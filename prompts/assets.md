@@ -8,7 +8,9 @@
 
 ## 0. Sinh asset bằng AI (Bước 2 trong `technology.md`)
 
-Agent dùng **GPT Image API** để tạo file trực tiếp vào `assets/` (không bake chữ gameplay vào texture — xem mục 1).
+**OpenCode:** gọi subagent **`@assets`** hoặc tool **`gpt_imagegen`** (plugin ChatGPT Image — xem `prompts/opencode.md`). **Cursor / agent khác:** dùng **GPT Image API** tương đương.
+
+Mọi agent sinh pixel lưu file trực tiếp vào `assets/` (không bake chữ gameplay vào texture — xem mục 1).
 
 | Loại asset | Gợi ý prompt (luôn kèm style + kích thước) | Đích lưu |
 |------------|---------------------------------------------|----------|

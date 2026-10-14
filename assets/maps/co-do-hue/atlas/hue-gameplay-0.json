@@ -1,0 +1,714 @@
+{
+ "frames": {
+  "hue-prop-exhibition-panel-bilingual": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 96,
+    "h": 192
+   }
+  },
+  "hue-prop-courtyard-banner": {
+   "frame": {
+    "x": 98,
+    "y": 0,
+    "w": 128,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 128,
+    "h": 192
+   }
+  },
+  "hue-prop-exhibition-photo-wall": {
+   "frame": {
+    "x": 228,
+    "y": 0,
+    "w": 192,
+    "h": 128
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 192,
+    "h": 128
+   },
+   "sourceSize": {
+    "w": 192,
+    "h": 128
+   }
+  },
+  "hue-prop-archive-shelf-a": {
+   "frame": {
+    "x": 422,
+    "y": 0,
+    "w": 192,
+    "h": 128
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 192,
+    "h": 128
+   },
+   "sourceSize": {
+    "w": 192,
+    "h": 128
+   }
+  },
+  "hue-prop-storage-copy-stand": {
+   "frame": {
+    "x": 616,
+    "y": 0,
+    "w": 96,
+    "h": 96
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 96
+   },
+   "sourceSize": {
+    "w": 96,
+    "h": 96
+   }
+  },
+  "hue-prop-coord-whiteboard": {
+   "frame": {
+    "x": 714,
+    "y": 0,
+    "w": 128,
+    "h": 96
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 96
+   },
+   "sourceSize": {
+    "w": 128,
+    "h": 96
+   }
+  },
+  "hue-prop-courtyard-meeting-table": {
+   "frame": {
+    "x": 844,
+    "y": 0,
+    "w": 144,
+    "h": 96
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 144,
+    "h": 96
+   },
+   "sourceSize": {
+    "w": 144,
+    "h": 96
+   }
+  },
+  "hue-prop-editing-printer": {
+   "frame": {
+    "x": 990,
+    "y": 0,
+    "w": 96,
+    "h": 80
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 80
+   },
+   "sourceSize": {
+    "w": 96,
+    "h": 80
+   }
+  },
+  "hue-prop-exhibition-spotlight": {
+   "frame": {
+    "x": 1088,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   }
+  },
+  "hue-prop-editing-scanner": {
+   "frame": {
+    "x": 1154,
+    "y": 0,
+    "w": 80,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 64
+   }
+  },
+  "hue-prop-editing-desk-papers": {
+   "frame": {
+    "x": 1236,
+    "y": 0,
+    "w": 128,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 128,
+    "h": 64
+   }
+  },
+  "hue-prop-storage-sealed-box": {
+   "frame": {
+    "x": 1366,
+    "y": 0,
+    "w": 80,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 64
+   }
+  },
+  "hue-prop-coord-monitor": {
+   "frame": {
+    "x": 1448,
+    "y": 0,
+    "w": 80,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 64
+   }
+  },
+  "hue-prop-corridor-plant": {
+   "frame": {
+    "x": 1530,
+    "y": 0,
+    "w": 48,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 48,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 48,
+    "h": 64
+   }
+  },
+  "hue-station-print-checklist": {
+   "frame": {
+    "x": 1580,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   }
+  },
+  "hue-station-print-checklist-active": {
+   "frame": {
+    "x": 1646,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   }
+  },
+  "hue-station-scan-footnote": {
+   "frame": {
+    "x": 1712,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   }
+  },
+  "hue-station-scan-footnote-active": {
+   "frame": {
+    "x": 1778,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   }
+  },
+  "hue-station-floor-plan": {
+   "frame": {
+    "x": 1844,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   }
+  },
+  "hue-station-floor-plan-active": {
+   "frame": {
+    "x": 1910,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   }
+  },
+  "hue-station-lights-labels": {
+   "frame": {
+    "x": 1976,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   }
+  },
+  "hue-station-lights-labels-active": {
+   "frame": {
+    "x": 0,
+    "y": 194,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   }
+  },
+  "hue-station-seal-box": {
+   "frame": {
+    "x": 66,
+    "y": 194,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   }
+  },
+  "hue-station-seal-box-active": {
+   "frame": {
+    "x": 132,
+    "y": 194,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   }
+  },
+  "hue-station-return-shelf": {
+   "frame": {
+    "x": 198,
+    "y": 194,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   }
+  },
+  "hue-station-return-shelf-active": {
+   "frame": {
+    "x": 264,
+    "y": 194,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   }
+  },
+  "task-marker": {
+   "frame": {
+    "x": 330,
+    "y": 194,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   }
+  },
+  "hue-prop-archive-box-hue04": {
+   "frame": {
+    "x": 396,
+    "y": 194,
+    "w": 64,
+    "h": 48
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 48
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 48
+   }
+  },
+  "hue-prop-courtyard-bench": {
+   "frame": {
+    "x": 462,
+    "y": 194,
+    "w": 128,
+    "h": 48
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 48
+   },
+   "sourceSize": {
+    "w": 128,
+    "h": 48
+   }
+  },
+  "ability-historian": {
+   "frame": {
+    "x": 592,
+    "y": 194,
+    "w": 48,
+    "h": 48
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 48,
+    "h": 48
+   },
+   "sourceSize": {
+    "w": 48,
+    "h": 48
+   }
+  },
+  "ability-conservator": {
+   "frame": {
+    "x": 642,
+    "y": 194,
+    "w": 48,
+    "h": 48
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 48,
+    "h": 48
+   },
+   "sourceSize": {
+    "w": 48,
+    "h": 48
+   }
+  },
+  "ability-local_guide": {
+   "frame": {
+    "x": 692,
+    "y": 194,
+    "w": 48,
+    "h": 48
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 48,
+    "h": 48
+   },
+   "sourceSize": {
+    "w": 48,
+    "h": 48
+   }
+  },
+  "ability-archivist": {
+   "frame": {
+    "x": 742,
+    "y": 194,
+    "w": 48,
+    "h": 48
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 48,
+    "h": 48
+   },
+   "sourceSize": {
+    "w": 48,
+    "h": 48
+   }
+  },
+  "ability-forger": {
+   "frame": {
+    "x": 792,
+    "y": 194,
+    "w": 48,
+    "h": 48
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 48,
+    "h": 48
+   },
+   "sourceSize": {
+    "w": 48,
+    "h": 48
+   }
+  },
+  "ability-broker": {
+   "frame": {
+    "x": 842,
+    "y": 194,
+    "w": 48,
+    "h": 48
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 48,
+    "h": 48
+   },
+   "sourceSize": {
+    "w": 48,
+    "h": 48
+   }
+  }
+ },
+ "meta": {
+  "app": "the-hidden-truth/assets-pack",
+  "image": "hue-gameplay-0.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 2044,
+   "h": 260
+  },
+  "scale": "1"
+ }
+}

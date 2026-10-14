@@ -7,6 +7,17 @@
 
 ## 0. Công nghệ lõi & quy trình AI (agent)
 
+### 0.0. OpenCode (model & asset)
+
+Khi chạy **[OpenCode](https://opencode.ai)** trong repo này:
+
+| Hạng mục | Cấu hình |
+|----------|-----------|
+| **Code** (Phaser, Colyseus, React, tooling) | **Claude Opus 5.5** — `opencode.json` → `model` + agent `build` / `plan`: `openrouter/anthropic/claude-opus-5.5` |
+| **Asset 2D** (Bước 2) | **ChatGPT Image** — plugin `@makcimbx/opencode-gpt-imagegen`, tool **`gpt_imagegen`**; subagent **`@assets`** (xem `prompts/opencode.md`) |
+
+Chi tiết cài plugin, OAuth, và quy trình gọi tool: **`prompts/opencode.md`**.
+
 ### 0.1. Game engine — **Phaser + TypeScript**
 
 Game **2D** chạy trên **Canvas / WebGL**: quản lý **scene**, **animation**, **input**, **camera** và **physics** (Arcade / Matter tùy map).

@@ -1,0 +1,619 @@
+{
+  "mapSlug": "co-do-hue",
+  "mapVersion": 1,
+  "layoutVersion": 1,
+  "tileSize": 48,
+  "skin": "hue",
+  "generatedBy": "ChatGPT Image (OpenAI gpt-5.4-image-2 / gpt-5-image-mini) -> tools/assets-pack",
+  "atlases": [
+    {
+      "name": "hue-gameplay-0",
+      "file": "maps/co-do-hue/atlas/hue-gameplay-0",
+      "size": [
+        2044,
+        260
+      ]
+    }
+  ],
+  "textures": {
+    "player": {
+      "atlas": "common/characters/player-atlas",
+      "tint": "common/characters/player-tint-atlas",
+      "frame": [
+        48,
+        64
+      ],
+      "anchor": [
+        0.5,
+        1
+      ]
+    },
+    "tileset": {
+      "file": "maps/co-do-hue/tileset/hue-interior-48.webp",
+      "tile": 48,
+      "order": [
+        "wood",
+        "carpet",
+        "cream",
+        "terracotta",
+        "stone",
+        "jade",
+        "wall-face",
+        "wall-top"
+      ],
+      "layout": "2x2 tiles per texture, columns"
+    },
+    "hue-lobby-thumb": {
+      "file": "maps/co-do-hue/meta/hue-lobby-thumb.webp",
+      "size": [
+        640,
+        360
+      ]
+    },
+    "hue-map-icon": {
+      "file": "maps/co-do-hue/meta/hue-map-icon.webp",
+      "size": [
+        128,
+        128
+      ]
+    },
+    "hue-loading": {
+      "file": "maps/co-do-hue/meta/hue-loading.webp",
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  },
+  "areas": [
+    "courtyard_checkin",
+    "exhibition",
+    "corridor",
+    "coordination",
+    "editing",
+    "archive",
+    "artifact_storage"
+  ],
+  "props": {
+    "hue-prop-exhibition-panel-bilingual": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        96,
+        192
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    },
+    "hue-prop-exhibition-photo-wall": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        192,
+        128
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    },
+    "hue-prop-exhibition-spotlight": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        64,
+        64
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    },
+    "hue-prop-editing-printer": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        96,
+        80
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    },
+    "hue-prop-editing-scanner": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        80,
+        64
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    },
+    "hue-prop-editing-desk-papers": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        128,
+        64
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    },
+    "hue-prop-archive-shelf-a": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        192,
+        128
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    },
+    "hue-prop-archive-box-hue04": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        64,
+        48
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    },
+    "hue-prop-storage-sealed-box": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        80,
+        64
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    },
+    "hue-prop-storage-copy-stand": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        96,
+        96
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    },
+    "hue-prop-coord-whiteboard": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        128,
+        96
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    },
+    "hue-prop-coord-monitor": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        80,
+        64
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    },
+    "hue-prop-corridor-plant": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        48,
+        64
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    },
+    "hue-prop-courtyard-banner": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        128,
+        192
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    },
+    "hue-prop-courtyard-bench": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        128,
+        48
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    },
+    "hue-prop-courtyard-meeting-table": {
+      "atlas": "hue-gameplay-0",
+      "size": [
+        144,
+        96
+      ],
+      "anchor": [
+        0.5,
+        1
+      ],
+      "footprint": [
+        48,
+        48
+      ]
+    }
+  },
+  "stations": [
+    {
+      "taskId": "task_print_checklist",
+      "key": "hue-station-print-checklist",
+      "activeKey": "hue-station-print-checklist-active",
+      "size": [
+        64,
+        64
+      ],
+      "hitbox": [
+        96,
+        96
+      ]
+    },
+    {
+      "taskId": "task_scan_footnote",
+      "key": "hue-station-scan-footnote",
+      "activeKey": "hue-station-scan-footnote-active",
+      "size": [
+        64,
+        64
+      ],
+      "hitbox": [
+        96,
+        96
+      ]
+    },
+    {
+      "taskId": "task_update_floor_plan",
+      "key": "hue-station-floor-plan",
+      "activeKey": "hue-station-floor-plan-active",
+      "size": [
+        64,
+        64
+      ],
+      "hitbox": [
+        96,
+        96
+      ]
+    },
+    {
+      "taskId": "task_check_lights_labels",
+      "key": "hue-station-lights-labels",
+      "activeKey": "hue-station-lights-labels-active",
+      "size": [
+        64,
+        64
+      ],
+      "hitbox": [
+        96,
+        96
+      ]
+    },
+    {
+      "taskId": "task_seal_box",
+      "key": "hue-station-seal-box",
+      "activeKey": "hue-station-seal-box-active",
+      "size": [
+        64,
+        64
+      ],
+      "hitbox": [
+        96,
+        96
+      ]
+    },
+    {
+      "taskId": "task_return_shelf_a",
+      "key": "hue-station-return-shelf",
+      "activeKey": "hue-station-return-shelf-active",
+      "size": [
+        64,
+        64
+      ],
+      "hitbox": [
+        96,
+        96
+      ]
+    }
+  ],
+  "clues": {
+    "hue-clue-paper": {
+      "file": "maps/co-do-hue/clues/hue-clue-paper.webp",
+      "size": [
+        640,
+        480
+      ]
+    },
+    "hue-ui-checklist-paper": {
+      "file": "maps/co-do-hue/clues/hue-ui-checklist-paper.webp",
+      "size": [
+        400,
+        520
+      ]
+    },
+    "hue-ui-scan-page": {
+      "file": "maps/co-do-hue/clues/hue-ui-scan-page.webp",
+      "size": [
+        480,
+        640
+      ]
+    },
+    "hue-ui-floor-plan": {
+      "file": "maps/co-do-hue/clues/hue-ui-floor-plan.webp",
+      "size": [
+        560,
+        400
+      ]
+    },
+    "hue-ui-photo-board": {
+      "file": "maps/co-do-hue/clues/hue-ui-photo-board.webp",
+      "size": [
+        480,
+        360
+      ]
+    },
+    "hue-ui-seal-record": {
+      "file": "maps/co-do-hue/clues/hue-ui-seal-record.webp",
+      "size": [
+        400,
+        360
+      ]
+    },
+    "hue-ui-loan-slip": {
+      "file": "maps/co-do-hue/clues/hue-ui-loan-slip.webp",
+      "size": [
+        400,
+        300
+      ]
+    },
+    "hue-ui-doc-diff-bg": {
+      "file": "maps/co-do-hue/clues/hue-ui-doc-diff-bg.webp",
+      "size": [
+        640,
+        480
+      ]
+    },
+    "hue-ui-email-thread": {
+      "file": "maps/co-do-hue/clues/hue-ui-email-thread.webp",
+      "size": [
+        520,
+        400
+      ]
+    },
+    "hue-ui-chat-fragment": {
+      "file": "maps/co-do-hue/clues/hue-ui-chat-fragment.webp",
+      "size": [
+        360,
+        280
+      ]
+    },
+    "hue-ui-tour-script": {
+      "file": "maps/co-do-hue/clues/hue-ui-tour-script.webp",
+      "size": [
+        480,
+        320
+      ]
+    },
+    "hue-clue-handnote": {
+      "file": "maps/co-do-hue/clues/hue-clue-handnote.webp",
+      "size": [
+        360,
+        280
+      ]
+    },
+    "hue-clue-print-proof": {
+      "file": "maps/co-do-hue/clues/hue-clue-print-proof.webp",
+      "size": [
+        640,
+        480
+      ]
+    }
+  },
+  "npc": {
+    "hoa": {
+      "file": "maps/co-do-hue/npc/hue-npc-hoa.webp",
+      "size": [
+        256,
+        256
+      ]
+    },
+    "lan": {
+      "file": "maps/co-do-hue/npc/hue-npc-lan.webp",
+      "size": [
+        256,
+        256
+      ]
+    },
+    "minh-giam": {
+      "file": "maps/co-do-hue/npc/hue-npc-minh-giam.webp",
+      "size": [
+        256,
+        256
+      ]
+    },
+    "phu": {
+      "file": "maps/co-do-hue/npc/hue-npc-phu.webp",
+      "size": [
+        256,
+        256
+      ]
+    },
+    "thao": {
+      "file": "maps/co-do-hue/npc/hue-npc-thao.webp",
+      "size": [
+        256,
+        256
+      ]
+    },
+    "tuan": {
+      "file": "maps/co-do-hue/npc/hue-npc-tuan.webp",
+      "size": [
+        256,
+        256
+      ]
+    },
+    "vi": {
+      "file": "maps/co-do-hue/npc/hue-npc-vi.webp",
+      "size": [
+        256,
+        256
+      ]
+    }
+  },
+  "ui": {
+    "task-marker": {
+      "file": "common/ui/task-marker.webp",
+      "size": 64
+    },
+    "task-complete": {
+      "file": "common/ui/task-complete.webp",
+      "size": 32
+    },
+    "meeting-bell": {
+      "file": "common/ui/meeting-bell.webp",
+      "size": 48
+    },
+    "clue": {
+      "file": "common/ui/clue.webp",
+      "size": 48
+    },
+    "chat": {
+      "file": "common/ui/chat.webp",
+      "size": 32
+    },
+    "timer": {
+      "file": "common/ui/timer.webp",
+      "size": 32
+    },
+    "meeting-table": {
+      "file": "common/ui/meeting-table.webp",
+      "size": 48
+    },
+    "alert": {
+      "file": "common/ui/alert.webp",
+      "size": 48
+    },
+    "progress-star": {
+      "file": "common/ui/progress-star.webp",
+      "size": 32
+    },
+    "notebook": {
+      "file": "common/ui/notebook.webp",
+      "size": 48
+    },
+    "vote": {
+      "file": "common/ui/vote.webp",
+      "size": 48
+    },
+    "leave": {
+      "file": "common/ui/leave.webp",
+      "size": 32
+    }
+  },
+  "roles": {
+    "historian": {
+      "icon": "common/ui/roles/historian.webp",
+      "ability": "common/ui/abilities/historian.webp"
+    },
+    "conservator": {
+      "icon": "common/ui/roles/conservator.webp",
+      "ability": "common/ui/abilities/conservator.webp"
+    },
+    "local_guide": {
+      "icon": "common/ui/roles/local_guide.webp",
+      "ability": "common/ui/abilities/local_guide.webp"
+    },
+    "archivist": {
+      "icon": "common/ui/roles/archivist.webp",
+      "ability": "common/ui/abilities/archivist.webp"
+    },
+    "forger": {
+      "icon": "common/ui/roles/forger.webp",
+      "ability": "common/ui/abilities/forger.webp"
+    },
+    "broker": {
+      "icon": "common/ui/roles/broker.webp",
+      "ability": "common/ui/abilities/broker.webp"
+    }
+  }
+}

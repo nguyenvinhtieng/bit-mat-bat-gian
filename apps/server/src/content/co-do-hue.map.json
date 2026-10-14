@@ -1,0 +1,159 @@
+{
+  "slug": "co-do-hue",
+  "mapVersion": 1,
+  "title": "Cố đô Huế",
+  "oneLiner": "Trước khai mạc gian Cố đô Huế trong triển lãm *Hồ Sơ Việt Nam*, một câu trong bảng giới thiệu tư liệu lệch so với hồ sơ nghiên cứu — đủ để đổi nghĩa cả đoạn. Nhóm phải tìm câu nào sai, sửa khi nào, và vì sao, không tranh “lịch sử đúng một kiểu”.",
+  "areas": [
+    {}
+  ],
+  "npcs": [
+    {
+      "id": "minh-giam",
+      "name": "Chị Minh Giám",
+      "role": "Người Giám Tuyển",
+      "story": "Chịu deadline & uy tín dự án",
+      "knows": "Ai gửi bản “final”; áp lực đối tác",
+      "voice": "Căng, thực dụng, không muốn scandal"
+    },
+    {
+      "id": "tuan",
+      "name": "Anh Tuấn",
+      "role": "Biên Dịch Viên",
+      "story": "Dịch và đề xuất câu tiếng Anh",
+      "knows": "Lịch sử comment trên file; lý do chọn từ",
+      "voice": "Cẩn trọng, hay giải thích nghĩa từ"
+    },
+    {
+      "id": "lan",
+      "name": "Chị Lan",
+      "role": "Lưu Trữ Viên (NPC)",
+      "story": "Quản kệ, phiếu mượn",
+      "knows": "Ai mượn hộp Huế-04; backup đêm qua",
+      "voice": "Ngắn gọn, nhớ số hiệu"
+    },
+    {
+      "id": "vi",
+      "name": "Em Vi",
+      "role": "Thực tập sinh",
+      "story": "Chạy in, chụp ảnh bản thử",
+      "knows": "Ai ở phòng biên tập khuya; hay nhầm phiên bản",
+      "voice": "Nhanh, hơi vội"
+    },
+    {
+      "id": "hoa",
+      "name": "Ông Hòa",
+      "role": "Cố vấn Sử học (tư vấn hợp đồng)",
+      "story": "Kiểm tra tính chắc chắn của wording",
+      "knows": "Không chứng kiến ai sửa file đêm",
+      "voice": "Phân biệt “ghi chép” vs “chứng minh”"
+    },
+    {
+      "id": "thao",
+      "name": "Chị Thảo",
+      "role": "Điều phối in & logistics",
+      "story": "Máy in, log giấy",
+      "knows": "Giờ in bản thử cuối",
+      "voice": "Thực tế, đọc log"
+    },
+    {
+      "id": "phu",
+      "name": "Anh Phú",
+      "role": "Hướng dẫn viên di tích",
+      "story": "Đối tác giới thiệu tour mẫu",
+      "knows": "Cung cấp ngữ cảnh, không có quyền sửa hồ sơ nội bộ",
+      "voice": ""
+    },
+    {
+      "id": "dai-dien-nha-tai-tro-khach",
+      "name": "Đại diện nhà tài trợ (khách)",
+      "role": "Ghé sân hiên sáng khai mạc",
+      "story": "Ghé sân hiên sáng khai mạc",
+      "knows": "Tạo áp lực “đừng đổi bảng nữa” — động cơ xã hội, không phải bằng chứng",
+      "voice": ""
+    }
+  ],
+  "commonTasks": [
+    {
+      "name": "Đối chiếu checklist in ấn",
+      "room": "Biên tập",
+      "effect": "+1 tiến độ triển lãm"
+    },
+    {
+      "name": "Scan trang chú thích",
+      "room": "Biên tập",
+      "effect": "Mở manh mối “bản quét thiếu footnote” (random slot)"
+    },
+    {
+      "name": "Cập nhật sơ đồ gian",
+      "room": "Điều phối",
+      "effect": "Hiện ai đăng ký ca đêm"
+    },
+    {
+      "name": "Kiểm tra đèn & nhãn phụ",
+      "room": "Gian trưng bày",
+      "effect": "Ảnh chụp bảng time-stamped"
+    },
+    {
+      "name": "Niêm phong hộp tư liệu",
+      "room": "Kho",
+      "effect": "So sánh số niêm phong với phiếu"
+    },
+    {
+      "name": "Trả sách mượn kệ A",
+      "room": "Lưu trữ",
+      "effect": "Lộ phiếu mượn hộp “Huế-04”"
+    }
+  ],
+  "roleTasks": [
+    {
+      "role": "Sử Gia",
+      "action": "Kiểm tra mốc “lần duyệt cuối” trên email vs ngày in",
+      "result": "Hợp lệ / mâu thuẫn / thiếu nguồn"
+    },
+    {
+      "role": "Người Bảo Tồn",
+      "action": "Kiểm tra niêm phong hộp bản sao",
+      "result": "Khớp / đã mở / nhãn không khớp"
+    },
+    {
+      "role": "Hướng Dẫn Viên Địa Phương",
+      "action": "Ngữ cảnh: cách trích dẫn di tích trong tour mẫu",
+      "result": "Gợi ý đọc chú thích, không kết luận thủ phạm"
+    },
+    {
+      "role": "Lưu Trữ Viên",
+      "action": "Khôi phục intro_VI_EN_v2.docx (hoặc tương đương)",
+      "result": "Diff một câu so với bản in"
+    },
+    {
+      "role": "Người Làm Giả",
+      "action": "(Bí mật) Sửa một chi tiết trên bản nháp / nhãn phụ theo kịch bản biến thể",
+      "result": "Dấu vết font, metadata, hoặc lịch sử file"
+    },
+    {
+      "role": "Người Môi Giới",
+      "action": "(Bí mật) Giữ / đổi tin về ai yêu cầu câu tiếng Anh “mạnh hơn”",
+      "result": "Không đổi file gốc trong kho"
+    }
+  ],
+  "variants": [
+    {
+      "id": "HUE-A",
+      "truth": "Biên dịch chọn nhầm từ đồng nghĩa khi vội",
+      "fake": "“Cố ý bịa để thu hút khách”",
+      "meta": "Mã hồ sơ trùng tài liệu khác"
+    },
+    {
+      "id": "HUE-B",
+      "truth": "Biên tập rút câu tiếng Việt khiến bản Anh sync sai",
+      "fake": "“Dịch sai hoàn toàn”",
+      "meta": "Ghi chú “trang 12–13 thiếu”"
+    },
+    {
+      "id": "HUE-C",
+      "truth": "Giám tuyển yêu cầu wording mạnh; Biên dịch nhắn nhưng không kịch hoàn tất v2",
+      "fake": "“Thực tập sinh in nhầm file cũ”",
+      "meta": "Mốc thời gian email trùng meta toàn dự án"
+    }
+  ]
+}

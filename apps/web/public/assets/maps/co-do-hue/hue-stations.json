@@ -1,0 +1,57 @@
+{
+ "mapVersion": 1,
+ "hitbox": [
+  96,
+  96
+ ],
+ "stations": [
+  {
+   "id": "task_print_checklist",
+   "area": "editing",
+   "x": 768,
+   "y": 1022,
+   "title": "Đối chiếu checklist in ấn",
+   "frame": 0
+  },
+  {
+   "id": "task_scan_footnote",
+   "area": "editing",
+   "x": 1248,
+   "y": 1022,
+   "title": "Scan trang chú thích",
+   "frame": 1
+  },
+  {
+   "id": "task_update_floor_plan",
+   "area": "coordination",
+   "x": 1632,
+   "y": 624,
+   "title": "Cập nhật sơ đồ gian",
+   "frame": 2
+  },
+  {
+   "id": "task_check_lights_labels",
+   "area": "exhibition",
+   "x": 504,
+   "y": 504,
+   "title": "Kiểm tra đèn & nhãn phụ",
+   "frame": 3
+  },
+  {
+   "id": "task_seal_box",
+   "area": "artifact_storage",
+   "x": 1296,
+   "y": 1406,
+   "title": "Niêm phong hộp tư liệu",
+   "frame": 4
+  },
+  {
+   "id": "task_return_shelf_a",
+   "area": "archive",
+   "x": 336,
+   "y": 1373,
+   "title": "Trả sách mượn kệ A",
+   "frame": 5
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "openrouter/anthropic/claude-opus-5.5",
+  "default_agent": "build",
+  "plugins": ["@makcimbx/opencode-gpt-imagegen"],
+  "agents": {
+    "build": {
+      "model": "openrouter/anthropic/claude-opus-5.5"
+    },
+    "plan": {
+      "model": "openrouter/anthropic/claude-opus-5.5"
+    }
+  }
+}
