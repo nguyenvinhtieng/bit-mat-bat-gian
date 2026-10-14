@@ -26,77 +26,66 @@ export const AREA_IDS = [
 ] as const;
 export type AreaId = (typeof AREA_IDS)[number];
 
-export const ROLE_IDS = ['historian', 'conservator', 'local_guide', 'archivist', 'forger', 'broker'] as const;
+/** Among-Us style: a few killers hunt, everybody else does tasks. */
+export const ROLE_IDS = ['villager', 'guardian', 'killer'] as const;
 export type RoleId = (typeof ROLE_IDS)[number];
-export type Faction = 'investigation' | 'secret';
+export type Faction = 'crew' | 'killer';
 
-export const ROLE_INFO: Record<RoleId, { name: string; faction: Faction; ability: string; desc: string }> = {
-  historian: {
-    name: 'Sử Gia',
-    faction: 'investigation',
-    ability: 'Kiểm tra mốc thời gian',
-    desc: 'Mỗi vòng kiểm tra một mốc thời gian / nhận định trong hồ sơ đã xác minh. Không biết ai nói dối.',
+export const ROLE_INFO: Record<RoleId, { name: string; faction: Faction; icon: string; short: string; desc: string }> = {
+  villager: {
+    name: 'Nghệ Nhân Cố Đô',
+    faction: 'crew',
+    icon: 'local_guide',
+    short: 'Làm nhiệm vụ, tránh Hắc Ảnh',
+    desc: 'Bạn là một người trong đoàn chuẩn bị Đêm Hội Hoàng Cung. Hoàn thành các nhiệm vụ văn hoá, tránh xa kẻ đáng ngờ và báo khi thấy thi thể.',
   },
-  conservator: {
-    name: 'Người Bảo Tồn',
-    faction: 'investigation',
-    ability: 'Kiểm tra dấu vết vật lý',
-    desc: 'Mỗi vòng kiểm tra một dấu vết trên hiện vật, bao bì, niêm phong. Dấu vết không cho biết ai làm.',
+  guardian: {
+    name: 'Lính Ngự Lâm',
+    faction: 'crew',
+    icon: 'conservator',
+    short: 'Có một lá chắn chống bị hạ gục',
+    desc: 'Bạn thuộc phe Người Dân và có MỘT lá chắn: lần đầu Hắc Ảnh ra tay với bạn, đòn đánh bị chặn (cả hai cùng biết). Sau đó bạn như người thường.',
   },
-  local_guide: {
-    name: 'Hướng Dẫn Viên Địa Phương',
-    faction: 'investigation',
-    ability: 'Mở manh mối ngữ cảnh',
-    desc: 'Mỗi vòng mở một manh mối ngữ cảnh địa điểm. Hiểu bối cảnh không đồng nghĩa với chứng kiến.',
-  },
-  archivist: {
-    name: 'Lưu Trữ Viên',
-    faction: 'investigation',
-    ability: 'Khôi phục phiên bản cũ',
-    desc: 'Mỗi vòng khôi phục / so sánh một phiên bản tài liệu. Không tự biết ai đứng sau thay đổi.',
-  },
-  forger: {
-    name: 'Người Làm Giả',
-    faction: 'secret',
-    ability: 'Tác động một chi tiết hồ sơ',
-    desc: 'Mỗi vòng sửa một chi tiết theo kịch bản. Hành động luôn để lại dấu vết có thể tìm thấy.',
-  },
-  broker: {
-    name: 'Người Môi Giới',
-    faction: 'secret',
-    ability: 'Giữ / trao đổi một mẩu tin',
-    desc: 'Mỗi vòng giữ lại một mẩu thông tin hoặc biết ai đang nắm manh mối liên quan. Không được sửa bằng chứng gốc.',
+  killer: {
+    name: 'Hắc Ảnh',
+    faction: 'killer',
+    icon: 'forger',
+    short: 'Hạ gục mọi người để thắng',
+    desc: 'Bạn trà trộn trong đoàn. Lại gần một người và bấm Hạ gục (có thời gian hồi). Giả vờ làm nhiệm vụ, đừng để ai thấy, và thuyết phục mọi người trong cuộc họp.',
   },
 };
 
-export type Phase = 'lobby' | 'explore' | 'meeting' | 'conclusion' | 'ended';
+export type Phase = 'lobby' | 'explore' | 'meeting' | 'reveal' | 'ended';
 
 export const PLAYER_COLORS = [
   0xe8524a, 0x3f7fd9, 0x3fae5a, 0xf2c230, 0xa05bd6, 0xf08a2c, 0x35c0c0, 0xef6fb0, 0x8d6e4a, 0x6b7a8f, 0xb8d94a, 0xf4f0e6,
 ];
 
 export const TASK_IDS = [
-  'task_print_checklist',
-  'task_scan_footnote',
-  'task_update_floor_plan',
-  'task_check_lights_labels',
-  'task_seal_box',
-  'task_return_shelf_a',
+  'task_hue_cuisine',
+  'task_woodblock',
+  'task_citadel_gates',
+  'task_lanterns',
+  'task_conical_hat',
+  'task_heritage_quiz',
 ] as const;
 export type TaskId = (typeof TASK_IDS)[number];
 
-export const TIMINGS = {
-  exploreSec: 210,
-  meetingSec: 90,
-  finalMeetingSec: 120,
-  conclusionSec: 90,
-  rounds: 2,
+export const GAME = {
+  /** tasks assigned to every player */
+  tasksPerPlayer: 4,
+  killRange: 84,
+  /** how far a living player can see (px); also blocked by walls */
+  visionRadius: 264,
+  reportRange: 110,
+  killCooldownSec: 25,
+  firstKillCooldownSec: 15,
+  /** after a meeting */
+  postMeetingCooldownSec: 15,
+  meetingSec: 75,
+  revealSec: 6,
+  emergencyPerPlayer: 1,
 };
 
-export const DEVIATION_TYPES = [
-  { id: 'translation', label: 'Dịch (lựa chọn từ / bản dịch)' },
-  { id: 'editing', label: 'Biên tập (rút gọn / sửa câu / yêu cầu wording)' },
-  { id: 'misprint', label: 'In nhầm (in sai file)' },
-  { id: 'deliberate', label: 'Cố ý bịa để thu hút khách' },
-] as const;
-export type DeviationType = (typeof DEVIATION_TYPES)[number]['id'];
+/** Number of killers for a given player count. */
+export const killersFor = (n: number) => (n >= 8 ? 2 : n >= 2 ? 1 : 0);

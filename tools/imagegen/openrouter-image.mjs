@@ -5,6 +5,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+try {
+  for (const line of fs.readFileSync(new URL('../../.env', import.meta.url), 'utf8').split('\n')) {
+    const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.*?)\s*$/);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+  }
+} catch {}
 const MODEL = process.env.IMAGE_MODEL || 'openai/gpt-5.4-image-2';
 const KEY = process.env.OPENROUTER_API_KEY;
 if (!KEY) {

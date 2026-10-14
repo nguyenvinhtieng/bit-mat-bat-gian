@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { getGrid, areaAt, SPAWNS, isSolidTile } from './layout';
 import { stepMovement } from './movement';
 import { TILE } from './constants';
-import { HUE_STATIONS, HUE_ROLE_STATIONS } from './maps/co-do-hue';
+import { HUE_STATIONS } from './maps/co-do-hue';
 
 test('spawns are walkable and inside the courtyard', () => {
   const g = getGrid();
@@ -16,7 +16,6 @@ test('spawns are walkable and inside the courtyard', () => {
 test('stations sit inside their area', () => {
   const g = getGrid();
   for (const st of HUE_STATIONS) assert.equal(areaAt(g, st.x, st.y), st.area, st.id);
-  for (const [id, st] of Object.entries(HUE_ROLE_STATIONS)) assert.equal(areaAt(g, st.x, st.y), st.area, id);
 });
 
 test('walls block movement', () => {

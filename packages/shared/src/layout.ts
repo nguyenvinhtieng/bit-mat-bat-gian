@@ -19,6 +19,8 @@ export const AREA_RECTS: Record<AreaId, Rect[]> = {
     [23, 11, 6, 3], // east hall -> coordination
     [15, 25, 3, 1], // editing -> archive
     [24, 25, 3, 1], // editing -> storage
+    [9, 18, 3, 8], // west loop: exhibition -> archive
+    [33, 18, 3, 8], // east loop: coordination -> storage
   ],
   editing: [[14, 19, 14, 6]],
   archive: [[4, 26, 15, 5]],
@@ -97,4 +99,15 @@ export function areaAt(g: LayoutGrid, x: number, y: number): AreaId | null {
   if (tx < 0 || ty < 0 || tx >= g.w || ty >= g.h) return null;
   const i = g.area[ty * g.w + tx];
   return i >= 0 ? AREA_ORDER[i] : null;
+}
+
+/** Grid raycast: true when no solid tile lies between two pixel points. */
+export function hasLineOfSight(g: LayoutGrid, a: Point, b: Point): boolean {
+  const d = Math.hypot(b.x - a.x, b.y - a.y);
+  const steps = Math.ceil(d / (TILE / 4));
+  for (let i = 1; i < steps; i++) {
+    const k = i / steps;
+    if (isSolidTile(g, Math.floor((a.x + (b.x - a.x) * k) / TILE), Math.floor((a.y + (b.y - a.y) * k) / TILE))) return false;
+  }
+  return true;
 }

@@ -1,7 +1,7 @@
 # Đặc tả asset — The Hidden Truth
 
 > **Phạm vi tài liệu:** danh sách asset cần sản xuất, **kích thước**, **định dạng file**, **quy ước đặt tên** và **mapping** với gameplay.  
-> **Nhân vật người chơi (avatar, animation):** dùng **common** — không lặp theo map.  
+> **Nhân vật người chơi (avatar, animation):** mỗi map có **trang phục riêng** (mục 3.1) trên cùng một rig/khung hình; `common/characters` là bản dự phòng.  
 > **Tham chiếu:** `technology.md` (Phaser + TypeScript, GPT Image API, quy trình AI 4 bước), `cot-truyen-role.md` (role & task logic), `map/co-do-hue.md` (bối cảnh Huế).
 
 ---
@@ -107,7 +107,21 @@ Asset **không** skin theo Huế; map chỉ “dán” decor lên trên.
 | Icon role (HUD) | **48×48** | `common/ui/roles/<role_id>.svg` | `historian`, `conservator`, `local_guide`, `archivist`, `forger`, `broker` |
 | Icon ability | **32×32** | `common/ui/abilities/<role_id>.png` | Một nút / role, mọi map |
 
-**Không** tạo avatar riêng cho Huế.
+**Rig chung, trang phục theo map** — xem 3.1.
+
+### 3.1. Trang phục nhân vật theo map
+
+Cùng khung **48×64**, 4 hàng (`down`, `left`, `right`, `up`) × 4 frame `walk-<dir>-<i>`, anchor chân giữa. Phần **áo** nằm ở tint atlas (xám) để engine nhuộm màu người chơi; mũ/khăn, tóc, quần, giày nằm ở base atlas.
+
+| Map | Trang phục | File (dưới `maps/<slug>/characters/`) |
+|-----|------------|----------------------------------------|
+| `co-do-hue` | Áo dài ngũ thân (nhuộm màu) + **khăn đóng vàng**, quần trắng, hài mũi cong | `hue-player-atlas`, `hue-player-tint-atlas` |
+| `hoi-an` | Áo bà ba (nhuộm màu) + **nón lá**, búi tóc, quần lụa đen, guốc mộc | `hoian-player-atlas`, `hoian-player-tint-atlas` |
+| `thang-long` | Áo the dài (nhuộm màu) + **khăn xếp**, quần trắng, giày Gia Định | `tl-player-atlas`, `tl-player-tint-atlas` |
+
+- Sinh bằng `pnpm assets:chars` (`tools/char-art/draw-characters.mjs`, vector, không cần API) → PNG ở `assets/maps/<slug>/characters/`, WebP + JSON ở `apps/web/public/assets/...`, ảnh duyệt `assets/_src/maps/<slug>/characters/*-preview.png`.
+- Map mới: thêm một costume trong script + `charPrefix` trong `packages/shared/src/maps/catalog.ts`. Không có `charPrefix` → dùng `common/characters/player-atlas`.
+- Client chọn atlas qua `playerArt(mapSlug)` (GameScene + Sprite cinematic).
 
 ---
 

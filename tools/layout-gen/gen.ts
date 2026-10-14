@@ -1,7 +1,7 @@
 /**
  * Exports the common layout (packages/shared/src/layout.ts) to Tiled-compatible files
  * (assets.md §2): layout/base.tmj, layout/spawns.json, layout/area-zones.json,
- * plus map station coordinates (hue-stations.json, hue-role-stations.json).
+ * plus map station coordinates (hue-stations.json).
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -9,7 +9,6 @@ import {
   AREA_ORDER,
   AREA_RECTS,
   FURNITURE_SLOTS,
-  HUE_ROLE_STATIONS,
   HUE_STATIONS,
   LAYOUT_H,
   LAYOUT_VERSION,
@@ -90,5 +89,4 @@ write('common/layout/area-zones.json', {
   zones: AREA_ORDER.map((id) => ({ areaId: id, rects: AREA_RECTS[id].map(([x, y, w, h]) => ({ x: x * TILE, y: y * TILE, w: w * TILE, h: h * TILE })) })),
 });
 write('maps/co-do-hue/hue-stations.json', { mapVersion: 1, hitbox: [96, 96], stations: HUE_STATIONS });
-write('maps/co-do-hue/hue-role-stations.json', { mapVersion: 1, stations: HUE_ROLE_STATIONS });
 console.log(`[layout-gen] ${LAYOUT_W}x${LAYOUT_H} tiles, ${AREA_ORDER.length} areas, ${SPAWNS.length} spawns`);

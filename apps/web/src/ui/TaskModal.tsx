@@ -2,16 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { HUE_STATIONS, type TaskData } from '@hidden-truth/shared';
 import { send } from '../net';
 import { useStore } from '../store';
-import { ClueCard, Modal, asset } from './common';
-
-const ART: Record<TaskData['taskId'], string> = {
-  task_print_checklist: 'hue-ui-checklist-paper',
-  task_scan_footnote: 'hue-ui-scan-page',
-  task_update_floor_plan: 'hue-ui-floor-plan',
-  task_check_lights_labels: 'hue-ui-photo-board',
-  task_seal_box: 'hue-ui-seal-record',
-  task_return_shelf_a: 'hue-ui-loan-slip',
-};
+import { Modal } from './common';
 
 export function TaskModal() {
   const task = useStore((s) => s.task);
@@ -27,14 +18,17 @@ export function TaskModal() {
       {result ? (
         <div className="task-done">
           <p className="success">✅ {result.text}</p>
-          <p className="muted">Manh mối mới đã vào sổ của bạn. Chia sẻ nó trong cuộc họp để cả nhóm cùng suy luận.</p>
-          {result.clues?.map((c) => <ClueCard key={c.id} clue={c} />)}
+          {result.fact && (
+            <p className="fact">
+              💡 <b>Bạn có biết?</b> {result.fact}
+            </p>
+          )}
           <button className="btn primary" onClick={close}>
-            Đóng
+            Tiếp tục
           </button>
         </div>
       ) : (
-        <div className="minigame" style={{ backgroundImage: `url(${asset(`maps/co-do-hue/clues/${ART[task.taskId]}.webp`)})` }}>
+        <div className="minigame">
           <div className="minigame-inner">
             <Minigame task={task} submit={submit} />
           </div>
@@ -46,22 +40,20 @@ export function TaskModal() {
 
 function Minigame({ task, submit }: { task: TaskData; submit: (a: unknown) => void }) {
   switch (task.taskId) {
-    case 'task_print_checklist':
-      return <Checklist task={task} submit={submit} />;
-    case 'task_scan_footnote':
-      return <HoldScan holdMs={task.holdMs} submit={submit} />;
-    case 'task_update_floor_plan':
-      return <Sequence title="Đăng ký ca trực theo đúng thứ tự trên lịch:" sequence={task.sequence} options={task.rooms} submit={submit} />;
-    case 'task_check_lights_labels':
-      return <Sequence title="Bật đèn theo thứ tự trong quy trình kiểm tra:" sequence={task.lights} options={[...task.lights].sort()} submit={submit} />;
-    case 'task_seal_box':
-      return <Seal task={task} submit={submit} />;
-    case 'task_return_shelf_a':
-      return <Shelf task={task} submit={submit} />;
+    case 'task_hue_cuisine':
+      return <Pick prompt={task.prompt} items={task.items} submit={submit} />;
+    case 'task_woodblock':
+      return <HoldPrint prompt={task.prompt} holdMs={task.holdMs} submit={submit} />;
+    case 'task_citadel_gates':
+    case 'task_lanterns':
+      return <Sequence prompt={task.prompt} sequence={task.sequence} options={task.options} submit={submit} />;
+    case 'task_conical_hat':
+    case 'task_heritage_quiz':
+      return <Quiz prompt={task.prompt} question={task.question} options={task.options} submit={submit} />;
   }
 }
 
-function Checklist({ task, submit }: { task: Extract<TaskData, { taskId: 'task_print_checklist' }>; submit: (a: unknown) => void }) {
+function Pick({ prompt, items, submit }: { prompt: string; items: { id: string; label: string }[]; submit: (a: unknown) => void }) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const toggle = (id: string) => {
     const n = new Set(checked);
@@ -69,37 +61,24 @@ function Checklist({ task, submit }: { task: Extract<TaskData, { taskId: 'task_p
     setChecked(n);
   };
   return (
-    <div className="mg-two">
-      <div>
-        <h4>Log máy in (bản thử cuối)</h4>
-        <ul className="printer-log">
-          {task.items.map((i) => (
-            <li key={i.id} className={i.log}>
-              {i.log === 'ok' ? '✔' : '✖'} {i.label}
-            </li>
-          ))}
-        </ul>
+    <div className="mg-center">
+      <p>{prompt}</p>
+      <div className="option-grid">
+        {items.map((i) => (
+          <button key={i.id} className={`btn ${checked.has(i.id) ? 'on' : ''}`} onClick={() => toggle(i.id)}>
+            {checked.has(i.id) ? '✔ ' : ''}
+            {i.label}
+          </button>
+        ))}
       </div>
-      <div>
-        <h4>Checklist in ấn</h4>
-        <p className="muted small">Chỉ tích các mục mà log máy in báo đạt.</p>
-        {[...task.items]
-          .sort((a, b) => a.label.localeCompare(b.label))
-          .map((i) => (
-            <label key={i.id} className="check">
-              <input type="checkbox" checked={checked.has(i.id)} onChange={() => toggle(i.id)} />
-              {i.label}
-            </label>
-          ))}
-        <button className="btn primary" onClick={() => submit([...checked])}>
-          Xác nhận checklist
-        </button>
-      </div>
+      <button className="btn primary" disabled={!checked.size} onClick={() => submit([...checked])}>
+        Dọn mâm cỗ
+      </button>
     </div>
   );
 }
 
-function HoldScan({ holdMs, submit }: { holdMs: number; submit: (a: unknown) => void }) {
+function HoldPrint({ prompt, holdMs, submit }: { prompt: string; holdMs: number; submit: (a: unknown) => void }) {
   const [p, setP] = useState(0);
   const start = useRef(0);
   const raf = useRef(0);
@@ -126,18 +105,18 @@ function HoldScan({ holdMs, submit }: { holdMs: number; submit: (a: unknown) => 
   useEffect(() => () => cancelAnimationFrame(raf.current), []);
   return (
     <div className="mg-center">
-      <p>Đặt trang chú thích lên mặt kính, giữ nút để máy quét chạy hết trang.</p>
+      <p>{prompt}</p>
       <div className="scan-bar">
         <div style={{ width: `${p * 100}%` }} />
       </div>
       <button className="btn primary big" onPointerDown={down} onPointerUp={up} onPointerLeave={up}>
-        {p >= 1 ? 'Đã quét xong' : 'Giữ để quét'}
+        {p >= 1 ? 'Đã in xong' : 'Giữ để in'}
       </button>
     </div>
   );
 }
 
-function Sequence({ title, sequence, options, submit }: { title: string; sequence: string[]; options: string[]; submit: (a: unknown) => void }) {
+function Sequence({ prompt, sequence, options, submit }: { prompt: string; sequence: string[]; options: string[]; submit: (a: unknown) => void }) {
   const [picked, setPicked] = useState<string[]>([]);
   const [wrong, setWrong] = useState(false);
   const click = (o: string) => {
@@ -154,7 +133,7 @@ function Sequence({ title, sequence, options, submit }: { title: string; sequenc
   };
   return (
     <div className="mg-center">
-      <p>{title}</p>
+      <p>{prompt}</p>
       <ol className="sequence">
         {sequence.map((s, i) => (
           <li key={s} className={i < picked.length ? 'done' : ''}>
@@ -174,42 +153,15 @@ function Sequence({ title, sequence, options, submit }: { title: string; sequenc
   );
 }
 
-function Seal({ task, submit }: { task: Extract<TaskData, { taskId: 'task_seal_box' }>; submit: (a: unknown) => void }) {
-  const [v, setV] = useState('');
+function Quiz({ prompt, question, options, submit }: { prompt: string; question: string; options: string[]; submit: (a: unknown) => void }) {
   return (
     <div className="mg-center">
-      <div className="slip">
-        <span>Phiếu bàn giao — số niêm</span>
-        <strong>{task.sealNumber}</strong>
-      </div>
-      <p className="muted">{task.slipNote}</p>
-      <input
-        className="code-input"
-        value={v}
-        placeholder="____-HUE"
-        onChange={(e) => setV(e.target.value.toUpperCase())}
-        onKeyDown={(e) => {
-          e.stopPropagation();
-          if (e.key === 'Enter') submit(v);
-        }}
-      />
-      <button className="btn primary" onClick={() => submit(v)}>
-        Niêm phong
-      </button>
-    </div>
-  );
-}
-
-function Shelf({ task, submit }: { task: Extract<TaskData, { taskId: 'task_return_shelf_a' }>; submit: (a: unknown) => void }) {
-  return (
-    <div className="mg-center">
-      <p>
-        Mã sách mượn: <strong>{task.bookCode}</strong> — trả về đúng ô trên kệ A.
-      </p>
-      <div className="shelf-grid">
-        {task.slots.map((s) => (
-          <button key={s} className="btn shelf-slot" onClick={() => submit(s)}>
-            {s}
+      <p className="muted">{prompt}</p>
+      <p className="quiz-q">{question}</p>
+      <div className="option-grid">
+        {options.map((o) => (
+          <button key={o} className="btn" onClick={() => submit(o)}>
+            {o}
           </button>
         ))}
       </div>

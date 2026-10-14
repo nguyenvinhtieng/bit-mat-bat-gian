@@ -1,4 +1,4 @@
-import { TILE, type AreaId, type RoleId, type TaskId } from '../constants';
+import { TILE, type AreaId, type TaskId } from '../constants';
 
 /**
  * Public skin for map `co-do-hue` (safe to ship to clients — contains no host truth).
@@ -10,13 +10,13 @@ export const HUE_MAP_VERSION = 1;
 const t = (v: number) => Math.round(v * TILE);
 
 export const HUE_AREAS: Record<AreaId, { name: string; nameEn: string; floor: string; tint?: number }> = {
-  courtyard_checkin: { name: 'Sân hiên / Check-in', nameEn: 'Courtyard / Check-in', floor: 'terracotta' },
-  exhibition: { name: 'Gian trưng bày', nameEn: 'Exhibition hall', floor: 'wood' },
-  corridor: { name: 'Hành lang', nameEn: 'Corridor', floor: 'carpet' },
-  coordination: { name: 'Phòng điều phối', nameEn: 'Coordination room', floor: 'jade' },
-  editing: { name: 'Phòng biên tập', nameEn: 'Editing room', floor: 'cream' },
-  archive: { name: 'Phòng lưu trữ', nameEn: 'Archive', floor: 'wood', tint: 0xd9c7a8 },
-  artifact_storage: { name: 'Kho hiện vật', nameEn: 'Artifact storage', floor: 'stone' },
+  courtyard_checkin: { name: 'Sân Ngọ Môn', nameEn: 'Ngọ Môn Courtyard', floor: 'terracotta' },
+  exhibition: { name: 'Điện Thái Hòa', nameEn: 'Thái Hòa Palace', floor: 'wood' },
+  corridor: { name: 'Hành lang Trường Lang', nameEn: 'Long Corridor', floor: 'carpet' },
+  coordination: { name: 'Duyệt Thị Đường', nameEn: 'Royal Theatre', floor: 'jade' },
+  editing: { name: 'Xưởng Mộc Bản', nameEn: 'Woodblock Workshop', floor: 'cream' },
+  archive: { name: 'Tàng Thư Lâu', nameEn: 'Archive Hall', floor: 'wood', tint: 0xd9c7a8 },
+  artifact_storage: { name: 'Kho Cổ Vật', nameEn: 'Relic Storehouse', floor: 'stone' },
 };
 
 /** Floor texture order in the packed tileset `hue-interior-48` (2x2 tiles each). */
@@ -61,49 +61,17 @@ export const HUE_PROPS: PropPlacement[] = [
 
 export type StationDef = { id: TaskId; area: AreaId; x: number; y: number; title: string; frame: number };
 
-/** hue-stations.json — common tasks. Hitbox 96x96 around (x, y). */
+/** hue-stations.json — task stations. Hitbox 96x96 around (x, y). Every task is a mini-game about Huế culture. */
 export const HUE_STATIONS: StationDef[] = [
-  { id: 'task_print_checklist', area: 'editing', x: t(16), y: t(21.3), title: 'Đối chiếu checklist in ấn', frame: 0 },
-  { id: 'task_scan_footnote', area: 'editing', x: t(26), y: t(21.3), title: 'Scan trang chú thích', frame: 1 },
-  { id: 'task_update_floor_plan', area: 'coordination', x: t(34), y: t(13), title: 'Cập nhật sơ đồ gian', frame: 2 },
-  { id: 'task_check_lights_labels', area: 'exhibition', x: t(10.5), y: t(10.5), title: 'Kiểm tra đèn & nhãn phụ', frame: 3 },
-  { id: 'task_seal_box', area: 'artifact_storage', x: t(27), y: t(29.3), title: 'Niêm phong hộp tư liệu', frame: 4 },
-  { id: 'task_return_shelf_a', area: 'archive', x: t(7), y: t(28.6), title: 'Trả sách mượn kệ A', frame: 5 },
+  { id: 'task_hue_cuisine', area: 'editing', x: t(16), y: t(21.3), title: 'Chọn món ngon xứ Huế', frame: 0 },
+  { id: 'task_woodblock', area: 'editing', x: t(26), y: t(21.3), title: 'In mộc bản triều Nguyễn', frame: 1 },
+  { id: 'task_citadel_gates', area: 'coordination', x: t(34), y: t(13), title: 'Dẫn đường vào Hoàng Thành', frame: 2 },
+  { id: 'task_lanterns', area: 'exhibition', x: t(10.5), y: t(10.5), title: 'Thắp đèn lồng đêm hội', frame: 3 },
+  { id: 'task_conical_hat', area: 'artifact_storage', x: t(27), y: t(29.3), title: 'Nón bài thơ — điền chữ còn thiếu', frame: 4 },
+  { id: 'task_heritage_quiz', area: 'archive', x: t(7), y: t(28.6), title: 'Đố vui di sản Cố đô', frame: 5 },
 ];
 
-/** hue-role-stations.json — one ability point per role (only shown to that role). */
-export const HUE_ROLE_STATIONS: Record<RoleId, { area: AreaId; x: number; y: number; title: string }> = {
-  historian: { area: 'coordination', x: t(37), y: t(15.5), title: 'Hộp thư dự án — đối chiếu email duyệt' },
-  conservator: { area: 'artifact_storage', x: t(33), y: t(29.4), title: 'Hộp bản sao — kiểm tra niêm phong' },
-  local_guide: { area: 'courtyard_checkin', x: t(25), y: t(5.6), title: 'Anh Phú — kịch bản tour mẫu' },
-  archivist: { area: 'archive', x: t(14), y: t(28.5), title: 'Máy lưu trữ — khôi phục intro_VI_EN_v2' },
-  forger: { area: 'editing', x: t(22.6), y: t(22.0), title: 'Bàn biên tập — bản nháp & nhãn phụ' },
-  broker: { area: 'coordination', x: t(38.5), y: t(11), title: 'Nhóm chat điều phối' },
-};
-
-export const HUE_NPCS = [
-  { id: 'minh-giam', name: 'Chị Minh Giám', role: 'Người Giám Tuyển' },
-  { id: 'tuan', name: 'Anh Tuấn', role: 'Biên Dịch Viên' },
-  { id: 'lan', name: 'Chị Lan', role: 'Lưu Trữ Viên (NPC)' },
-  { id: 'vi', name: 'Em Vi', role: 'Thực tập sinh' },
-  { id: 'hoa', name: 'Ông Hòa', role: 'Cố vấn Sử học' },
-  { id: 'thao', name: 'Chị Thảo', role: 'Điều phối in & logistics' },
-  { id: 'phu', name: 'Anh Phú', role: 'Hướng dẫn viên di tích' },
-] as const;
+export const HUE_STORY_TITLE = 'Đêm Hội Hoàng Cung';
 
 export const HUE_INTRO =
-  '“Bảng ‘Câu chuyện từ tư liệu’ đã treo. Đại diện đối tác địa phương nhắn: một câu tiếng Anh nghe ‘mạnh’ hơn bản các bạn gửi duyệt tuần trước. Giám tuyển yêu cầu đối chiếu trước giờ mở cửa — nếu lệch hồ sơ nghiên cứu, phải ghi rõ là do biên tập hay do dịch. Một số người trong đoàn đêm qua vẫn vào được kho tư liệu.”';
-
-/** Sentences of the public bilingual panel (the printed version players can see). */
-export const HUE_PANEL_SENTENCES = [
-  { id: 1, label: 'Câu 1 — mô tả trình tự buổi lễ trong không gian cung đình' },
-  { id: 2, label: 'Câu 2 — các bước được chuẩn bị từ sáng sớm' },
-  { id: 3, label: 'Câu 3 — chi tiết trang phục và quy mô buổi lễ' },
-] as const;
-
-export const HUE_WHEN_OPTIONS = [
-  { id: 'week_before', label: 'Tuần trước (bản v2 được góp ý)' },
-  { id: 'two_days_before', label: 'Hai ngày trước khai mạc' },
-  { id: 'night_before', label: 'Đêm trước khai mạc (export v3 / in thử)' },
-  { id: 'morning', label: 'Sáng khai mạc (khi treo bảng)' },
-] as const;
+  'Đêm nay Đại Nội Huế thắp hàng nghìn ngọn đèn lồng cho Đêm Hội Hoàng Cung. Đoàn nghệ nhân, đầu bếp, nhạc công và hướng dẫn viên phải chuẩn bị xong trước khi đèn lên. Nhưng có kẻ lạ trà trộn trong đoàn — Hắc Ảnh — muốn dập tắt từng ngọn đèn, từng con người. Hãy hoàn thành công việc, giữ vững đoàn, và tìm ra Hắc Ảnh trước khi quá muộn.';

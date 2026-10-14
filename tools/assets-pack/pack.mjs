@@ -460,6 +460,9 @@ async function packMeta() {
 }
 
 await packPlayer();
+// map costume (tools/char-art/draw-characters.mjs) overrides the common avatar in-game
+if (exists(path.join(PUB, 'maps/co-do-hue/characters/hue-player-atlas.webp')))
+  manifest.textures.mapPlayer = { atlas: 'maps/co-do-hue/characters/hue-player-atlas', tint: 'maps/co-do-hue/characters/hue-player-tint-atlas', frame: [48, 64], anchor: [0.5, 1], costume: 'áo dài + khăn đóng' };
 await packUi();
 await packRoles();
 await packTileset();

@@ -1,5 +1,5 @@
 import { Client, type Room } from 'colyseus.js';
-import { PLAYER_COLORS, ROOM_NAME, type ClientMessages, type Clue } from '@hidden-truth/shared';
+import { PLAYER_COLORS, ROOM_NAME, type ClientMessages, type Cinematic } from '@hidden-truth/shared';
 import { useStore, type RoomView } from './store';
 
 function endpoint(): string {
@@ -31,34 +31,41 @@ const TOKEN_KEY = 'tht:reconnect';
 function snapshot(state: any): RoomView {
   const players: RoomView['players'] = [];
   state.players.forEach((p: any) =>
-    players.push({ id: p.id, name: p.name, color: PLAYER_COLORS[p.color] ?? 0xffffff, ready: p.ready, connected: p.connected, tasksDone: p.tasksDone, voted: p.voted, emergencyUsed: p.emergencyUsed }),
-  );
-  const board: RoomView['board'] = [];
-  state.board.forEach((c: any) =>
-    board.push({ id: c.id, title: c.title, body: c.body, source: c.source, art: c.art || undefined, trace: c.trace || undefined, diff: c.diff ? JSON.parse(c.diff) : undefined, by: c.by }),
+    players.push({
+      id: p.id,
+      name: p.name,
+      color: PLAYER_COLORS[p.color] ?? 0xffffff,
+      ready: p.ready,
+      connected: p.connected,
+      tasksDone: p.tasksDone,
+      voted: p.voted,
+      emergencyUsed: p.emergencyUsed,
+      alive: p.alive,
+      body: p.body,
+      bodyX: p.bodyX,
+      bodyY: p.bodyY,
+    }),
   );
   return {
     code: state.code,
+    mapSlug: state.mapSlug,
     hostId: state.hostId,
     phase: state.phase,
-    round: state.round,
-    maxRounds: state.maxRounds,
     phaseEndsAt: state.phaseEndsAt,
     progress: state.progress,
     progressTarget: state.progressTarget,
-    finalMeeting: state.finalMeeting,
     meetingReason: state.meetingReason,
-    variantChoice: state.variantChoice,
     quick: state.quick,
     players,
-    board,
   };
 }
+
+let pingTimer: ReturnType<typeof setInterval> | undefined;
 
 function bind(r: Room) {
   room = r;
   const st = useStore.getState();
-  st.set({ screen: 'room', sessionId: r.sessionId, error: '', connecting: false, end: null, me: null, chat: [] });
+  st.set({ screen: 'room', sessionId: r.sessionId, error: '', connecting: false, end: null, me: null, chat: [], voteResult: null });
   sessionStorage.setItem(TOKEN_KEY, r.reconnectionToken);
   history.replaceState(null, '', `/join/${r.roomId}`);
 
@@ -71,8 +78,8 @@ function bind(r: Room) {
     last = key;
     const s = useStore.getState();
     if (snap.phase !== lastPhase) {
-      if (snap.phase === 'meeting' || snap.phase === 'conclusion') s.set({ task: null, taskResult: null, ability: null, abilityResult: null, notebookOpen: false });
-      if (snap.phase === 'lobby') s.set({ end: null, me: null });
+      if (snap.phase === 'meeting') s.set({ task: null, taskResult: null, voteResult: null });
+      if (snap.phase === 'lobby') s.set({ end: null, me: null, voteResult: null });
       lastPhase = snap.phase;
     }
     s.set({ room: snap });
@@ -83,27 +90,33 @@ function bind(r: Room) {
     const s = useStore.getState();
     const first = !s.me && me;
     s.set({ me });
-    if (first && s.room?.phase === 'explore') s.set({ introOpen: true });
+    if (first && s.room?.phase === 'explore') s.set({ introOpen: true, introQuick: false });
   });
-  r.onMessage('intro', () => useStore.getState().set({ introOpen: true }));
+  r.onMessage('intro', () => useStore.getState().set({ introOpen: true, introQuick: false }));
   r.onMessage('chat:history', (list) => useStore.getState().set({ chat: list }));
   r.onMessage('chat', (m) => useStore.getState().set({ chat: [...useStore.getState().chat, m].slice(-200) }));
   r.onMessage('toast', (t) => useStore.getState().toast(t));
   r.onMessage('task:data', (task) => useStore.getState().set({ task, taskResult: null }));
-  r.onMessage('task:result', (res: { ok: boolean; text: string; clues?: Clue[] }) => {
+  r.onMessage('task:result', (res: { ok: boolean; text: string; fact?: string }) => {
     const s = useStore.getState();
     if (res.ok) s.set({ taskResult: res });
     else s.toast({ text: res.text, kind: 'warn' });
   });
-  r.onMessage('task:close', () => useStore.getState().set({ task: null, taskResult: null, ability: null, abilityResult: null }));
-  r.onMessage('ability:data', (ability) => useStore.getState().set({ ability, abilityResult: null }));
-  r.onMessage('ability:result', (res) => useStore.getState().set({ abilityResult: res }));
+  r.onMessage('task:close', () => useStore.getState().set({ task: null, taskResult: null }));
+  r.onMessage('vote:result', (voteResult) => useStore.getState().set({ voteResult }));
+  r.onMessage('cinematic', (c: Cinematic) => useStore.getState().set({ cinematic: { ...c, id: Date.now() } }));
   r.onMessage('end', (end) => useStore.getState().set({ end }));
   r.onMessage('teleport', () => {});
+  r.onMessage('pong', (t: number) => useStore.getState().set({ ping: Math.round(performance.now() - t) }));
+  if (pingTimer) clearInterval(pingTimer);
+  pingTimer = setInterval(() => r.send('ping', performance.now()), 3000);
+  r.send('ping', performance.now());
 
   r.onLeave((code) => {
     room = null;
-    if (code > 1000) {
+    if (pingTimer) clearInterval(pingTimer);
+    useStore.getState().set({ ping: 0 });
+    if (code > 1000 && code !== 4001) {
       // unexpected disconnect -> try to reconnect once
       reconnect().then((ok) => {
         if (!ok) useStore.getState().set({ screen: 'home', room: null, error: 'Mất kết nối với phòng.' });
@@ -125,10 +138,10 @@ function friendly(e: unknown): string {
   return msg;
 }
 
-export async function createRoom(name: string) {
+export async function createRoom(name: string, map?: string) {
   useStore.getState().set({ connecting: true, error: '' });
   try {
-    bind(await client.create(ROOM_NAME, { name }));
+    bind(await client.create(ROOM_NAME, { name, map }));
   } catch (e) {
     useStore.getState().set({ connecting: false, error: friendly(e) });
   }

@@ -4,9 +4,9 @@ import {
   AREA_ORDER,
   HUE_AREAS,
   HUE_PROPS,
-  HUE_ROLE_STATIONS,
   HUE_STATIONS,
   HUE_TILESET_ORDER,
+  GAME,
   INTERACT_RADIUS,
   LAYOUT_H,
   LAYOUT_W,
@@ -18,6 +18,8 @@ import {
   dirFromInput,
   dist,
   getGrid,
+  hasLineOfSight,
+  playerArt,
   stepMovement,
   type TaskId,
 } from '@hidden-truth/shared';
@@ -26,7 +28,15 @@ import { uiBlocksMovement, useStore, type Nearby } from '../store';
 
 const A = '/assets';
 const DIRS = ['down', 'left', 'right', 'up'] as const;
-const INTERP_MS = 100;
+const INTERP_MS = 140; // > 2 patch intervals (PATCH_MS=50) to absorb network jitter
+/** FX strips: 6 frames x 256px (tools/ui-art/draw-fx.mjs). rate = fps, size = on-screen px in world units */
+const FX = {
+  'fx-kill-slash': { rate: 16, size: 120 },
+  'fx-shield-block': { rate: 10, size: 110 },
+  'fx-witness': { rate: 14, size: 64 },
+  'fx-report-burst': { rate: 10, size: 110 },
+} as const;
+type FxKey = keyof typeof FX;
 
 type Snap = { t: number; x: number; y: number };
 type Avatar = {
@@ -38,14 +48,15 @@ type Avatar = {
   dir: number;
   moving: boolean;
   lastMoveAt: number;
+  name: string;
+  alive: boolean;
 };
 
 export class GameScene extends Phaser.Scene {
   private grid = getGrid();
   private avatars = new Map<string, Avatar>();
   private stationSprites = new Map<TaskId, { icon: Phaser.GameObjects.Image; ring: Phaser.GameObjects.Image }>();
-  private roleMarker?: Phaser.GameObjects.Container;
-  private roleMarkerRole = '';
+  private bodies = new Map<string, Phaser.GameObjects.Container>();
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   // prediction
   private pred = { x: 0, y: 0 };
@@ -61,6 +72,8 @@ export class GameScene extends Phaser.Scene {
   private unbind: (() => void)[] = [];
   private lastNearbyKey = '';
   private lastArea = '';
+  private fog?: Phaser.GameObjects.RenderTexture;
+  private fogBrush?: Phaser.GameObjects.Image;
 
   constructor() {
     super('game');
@@ -69,9 +82,13 @@ export class GameScene extends Phaser.Scene {
   preload() {
     this.load.spritesheet('hue-tiles', `${A}/maps/co-do-hue/tileset/hue-interior-48.webp`, { frameWidth: TILE, frameHeight: TILE });
     this.load.atlas('hue', `${A}/maps/co-do-hue/atlas/hue-gameplay-0.webp`, `${A}/maps/co-do-hue/atlas/hue-gameplay-0.json`);
-    this.load.atlas('player', `${A}/common/characters/player-atlas.webp`, `${A}/common/characters/player-atlas.json`);
-    this.load.atlas('player-tint', `${A}/common/characters/player-tint-atlas.webp`, `${A}/common/characters/player-tint-atlas.json`);
+    // costume follows the map (Huế: áo dài + khăn đóng…), common avatar otherwise
+    const art = playerArt(useStore.getState().room?.mapSlug);
+    this.load.atlas('player', `${A}/${art.atlas}.webp`, `${A}/${art.atlas}.json`);
+    this.load.atlas('player-tint', `${A}/${art.tint}.webp`, `${A}/${art.tint}.json`);
     this.load.image('shadow', `${A}/common/characters/shadow.webp`);
+    this.load.image('body-marker', `${A}/common/ui/body-marker.webp`);
+    for (const k of Object.keys(FX)) this.load.spritesheet(k, `${A}/common/ui/fx/${k}.webp`, { frameWidth: 256, frameHeight: 256 });
   }
 
   create() {
@@ -88,11 +105,16 @@ export class GameScene extends Phaser.Scene {
         }),
       );
 
+    for (const [k, v] of Object.entries(FX)) this.anims.create({ key: k, frames: this.anims.generateFrameNumbers(k, { start: 0, end: 5 }), frameRate: v.rate });
+
     const kb = this.input.keyboard!;
     this.keys = kb.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,E,SPACE', false) as Record<string, Phaser.Input.Keyboard.Key>;
     kb.on('keydown-E', () => this.interact());
     kb.on('keydown-SPACE', () => this.interact());
+    kb.on('keydown-K', () => this.doKill());
+    kb.on('keydown-R', () => this.doReport());
 
+    this.buildFog();
     const cam = this.cameras.main;
     cam.setBounds(0, 0, LAYOUT_W * TILE, LAYOUT_H * TILE);
     cam.setBackgroundColor('#1b120d');
@@ -101,8 +123,8 @@ export class GameScene extends Phaser.Scene {
     this.scale.on('resize', () => this.fitZoom());
 
     this.unbind.push(onRoom((r) => this.bindRoom(r)));
-    this.unbind.push(useStore.subscribe((s, prev) => s.me?.role !== prev.me?.role && this.refreshRoleMarker()));
-    this.unbind.push(useStore.subscribe((s, prev) => s.me?.completedTasks !== prev.me?.completedTasks && this.refreshStations()));
+    this.unbind.push(useStore.subscribe((s, prev) => s.cinematic && s.cinematic !== prev.cinematic && this.onCinematic(s.cinematic)));
+    this.unbind.push(useStore.subscribe((s, prev) => (s.me?.completedTasks !== prev.me?.completedTasks || s.me?.tasks !== prev.me?.tasks) && this.refreshStations()));
     this.events.once('shutdown', () => this.unbind.forEach((u) => u()));
   }
 
@@ -138,6 +160,31 @@ export class GameScene extends Phaser.Scene {
     layer.setDepth(-10);
   }
 
+  /** Dark overlay with a soft circular hole around me; limits what a living player can see. */
+  private buildFog() {
+    const R = GAME.visionRadius;
+    const size = R * 2 + 64;
+    const tex = this.textures.createCanvas('fog-brush', size, size)!;
+    const ctx = tex.getContext();
+    const gr = ctx.createRadialGradient(size / 2, size / 2, R * 0.55, size / 2, size / 2, R + 24);
+    gr.addColorStop(0, 'rgba(255,255,255,1)');
+    gr.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gr;
+    ctx.fillRect(0, 0, size, size);
+    tex.refresh();
+    this.fogBrush = this.make.image({ key: 'fog-brush', add: false }).setOrigin(0.5);
+    this.fog = this.add.renderTexture(0, 0, LAYOUT_W * TILE, LAYOUT_H * TILE).setOrigin(0).setDepth(100000).setVisible(false);
+  }
+
+  private updateFog(me: { x: number; y: number } | null, show: boolean) {
+    const fog = this.fog;
+    if (!fog) return;
+    fog.setVisible(show && !!me);
+    if (!show || !me) return;
+    fog.fill(0x0a0605, 0.94);
+    fog.erase(this.fogBrush!, me.x, me.y - 30);
+  }
+
   private buildProps() {
     for (const p of HUE_PROPS) {
       const img = this.add.image(p.x, p.y, 'hue', p.key).setOrigin(0.5, 1);
@@ -156,34 +203,24 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /** Highlight only the stations assigned to me; finished / foreign stations are dimmed. */
   private refreshStations() {
-    const done = new Set(useStore.getState().me?.completedTasks ?? []);
+    const me = useStore.getState().me;
+    const mine = new Set(me?.tasks ?? []);
+    const done = new Set(me?.completedTasks ?? []);
     for (const [id, s] of this.stationSprites) {
-      const isDone = done.has(id);
-      s.icon.setTint(isDone ? 0x777777 : 0xffffff).setAlpha(isDone ? 0.7 : 1);
-      s.ring.setVisible(!isDone);
+      const active = mine.has(id) && !done.has(id);
+      s.icon.setTint(active ? 0xffffff : 0x777777).setAlpha(active ? 1 : 0.55);
+      s.ring.setVisible(active);
     }
-  }
-
-  private refreshRoleMarker() {
-    const role = useStore.getState().me?.role;
-    if (role === this.roleMarkerRole) return;
-    this.roleMarker?.destroy();
-    this.roleMarker = undefined;
-    this.roleMarkerRole = role ?? '';
-    if (!role) return;
-    const st = HUE_ROLE_STATIONS[role];
-    const ring = this.add.image(0, 0, 'hue', 'task-marker').setDisplaySize(72, 72).setTint(0xa8e6ff);
-    const icon = this.add.image(0, -6, 'hue', `ability-${role}`).setDisplaySize(40, 40);
-    this.roleMarker = this.add.container(st.x, st.y, [ring, icon]).setDepth(st.y - 20);
-    this.tweens.add({ targets: ring, alpha: 0.4, yoyo: true, repeat: -1, duration: 700 });
-    icon.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.interact());
   }
 
   // ------------------------------------------------------------ network
   private bindRoom(r: Room) {
     for (const a of this.avatars.values()) a.c.destroy();
     this.avatars.clear();
+    for (const b of this.bodies.values()) b.destroy();
+    this.bodies.clear();
     this.pending = [];
     this.hasServerPos = false;
     const $ = getStateCallbacks(r);
@@ -191,6 +228,8 @@ export class GameScene extends Phaser.Scene {
     const players = $(r.state as any).players as any;
     players.onAdd((p: any, id: string) => {
       const av = this.makeAvatar(p.name, PLAYER_COLORS[p.color] ?? 0xffffff);
+      av.name = p.name;
+      av.alive = p.alive;
       av.c.setPosition(p.x, p.y);
       av.buf.push({ t: performance.now(), x: p.x, y: p.y });
       this.avatars.set(id, av);
@@ -199,9 +238,12 @@ export class GameScene extends Phaser.Scene {
         this.hasServerPos = true;
         this.cameras.main.startFollow(av.c, true, 0.18, 0.18);
       }
+      this.syncBody(id, p, false);
       $(p).onChange(() => {
         av.label.setText(p.name);
-        av.c.setAlpha(p.connected ? 1 : 0.4);
+        av.name = p.name;
+        av.alive = p.alive;
+        this.syncBody(id, p, true);
         if (id === r.sessionId) this.reconcile(p.x, p.y, p.lastSeq);
         else {
           av.buf.push({ t: performance.now(), x: p.x, y: p.y });
@@ -214,8 +256,9 @@ export class GameScene extends Phaser.Scene {
     players.onRemove((_p: unknown, id: string) => {
       this.avatars.get(id)?.c.destroy();
       this.avatars.delete(id);
+      this.bodies.get(id)?.destroy();
+      this.bodies.delete(id);
     });
-    this.refreshRoleMarker();
     this.refreshStations();
   }
 
@@ -228,7 +271,64 @@ export class GameScene extends Phaser.Scene {
       .setOrigin(0.5, 1)
       .setResolution(2);
     const c = this.add.container(0, 0, [shadow, base, tint, label]);
-    return { c, base, tint, label, buf: [], dir: 0, moving: false, lastMoveAt: 0 };
+    return { c, base, tint, label, buf: [], dir: 0, moving: false, lastMoveAt: 0, name, alive: true };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private syncBody(id: string, p: any, live: boolean) {
+    const existing = this.bodies.get(id);
+    if (!p.body) {
+      existing?.destroy();
+      this.bodies.delete(id);
+      return;
+    }
+    if (existing) return;
+    const shadow = this.add.image(0, -2, 'shadow').setDisplaySize(40, 16);
+    const base = this.add.sprite(0, -6, 'player', 'walk-down-0').setOrigin(0.5, 1).setAngle(90).setAlpha(0.9);
+    const tint = this.add.sprite(0, -6, 'player-tint', 'walk-down-0').setOrigin(0.5, 1).setAngle(90).setTint(PLAYER_COLORS[p.color] ?? 0xffffff).setAlpha(0.9);
+    const mark = this.add.image(0, -30, 'body-marker').setDisplaySize(30, 30).setOrigin(0.5, 1);
+    const c = this.add.container(p.bodyX, p.bodyY, [shadow, base, tint, mark]).setDepth(p.bodyY - 1);
+    this.tweens.add({ targets: mark, y: -40, yoyo: true, repeat: -1, duration: 700 });
+    this.bodies.set(id, c);
+    // collapse-in effect + expanding red ring
+    c.setAlpha(0).setScale(1.4);
+    this.tweens.add({ targets: c, alpha: 1, scale: 1, duration: 350, ease: 'Bounce.easeOut' });
+    const ring = this.add.circle(p.bodyX, p.bodyY, 6, 0xff3b2a, 0.5).setDepth(p.bodyY - 2);
+    this.tweens.add({ targets: ring, radius: 60, alpha: 0, duration: 700, ease: 'Cubic.easeOut', onComplete: () => ring.destroy() });
+    this.cameras.main.shake(180, 0.004);
+    // a fresh kill (not a body that already existed when we joined): slash FX on the spot
+    if (live && useStore.getState().room?.phase === 'explore' && this.canSee(p.bodyX, p.bodyY)) this.playFx('fx-kill-slash', p.bodyX, p.bodyY - 34);
+  }
+
+  /** One-shot FX sprite in the world; destroyed when the animation ends. */
+  private playFx(key: FxKey, x: number, y: number, follow?: Phaser.GameObjects.Container) {
+    const fx = this.add.sprite(x, y, key, 0).setDisplaySize(FX[key].size, FX[key].size).setDepth(y + 10000);
+    fx.play(key);
+    const tick = follow ? () => fx.setPosition(follow.x, follow.y - 84) : null;
+    if (tick) this.events.on('postupdate', tick);
+    fx.once('animationcomplete', () => {
+      if (tick) this.events.off('postupdate', tick);
+      fx.destroy();
+    });
+  }
+
+  /** Server cinematics -> matching in-world FX (the React overlay handles the full-screen part). */
+  private onCinematic(c: { kind: string; at?: { x: number; y: number } }) {
+    const me = room ? this.avatars.get(room.sessionId) : undefined;
+    if (c.kind === 'shield' && c.at) this.playFx('fx-shield-block', c.at.x, c.at.y - 34);
+    else if (c.kind === 'witness' && me) this.playFx('fx-witness', me.c.x, me.c.y - 84, me.c);
+    else if (c.kind === 'report' && me) this.playFx('fx-report-burst', me.c.x, me.c.y - 40);
+  }
+
+  /** Same rule as the fog: a living player only sees within vision radius and line of sight. */
+  private canSee(x: number, y: number) {
+    const r = room;
+    const mine = r ? this.avatars.get(r.sessionId) : undefined;
+    const iAmGhost = mine ? !mine.alive : false;
+    const lobby = useStore.getState().room?.phase !== 'explore';
+    if (iAmGhost || lobby || !mine) return true;
+    const eye = { x: this.pred.x, y: this.pred.y - 30 };
+    return Math.hypot(x - this.pred.x, y - this.pred.y) <= GAME.visionRadius && hasLineOfSight(this.grid, eye, { x, y: y - 30 });
   }
 
   private reconcile(sx: number, sy: number, lastSeq: number) {
@@ -264,6 +364,7 @@ export class GameScene extends Phaser.Scene {
     const s = useStore.getState();
     if (s.room?.phase !== 'explore' || uiBlocksMovement()) return;
     const st = HUE_STATIONS.find((x) => x.id === id)!;
+    if (!s.me?.tasks.includes(id)) return s.toast({ text: 'Đây không phải nhiệm vụ của bạn.', kind: 'info' });
     if (dist(this.pred, st) > INTERACT_RADIUS) return s.toast({ text: `Lại gần “${st.title}” để làm nhiệm vụ.`, kind: 'info' });
     send('task:open', { taskId: id });
   }
@@ -273,36 +374,66 @@ export class GameScene extends Phaser.Scene {
     const n = s.nearby;
     if (!n || uiBlocksMovement()) return;
     if (n.kind === 'task') this.tryTask(n.id);
-    else if (n.kind === 'ability') send('ability:open', {});
+    else if (n.kind === 'report') send('report', {});
     else if (n.kind === 'emergency') send('emergency', {});
+  }
+
+  private doKill() {
+    const s = useStore.getState();
+    if (s.me?.faction !== 'killer' || s.room?.phase !== 'explore' || uiBlocksMovement()) return;
+    send('kill', {});
+  }
+
+  private doReport() {
+    const s = useStore.getState();
+    if (s.room?.phase !== 'explore' || uiBlocksMovement()) return;
+    send('report', {});
+  }
+
+  private myView() {
+    const s = useStore.getState();
+    return s.room?.players.find((p) => p.id === s.sessionId);
   }
 
   private computeNearby(): Nearby {
     const s = useStore.getState();
     if (s.room?.phase !== 'explore') return null;
+    const me = this.myView();
+    const alive = me?.alive !== false;
+    if (alive) {
+      const body = s.room.players.find((p) => p.body && dist(this.pred, { x: p.bodyX, y: p.bodyY }) <= GAME.reportRange);
+      if (body) return { kind: 'report', title: `Báo cáo thi thể của ${body.name}` };
+    }
     let best: Nearby = null;
     let bestD = INTERACT_RADIUS;
     const done = new Set(s.me?.completedTasks ?? []);
+    const mine = new Set(s.me?.tasks ?? []);
     for (const st of HUE_STATIONS) {
+      if (!mine.has(st.id)) continue;
       const d = dist(this.pred, st);
       if (d < bestD) {
         bestD = d;
         best = { kind: 'task', id: st.id, title: st.title, done: done.has(st.id) };
       }
     }
-    if (s.me) {
-      const rs = HUE_ROLE_STATIONS[s.me.role];
-      const d = dist(this.pred, rs);
-      if (d < bestD) {
-        bestD = d;
-        best = { kind: 'ability', title: rs.title, used: s.me.abilityUsedRound >= (s.room?.round ?? 0) };
-      }
-    }
-    const me = s.room?.players.find((p) => p.id === s.sessionId);
-    if (dist(this.pred, MEETING_POINT) < INTERACT_RADIUS + 50 && bestD >= INTERACT_RADIUS) {
+    if (alive && dist(this.pred, MEETING_POINT) < INTERACT_RADIUS + 50 && bestD >= INTERACT_RADIUS) {
       best = { kind: 'emergency', title: 'Rung chuông gọi họp khẩn', used: !!me?.emergencyUsed };
     }
     return best;
+  }
+
+  /** Is someone killable within range? (client hint only; the server decides) */
+  private computeKillTarget(): boolean {
+    const s = useStore.getState();
+    if (s.me?.faction !== 'killer' || s.room?.phase !== 'explore') return false;
+    const me = this.myView();
+    if (!me?.alive) return false;
+    const mates = new Set(s.me.mates ?? []);
+    for (const [id, av] of this.avatars) {
+      if (id === s.sessionId || !av.alive || mates.has(av.name)) continue;
+      if (dist(this.pred, { x: av.c.x, y: av.c.y }) <= GAME.killRange) return true;
+    }
+    return false;
   }
 
   // ------------------------------------------------------------ loop
@@ -335,9 +466,18 @@ export class GameScene extends Phaser.Scene {
     // own avatar
     const mine = this.avatars.get(r.sessionId);
     if (mine && this.hasServerPos) {
-      this.renderOffset.x *= 0.82;
-      this.renderOffset.y *= 0.82;
-      mine.c.setPosition(this.pred.x + this.renderOffset.x, this.pred.y + this.renderOffset.y);
+      const dts = Math.min(dtMs, 100) / 1000;
+      const decay = Math.exp(-dts * 12);
+      this.renderOffset.x *= decay;
+      this.renderOffset.y *= decay;
+      const tx = this.pred.x + this.renderOffset.x, ty = this.pred.y + this.renderOffset.y;
+      // pred advances in 30Hz steps; ease the sprite toward it every frame so motion is smooth at any fps
+      const gap = Math.hypot(tx - mine.c.x, ty - mine.c.y);
+      if (gap > 96) mine.c.setPosition(tx, ty);
+      else {
+        const k = 1 - Math.exp(-dts * 30);
+        mine.c.setPosition(mine.c.x + (tx - mine.c.x) * k, mine.c.y + (ty - mine.c.y) * k);
+      }
       this.animate(mine, this.myDir, this.myMoving);
     }
     // others — interpolate
@@ -364,7 +504,20 @@ export class GameScene extends Phaser.Scene {
       // keep the walk anim through tiny network gaps
       this.animate(av, av.dir, moving || performance.now() - av.lastMoveAt < 120);
     }
-    for (const av of this.avatars.values()) av.c.setDepth(av.c.y);
+    const iAmGhost = mine ? !mine.alive : false;
+    const lobby = useStore.getState().room?.phase !== 'explore';
+    const limited = !iAmGhost && !lobby && !!mine;
+    const eye = { x: this.pred.x, y: this.pred.y - 30 };
+    const canSee = (x: number, y: number) =>
+      !limited || (Math.hypot(x - this.pred.x, y - this.pred.y) <= GAME.visionRadius && hasLineOfSight(this.grid, eye, { x, y: y - 30 }));
+    for (const [id, av] of this.avatars) {
+      av.c.setDepth(av.c.y);
+      if (id === r.sessionId) av.c.setVisible(true).setAlpha(av.alive ? 1 : 0.5);
+      else if (!av.alive) av.c.setVisible(iAmGhost).setAlpha(0.45);
+      else av.c.setVisible(canSee(av.c.x, av.c.y)).setAlpha(1);
+    }
+    for (const b of this.bodies.values()) b.setVisible(canSee(b.x, b.y));
+    this.updateFog(limited ? this.pred : null, limited);
 
     // UI bridge (only on change)
     const nearby = this.computeNearby();
@@ -373,6 +526,12 @@ export class GameScene extends Phaser.Scene {
       this.lastNearbyKey = nk;
       useStore.getState().set({ nearby });
     }
+    const kt = this.computeKillTarget();
+    if (kt !== useStore.getState().killTarget) useStore.getState().set({ killTarget: kt });
+    const px = Math.round((this.pred.x / TILE) * 2) / 2;
+    const py = Math.round((this.pred.y / TILE) * 2) / 2;
+    const cur = useStore.getState().pos;
+    if (!cur || cur.x !== px || cur.y !== py) useStore.getState().set({ pos: { x: px, y: py } });
     const area = areaAt(this.grid, this.pred.x, this.pred.y) ?? '';
     if (area && area !== this.lastArea) {
       this.lastArea = area;

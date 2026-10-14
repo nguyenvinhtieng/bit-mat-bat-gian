@@ -3,3 +3,4 @@ export * from './layout';
 export * from './movement';
 export * from './protocol';
 export * from './maps/co-do-hue';
+export * from './maps/catalog';

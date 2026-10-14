@@ -4,9 +4,10 @@ import { Home } from './ui/Home';
 import { Hud } from './ui/Hud';
 import { LobbyPanel } from './ui/LobbyPanel';
 import { TaskModal } from './ui/TaskModal';
-import { AbilityModal, IntroModal, Notebook } from './ui/Panels';
+import { IntroModal } from './ui/Panels';
 import { Meeting } from './ui/Meeting';
 import { EndScreen } from './ui/EndScreen';
+import { Cinematic } from './ui/Cinematic';
 import { Toasts } from './ui/common';
 import { Joystick } from './ui/Joystick';
 
@@ -29,12 +30,11 @@ export function App() {
       <div className="ui-layer">
         <Hud />
         {phase === 'lobby' && <LobbyPanel />}
-        {(phase === 'meeting' || phase === 'conclusion') && <Meeting />}
+        {(phase === 'meeting' || phase === 'reveal') && <Meeting />}
         {phase === 'ended' && end && <EndScreen />}
         <TaskModal />
-        <AbilityModal />
-        <Notebook />
         <IntroModal />
+        <Cinematic />
         {(phase === 'lobby' || phase === 'explore') && <Joystick />}
       </div>
       <Toasts />

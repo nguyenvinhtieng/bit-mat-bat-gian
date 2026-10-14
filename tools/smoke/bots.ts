@@ -1,14 +1,13 @@
 /**
  * Headless end-to-end smoke test against a running server (pnpm dev:server).
  * N bot clients: create/join by code, start, walk to a station (server-validated movement),
- * solve a task, use ability, meeting chat + share clues, conclude, check end reveal.
+ * killer hunts a villager, body report, vote, end reveal.
  *   pnpm smoke            (default 4 bots)
  */
 import { Client, type Room } from 'colyseus.js';
 import {
-  HUE_ROLE_STATIONS,
+  GAME,
   HUE_STATIONS,
-  MEETING_POINT,
   ROOM_NAME,
   SIM_DT,
   getGrid,
@@ -24,7 +23,7 @@ const grid = getGrid();
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const log = (...a: unknown[]) => console.log('[smoke]', ...a);
 
-type Bot = { room: Room<any>; name: string; me?: PrivateInfo; seq: number; task?: TaskData; lastResult?: any; end?: any };
+type Bot = { room: Room<any>; name: string; me?: PrivateInfo; seq: number; task?: TaskData; lastResult?: any; end?: any; voteResult?: any };
 
 /** BFS path on tile grid -> list of waypoints. */
 function path(from: Vec, to: Vec): Vec[] {
@@ -82,18 +81,13 @@ async function walkTo(b: Bot, target: Vec) {
 
 function solve(t: TaskData): unknown {
   switch (t.taskId) {
-    case 'task_print_checklist':
-      return t.items.filter((i) => i.log === 'ok').map((i) => i.id);
-    case 'task_scan_footnote':
+    case 'task_woodblock':
       return { held: true };
-    case 'task_update_floor_plan':
+    case 'task_citadel_gates':
+    case 'task_lanterns':
       return t.sequence;
-    case 'task_check_lights_labels':
-      return t.lights;
-    case 'task_seal_box':
-      return t.sealNumber;
-    case 'task_return_shelf_a':
-      return t.bookCode.split('/ ')[1];
+    default:
+      return null; // cuisine / quizzes: the answer never leaves the server
   }
 }
 
@@ -101,8 +95,7 @@ function wire(b: Bot) {
   b.room.onMessage('private', (m) => (b.me = m));
   b.room.onMessage('task:data', (t) => (b.task = t));
   b.room.onMessage('task:result', (r) => (b.lastResult = r));
-  b.room.onMessage('ability:data', () => {});
-  b.room.onMessage('ability:result', (r) => (b.lastResult = r));
+  b.room.onMessage('vote:result', (r) => (b.voteResult = r));
   b.room.onMessage('end', (e) => (b.end = e));
   for (const t of ['chat', 'chat:history', 'toast', 'intro', 'teleport', 'task:close', 'time']) b.room.onMessage(t, () => {});
 }
@@ -121,7 +114,7 @@ async function main() {
   wire(host);
   await until(() => host.room.state.code, 3000, 'code');
   const code = host.room.state.code as string;
-  log('room code', code, '(roomId', host.room.roomId + ')');
+  log('room code', code);
   const bots = [host];
   for (let i = 1; i < N; i++) {
     const b: Bot = { room: await new Client(URL).joinById(code, { name: `Bot-${i}` }), name: `Bot-${i}`, seq: 0 };
@@ -129,72 +122,69 @@ async function main() {
     bots.push(b);
   }
   await until(() => host.room.state.players.size === N, 3000, 'players joined');
-  log('players', host.room.state.players.size);
 
-  // collision check: try to walk north into the wall
-  const p0 = host.room.state.players.get(host.room.sessionId);
-  host.room.send('input', Array.from({ length: 10 }, () => ({ seq: ++host.seq, dx: 0, dy: -1 })));
-  await sleep(600);
-  const p1 = host.room.state.players.get(host.room.sessionId);
-  log('moved north', p0.y, '->', p1.y, '(wall top of courtyard at y>=55)');
-  if (p1.y < 48 + 7 - 0.1) throw new Error('walked through wall');
-
-  host.room.send('configure', { variant: 'HUE-A', quick: true });
+  host.room.send('configure', { quick: true });
   await sleep(200);
   host.room.send('start', {});
   await until(() => host.room.state.phase === 'explore' && bots.every((b) => b.me), 4000, 'explore + private');
   log('roles', bots.map((b) => `${b.name}:${b.me!.role}`).join(', '));
+  const killer = bots.find((b) => b.me!.faction === 'killer')!;
+  const crew = bots.filter((b) => b.me!.faction === 'crew');
+  if (!killer) throw new Error('no killer assigned');
+  if (killer.me!.tasks.length === 0) throw new Error('killer has no fake task list');
 
-  // every bot does one task at a different station; host also does the ability
-  await Promise.all(
-    bots.map(async (b, i) => {
-      const st = HUE_STATIONS[i % HUE_STATIONS.length];
-      const d = await walkTo(b, st);
-      b.room.send('task:open', { taskId: st.id });
-      await until(() => b.task, 4000, `${b.name} task:data (dist ${d.toFixed(1)})`);
-      if (b.task!.taskId === 'task_scan_footnote') await sleep(1800);
-      b.room.send('task:submit', { taskId: st.id, answer: solve(b.task!) });
-      await until(() => b.lastResult?.ok, 4000, `${b.name} task result`);
-      log(`${b.name} completed ${st.id} -> clue "${b.lastResult.clues[0].title}"`);
-      b.lastResult = undefined;
-      const rs = HUE_ROLE_STATIONS[b.me!.role];
-      await walkTo(b, rs);
-      b.room.send('ability:use', { option: b.me!.role === 'forger' ? 'plant_note' : b.me!.role === 'broker' ? 'hold' : 'use' });
-      await until(() => b.lastResult?.clue, 4000, `${b.name} ability`);
-      log(`${b.name} ability(${b.me!.role}) -> "${b.lastResult.clue.title}"`);
-    }),
-  );
-  log('progress', host.room.state.progress, '/', host.room.state.progressTarget);
-
-  // emergency meeting from the table
-  await walkTo(host, { x: MEETING_POINT.x, y: MEETING_POINT.y + 60 });
-  host.room.send('emergency', {});
-  await until(() => host.room.state.phase === 'meeting', 4000, 'meeting');
-  log('meeting:', host.room.state.meetingReason);
-  for (const b of bots) {
-    b.room.send('chat', { text: `${b.name}: tôi có ${b.me!.notebook.length} manh mối` });
-    for (const cl of b.me!.notebook) b.room.send('clue:share', { clueId: cl.id });
+  // a crew member completes a real task -> shared progress goes up
+  const worker = crew[0];
+  const tid = worker.me!.tasks.find((id) => id === 'task_woodblock' || id === 'task_citadel_gates' || id === 'task_lanterns');
+  if (tid) {
+    const st = HUE_STATIONS.find((x) => x.id === tid)!;
+    await walkTo(worker, st);
+    worker.room.send('task:open', { taskId: tid });
+    await until(() => worker.task, 4000, 'task:data');
+    if (tid === 'task_woodblock') await sleep(2000);
+    worker.room.send('task:submit', { taskId: tid, answer: solve(worker.task!) });
+    await until(() => worker.lastResult?.ok, 4000, 'task result');
+    log('task done, progress', host.room.state.progress, '/', host.room.state.progressTarget);
+    if (host.room.state.progress < 1) throw new Error('progress did not increase');
   }
-  await sleep(500);
-  log('board size', host.room.state.board.length);
 
-  // skip to round 2, then final meeting -> conclusion
-  host.room.send('host:skip', {});
-  await until(() => host.room.state.phase === 'explore' && host.room.state.round === 2, 3000, 'round 2');
-  host.room.send('host:skip', {});
-  await until(() => host.room.state.phase === 'meeting' && host.room.state.finalMeeting, 3000, 'final meeting');
-  host.room.send('host:skip', {});
-  await until(() => host.room.state.phase === 'conclusion', 3000, 'conclusion');
-  for (const b of bots) b.room.send('conclude', { sentence: 3, type: 'translation', responsible: 'tuan', when: 'night_before' });
-  await until(() => bots.every((b) => b.end), 4000, 'end');
-  log('winner', host.end.winner, JSON.stringify(host.end.correct));
-  if (host.end.winner !== 'investigation') throw new Error('expected investigation to win with correct HUE-A conclusion');
+  // killer walks to a victim and kills (server validates range + cooldown)
+  const victim = crew[crew.length - 1];
+  const vp = victim.room.state.players.get(victim.room.sessionId);
+  await walkTo(killer, { x: vp.x + 20, y: vp.y });
+  log('waiting for kill cooldown…');
+  let killed = false;
+  for (let i = 0; i < 6 && !killed; i++) {
+    await sleep(3000);
+    killer.room.send('kill', {});
+    await sleep(300);
+    killed = [...host.room.state.players.values()].some((p: any) => !p.alive);
+  }
+  if (!killed) throw new Error('kill never landed (guardian shield may have absorbed one; check logs)');
+  const dead = [...host.room.state.players.values()].find((p: any) => !p.alive) as any;
+  log('killed', dead.name, 'body', dead.body);
+
+  // report -> meeting -> everyone votes for the killer -> crew wins (or tie-safe)
+  const reporter = bots.find((b) => b.room.state.players.get(b.room.sessionId).alive && b !== killer)!;
+  const rp = reporter.room.state.players.get(reporter.room.sessionId);
+  await walkTo(reporter, { x: dead.bodyX, y: dead.bodyY });
+  reporter.room.send('report', {});
+  await until(() => host.room.state.phase === 'meeting', 4000, 'meeting');
+  log('meeting:', host.room.state.meetingReason, `(reporter was at ${Math.round(rp.x)},${Math.round(rp.y)})`);
+  const killerId = killer.room.sessionId;
+  for (const b of bots) b.room.send('vote', { target: b.room.sessionId === killerId ? 'skip' : killerId });
+  await until(() => host.room.state.phase === 'reveal', 4000, 'reveal');
+  log('vote result', JSON.stringify(host.voteResult));
+  if (!host.voteResult?.wasKiller) throw new Error('killer should have been ejected');
+  await until(() => bots.every((b) => b.end), 9000, 'end');
+  log('winner', host.end.winner, '-', host.end.reason);
+  if (host.end.winner !== 'crew') throw new Error('crew should win after ejecting the only killer');
 
   host.room.send('host:restart', {});
   await until(() => host.room.state.phase === 'lobby', 3000, 'lobby');
   log('back to lobby ✓');
   for (const b of bots) b.room.leave();
-  log('ALL OK');
+  log('ALL OK (cooldown', GAME.killCooldownSec, 's, quick mode shortens it)');
   process.exit(0);
 }
 

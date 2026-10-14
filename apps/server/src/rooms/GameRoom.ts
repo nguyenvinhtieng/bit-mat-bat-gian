@@ -1,9 +1,7 @@
 import { Room, type Client } from '@colyseus/core';
 import {
-  AREA_ORDER,
-  HUE_AREAS,
-  HUE_ROLE_STATIONS,
-  HUE_STATIONS,
+  playableMap,
+  GAME,
   INTERACT_RADIUS,
   MAX_PLAYERS,
   MEETING_POINT,
@@ -13,44 +11,44 @@ import {
   SIM_DT,
   SIM_HZ,
   SPAWNS,
-  TIMINGS,
+  TASK_IDS,
+  HUE_STATIONS,
   dirFromInput,
   dist,
   getGrid,
+  hasLineOfSight,
+  killersFor,
   stepMovement,
-  type AbilityData,
   type ChatMsg,
-  type Clue,
-  type ConclusionVote,
   type EndReveal,
   type Faction,
   type PrivateInfo,
   type RoleId,
-  type TaskData,
   type TaskId,
+  type VoteResult,
 } from '@hidden-truth/shared';
-import { FORGER_OPTIONS, LEARNED, NPC_NAMES, VARIANTS, type VariantId } from '../content/co-do-hue.content';
-import { GameState, Player, SharedClue } from './schema';
+import { FUN_FACTS, buildTask, type Pending } from '../content/co-do-hue.content';
+import { GameState, Player } from './schema';
 
-type PendingTask = { taskId: TaskId; expected: unknown; openedAt: number };
 type Secret = {
   role: RoleId;
   faction: Faction;
   objective: string;
-  abilityUsedRound: number;
-  notebook: Clue[];
-  completedTasks: Set<TaskId>;
-  pending?: PendingTask;
-  vote?: ConclusionVote;
-  extra: string[];
+  tasks: TaskId[];
+  completed: Set<TaskId>;
+  pending?: Pending;
+  vote?: string;
+  shield: boolean;
+  killReadyAt: number;
 };
 type MoveState = { queue: { seq: number; dx: number; dy: number }[]; budget: number; lastQueued: number };
 
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const AFK_LOBBY_MS = 3 * 60_000;
 const activeCodes = new Set<string>();
 const grid = getGrid();
 
-const shuffle = <T>(arr: T[]): T[] => {
+const shuffle = <T>(arr: readonly T[]): T[] => {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -64,24 +62,22 @@ export class GameRoom extends Room<GameState> {
   maxClients = MAX_PLAYERS;
   private secrets = new Map<string, Secret>();
   private moves = new Map<string, MoveState>();
-  private variant: VariantId = 'HUE-A';
-  private forgerEdits = new Map<TaskId, (typeof FORGER_OPTIONS)[number]>();
-  private brokerHeld = false;
   private lastChat = new Map<string, number>();
   private chatLog: ChatMsg[] = [];
+  private lastActive = new Map<string, number>();
 
-  onCreate(options: { name?: string }) {
+  onCreate(options: { name?: string; map?: string }) {
     this.setState(new GameState());
+    this.state.mapSlug = playableMap(options?.map);
     let code = '';
     do code = Array.from({ length: 6 }, () => pick(CODE_ALPHABET.split(''))).join('');
     while (activeCodes.has(code));
     activeCodes.add(code);
     this.roomId = code;
     this.state.code = code;
-    this.state.maxRounds = TIMINGS.rounds;
     this.setPatchRate(PATCH_MS);
     this.setSimulationInterval((dt) => this.update(dt), 1000 / SIM_HZ);
-    this.setMetadata({ map: 'co-do-hue', creator: options?.name ?? '' });
+    this.setMetadata({ map: this.state.mapSlug, creator: options?.name ?? '' });
     this.registerMessages();
   }
 
@@ -101,6 +97,7 @@ export class GameRoom extends Room<GameState> {
     p.y = spawn.y;
     this.state.players.set(client.sessionId, p);
     this.moves.set(client.sessionId, { queue: [], budget: 0, lastQueued: 0 });
+    this.lastActive.set(client.sessionId, Date.now());
     if (!this.state.hostId) this.state.hostId = client.sessionId;
     this.system(`${p.name} đã vào phòng.`);
     client.send('time', Date.now());
@@ -126,13 +123,17 @@ export class GameRoom extends Room<GameState> {
     if (this.state.phase === 'lobby') {
       this.state.players.delete(client.sessionId);
       this.moves.delete(client.sessionId);
-    } else p.connected = false;
+    } else {
+      p.connected = false;
+      p.alive = false;
+    }
     this.system(`${p.name} đã rời phòng.`);
     if (this.state.hostId === client.sessionId) {
       const next = [...this.state.players.values()].find((x) => x.connected);
       this.state.hostId = next?.id ?? '';
     }
-    if (this.state.phase === 'conclusion') this.maybeFinishConclusion();
+    if (this.state.phase === 'meeting') this.maybeResolveVotes();
+    else if (this.state.phase === 'explore') this.checkWin();
   }
 
   // ---------------------------------------------------------------- messages
@@ -140,6 +141,7 @@ export class GameRoom extends Room<GameState> {
     this.onMessage('input', (client, list: unknown) => {
       const m = this.moves.get(client.sessionId);
       if (!m || !Array.isArray(list)) return;
+      if (list.some((r) => r?.dx || r?.dy)) this.lastActive.set(client.sessionId, Date.now());
       for (const raw of list.slice(0, 12)) {
         const seq = Number(raw?.seq);
         if (!Number.isInteger(seq) || seq <= m.lastQueued) continue;
@@ -151,14 +153,16 @@ export class GameRoom extends Room<GameState> {
       if (m.queue.length > 30) m.queue.splice(0, m.queue.length - 30);
     });
 
+    this.onMessage('ping', (client, t: number) => client.send('pong', t));
+
     this.onMessage('ready', (client, msg: { ready: boolean }) => {
+      this.lastActive.set(client.sessionId, Date.now());
       const p = this.state.players.get(client.sessionId);
       if (p && this.state.phase === 'lobby') p.ready = !!msg?.ready;
     });
 
-    this.onMessage('configure', (client, msg: { variant?: string; quick?: boolean }) => {
+    this.onMessage('configure', (client, msg: { quick?: boolean }) => {
       if (client.sessionId !== this.state.hostId || this.state.phase !== 'lobby') return;
-      if (['random', 'HUE-A', 'HUE-B', 'HUE-C'].includes(msg?.variant ?? '')) this.state.variantChoice = msg.variant!;
       if (typeof msg?.quick === 'boolean') this.state.quick = msg.quick;
     });
 
@@ -169,21 +173,24 @@ export class GameRoom extends Room<GameState> {
 
     this.onMessage('task:open', (client, msg: { taskId: TaskId }) => this.openTask(client, msg?.taskId));
     this.onMessage('task:submit', (client, msg: { taskId: TaskId; answer: unknown }) => this.submitTask(client, msg));
-    this.onMessage('ability:open', (client) => this.openAbility(client));
-    this.onMessage('ability:use', (client, msg: { option?: string }) => this.useAbility(client, msg?.option));
+    this.onMessage('kill', (client) => this.kill(client));
+    this.onMessage('report', (client) => this.report(client));
 
     this.onMessage('emergency', (client) => {
       const p = this.state.players.get(client.sessionId);
-      if (!p || this.state.phase !== 'explore' || p.emergencyUsed) return;
-      if (dist(p, MEETING_POINT) > INTERACT_RADIUS + 60) return client.send('toast', { text: 'Hãy đến bàn họp ở Sân hiên để gọi họp.', kind: 'warn' });
+      if (!p || !p.alive || this.state.phase !== 'explore' || p.emergencyUsed) return;
+      if (dist(p, MEETING_POINT) > INTERACT_RADIUS + 60) return client.send('toast', { text: 'Hãy đến bàn họp ở Sân Ngọ Môn để rung chuông.', kind: 'warn' });
       p.emergencyUsed = true;
+      this.broadcast('cinematic', { kind: 'emergency', actor: { name: p.name, color: p.color } });
       this.startMeeting(`${p.name} rung chuông gọi họp khẩn`);
     });
 
     this.onMessage('chat', (client, msg: { text: string }) => {
       const p = this.state.players.get(client.sessionId);
       if (!p) return;
-      if (this.state.phase === 'explore') return client.send('toast', { text: 'Chỉ trò chuyện được khi họp.', kind: 'warn' });
+      const phase = this.state.phase;
+      if (phase === 'explore' || phase === 'reveal') return client.send('toast', { text: 'Chỉ trò chuyện được khi họp.', kind: 'warn' });
+      if (!p.alive && phase === 'meeting') return client.send('toast', { text: 'Hồn ma không thể nói trong cuộc họp.', kind: 'warn' });
       const now = Date.now();
       if (now - (this.lastChat.get(client.sessionId) ?? 0) < 400) return;
       this.lastChat.set(client.sessionId, now);
@@ -192,43 +199,23 @@ export class GameRoom extends Room<GameState> {
       this.pushChat({ from: p.id, name: p.name, color: p.color, text, t: now });
     });
 
-    this.onMessage('clue:share', (client, msg: { clueId: string }) => {
+    this.onMessage('vote', (client, msg: { target: string }) => {
       const p = this.state.players.get(client.sessionId);
       const s = this.secrets.get(client.sessionId);
-      if (!p || !s || !['meeting', 'conclusion'].includes(this.state.phase)) return;
-      const clue = s.notebook.find((c) => c.id === msg?.clueId);
-      if (!clue) return;
-      if (this.state.board.some((b) => b.id === clue.id)) return client.send('toast', { text: 'Manh mối này đã có trên bảng.', kind: 'info' });
-      const sc = new SharedClue();
-      sc.id = clue.id;
-      sc.title = clue.title;
-      sc.body = clue.body;
-      sc.source = clue.source;
-      sc.art = clue.art ?? '';
-      sc.trace = clue.trace ?? '';
-      sc.diff = clue.diff ? JSON.stringify(clue.diff) : '';
-      sc.by = p.name;
-      this.state.board.push(sc);
-      this.system(`${p.name} đã đưa manh mối “${clue.title}” lên bảng.`);
-    });
-
-    this.onMessage('conclude', (client, vote: ConclusionVote) => {
-      const p = this.state.players.get(client.sessionId);
-      const s = this.secrets.get(client.sessionId);
-      if (!p || !s || this.state.phase !== 'conclusion') return;
-      s.vote = {
-        sentence: Number(vote?.sentence) || 0,
-        type: vote?.type,
-        responsible: String(vote?.responsible ?? ''),
-        when: String(vote?.when ?? ''),
-      };
+      if (!p || !s || !p.alive || this.state.phase !== 'meeting' || p.voted) return;
+      const target = String(msg?.target ?? '');
+      if (target !== 'skip') {
+        const t = this.state.players.get(target);
+        if (!t || !t.alive) return;
+      }
+      s.vote = target;
       p.voted = true;
-      this.maybeFinishConclusion();
+      this.maybeResolveVotes();
     });
 
     this.onMessage('host:skip', (client) => {
       if (client.sessionId !== this.state.hostId) return;
-      if (['explore', 'meeting', 'conclusion'].includes(this.state.phase)) this.advancePhase();
+      if (this.state.phase === 'meeting' || this.state.phase === 'reveal') this.advancePhase();
     });
 
     this.onMessage('host:restart', (client) => {
@@ -237,8 +224,23 @@ export class GameRoom extends Room<GameState> {
     });
   }
 
+  /** Kick non-host players idle in the lobby for too long. */
+  private kickAfk() {
+    const now = Date.now();
+    for (const client of this.clients) {
+      if (client.sessionId === this.state.hostId) continue;
+      const last = this.lastActive.get(client.sessionId) ?? now;
+      if (now - last > AFK_LOBBY_MS) {
+        client.send('toast', { text: 'Bạn bị mời ra khỏi phòng vì không hoạt động.', kind: 'warn' });
+        this.lastActive.delete(client.sessionId);
+        client.leave(4001);
+      }
+    }
+  }
+
   // ---------------------------------------------------------------- simulation
   private update(dtMs: number) {
+    if (this.state.phase === 'lobby') this.kickAfk();
     const canMove = this.state.phase === 'lobby' || this.state.phase === 'explore';
     for (const [id, m] of this.moves) {
       const p = this.state.players.get(id);
@@ -263,60 +265,62 @@ export class GameRoom extends Room<GameState> {
   }
 
   // ---------------------------------------------------------------- phases
-  private timing() {
+  private cfg() {
     const q = this.state.quick;
     return {
-      explore: (q ? 90 : TIMINGS.exploreSec) * 1000,
-      meeting: (q ? 45 : TIMINGS.meetingSec) * 1000,
-      finalMeeting: (q ? 60 : TIMINGS.finalMeetingSec) * 1000,
-      conclusion: (q ? 60 : TIMINGS.conclusionSec) * 1000,
+      tasksPerPlayer: q ? 3 : GAME.tasksPerPlayer,
+      meetingMs: (q ? 45 : GAME.meetingSec) * 1000,
+      killCd: (q ? 15 : GAME.killCooldownSec) * 1000,
+      firstCd: (q ? 10 : GAME.firstKillCooldownSec) * 1000,
+      postMeetingCd: (q ? 10 : GAME.postMeetingCooldownSec) * 1000,
     };
   }
 
   private startGame() {
     const players = [...this.state.players.values()];
     const n = players.length;
-    this.variant = this.state.variantChoice === 'random' ? pick(['HUE-A', 'HUE-B', 'HUE-C'] as const) : (this.state.variantChoice as VariantId);
-    const v = VARIANTS[this.variant];
-    const secretCount = n >= 6 ? 2 : n >= 3 ? 1 : 0;
-    const secretRoles = shuffle<RoleId>(['forger', 'broker']).slice(0, secretCount);
-    const invRoles = shuffle<RoleId>(['historian', 'conservator', 'local_guide', 'archivist']);
-    const roles: RoleId[] = [...secretRoles];
-    for (let i = 0; roles.length < n; i++) roles.push(invRoles[i % invRoles.length]);
+    const c = this.cfg();
+    const killers = Math.min(killersFor(n), n);
+    const crew = n - killers;
+    const roles: RoleId[] = [];
+    for (let i = 0; i < killers; i++) roles.push('killer');
+    if (crew >= 3) roles.push('guardian');
+    while (roles.length < n) roles.push('villager');
     const assigned = shuffle(roles);
+    const tpp = Math.min(c.tasksPerPlayer, TASK_IDS.length);
 
     this.secrets.clear();
-    this.forgerEdits.clear();
-    this.brokerHeld = false;
-    this.state.board.clear();
+    const now = Date.now();
     players.forEach((p, i) => {
       const role = assigned[i];
       const faction = ROLE_INFO[role].faction;
       this.secrets.set(p.id, {
         role,
         faction,
-        objective: faction === 'secret' ? v.objectives[role as 'forger' | 'broker'] : v.objectives.investigation,
-        abilityUsedRound: 0,
-        notebook: [],
-        completedTasks: new Set(),
-        extra: role === 'broker' ? [v.brokerSecret] : [],
+        objective:
+          faction === 'killer'
+            ? 'Hạ gục người trong đoàn cho tới khi số Hắc Ảnh bằng hoặc nhiều hơn số người còn sống. Đừng để bị phát hiện và bị bỏ phiếu loại.'
+            : 'Hoàn thành mọi nhiệm vụ để thắp sáng Đêm Hội — hoặc tìm ra Hắc Ảnh trong cuộc họp và bỏ phiếu loại họ.',
+        tasks: shuffle(TASK_IDS).slice(0, tpp),
+        completed: new Set(),
+        shield: role === 'guardian',
+        killReadyAt: now + c.firstCd,
       });
       p.tasksDone = 0;
       p.voted = false;
       p.emergencyUsed = false;
-      p.ready = false;
+      p.alive = true;
+      p.body = false;
     });
     this.state.progress = 0;
-    this.state.progressTarget = Math.max(4, Math.ceil(n * 6 * 0.6));
-    this.state.round = 1;
-    this.state.finalMeeting = false;
-    this.state.event = '';
+    this.state.progressTarget = Math.max(1, n * tpp);
+    this.state.meetingReason = '';
     this.teleportToSpawns();
-    this.setPhase('explore', this.timing().explore);
+    this.setPhase('explore', 0);
     for (const p of players) this.sendPrivate(p.id);
-    this.broadcast('intro', { variantHidden: true });
-    this.system(`Ván bắt đầu — vòng 1/${this.state.maxRounds}. Làm nhiệm vụ để tăng tiến độ triển lãm, thu thập manh mối.`);
-    if (n < 4) this.system(`Lưu ý: game thiết kế cho 4–10 người; với ${n} người, phe Bí Mật ${secretCount ? 'có ' + secretCount + ' người' : 'không có'}.`);
+    this.broadcast('intro', {});
+    this.system(`Ván bắt đầu — ${killers} Hắc Ảnh đang trà trộn trong đoàn. Làm nhiệm vụ, giữ khoảng cách và quan sát!`);
+    if (n < 4) this.system(`Lưu ý: game thiết kế cho 4–10 người; với ${n} người có ${killers} Hắc Ảnh.`);
   }
 
   private setPhase(phase: GameState['phase'], durationMs: number) {
@@ -326,34 +330,33 @@ export class GameRoom extends Room<GameState> {
 
   private advancePhase() {
     const ph = this.state.phase;
-    if (ph === 'explore') {
-      this.startMeeting(this.state.round >= this.state.maxRounds ? 'Hết giờ — họp kết luận trước giờ mở cửa' : `Hết vòng ${this.state.round} — họp tổng hợp`);
-    } else if (ph === 'meeting') {
-      if (this.state.finalMeeting) {
-        this.setPhase('conclusion', this.timing().conclusion);
-        for (const p of this.state.players.values()) p.voted = false;
-        this.system('Bỏ phiếu kết luận: chọn câu lệch, loại sai lệch, người chịu trách nhiệm chính và thời điểm.');
-      } else {
-        this.state.round += 1;
-        this.state.meetingReason = '';
-        this.setPhase('explore', this.timing().explore);
-        this.system(`Vòng ${this.state.round}/${this.state.maxRounds} — năng lực role đã được làm mới.`);
-        for (const id of this.secrets.keys()) this.sendPrivate(id);
-      }
-    } else if (ph === 'conclusion') {
-      this.finishGame();
+    if (ph === 'meeting') {
+      this.resolveVotes();
+    } else if (ph === 'reveal') {
+      if (this.checkWin()) return;
+      const now = Date.now();
+      for (const s of this.secrets.values()) if (s.faction === 'killer') s.killReadyAt = now + this.cfg().postMeetingCd;
+      this.state.meetingReason = '';
+      this.setPhase('explore', 0);
+      for (const id of this.secrets.keys()) this.sendPrivate(id);
+      this.system('Cuộc họp kết thúc — mọi người trở lại làm việc.');
     }
   }
 
   private startMeeting(reason: string) {
-    const final = this.state.round >= this.state.maxRounds || this.state.progress >= this.state.progressTarget || this.state.finalMeeting;
-    this.state.finalMeeting = final;
     this.state.meetingReason = reason;
+    for (const p of this.state.players.values()) {
+      p.body = false;
+      p.voted = false;
+    }
+    for (const s of this.secrets.values()) {
+      s.pending = undefined;
+      s.vote = undefined;
+    }
     this.teleportToSpawns();
-    for (const s of this.secrets.values()) s.pending = undefined;
     this.broadcast('task:close', {});
-    this.setPhase('meeting', final ? this.timing().finalMeeting : this.timing().meeting);
-    this.system(`Họp: ${reason}.${final ? ' Đây là cuộc họp cuối — sau đó nhóm bỏ phiếu kết luận.' : ''}`);
+    this.setPhase('meeting', this.cfg().meetingMs);
+    this.system(`Họp khẩn: ${reason}. Thảo luận và bỏ phiếu loại người đáng ngờ (hoặc bỏ qua).`);
   }
 
   private teleportToSpawns() {
@@ -372,74 +375,117 @@ export class GameRoom extends Room<GameState> {
     this.broadcast('teleport', {});
   }
 
-  private maybeFinishConclusion() {
-    const active = [...this.state.players.values()].filter((p) => p.connected);
-    if (active.length && active.every((p) => p.voted)) this.finishGame();
+  // ---------------------------------------------------------------- voting
+  private maybeResolveVotes() {
+    const voters = [...this.state.players.values()].filter((p) => p.alive && p.connected);
+    if (voters.length && voters.every((p) => p.voted)) this.resolveVotes();
   }
 
-  private finishGame() {
-    if (this.state.phase === 'ended') return;
-    const v = VARIANTS[this.variant];
-    const votes = [...this.secrets.values()].map((s) => s.vote).filter(Boolean) as ConclusionVote[];
-    const plural = <K extends keyof ConclusionVote>(k: K): ConclusionVote[K] | null => {
-      const counts = new Map<string, number>();
-      for (const vt of votes) counts.set(String(vt[k]), (counts.get(String(vt[k])) ?? 0) + 1);
-      const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
-      if (!sorted.length || (sorted[1] && sorted[1][1] === sorted[0][1])) return null;
-      const raw = sorted[0][0];
-      return (k === 'sentence' ? Number(raw) : raw) as ConclusionVote[K];
+  private resolveVotes() {
+    if (this.state.phase !== 'meeting') return;
+    const counts = new Map<string, number>();
+    let skips = 0;
+    for (const [id, s] of this.secrets) {
+      const p = this.state.players.get(id);
+      if (!p?.alive || !s.vote) continue;
+      if (s.vote === 'skip') skips++;
+      else counts.set(s.vote, (counts.get(s.vote) ?? 0) + 1);
+    }
+    const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    const top = sorted[0];
+    const tie = sorted[1] && sorted[1][1] === top[1];
+    const ejectedId = top && !tie && top[1] > skips ? top[0] : null;
+
+    const result: VoteResult = {
+      ejected: null,
+      killersLeft: 0,
+      skips,
+      tally: sorted.map(([id, votes]) => {
+        const p = this.state.players.get(id)!;
+        return { name: p.name, color: p.color, votes };
+      }),
     };
-    const team = votes.length
-      ? { sentence: plural('sentence') ?? 0, type: plural('type') ?? ('' as never), responsible: plural('responsible') ?? '', when: plural('when') ?? '' }
-      : null;
-    const correct = {
-      sentence: team?.sentence === v.truth.sentence,
-      type: team?.type === v.truth.type,
-      responsible: team?.responsible === v.truth.responsible,
-      when: team?.when === v.truth.when,
-      evidence: this.state.board.length >= 3,
-    };
-    const invWin = correct.sentence && correct.type && correct.responsible && correct.when && correct.evidence;
-    const goalMet = (goal: Partial<{ type: string; responsible: string }>) => {
-      if (!team) return true;
-      if (goal.type) return team.type === goal.type;
-      if (goal.responsible?.startsWith('!')) return team.responsible !== goal.responsible.slice(1);
-      return false;
-    };
+    if (ejectedId) {
+      const p = this.state.players.get(ejectedId)!;
+      p.alive = false;
+      result.ejected = p.name;
+      result.ejectedColor = p.color;
+      result.wasKiller = this.secrets.get(ejectedId)?.faction === 'killer';
+    }
+    result.killersLeft = this.aliveKillers();
+    this.broadcast('vote:result', result);
+    this.system(
+      result.ejected
+        ? `${result.ejected} bị loại khỏi đoàn.`
+        : tie
+          ? 'Hoà phiếu — không ai bị loại.'
+          : 'Không ai bị loại.',
+    );
+    for (const p of this.state.players.values()) p.voted = false;
+    this.setPhase('reveal', GAME.revealSec * 1000);
+  }
+
+  // ---------------------------------------------------------------- win conditions
+  private aliveKillers() {
+    let n = 0;
+    for (const [id, s] of this.secrets) if (s.faction === 'killer' && this.state.players.get(id)?.alive) n++;
+    return n;
+  }
+
+  private aliveCrew() {
+    let n = 0;
+    for (const [id, s] of this.secrets) if (s.faction === 'crew' && this.state.players.get(id)?.alive) n++;
+    return n;
+  }
+
+  private totalKillers() {
+    let n = 0;
+    for (const s of this.secrets.values()) if (s.faction === 'killer') n++;
+    return n;
+  }
+
+  /** Returns true if the game ended. */
+  private checkWin(): boolean {
+    if (this.state.phase === 'ended' || this.state.phase === 'lobby') return false;
+    // dead players can't finish their remaining tasks: drop them from the target
+    let done = 0;
+    let target = 0;
+    for (const [id, s] of this.secrets) {
+      done += s.completed.size;
+      target += this.state.players.get(id)?.alive ? s.tasks.length : s.completed.size;
+    }
+    this.state.progress = done;
+    this.state.progressTarget = Math.max(1, target);
+    const total = this.totalKillers();
+    const k = this.aliveKillers();
+    const c = this.aliveCrew();
+    if (total > 0 && k === 0) return this.finishGame('crew', 'Hắc Ảnh đã bị trục xuất khỏi đoàn!');
+    if (total > 0 && k >= c) return this.finishGame('killer', 'Hắc Ảnh đã hạ gục đủ người — đèn đêm hội tắt lịm.');
+    if (this.state.progress >= this.state.progressTarget) return this.finishGame('crew', 'Mọi nhiệm vụ đã hoàn thành — Đêm Hội Hoàng Cung rực sáng!');
+    return false;
+  }
+
+  private finishGame(winner: Faction, reason: string): boolean {
+    if (this.state.phase === 'ended') return true;
     const reveal: EndReveal = {
-      winner: invWin ? 'investigation' : 'secret',
-      variantId: v.id,
-      truthSummary: v.summary,
-      truthSteps: v.steps,
-      correct,
-      teamConclusion: team,
-      sharedClueCount: this.state.board.length,
+      winner,
+      reason,
+      fact: pick(FUN_FACTS),
       roles: [...this.state.players.values()].map((p) => {
         const s = this.secrets.get(p.id)!;
-        return {
-          name: p.name,
-          role: s.role,
-          faction: s.faction,
-          objective: s.objective,
-          objectiveMet: s.faction === 'secret' ? goalMet(v.secretGoal[s.role as 'forger' | 'broker']) : invWin,
-        };
+        return { name: p.name, color: p.color, role: s.role, faction: s.faction, alive: p.alive, tasksDone: s.completed.size };
       }),
-      metaQuestion: v.metaQuestion,
-      learned: LEARNED,
     };
     this.setPhase('ended', 0);
     this.broadcast('end', reveal);
-    this.system(invWin ? 'Phe Điều Tra đã tái dựng đúng sự việc!' : 'Kết luận chưa khớp bằng chứng — phe Bí Mật thắng ván này.');
+    this.system(winner === 'crew' ? `Phe Người Dân thắng! ${reason}` : `Hắc Ảnh thắng! ${reason}`);
+    return true;
   }
 
   private resetToLobby() {
     this.secrets.clear();
-    this.state.board.clear();
-    this.state.round = 0;
     this.state.progress = 0;
-    this.state.event = '';
     this.state.meetingReason = '';
-    this.state.finalMeeting = false;
     for (const [id, p] of this.state.players) {
       if (!p.connected) this.state.players.delete(id);
       else {
@@ -447,11 +493,72 @@ export class GameRoom extends Room<GameState> {
         p.voted = false;
         p.tasksDone = 0;
         p.emergencyUsed = false;
+        p.alive = true;
+        p.body = false;
       }
     }
     this.teleportToSpawns();
     this.setPhase('lobby', 0);
     this.broadcast('private', null);
+    this.chatLog = [];
+    this.broadcast('chat:history', []);
+  }
+
+  // ---------------------------------------------------------------- kill / report
+  private kill(client: Client) {
+    const me = this.state.players.get(client.sessionId);
+    const s = this.secrets.get(client.sessionId);
+    if (!me || !s || s.faction !== 'killer' || !me.alive || this.state.phase !== 'explore') return;
+    const now = Date.now();
+    if (now < s.killReadyAt) return client.send('toast', { text: 'Kỹ năng đang hồi — chờ một chút.', kind: 'info' });
+    let target: Player | undefined;
+    let best = GAME.killRange;
+    for (const p of this.state.players.values()) {
+      if (p.id === me.id || !p.alive || this.secrets.get(p.id)?.faction === 'killer') continue;
+      const d = dist(me, p);
+      if (d <= best) {
+        best = d;
+        target = p;
+      }
+    }
+    if (!target) return client.send('toast', { text: 'Không có ai trong tầm tay.', kind: 'warn' });
+    const ts = this.secrets.get(target.id)!;
+    s.killReadyAt = now + this.cfg().killCd;
+    if (ts.shield) {
+      ts.shield = false;
+      const sh = { kind: 'shield', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, at: { x: target.x, y: target.y } };
+      client.send('cinematic', { ...sh, youAre: 'actor' });
+      this.clients.getById(target.id)?.send('cinematic', { ...sh, youAre: 'victim' });
+      client.send('toast', { text: 'Đòn đánh bị chặn bởi lá chắn của Lính Ngự Lâm!', kind: 'warn' });
+      this.clients.getById(target.id)?.send('toast', { text: '🛡️ Lá chắn của bạn đã cứu bạn khỏi một đòn hạ gục!', kind: 'success' });
+      this.sendPrivate(target.id);
+      this.sendPrivate(me.id);
+      return;
+    }
+    const at = { x: target.x, y: target.y };
+    this.clients.getById(me.id)?.send('cinematic', { kind: 'kill', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, youAre: 'actor', at });
+    this.clients.getById(target.id)?.send('cinematic', { kind: 'kill', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, youAre: 'victim', at });
+    for (const w of this.state.players.values()) {
+      if (w.id === me.id || w.id === target.id || !w.alive) continue;
+      if (dist(w, target) > GAME.visionRadius || !hasLineOfSight(grid, { x: w.x, y: w.y - 30 }, { x: target.x, y: target.y - 30 })) continue;
+      this.clients.getById(w.id)?.send('cinematic', { kind: 'witness', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, at });
+    }
+    target.alive = false;
+    target.body = true;
+    target.bodyX = target.x;
+    target.bodyY = target.y;
+    this.clients.getById(target.id)?.send('toast', { text: 'Bạn đã bị hạ gục! Bạn vẫn có thể làm nhiệm vụ như một hồn ma.', kind: 'warn' });
+    this.sendPrivate(me.id);
+    this.checkWin();
+  }
+
+  private report(client: Client) {
+    const me = this.state.players.get(client.sessionId);
+    if (!me || !me.alive || this.state.phase !== 'explore') return;
+    const body = [...this.state.players.values()].find((p) => p.body && dist(me, { x: p.bodyX, y: p.bodyY }) <= GAME.reportRange);
+    if (!body) return client.send('toast', { text: 'Không có thi thể nào ở gần.', kind: 'info' });
+    this.broadcast('cinematic', { kind: 'report', actor: { name: me.name, color: me.color }, victim: { name: body.name, color: body.color } });
+    this.startMeeting(`${me.name} phát hiện thi thể của ${body.name}`);
   }
 
   // ---------------------------------------------------------------- tasks
@@ -463,206 +570,50 @@ export class GameRoom extends Room<GameState> {
     const p = this.state.players.get(client.sessionId);
     const s = this.secrets.get(client.sessionId);
     const st = HUE_STATIONS.find((x) => x.id === taskId);
-    if (!p || !s || !st || this.state.phase !== 'explore') return;
+    if (!p || !s || !st || this.state.phase !== 'explore' || !p.alive) return;
+    if (!s.tasks.includes(taskId)) return client.send('toast', { text: 'Đây không phải nhiệm vụ của bạn.', kind: 'info' });
     if (!this.near(p, st.x, st.y)) return client.send('toast', { text: 'Bạn cần đứng gần điểm nhiệm vụ.', kind: 'warn' });
-    if (s.completedTasks.has(taskId)) return client.send('toast', { text: 'Bạn đã hoàn thành nhiệm vụ này.', kind: 'info' });
-
-    let data: TaskData;
-    let expected: unknown;
-    switch (taskId) {
-      case 'task_print_checklist': {
-        const labels = ['Font tiêu đề', 'Logo đối tác', 'Đoạn giới thiệu VI', 'Đoạn giới thiệu EN', 'Chú thích nguồn', 'Ảnh kiến trúc'];
-        let items = labels.map((label, i) => ({ id: `i${i}`, label, log: (Math.random() < 0.6 ? 'ok' : 'error') as 'ok' | 'error' }));
-        if (items.every((i) => i.log === 'ok')) items[3].log = 'error';
-        if (items.every((i) => i.log === 'error')) items[0].log = 'ok';
-        items = shuffle(items);
-        data = { taskId, items };
-        expected = items.filter((i) => i.log === 'ok').map((i) => i.id).sort();
-        break;
-      }
-      case 'task_scan_footnote':
-        data = { taskId, holdMs: 1800 };
-        expected = 1800;
-        break;
-      case 'task_update_floor_plan': {
-        const rooms = AREA_ORDER.filter((a) => a !== 'corridor').map((a) => HUE_AREAS[a].name);
-        const sequence = shuffle(rooms).slice(0, 4);
-        data = { taskId, rooms: shuffle(rooms), sequence };
-        expected = sequence;
-        break;
-      }
-      case 'task_check_lights_labels': {
-        const lights = shuffle(['Đèn spot trái', 'Đèn spot phải', 'Đèn bảng chính', 'Đèn nhãn phụ']);
-        data = { taskId, lights };
-        expected = [...lights];
-        break;
-      }
-      case 'task_seal_box': {
-        const sealNumber = `${String(Math.floor(1000 + Math.random() * 9000))}-HUE`;
-        data = { taskId, sealNumber, slipNote: 'Đối chiếu số niêm trên phiếu bàn giao, nhập đúng số để niêm phong lại.' };
-        expected = sealNumber;
-        break;
-      }
-      case 'task_return_shelf_a': {
-        const slots = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6'];
-        const target = pick(slots);
-        data = { taskId, bookCode: `HUE-04 / ${target}`, slots };
-        expected = target;
-        break;
-      }
-      default:
-        return;
-    }
-    s.pending = { taskId, expected, openedAt: Date.now() };
-    client.send('task:data', data);
+    if (s.completed.has(taskId)) return client.send('toast', { text: 'Bạn đã hoàn thành nhiệm vụ này.', kind: 'info' });
+    const built = buildTask(taskId);
+    s.pending = { expected: built.expected, openedAt: Date.now(), reward: built.fact, taskId };
+    client.send('task:data', built.data);
   }
 
   private submitTask(client: Client, msg: { taskId: TaskId; answer: unknown }) {
     const p = this.state.players.get(client.sessionId);
     const s = this.secrets.get(client.sessionId);
-    if (!p || !s || this.state.phase !== 'explore' || !s.pending || s.pending.taskId !== msg?.taskId) return;
-    const { taskId, expected, openedAt } = s.pending;
+    if (!p || !s || !p.alive || this.state.phase !== 'explore' || !s.pending || s.pending.taskId !== msg?.taskId) return;
+    const { taskId, expected, openedAt, reward } = s.pending;
     const st = HUE_STATIONS.find((x) => x.id === taskId)!;
     if (!this.near(p, st.x, st.y)) return client.send('toast', { text: 'Bạn đã rời khỏi điểm nhiệm vụ.', kind: 'warn' });
-    let ok = false;
     const a = msg.answer;
+    let ok = false;
     switch (taskId) {
-      case 'task_print_checklist':
+      case 'task_hue_cuisine':
         ok = Array.isArray(a) && JSON.stringify([...a].map(String).sort()) === JSON.stringify(expected);
         break;
-      case 'task_scan_footnote':
+      case 'task_woodblock':
         ok = Date.now() - openedAt >= (expected as number) - 250;
         break;
-      case 'task_update_floor_plan':
-      case 'task_check_lights_labels':
+      case 'task_citadel_gates':
+      case 'task_lanterns':
         ok = JSON.stringify(a) === JSON.stringify(expected);
         break;
-      case 'task_seal_box':
-        ok = String(a ?? '').trim().toUpperCase() === expected;
-        break;
-      case 'task_return_shelf_a':
+      case 'task_conical_hat':
+      case 'task_heritage_quiz':
         ok = a === expected;
         break;
     }
     if (!ok) return client.send('task:result', { ok: false, text: 'Chưa đúng — thử lại.' });
 
     s.pending = undefined;
-    s.completedTasks.add(taskId);
-    p.tasksDone = s.completedTasks.size;
+    s.completed.add(taskId);
+    p.tasksDone = s.completed.size;
+    // every player (killers included) advances the shared bar
     this.state.progress += 1;
-    const clues = [this.clueForTask(taskId)];
-    if (taskId === 'task_seal_box') {
-      const meta = VARIANTS[this.variant].meta;
-      clues.push({ ...meta, source: 'Hộp tư liệu cũ (Kho hiện vật)', art: 'hue-clue-handnote' });
-    }
-    for (const c of clues) this.addClue(s, c);
-    client.send('task:result', { ok: true, text: `Hoàn thành: ${st.title}. Tiến độ triển lãm +1.`, clues });
+    client.send('task:result', { ok: true, text: `Hoàn thành: ${st.title}.`, fact: reward });
     this.sendPrivate(client.sessionId);
-
-    if (this.state.progress >= this.state.progressTarget && !this.state.event) {
-      this.state.event = 'opening_soon';
-      this.broadcast('toast', { text: '⏰ 30 phút trước khai mạc! Giám tuyển triệu tập họp kết luận.', kind: 'warn' });
-      this.state.finalMeeting = true;
-      this.clock.setTimeout(() => {
-        if (this.state.phase === 'explore') this.startMeeting('30 phút trước khai mạc — tiến độ triển lãm đã đủ');
-      }, 2500);
-    }
-  }
-
-  private clueForTask(taskId: TaskId): Clue {
-    const base = VARIANTS[this.variant].tasks[taskId];
-    const st = HUE_STATIONS.find((x) => x.id === taskId)!;
-    const edit = this.forgerEdits.get(taskId);
-    return {
-      ...base,
-      id: edit ? `${taskId}-${edit.id}` : taskId,
-      body: edit ? base.body + edit.addition : base.body,
-      trace: edit ? edit.trace : undefined,
-      source: `${st.title} · ${HUE_AREAS[st.area].name}`,
-    };
-  }
-
-  private addClue(s: Secret, c: Clue) {
-    if (!s.notebook.some((x) => x.id === c.id)) s.notebook.push(c);
-  }
-
-  // ---------------------------------------------------------------- abilities
-  private abilityCheck(client: Client) {
-    const p = this.state.players.get(client.sessionId);
-    const s = this.secrets.get(client.sessionId);
-    if (!p || !s || this.state.phase !== 'explore') return null;
-    const st = HUE_ROLE_STATIONS[s.role];
-    if (!this.near(p, st.x, st.y)) {
-      client.send('toast', { text: `Năng lực dùng tại: ${st.title} (${HUE_AREAS[st.area].name}).`, kind: 'warn' });
-      return null;
-    }
-    if (s.abilityUsedRound >= this.state.round) {
-      client.send('toast', { text: 'Bạn đã dùng năng lực trong vòng này.', kind: 'info' });
-      return null;
-    }
-    return { p, s, st };
-  }
-
-  private openAbility(client: Client) {
-    const c = this.abilityCheck(client);
-    if (!c) return;
-    const { s, st } = c;
-    const data: AbilityData = { role: s.role, title: `${ROLE_INFO[s.role].name} — ${ROLE_INFO[s.role].ability}`, prompt: st.title };
-    if (s.role === 'forger') {
-      data.prompt = 'Chọn MỘT chi tiết để tác động. Người nhận manh mối này sau bạn sẽ thấy phiên bản đã sửa — nhưng luôn kèm một dấu vết có thể phát hiện.';
-      data.options = FORGER_OPTIONS.filter((o) => !this.forgerEdits.has(o.target)).map((o) => ({ id: o.id, label: o.label }));
-    } else if (s.role === 'broker') {
-      data.prompt = 'Giữ lại một mẩu tin khỏi nhóm chat (bản sao lưu vẫn còn trong kho), đồng thời biết hai người đang nắm manh mối liên quan.';
-      data.options = [{ id: 'hold', label: 'Giữ tin “ai yêu cầu câu tiếng Anh mạnh hơn”' }];
-    } else {
-      data.options = [{ id: 'use', label: ROLE_INFO[s.role].ability }];
-    }
-    client.send('ability:data', data);
-  }
-
-  private useAbility(client: Client, option?: string) {
-    const c = this.abilityCheck(client);
-    if (!c) return;
-    const { s } = c;
-    const v = VARIANTS[this.variant];
-    const source = `Năng lực ${ROLE_INFO[s.role].name} · vòng ${this.state.round}`;
-    let clue: Clue | null = null;
-    if (s.role === 'forger') {
-      const opt = FORGER_OPTIONS.find((o) => o.id === option && !this.forgerEdits.has(o.target));
-      if (!opt) return;
-      this.forgerEdits.set(opt.target, opt);
-      clue = { id: `forger-${opt.id}`, title: 'Bạn đã tác động hồ sơ', body: `${opt.label}.\nAi nhận manh mối này từ giờ sẽ thấy bản đã sửa.`, trace: opt.trace, source };
-    } else if (s.role === 'broker') {
-      this.brokerHeld = true;
-      const holders = [...this.secrets.entries()]
-        .filter(([id, x]) => id !== client.sessionId && x.notebook.length > 0)
-        .sort((a, b) => b[1].notebook.length - a[1].notebook.length)
-        .slice(0, 2)
-        .map(([id]) => this.state.players.get(id)?.name ?? '?');
-      clue = {
-        id: `broker-${this.state.round}`,
-        title: 'Mẩu tin bạn đang giữ',
-        body: `${v.brokerSecret}\n\nNgười đang nắm manh mối liên quan: ${holders.length ? holders.join(', ') : 'chưa ai có manh mối'}.`,
-        source,
-      };
-    } else {
-      const base = v.roles[s.role as keyof typeof v.roles];
-      let body = base.body;
-      let trace: string | undefined;
-      if (s.role === 'historian' && this.brokerHeld) body += '\n[Một email trong chuỗi đã bị chuyển khỏi nhóm chat — bản sao lưu đêm qua vẫn còn trong máy lưu trữ.]';
-      if (s.role === 'archivist' && this.brokerHeld) trace = `Bản sao lưu đêm qua còn một tin bị ẩn khỏi nhóm: ${v.brokerSecret.replace('Tin bạn đang giữ: ', '')}`;
-      if (s.role === 'archivist' && this.forgerEdits.size) {
-        trace = [trace, `Lịch sử chỉnh sửa có ${this.forgerEdits.size} thay đổi lúc 01:1x bởi tài khoản “bientap-chung”, sau khi bản in đã xong.`].filter(Boolean).join('\n');
-      }
-      if (s.role === 'conservator' && this.forgerEdits.size) {
-        trace = 'Dấu vết vật lý: một mẩu giấy / nhãn trong phòng biên tập mới hơn hẳn các tài liệu khác.';
-      }
-      clue = { ...base, body, trace, id: `role-${s.role}-${this.state.round}`, source };
-    }
-    s.abilityUsedRound = this.state.round;
-    if (clue) this.addClue(s, clue);
-    client.send('ability:result', { clue });
-    this.sendPrivate(client.sessionId);
+    this.checkWin();
   }
 
   // ---------------------------------------------------------------- utils
@@ -674,11 +625,16 @@ export class GameRoom extends Room<GameState> {
       role: s.role,
       faction: s.faction,
       objective: s.objective,
-      abilityUsedRound: s.abilityUsedRound,
-      notebook: s.notebook,
-      completedTasks: [...s.completedTasks],
-      extra: s.extra,
+      tasks: s.tasks,
+      completedTasks: [...s.completed],
     };
+    if (s.faction === 'killer') {
+      info.killReadyAt = s.killReadyAt;
+      info.mates = [...this.secrets.entries()]
+        .filter(([pid, x]) => pid !== id && x.faction === 'killer')
+        .map(([pid]) => this.state.players.get(pid)?.name ?? '?');
+    }
+    if (s.role === 'guardian') info.shield = s.shield;
     client.send('private', info);
   }
 
@@ -692,5 +648,3 @@ export class GameRoom extends Room<GameState> {
     this.pushChat({ from: '', name: 'Hệ thống', color: 0, text, t: Date.now(), system: true });
   }
 }
-
-export { NPC_NAMES };

@@ -1,85 +1,97 @@
-import { MIN_RECOMMENDED_PLAYERS } from '@hidden-truth/shared';
+import { useState } from 'react';
+import { MIN_RECOMMENDED_PLAYERS, mapArt } from '@hidden-truth/shared';
 import { leaveRoom, send } from '../net';
 import { colorHex, useStore } from '../store';
 import { asset } from './common';
 import { Chat } from './Chat';
+import { useT } from '../i18n';
+import { Guide, GuideButton } from './Guide';
 
 export function LobbyPanel() {
   const room = useStore((s) => s.room)!;
   const sessionId = useStore((s) => s.sessionId);
   const toast = useStore((s) => s.toast);
+  const t = useT();
+  const ping = useStore((s) => s.ping);
   const isHost = room.hostId === sessionId;
   const me = room.players.find((p) => p.id === sessionId);
   const link = `${location.origin}/join/${room.code}`;
+  const readyCount = room.players.filter((p) => p.ready).length;
+  const total = room.players.length;
+  const [showGuide, setShowGuide] = useState(false);
 
   return (
-    <aside className="lobby-panel">
-      <div className="room-code">
-        <span>Mã phòng</span>
-        <strong>{room.code}</strong>
-        <button
-          className="btn small"
-          onClick={() => {
-            navigator.clipboard?.writeText(link);
-            toast({ text: 'Đã copy link mời!', kind: 'success' });
-          }}
-        >
-          Copy link mời
-        </button>
-      </div>
-      <div className="map-mini">
-        <img src={asset('maps/co-do-hue/meta/hue-lobby-thumb.webp')} alt="" />
-        <span>Cố đô Huế — “Mật mã cố đô”</span>
-      </div>
-
-      <h4>
-        Người chơi ({room.players.length}/10)
-      </h4>
-      <ul className="player-list">
-        {room.players.map((p) => (
-          <li key={p.id}>
-            <i className="dot" style={{ background: colorHex(p.color) }} />
-            {p.name}
-            {p.id === room.hostId && <em className="tag">host</em>}
-            {p.ready && <em className="tag ok">sẵn sàng</em>}
-          </li>
-        ))}
-      </ul>
-      {room.players.length < MIN_RECOMMENDED_PLAYERS && (
-        <p className="muted small">Gợi ý 4–10 người. Có thể bắt đầu với ít người để chơi thử (không có / ít phe Bí Mật).</p>
-      )}
-
-      <div className="lobby-actions">
-        <button className={`btn ${me?.ready ? '' : 'primary'}`} onClick={() => send('ready', { ready: !me?.ready })}>
-          {me?.ready ? 'Huỷ sẵn sàng' : 'Sẵn sàng'}
-        </button>
-        <button className="btn ghost" onClick={leaveRoom}>
-          Rời phòng
-        </button>
-      </div>
-
-      {isHost && (
-        <div className="host-box">
-          <h4>Host</h4>
-          <label className="field">
-            Biến thể vụ án
-            <select value={room.variantChoice} onChange={(e) => send('configure', { variant: e.target.value as 'random' })}>
-              <option value="random">Ngẫu nhiên (khuyên dùng — không lộ đáp án)</option>
-              <option value="HUE-A">HUE-A</option>
-              <option value="HUE-B">HUE-B</option>
-              <option value="HUE-C">HUE-C</option>
-            </select>
-          </label>
-          <label className="check">
-            <input type="checkbox" checked={room.quick} onChange={(e) => send('configure', { variant: room.variantChoice as 'random', quick: e.target.checked })} />
-            Chế độ nhanh (vòng ngắn hơn)
-          </label>
-          <button className="btn primary wide" onClick={() => send('start', {})}>
-            Bắt đầu ván ({room.players.filter((p) => p.ready).length}/{room.players.length} sẵn sàng)
+    <>
+      <aside className="lobby-panel">
+        <div className="lobby-head">
+          <img className="lobby-thumb" src={asset(mapArt(room.mapSlug, 'thumb'))} alt="" />
+          <div className="room-code">
+            <span>{t('roomCode')}</span>
+            <strong>{room.code}</strong>
+          </div>
+          <button
+            className="btn small"
+            onClick={() => {
+              navigator.clipboard?.writeText(link);
+              toast({ text: t('linkCopied'), kind: 'success' });
+            }}
+          >
+            {t('copyLink')}
           </button>
         </div>
-      )}
-      <Chat compact />
-    </aside>
+
+        <h4 className="lobby-players-title">
+          {t('players')} ({total}/10)
+          {ping > 0 && <small className="muted"> · {t('ping')} {ping}ms</small>}
+        </h4>
+        <ul className="player-list">
+          {room.players.map((p) => (
+            <li key={p.id} className={p.ready ? 'is-ready' : ''}>
+              <i className="dot" style={{ background: colorHex(p.color) }} />
+              <span className="pname">{p.name}</span>
+              {p.id === room.hostId && <em className="tag">host</em>}
+              <em className={`tag ${p.ready ? 'ok' : 'wait'}`}>{p.ready ? `✓ ${t('ready')}` : '…'}</em>
+            </li>
+          ))}
+        </ul>
+        {total < MIN_RECOMMENDED_PLAYERS && <p className="muted small lobby-hint">{t('hint')}</p>}
+
+        <div className="lobby-footer">
+          <GuideButton variant="lobby" onClick={() => setShowGuide(true)} />
+          <div className="ready-status">
+            <div className="ready-bar">
+              <div style={{ width: `${total ? (readyCount / total) * 100 : 0}%` }} />
+            </div>
+            <span>
+              {readyCount}/{total} sẵn sàng
+            </span>
+          </div>
+          {isHost && (
+            <label className="check">
+              <input type="checkbox" checked={room.quick} onChange={(e) => send('configure', { quick: e.target.checked })} />
+              {t('quick')}
+            </label>
+          )}
+          <button
+            className={`btn big wide ${me?.ready ? '' : 'primary pulse'}`}
+            onClick={() => send('ready', { ready: !me?.ready })}
+          >
+            {me?.ready ? t('unready') : t('readyBtn')}
+          </button>
+          {isHost && (
+            <button className="btn big wide primary start" onClick={() => send('start', {})}>
+              ▶ {t('start')} ({readyCount}/{total})
+            </button>
+          )}
+          <button className="btn ghost small wide" onClick={leaveRoom}>
+            {t('leave')}
+          </button>
+        </div>
+      </aside>
+      <aside className="lobby-chat">
+        <Chat compact />
+      </aside>
+      {showGuide && <Guide onClose={() => setShowGuide(false)} />}
+    </>
   );
 }

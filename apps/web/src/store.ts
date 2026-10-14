@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { AbilityData, ChatMsg, Clue, EndReveal, Phase, PrivateInfo, TaskData, TaskId, ToastMsg } from '@hidden-truth/shared';
+import type { Cinematic, ChatMsg, EndReveal, Phase, PrivateInfo, TaskData, TaskId, ToastMsg, VoteResult } from '@hidden-truth/shared';
 
 export type PlayerView = {
   id: string;
@@ -10,34 +10,32 @@ export type PlayerView = {
   tasksDone: number;
   voted: boolean;
   emergencyUsed: boolean;
+  alive: boolean;
+  body: boolean;
+  bodyX: number;
+  bodyY: number;
 };
-
-export type BoardClue = Clue & { by: string };
 
 export type RoomView = {
   code: string;
+  mapSlug: string;
   hostId: string;
   phase: Phase;
-  round: number;
-  maxRounds: number;
   phaseEndsAt: number;
   progress: number;
   progressTarget: number;
-  finalMeeting: boolean;
   meetingReason: string;
-  variantChoice: string;
   quick: boolean;
   players: PlayerView[];
-  board: BoardClue[];
 };
 
 export type Nearby =
   | { kind: 'task'; id: TaskId; title: string; done: boolean }
-  | { kind: 'ability'; title: string; used: boolean }
+  | { kind: 'report'; title: string }
   | { kind: 'emergency'; title: string; used: boolean }
   | null;
 
-type TaskResult = { ok: boolean; text: string; clues?: Clue[] };
+type TaskResult = { ok: boolean; text: string; fact?: string };
 
 type Store = {
   screen: 'home' | 'room';
@@ -50,15 +48,20 @@ type Store = {
   toasts: (ToastMsg & { id: number })[];
   task: TaskData | null;
   taskResult: TaskResult | null;
-  ability: AbilityData | null;
-  abilityResult: { clue: Clue | null } | null;
   nearby: Nearby;
+  /** a player (not killer-mate) is within kill range of me */
+  killTarget: boolean;
   area: string;
-  notebookOpen: boolean;
+  /** my position in tile units */
+  pos: { x: number; y: number } | null;
   introOpen: boolean;
-  viewClue: Clue | null;
+  /** reopened from the HUD: show only the role card, no story / long animation */
+  introQuick: boolean;
+  voteResult: VoteResult | null;
   end: EndReveal | null;
+  cinematic: (Cinematic & { id: number }) | null;
   timeOffset: number;
+  ping: number;
   set: (p: Partial<Store>) => void;
   toast: (t: ToastMsg) => void;
 };
@@ -75,15 +78,17 @@ export const useStore = create<Store>((set, get) => ({
   toasts: [],
   task: null,
   taskResult: null,
-  ability: null,
-  abilityResult: null,
   nearby: null,
+  killTarget: false,
   area: '',
-  notebookOpen: false,
+  pos: null,
   introOpen: false,
-  viewClue: null,
+  introQuick: false,
+  voteResult: null,
   end: null,
+  cinematic: null,
   timeOffset: 0,
+  ping: 0,
   set: (p) => set(p),
   toast: (t) => {
     const id = ++toastId;
@@ -95,7 +100,7 @@ export const useStore = create<Store>((set, get) => ({
 /** Any modal that should freeze movement / keyboard input in Phaser. */
 export function uiBlocksMovement(): boolean {
   const s = useStore.getState();
-  return !!(s.task || s.ability || s.notebookOpen || s.introOpen || s.viewClue);
+  return !!(s.task || s.introOpen);
 }
 
 export const colorHex = (n: number) => '#' + n.toString(16).padStart(6, '0');

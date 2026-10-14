@@ -6,51 +6,51 @@
  ],
  "stations": [
   {
-   "id": "task_print_checklist",
+   "id": "task_hue_cuisine",
    "area": "editing",
    "x": 768,
    "y": 1022,
-   "title": "Đối chiếu checklist in ấn",
+   "title": "Chọn món ngon xứ Huế",
    "frame": 0
   },
   {
-   "id": "task_scan_footnote",
+   "id": "task_woodblock",
    "area": "editing",
    "x": 1248,
    "y": 1022,
-   "title": "Scan trang chú thích",
+   "title": "In mộc bản triều Nguyễn",
    "frame": 1
   },
   {
-   "id": "task_update_floor_plan",
+   "id": "task_citadel_gates",
    "area": "coordination",
    "x": 1632,
    "y": 624,
-   "title": "Cập nhật sơ đồ gian",
+   "title": "Dẫn đường vào Hoàng Thành",
    "frame": 2
   },
   {
-   "id": "task_check_lights_labels",
+   "id": "task_lanterns",
    "area": "exhibition",
    "x": 504,
    "y": 504,
-   "title": "Kiểm tra đèn & nhãn phụ",
+   "title": "Thắp đèn lồng đêm hội",
    "frame": 3
   },
   {
-   "id": "task_seal_box",
+   "id": "task_conical_hat",
    "area": "artifact_storage",
    "x": 1296,
    "y": 1406,
-   "title": "Niêm phong hộp tư liệu",
+   "title": "Nón bài thơ — điền chữ còn thiếu",
    "frame": 4
   },
   {
-   "id": "task_return_shelf_a",
+   "id": "task_heritage_quiz",
    "area": "archive",
    "x": 336,
    "y": 1373,
-   "title": "Trả sách mượn kệ A",
+   "title": "Đố vui di sản Cố đô",
    "frame": 5
   }
  ]

@@ -1,15 +1,43 @@
 import { useEffect, useState } from 'react';
+import { DEFAULT_MAP_SLUG, MAP_CATALOG, mapArt, mapMeta, playableMap } from '@hidden-truth/shared';
 import { createRoom, joinRoom, reconnect } from '../net';
 import { useStore } from '../store';
 import { asset } from './common';
+import { useLang, useT } from '../i18n';
+import { Guide, GuideButton } from './Guide';
+import { LangSwitch } from './LangSwitch';
 
 const NAME_KEY = 'tht:name';
+const MAP_KEY = 'tht:map';
+const home = (n: string) => asset(`common/ui/home/${n}.webp`);
+
+const readMap = () => {
+  try {
+    return playableMap(localStorage.getItem(MAP_KEY));
+  } catch {
+    return DEFAULT_MAP_SLUG;
+  }
+};
 
 export function Home() {
   const { connecting, error } = useStore();
+  const t = useT();
+  const lang = useLang((s) => s.lang);
+  const [showGuide, setShowGuide] = useState(false);
   const [name, setName] = useState(() => localStorage.getItem(NAME_KEY) ?? '');
   const joinMatch = /^\/join\/([A-Za-z0-9]{4,8})/.exec(location.pathname);
+  const invited = !!joinMatch;
   const [code, setCode] = useState(joinMatch?.[1]?.toUpperCase() ?? '');
+  const [mapSlug, setMapSlug] = useState(readMap);
+  const map = mapMeta(mapSlug);
+  const toast = useStore((s) => s.toast);
+  const pickMap = (slug: string) => {
+    if (!mapMeta(slug).available) return toast({ text: t('comingSoonToast'), kind: 'info' });
+    setMapSlug(slug);
+    try {
+      localStorage.setItem(MAP_KEY, slug);
+    } catch {}
+  };
 
   useEffect(() => {
     reconnect();
@@ -22,49 +50,102 @@ export function Home() {
   };
 
   return (
-    <div className="home" style={{ backgroundImage: `url(${asset('maps/co-do-hue/meta/hue-loading.webp')})` }}>
+    <div className="home">
+      {MAP_CATALOG.map((m) => (
+        <div key={m.slug} className={`home-bg ${m.slug === mapSlug ? 'on' : ''}`} style={{ backgroundImage: `url(${asset(mapArt(m.slug, 'home-bg'))})` }} />
+      ))}
+      <LangSwitch className="home-lang" />
       <div className="home-card">
+        <img className="home-crest" src={home('home-crest')} alt="" draggable={false} />
         <h1>
           The Hidden Truth
           <small>Bí Ẩn Việt Nam</small>
         </h1>
-        <p className="tagline">Hồ Sơ Việt Nam · suy luận xã hội · điều tra bằng bằng chứng</p>
+        <p className="tagline">{t('tagline')}</p>
 
         <label className="field">
-          Tên hiển thị
-          <input value={name} maxLength={16} placeholder="Ví dụ: Minh" onChange={(e) => setName(e.target.value)} />
+          {t('displayName')}
+          <input value={name} maxLength={16} placeholder={t('namePlaceholder')} onChange={(e) => setName(e.target.value)} />
         </label>
 
-        <div className="map-card">
-          <img src={asset('maps/co-do-hue/meta/hue-lobby-thumb.webp')} alt="Cố đô Huế" />
-          <div>
-            <img src={asset('maps/co-do-hue/meta/hue-map-icon.webp')} width={40} height={40} alt="" />
-            <strong>Map: Cố đô Huế</strong>
-            <span>Một câu trên bảng song ngữ lệch hồ sơ nghiên cứu — dịch, biên tập hay in vội?</span>
+        {!invited && (
+          <div className="map-picker">
+            <span className="map-picker-label">{t('chooseMap')}</span>
+            <div className="map-grid" role="radiogroup" aria-label={t('chooseMap')}>
+              {MAP_CATALOG.map((m) => (
+                <button
+                  key={m.slug}
+                  role="radio"
+                  aria-checked={m.slug === mapSlug}
+                  aria-disabled={!m.available}
+                  className={`map-tile ${m.slug === mapSlug ? 'active' : ''} ${m.available ? '' : 'locked'}`}
+                  onClick={() => pickMap(m.slug)}
+                  title={m.available ? m.name[lang] : `${m.name[lang]} — ${t('comingSoon')}`}
+                >
+                  <span className="map-thumb" style={{ backgroundImage: `url(${asset(mapArt(m.slug, 'thumb'))})` }}>
+                    {!m.available && <img className="map-lock" src={home('lock')} alt="" draggable={false} />}
+                    {!m.available && <em className="map-soon"><span>{t('comingSoon')}</span></em>}
+                  </span>
+                  <b>{m.name[lang]}</b>
+                </button>
+              ))}
+            </div>
+            <div className="map-desc" key={map.slug}>
+              <strong>
+                {map.name[lang]} <small>· {map.subtitle[lang]}</small>
+              </strong>
+              <span>{map.hook[lang]}</span>
+              <i>
+                {map.players} {t('playersShort')}
+              </i>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="home-actions">
-          <button className="btn primary" disabled={connecting} onClick={() => createRoom(saveName())}>
-            Tạo phòng mới
-          </button>
-          <div className="join-row">
-            <input
-              className="code-input"
-              value={code}
-              maxLength={8}
-              placeholder="MÃ PHÒNG"
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              onKeyDown={(e) => e.key === 'Enter' && code && joinRoom(code, saveName())}
-            />
-            <button className="btn" disabled={connecting || code.length < 4} onClick={() => joinRoom(code, saveName())}>
-              Vào phòng
-            </button>
-          </div>
+          {invited ? (
+            <>
+              <div className="invite-banner">
+                {lang === 'vi' ? 'Bạn được mời vào phòng' : 'You are invited to room'} <b>{code}</b>
+              </div>
+              <button className="btn primary big wide" disabled={connecting || code.length < 4} onClick={() => joinRoom(code, saveName())}>
+                {t('joinRoom')}
+              </button>
+              <button className="btn-link" disabled={connecting} onClick={() => createRoom(saveName(), mapSlug)}>
+                {lang === 'vi' ? 'hoặc tạo phòng mới' : 'or create a new room'}
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="btn primary big wide" disabled={connecting} onClick={() => createRoom(saveName(), mapSlug)}>
+                {t('createRoom')}
+              </button>
+              <div className="or-sep">
+                <span>{lang === 'vi' ? 'hoặc nhập mã để vào phòng' : 'or join with a code'}</span>
+              </div>
+              <div className="join-row">
+                <input
+                  className="code-input"
+                  value={code}
+                  maxLength={8}
+                  placeholder={t('roomCodePh')}
+                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => e.key === 'Enter' && code && joinRoom(code, saveName())}
+                />
+                <button className="btn" disabled={connecting || code.length < 4} onClick={() => joinRoom(code, saveName())}>
+                  {t('joinRoom')}
+                </button>
+              </div>
+            </>
+          )}
         </div>
-        {connecting && <p className="muted">Đang kết nối…</p>}
+        <div className="home-foot">
+          <GuideButton onClick={() => setShowGuide(true)} />
+        </div>
+        {showGuide && <Guide onClose={() => setShowGuide(false)} />}
+        {connecting && <p className="muted">{t('connecting')}</p>}
         {error && <p className="error">{error}</p>}
-        <p className="muted small">Điều khiển: WASD / phím mũi tên để đi · E hoặc Space để tương tác.</p>
+        <p className="muted small home-controls">{t('controls')}</p>
       </div>
     </div>
   );
