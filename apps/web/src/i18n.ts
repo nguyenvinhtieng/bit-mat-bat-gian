@@ -5,7 +5,8 @@ const KEY = 'tht:lang';
 
 const dict = {
   vi: {
-    tagline: 'Làm nhiệm vụ văn hoá, lần theo manh mối, bắt cho ra kẻ gian.',
+    slogan: 'Mắt Ai Cũng Bịt, Gian Ai Cũng Giấu',
+    tagline: 'Làm nhiệm vụ di sản, đọc vị từng người, tìm ra Âm Binh trước khi quá muộn.',
     displayName: 'Tên hiển thị',
     namePlaceholder: 'Ví dụ: Minh',
     mapTitle: 'Map: Cố đô Huế — Năm Canh Trước Bình Minh',
@@ -91,7 +92,8 @@ const dict = {
     rotateBody: 'Trò chơi chỉ hỗ trợ màn hình ngang trên điện thoại.',
   },
   en: {
-    tagline: 'Do cultural tasks, follow the clues, catch the culprit.',
+    slogan: 'Every Eye Blindfolded, Every Hand Hiding Something',
+    tagline: 'Complete heritage tasks, read every player, unmask the Shadows before it is too late.',
     displayName: 'Display name',
     namePlaceholder: 'e.g. Minh',
     mapTitle: 'Map: Imperial City of Huế — Five Watches Before Dawn',

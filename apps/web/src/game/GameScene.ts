@@ -27,7 +27,9 @@ import {
   type TaskId,
 } from '@hidden-truth/shared';
 import { onRoom, room, send } from '../net';
-import { uiBlocksMovement, useStore, type Nearby } from '../store';
+import { KILLER_NAME_COLOR, uiBlocksMovement, useStore, type Nearby } from '../store';
+
+const NAME_COLOR = '#fff8e8';
 
 const A = '/assets';
 const DIRS = ['down', 'left', 'right', 'up'] as const;
@@ -157,6 +159,7 @@ export class GameScene extends Phaser.Scene {
 
     this.unbind.push(onRoom((r) => this.bindRoom(r)));
     this.unbind.push(useStore.subscribe((s, prev) => s.cinematic && s.cinematic !== prev.cinematic && this.onCinematic(s.cinematic)));
+    this.unbind.push(useStore.subscribe((s, prev) => s.me?.killerIds !== prev.me?.killerIds && this.refreshNameColors()));
     this.unbind.push(useStore.subscribe((s, prev) => (s.me?.completedTasks !== prev.me?.completedTasks || s.me?.tasks !== prev.me?.tasks) && this.refreshStations()));
     this.events.once('shutdown', () => this.unbind.forEach((u) => u()));
   }
@@ -368,6 +371,7 @@ export class GameScene extends Phaser.Scene {
       av.c.setPosition(p.x, p.y);
       av.buf.push({ t: performance.now(), x: p.x, y: p.y });
       this.avatars.set(id, av);
+      this.refreshNameColors();
       if (id === r.sessionId) {
         this.pred = { x: p.x, y: p.y };
         this.hasServerPos = true;
@@ -397,12 +401,18 @@ export class GameScene extends Phaser.Scene {
     this.refreshStations();
   }
 
+  /** Âm Binh see every Âm Binh's nameplate in red; everyone else only ever gets the default colour. */
+  private refreshNameColors() {
+    const killers = useStore.getState().me?.killerIds ?? [];
+    for (const [id, av] of this.avatars) av.label.setColor(killers.includes(id) ? KILLER_NAME_COLOR : NAME_COLOR);
+  }
+
   private makeAvatar(name: string, color: number): Avatar {
     const shadow = this.add.image(0, -2, 'shadow').setDisplaySize(34, 14);
     const base = this.add.sprite(0, 0, 'player', 'walk-down-0').setOrigin(0.5, 1);
     const tint = this.add.sprite(0, 0, 'player-tint', 'walk-down-0').setOrigin(0.5, 1).setTint(color);
     const label = this.add
-      .text(0, -68, name, { fontFamily: 'Be Vietnam Pro, system-ui, sans-serif', fontSize: '13px', color: '#fff8e8', stroke: '#2a1a10', strokeThickness: 4 })
+      .text(0, -68, name, { fontFamily: 'Be Vietnam Pro, system-ui, sans-serif', fontSize: '13px', color: NAME_COLOR, stroke: '#2a1a10', strokeThickness: 4 })
       .setOrigin(0.5, 1)
       .setResolution(2);
     const c = this.add.container(0, 0, [shadow, base, tint, label]);
@@ -658,9 +668,10 @@ export class GameScene extends Phaser.Scene {
     if (s.me?.faction !== 'killer' || s.room?.phase !== 'explore') return false;
     const me = this.myView();
     if (!me?.alive) return false;
-    const mates = new Set(s.me.mates ?? []);
+    // by session id, never by name — players may share a name with a mate
+    const mates = new Set(s.me.killerIds ?? []);
     for (const [id, av] of this.avatars) {
-      if (id === s.sessionId || !av.alive || mates.has(av.name)) continue;
+      if (id === s.sessionId || !av.alive || mates.has(id)) continue;
       if (dist(this.pred, { x: av.c.x, y: av.c.y }) <= GAME.killRange) return true;
     }
     return false;

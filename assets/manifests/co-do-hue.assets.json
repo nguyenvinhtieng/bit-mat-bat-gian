@@ -60,25 +60,11 @@
    ],
    "layout": "2x2 tiles per texture, columns"
   },
-  "hue-lobby-thumb": {
-   "file": "maps/co-do-hue/meta/hue-lobby-thumb.webp",
-   "size": [
-    640,
-    360
-   ]
-  },
   "hue-map-icon": {
    "file": "maps/co-do-hue/meta/hue-map-icon.webp",
    "size": [
     128,
     128
-   ]
-  },
-  "hue-loading": {
-   "file": "maps/co-do-hue/meta/hue-loading.webp",
-   "size": [
-    1920,
-    1080
    ]
   },
   "floor-bake": {
@@ -709,158 +695,10 @@
    ]
   }
  ],
- "clues": {
-  "hue-clue-paper": {
-   "file": "maps/co-do-hue/clues/hue-clue-paper.webp",
-   "size": [
-    640,
-    480
-   ]
-  },
-  "hue-ui-checklist-paper": {
-   "file": "maps/co-do-hue/clues/hue-ui-checklist-paper.webp",
-   "size": [
-    400,
-    520
-   ]
-  },
-  "hue-ui-scan-page": {
-   "file": "maps/co-do-hue/clues/hue-ui-scan-page.webp",
-   "size": [
-    480,
-    640
-   ]
-  },
-  "hue-ui-floor-plan": {
-   "file": "maps/co-do-hue/clues/hue-ui-floor-plan.webp",
-   "size": [
-    560,
-    400
-   ]
-  },
-  "hue-ui-photo-board": {
-   "file": "maps/co-do-hue/clues/hue-ui-photo-board.webp",
-   "size": [
-    480,
-    360
-   ]
-  },
-  "hue-ui-seal-record": {
-   "file": "maps/co-do-hue/clues/hue-ui-seal-record.webp",
-   "size": [
-    400,
-    360
-   ]
-  },
-  "hue-ui-loan-slip": {
-   "file": "maps/co-do-hue/clues/hue-ui-loan-slip.webp",
-   "size": [
-    400,
-    300
-   ]
-  },
-  "hue-ui-doc-diff-bg": {
-   "file": "maps/co-do-hue/clues/hue-ui-doc-diff-bg.webp",
-   "size": [
-    640,
-    480
-   ]
-  },
-  "hue-ui-email-thread": {
-   "file": "maps/co-do-hue/clues/hue-ui-email-thread.webp",
-   "size": [
-    520,
-    400
-   ]
-  },
-  "hue-ui-chat-fragment": {
-   "file": "maps/co-do-hue/clues/hue-ui-chat-fragment.webp",
-   "size": [
-    360,
-    280
-   ]
-  },
-  "hue-ui-tour-script": {
-   "file": "maps/co-do-hue/clues/hue-ui-tour-script.webp",
-   "size": [
-    480,
-    320
-   ]
-  },
-  "hue-clue-handnote": {
-   "file": "maps/co-do-hue/clues/hue-clue-handnote.webp",
-   "size": [
-    360,
-    280
-   ]
-  },
-  "hue-clue-print-proof": {
-   "file": "maps/co-do-hue/clues/hue-clue-print-proof.webp",
-   "size": [
-    640,
-    480
-   ]
-  }
- },
- "npc": {
-  "hoa": {
-   "file": "maps/co-do-hue/npc/hue-npc-hoa.webp",
-   "size": [
-    256,
-    256
-   ]
-  },
-  "lan": {
-   "file": "maps/co-do-hue/npc/hue-npc-lan.webp",
-   "size": [
-    256,
-    256
-   ]
-  },
-  "minh-giam": {
-   "file": "maps/co-do-hue/npc/hue-npc-minh-giam.webp",
-   "size": [
-    256,
-    256
-   ]
-  },
-  "phu": {
-   "file": "maps/co-do-hue/npc/hue-npc-phu.webp",
-   "size": [
-    256,
-    256
-   ]
-  },
-  "thao": {
-   "file": "maps/co-do-hue/npc/hue-npc-thao.webp",
-   "size": [
-    256,
-    256
-   ]
-  },
-  "tuan": {
-   "file": "maps/co-do-hue/npc/hue-npc-tuan.webp",
-   "size": [
-    256,
-    256
-   ]
-  },
-  "vi": {
-   "file": "maps/co-do-hue/npc/hue-npc-vi.webp",
-   "size": [
-    256,
-    256
-   ]
-  }
- },
  "ui": {
   "task-marker": {
-   "file": "common/ui/task-marker.webp",
-   "size": 64
-  },
-  "task-complete": {
-   "file": "common/ui/task-complete.webp",
-   "size": 32
+   "size": 64,
+   "atlas": "hue-gameplay-0"
   },
   "meeting-bell": {
    "file": "common/ui/meeting-bell.webp",
@@ -870,37 +708,13 @@
    "file": "common/ui/clue.webp",
    "size": 48
   },
-  "chat": {
-   "file": "common/ui/chat.webp",
-   "size": 32
-  },
   "timer": {
    "file": "common/ui/timer.webp",
-   "size": 32
-  },
-  "meeting-table": {
-   "file": "common/ui/meeting-table.webp",
-   "size": 48
-  },
-  "alert": {
-   "file": "common/ui/alert.webp",
-   "size": 48
-  },
-  "progress-star": {
-   "file": "common/ui/progress-star.webp",
    "size": 32
   },
   "notebook": {
    "file": "common/ui/notebook.webp",
    "size": 48
-  },
-  "vote": {
-   "file": "common/ui/vote.webp",
-   "size": 48
-  },
-  "leave": {
-   "file": "common/ui/leave.webp",
-   "size": 32
   },
   "meeting-bg": {
    "file": "common/ui/meeting/meeting-bg",
@@ -980,29 +794,14 @@
   }
  },
  "roles": {
-  "historian": {
-   "icon": "common/ui/roles/historian.webp",
-   "ability": "common/ui/abilities/historian.webp"
-  },
   "conservator": {
-   "icon": "common/ui/roles/conservator.webp",
-   "ability": "common/ui/abilities/conservator.webp"
+   "icon": "common/ui/roles/conservator.webp"
   },
   "local_guide": {
-   "icon": "common/ui/roles/local_guide.webp",
-   "ability": "common/ui/abilities/local_guide.webp"
-  },
-  "archivist": {
-   "icon": "common/ui/roles/archivist.webp",
-   "ability": "common/ui/abilities/archivist.webp"
+   "icon": "common/ui/roles/local_guide.webp"
   },
   "forger": {
-   "icon": "common/ui/roles/forger.webp",
-   "ability": "common/ui/abilities/forger.webp"
-  },
-  "broker": {
-   "icon": "common/ui/roles/broker.webp",
-   "ability": "common/ui/abilities/broker.webp"
+   "icon": "common/ui/roles/forger.webp"
   }
  },
  "story": "nam-canh-truoc-binh-minh",

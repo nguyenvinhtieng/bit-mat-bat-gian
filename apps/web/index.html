@@ -2,16 +2,98 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Bịt Mắt Bắt Gian: Truy Tìm Kẻ Gian Giữa Di Sản Việt</title>
-    <link rel="icon" href="/assets/maps/co-do-hue/meta/hue-map-icon.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Bịt Mắt Bắt Gian — Game suy luận xã hội: Mắt Ai Cũng Bịt, Gian Ai Cũng Giấu</title>
+    <meta name="description" content="Bịt Mắt Bắt Gian là game suy luận xã hội nhiều người chơi trên trình duyệt: làm nhiệm vụ văn hoá tại Cố đô Huế, lần theo manh mối, họp bàn bỏ phiếu và bắt cho ra Âm Binh. Chơi miễn phí cùng bạn bè, 4–10 người." />
+    <meta name="keywords" content="Bịt Mắt Bắt Gian, game suy luận, game ma sói, game giống Among Us, game nhiều người chơi, game trình duyệt, game chơi cùng bạn bè, di sản Việt Nam, Cố đô Huế, social deduction game" />
+    <meta name="application-name" content="Bịt Mắt Bắt Gian" />
+    <meta name="author" content="Bịt Mắt Bắt Gian" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#1d130c" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="canonical" href="%SITE_URL%/" />
+
+    <!-- icons / PWA -->
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Bịt Mắt Bắt Gian" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Bịt Mắt Bắt Gian" />
+    <meta property="og:locale" content="vi_VN" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:url" content="%SITE_URL%/" />
+    <meta property="og:title" content="Bịt Mắt Bắt Gian — Mắt Ai Cũng Bịt, Gian Ai Cũng Giấu" />
+    <meta property="og:description" content="Game suy luận xã hội nhiều người chơi: làm nhiệm vụ văn hoá ở Cố đô Huế, lần theo manh mối và bắt cho ra kẻ gian. Chơi miễn phí trên trình duyệt." />
+    <meta property="og:image" content="%SITE_URL%/brand/og-image.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Logo Bịt Mắt Bắt Gian trên nền Cố đô Huế về đêm" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Bịt Mắt Bắt Gian — Mắt Ai Cũng Bịt, Gian Ai Cũng Giấu" />
+    <meta name="twitter:description" content="Game suy luận xã hội nhiều người chơi trên trình duyệt, lấy bối cảnh di sản Việt. Chơi miễn phí cùng bạn bè." />
+    <meta name="twitter:image" content="%SITE_URL%/brand/og-image.jpg" />
+    <meta name="twitter:image:alt" content="Logo Bịt Mắt Bắt Gian trên nền Cố đô Huế về đêm" />
+
+    <!-- structured data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "%SITE_URL%/#website",
+            "url": "%SITE_URL%/",
+            "name": "Bịt Mắt Bắt Gian",
+            "alternateName": "Bit Mat Bat Gian",
+            "inLanguage": ["vi", "en"]
+          },
+          {
+            "@type": ["VideoGame", "WebApplication"],
+            "@id": "%SITE_URL%/#game",
+            "name": "Bịt Mắt Bắt Gian",
+            "alternateName": "Bit Mat Bat Gian — Hunting the Culprit Among Vietnamese Heritage",
+            "url": "%SITE_URL%/",
+            "description": "Game suy luận xã hội nhiều người chơi trên trình duyệt: làm nhiệm vụ văn hoá tại Cố đô Huế, lần theo manh mối, họp bàn bỏ phiếu và bắt cho ra Âm Binh.",
+            "image": "%SITE_URL%/brand/og-image.jpg",
+            "logo": "%SITE_URL%/brand/logo.png",
+            "genre": ["Social deduction", "Party game", "Multiplayer"],
+            "gamePlatform": ["Web browser", "PC", "Mobile"],
+            "applicationCategory": "GameApplication",
+            "operatingSystem": "Any",
+            "playMode": "MultiPlayer",
+            "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 4, "maxValue": 10 },
+            "inLanguage": ["vi", "en"],
+            "isAccessibleForFree": true,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "VND" },
+            "isPartOf": { "@id": "%SITE_URL%/#website" }
+          }
+        ]
+      }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="image" href="/brand/logo.webp" type="image/webp" />
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&family=Noto+Serif:wght@700&family=Dancing+Script:wght@600&display=swap" rel="stylesheet" />
     <!-- Hán glyphs used by the Huế mini-games (woodblock + poem wall) -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&text=%E6%9C%94%E6%9B%86%E5%B9%B4%E7%A6%8F%E8%93%AE%E5%B1%B1%E8%88%9F%E7%AB%B9%E6%A2%85%E6%9C%88&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>Bịt Mắt Bắt Gian — Mắt Ai Cũng Bịt, Gian Ai Cũng Giấu</h1>
+      <p>Game suy luận xã hội nhiều người chơi trên trình duyệt. Làm nhiệm vụ văn hoá tại Cố đô Huế, lần theo manh mối, họp bàn bỏ phiếu và bắt cho ra Âm Binh. Vui lòng bật JavaScript để chơi.</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

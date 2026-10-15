@@ -6,8 +6,6 @@
  *   fx-dash-smear   ink speed streaks trailing a lunge (drawn trailing to the RIGHT, flip for the other way)
  *   fx-soul-rise    pale soul wisp leaving a fallen body, rising and dissolving
  *   fx-shield-dome  jade hex-lattice dome: pops up, ripples from the blade hit on the left, shatters to motes
- * Single:
- *   fx-crack.png    512px cracked-lacquer overlay for the victim's view (white lines, alpha)
  * Writes assets/_src/common/ui/fx/*.svg, assets/common/ui/fx/*.png, apps/web/public/assets/common/ui/fx/*.webp
  */
 import fs from 'node:fs';
@@ -118,37 +116,6 @@ function domeFrame(i) {
   return s;
 }
 
-/* ---------- cracked lacquer overlay (victim POV) */
-function crack() {
-  const S = 512, R = rng(99);
-  let s = '';
-  const cx = 256, cy = 230;
-  for (let k = 0; k < 11; k++) {
-    let a = (k / 11) * Math.PI * 2 + R() * 0.4, x = cx, y = cy;
-    let d = `M${cx} ${cy}`;
-    const steps = 5 + Math.floor(R() * 4);
-    for (let j = 0; j < steps; j++) {
-      a += (R() - 0.5) * 0.7;
-      const l = 24 + R() * 40;
-      x += Math.cos(a) * l;
-      y += Math.sin(a) * l;
-      d += ` L${r1(x)} ${r1(y)}`;
-    }
-    s += `<path d="${d}" fill="none" stroke="#000" stroke-opacity=".55" stroke-width="5" stroke-linejoin="round"/>`;
-    s += `<path d="${d}" fill="none" stroke="#fff" stroke-width="${r1(1.4 + R() * 1.6)}" stroke-linejoin="round"/>`;
-  }
-  for (const r of [40, 90]) {
-    let d = '';
-    for (let k = 0; k <= 14; k++) {
-      const a = (k / 14) * Math.PI * 2, rr = r + (R() - 0.5) * 18;
-      d += `${k ? 'L' : 'M'}${r1(cx + Math.cos(a) * rr)} ${r1(cy + Math.sin(a) * rr)} `;
-    }
-    s += `<path d="${d}" fill="none" stroke="#fff" stroke-width="1.4" opacity=".8"/>`;
-  }
-  s += `<circle cx="${cx}" cy="${cy}" r="14" fill="#fff" opacity=".9" filter="url(#b6)"/>`;
-  return { S, body: s };
-}
-
 const wrap = (w, h, body) => `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${DEFS}${body}</svg>`;
 
 async function writeStrip(name, frameFn) {
@@ -165,10 +132,3 @@ async function writeStrip(name, frameFn) {
 await writeStrip('fx-dash-smear', dashFrame);
 await writeStrip('fx-soul-rise', soulFrame);
 await writeStrip('fx-shield-dome', domeFrame);
-const c = crack();
-const cs = wrap(c.S, c.S, c.body);
-fs.writeFileSync(path.join(SRC, 'fx-crack.svg'), cs);
-const cp = await sharp(Buffer.from(cs)).png().toBuffer();
-fs.writeFileSync(path.join(OUT, 'fx-crack.png'), cp);
-await sharp(cp).webp({ quality: 88, alphaQuality: 100 }).toFile(path.join(PUB, 'fx-crack.webp'));
-console.log('[fx-action] fx-crack');

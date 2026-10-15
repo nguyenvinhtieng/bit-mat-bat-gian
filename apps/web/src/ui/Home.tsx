@@ -63,8 +63,8 @@ export function Home() {
       <div className="home-card">
         <img className="home-crest" src={home('home-crest')} alt="" draggable={false} />
         <h1>
-          Bịt Mắt Bắt Gian
-          <small>Truy Tìm Kẻ Gian Giữa Di Sản Việt</small>
+          <img className="home-logo" src="/brand/logo.webp" alt="Bịt Mắt Bắt Gian" width={1200} height={392} draggable={false} />
+          <small>{t('slogan')}</small>
         </h1>
         <p className="tagline">{t('tagline')}</p>
 

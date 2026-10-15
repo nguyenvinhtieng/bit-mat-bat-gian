@@ -1,0 +1,19 @@
+{
+  "name": "Bịt Mắt Bắt Gian — Mắt Ai Cũng Bịt, Gian Ai Cũng Giấu",
+  "short_name": "Bịt Mắt Bắt Gian",
+  "description": "Game suy luận xã hội nhiều người chơi lấy bối cảnh di sản Việt.",
+  "lang": "vi",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#1d130c",
+  "theme_color": "#1d130c",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "/brand/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

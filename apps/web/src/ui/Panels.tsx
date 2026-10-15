@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { GAME, HUE_PRELUDE, ROLE_INFO } from '@hidden-truth/shared';
-import { useStore } from '../store';
+import { KILLER_NAME_COLOR, useStore } from '../store';
 import { RoleBadge, useEscape } from './common';
 
 const FLY_MS = 850; // role reveal shrinking into the HUD role card
@@ -111,7 +111,7 @@ export function IntroModal() {
           <p className="opening-desc">{info.desc}</p>
           {killer && me.mates && me.mates.length > 0 && (
             <p className="opening-mates">
-              <b>Đồng bọn:</b> {me.mates.join(', ')}
+              <b>Đồng bọn:</b> <span style={{ color: KILLER_NAME_COLOR }}>{me.mates.join(', ')}</span>
             </p>
           )}
           <p className="objective">

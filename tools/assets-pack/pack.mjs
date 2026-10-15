@@ -208,8 +208,6 @@ const manifest = {
   areas: ['courtyard_checkin', 'exhibition', 'corridor', 'coordination', 'editing', 'archive', 'artifact_storage'],
   props: {},
   stations: [],
-  clues: {},
-  npc: {},
   ui: {},
   roles: {},
 };
@@ -277,30 +275,33 @@ const UI_NAMES = [
   ['chat', 32], ['timer', 32], ['meeting-table', 48], ['alert', 48],
   ['progress-star', 32], ['notebook', 48], ['vote', 48], ['leave', 32],
 ];
+// sheet order is fixed (4x3 grid); only these cells ship. task-marker is PNG-only (atlas input).
+const UI_SHIP = new Set(['task-marker', 'meeting-bell', 'clue', 'timer', 'notebook']);
 async function packUi() {
   const f = path.join(SRC, 'common/ui-sheet.png');
   if (!exists(f)) return log('skip ui');
   const cells = sliceGrid(removeBackground(await loadRaw(f)), 4, 3);
   for (let i = 0; i < UI_NAMES.length; i++) {
     const [name, size] = UI_NAMES[i];
-    if (!cells[i]) continue;
+    if (!cells[i] || !UI_SHIP.has(name)) continue;
     const out = Math.max(size, 64); // ship 64px (crisp at 2x for 32px slots)
-    await writeBoth(`common/ui/${name}.png`, await fitTo(cells[i], out, out, { align: 'center', pad: 1 }));
-    manifest.ui[name] = { file: `common/ui/${name}.webp`, size };
+    const webp = name !== 'task-marker';
+    await writeBoth(`common/ui/${name}.png`, await fitTo(cells[i], out, out, { align: 'center', pad: 1 }), { webp });
+    manifest.ui[name] = webp ? { file: `common/ui/${name}.webp`, size } : { size, atlas: 'hue-gameplay-0' };
   }
   log('ui icons');
 }
 
-const ROLES = ['historian', 'conservator', 'local_guide', 'archivist', 'forger', 'broker'];
+const ROLES = ['historian', 'conservator', 'local_guide', 'archivist', 'forger', 'broker']; // sheet order (3x2)
+const ROLE_SHIP = new Set(['conservator', 'local_guide', 'forger']); // roles in ROLE_INFO
 async function packRoles() {
   const f = path.join(SRC, 'common/role-icons.png');
   if (!exists(f)) return log('skip roles');
   const cells = sliceGrid(removeBackground(await loadRaw(f)), 3, 2);
   for (let i = 0; i < ROLES.length; i++) {
-    if (!cells[i]) continue;
+    if (!cells[i] || !ROLE_SHIP.has(ROLES[i])) continue;
     await writeBoth(`common/ui/roles/${ROLES[i]}.png`, await fitTo(cells[i], 96, 96, { align: 'center' })); // 48dp @2x
-    await writeBoth(`common/ui/abilities/${ROLES[i]}.png`, await fitTo(cells[i], 64, 64, { align: 'center' })); // 32dp @2x
-    manifest.roles[ROLES[i]] = { icon: `common/ui/roles/${ROLES[i]}.webp`, ability: `common/ui/abilities/${ROLES[i]}.webp` };
+    manifest.roles[ROLES[i]] = { icon: `common/ui/roles/${ROLES[i]}.webp` };
   }
   log('role icons');
 }
@@ -402,45 +403,13 @@ async function packGameplayAtlas() {
   // task marker ring also lives in the gameplay atlas
   const marker = path.join(OUT, 'common/ui/task-marker.png');
   if (exists(marker)) items.push({ key: 'task-marker', buf: fs.readFileSync(marker), w: 64, h: 64 });
-  for (const role of ROLES) {
-    const p = path.join(OUT, `common/ui/abilities/${role}.png`);
-    if (exists(p)) items.push({ key: `ability-${role}`, buf: await sharp(p).resize(48, 48).png().toBuffer(), w: 48, h: 48 });
-  }
   const a = await buildAtlas('hue-gameplay-0', items, 'maps/co-do-hue/atlas');
   manifest.atlases.push({ name: a.name, file: 'maps/co-do-hue/atlas/hue-gameplay-0', size: a.size });
 }
 
-const CLUE_SIZES = {
-  'hue-clue-paper': [640, 480],
-  'hue-ui-checklist-paper': [400, 520],
-  'hue-ui-scan-page': [480, 640],
-  'hue-ui-floor-plan': [560, 400],
-  'hue-ui-photo-board': [480, 360],
-  'hue-ui-seal-record': [400, 360],
-  'hue-ui-loan-slip': [400, 300],
-  'hue-ui-doc-diff-bg': [640, 480],
-  'hue-ui-email-thread': [520, 400],
-  'hue-ui-chat-fragment': [360, 280],
-  'hue-ui-tour-script': [480, 320],
-  'hue-clue-handnote': [360, 280],
-  'hue-clue-print-proof': [640, 480],
-};
-async function packClues() {
-  for (const [key, [w, h]] of Object.entries(CLUE_SIZES)) {
-    const f = path.join(SRC, `maps/co-do-hue/clues/${key}.png`);
-    if (!exists(f)) continue;
-    const buf = await sharp(f).resize(w, h, { fit: 'cover' }).png().toBuffer();
-    await writeBoth(`maps/co-do-hue/clues/${key}.png`, buf);
-    manifest.clues[key] = { file: `maps/co-do-hue/clues/${key}.webp`, size: [w, h] };
-  }
-  log('clues', Object.keys(manifest.clues).length);
-}
-
 async function packMeta() {
   const list = [
-    ['meta/hue-lobby-thumb', 640, 360],
     ['meta/hue-map-icon', 128, 128],
-    ['meta/hue-loading', 1920, 1080],
   ];
   for (const [rel, w, h] of list) {
     const f = path.join(SRC, `maps/co-do-hue/${rel}.png`);
@@ -448,15 +417,7 @@ async function packMeta() {
     await writeBoth(`maps/co-do-hue/${rel}.png`, await sharp(f).resize(w, h, { fit: 'cover' }).png().toBuffer());
     manifest.textures[path.basename(rel)] = { file: `maps/co-do-hue/${rel}.webp`, size: [w, h] };
   }
-  const npcDir = path.join(SRC, 'maps/co-do-hue/npc');
-  if (exists(npcDir))
-    for (const file of fs.readdirSync(npcDir)) {
-      const img = removeBackground(await loadRaw(path.join(npcDir, file)));
-      const key = file.replace('.png', '');
-      await writeBoth(`maps/co-do-hue/npc/${key}.png`, await fitTo(crop(img, bboxOf(img)), 256, 256, { align: 'bottom' }));
-      manifest.npc[key.replace('hue-npc-', '')] = { file: `maps/co-do-hue/npc/${key}.webp`, size: [256, 256] };
-    }
-  log('meta + npc');
+  log('meta');
 }
 
 await packPlayer();
@@ -467,7 +428,6 @@ await packUi();
 await packRoles();
 await packTileset();
 await packGameplayAtlas();
-await packClues();
 await packMeta();
 
 const mf = path.join(OUT, 'manifests/co-do-hue.assets.json');

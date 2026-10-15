@@ -33,7 +33,7 @@ function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''
   );
 }
 import { send } from '../net';
-import { useStore } from '../store';
+import { KILLER_NAME_COLOR, useStore } from '../store';
 import { useT } from '../i18n';
 import { Digits, Icon, RoleBadge, asset, fmt, useCountdown } from './common';
 import { MapView } from './MapView';
@@ -326,7 +326,7 @@ export function Hud() {
                 ROLE_INFO[me.role].short
               )}
             </span>
-            {killer && me.mates && me.mates.length > 0 && <span className="ability">{t('mates')}: {me.mates.join(', ')}</span>}
+            {killer && me.mates && me.mates.length > 0 && <span className="ability">{t('mates')}: <b style={{ color: KILLER_NAME_COLOR }}>{me.mates.join(', ')}</b></span>}
           </div>
         </button>
       )}

@@ -718,9 +718,9 @@ export class GameRoom extends Room<GameState> {
     };
     if (s.faction === 'killer') {
       info.killReadyAt = s.killReadyAt;
-      info.mates = [...this.secrets.entries()]
-        .filter(([pid, x]) => pid !== id && x.faction === 'killer')
-        .map(([pid]) => this.state.players.get(pid)?.name ?? '?');
+      const killers = [...this.secrets.entries()].filter(([, x]) => x.faction === 'killer').map(([pid]) => pid);
+      info.killerIds = killers;
+      info.mates = killers.filter((pid) => pid !== id).map((pid) => this.state.players.get(pid)?.name ?? '?');
     }
     if (s.role === 'guardian') info.shield = s.shield;
     client.send('private', info);

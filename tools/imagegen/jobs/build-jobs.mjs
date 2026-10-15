@@ -47,37 +47,7 @@ prop('hue-prop-courtyard-meeting-table', '3:2', 'large round wooden meeting tabl
 // --- task stations ---
 add('maps/co-do-hue/stations/hue-stations-sheet.png', '3:2', `${STYLE} Task station icon sheet: exact grid of 3 columns x 2 rows, equal cells, one round icon per cell centered with empty margins, each on an ochre-gold round floor medallion. (1) printer with a checklist clipboard, (2) flatbed scanner with a page and a footnote asterisk, (3) floor plan blueprint with a pencil, (4) spotlight with a small label tag, (5) wooden box with red wax seal, (6) book being returned to a shelf with an arrow. ${NOTEXT} ${KEY}`);
 
-// --- clue / task UI backgrounds (text is rendered by React) ---
-const bg = (file, aspect, desc) =>
-  add(`maps/co-do-hue/clues/${file}.png`, aspect, `Flat 2D illustrated game UI background, cartoon style, soft outline: ${desc}. Leave the main area EMPTY and plain for text overlay. ${NOTEXT}`);
-bg('hue-clue-paper', '4:3', 'aged cream paper sheet filling the frame with a faint ochre lotus ornamental border, light texture');
-bg('hue-ui-checklist-paper', '3:4', 'clipboard with a blank checklist paper sheet, empty checkbox column on the left, metal clip on top, seen straight on');
-bg('hue-ui-scan-page', '3:4', 'scanned document page on a scanner glass, slightly tilted greyscale page, scanner light bar at the top');
-bg('hue-ui-floor-plan', '4:3', 'blank architectural blueprint sheet with grid lines, blue paper, a few empty room outlines');
-bg('hue-ui-photo-board', '4:3', 'polaroid style photo frame of an exhibition wall panel under spotlights, photo slightly blurred, white frame bottom area empty');
-bg('hue-ui-seal-record', '1:1', 'official form card with a red wax seal stamp in the corner, empty fields');
-bg('hue-ui-loan-slip', '4:3', 'small library loan slip card, pale yellow, with empty ruled lines and a punched hole');
-bg('hue-ui-doc-diff-bg', '4:3', 'computer document-compare window with two empty side-by-side white pages, soft grey window chrome');
-bg('hue-ui-email-thread', '4:3', 'laptop email client window, empty message pane, soft grey chrome');
-bg('hue-ui-chat-fragment', '4:3', 'phone screen showing an empty group chat with blank message bubbles');
-bg('hue-ui-tour-script', '3:2', 'tour guide clipboard with a blank script page and a small map of a citadel');
-bg('hue-clue-handnote', '4:3', 'torn notebook page with faint handwriting scribbles (unreadable) and an empty center, paper clip');
-bg('hue-clue-print-proof', '4:3', 'photograph of a test print sheet lying on a desk with color calibration swatches, sheet center empty');
-
 // --- meta ---
-add('maps/co-do-hue/meta/hue-lobby-thumb.png', '16:9', `${STYLE} Wide illustration: interior of a cozy temporary exhibition hall in Hue, wooden floor, framed photos and a bilingual info panel, through the doorway the silhouette of the Hue imperial citadel gate (Ngo Mon) at dusk, lanterns, mysterious warm mood. ${NOTEXT}`);
 add('maps/co-do-hue/meta/hue-map-icon.png', '1:1', `${STYLE} Round app-style icon: stylized Hue citadel gate silhouette with a lotus and a magnifying glass, ochre and jade on dark wood background. ${NOTEXT}`);
-add('maps/co-do-hue/meta/hue-loading.png', '16:9', `${STYLE} Wide cinematic key art: night before an exhibition opening in Hue, a desk with printed drafts, a magnifying glass, an old document box, the imperial citadel silhouette through a window under moonlight, mysterious but warm. ${NOTEXT}`);
-
-// --- NPC portraits ---
-const npc = (key, desc) =>
-  add(`maps/co-do-hue/npc/${key}.png`, '1:1', `${STYLE} Character bust portrait (head and shoulders), friendly cartoon style matching a chibi game, facing slightly to the side, centered: ${desc}. ${KEY}`);
-npc('hue-npc-minh-giam', 'Vietnamese woman curator in her 40s, neat bun, blazer, tablet in hand, stressed but professional expression');
-npc('hue-npc-tuan', 'Vietnamese man translator around 30, glasses, cardigan, holding a dictionary, thoughtful');
-npc('hue-npc-lan', 'Vietnamese woman archivist in her 30s, short hair, cardigan with a key ring and reading glasses on a cord, calm');
-npc('hue-npc-vi', 'young Vietnamese female intern around 21, ponytail, oversized hoodie, camera strap, hurried cheerful look');
-npc('hue-npc-hoa', 'elderly Vietnamese male history consultant around 65, grey hair, round glasses, simple shirt, wise and careful');
-npc('hue-npc-thao', 'Vietnamese woman print and logistics coordinator in her 30s, headset, rolled-up sleeves, practical expression');
-npc('hue-npc-phu', 'Vietnamese man local heritage tour guide around 35, polo shirt with a guide badge, warm smile, holding a small flag');
 
 process.stdout.write(JSON.stringify(jobs, null, 2));

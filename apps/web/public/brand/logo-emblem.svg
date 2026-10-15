@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs>
+  <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff0b0"/><stop offset=".45" stop-color="#f0c04e"/><stop offset="1" stop-color="#a8701a"/>
+  </linearGradient>
+  <radialGradient id="lacq" cx=".5" cy=".42" r=".6">
+    <stop offset="0" stop-color="#4a2c17"/><stop offset="1" stop-color="#170d06"/>
+  </radialGradient>
+  <radialGradient id="jade" cx=".4" cy=".35" r=".7">
+    <stop offset="0" stop-color="#7fd6a4"/><stop offset=".55" stop-color="#2f9463"/><stop offset="1" stop-color="#14523a"/>
+  </radialGradient>
+  <linearGradient id="silk" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ef5a48"/><stop offset=".6" stop-color="#c22b22"/><stop offset="1" stop-color="#861612"/>
+  </linearGradient>
+  <linearGradient id="silk2" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#d8392d"/><stop offset="1" stop-color="#7a120e"/>
+  </linearGradient>
+  <linearGradient id="petal" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffb3a0"/><stop offset="1" stop-color="#d4473c"/>
+  </linearGradient></defs>
+  <!-- ribbon tails (behind medallion) -->
+  <path d="M410 238 C 455 262, 470 300, 500 318 C 478 330, 458 326, 440 318 C 430 296, 414 276, 396 262 Z" fill="url(#silk2)" stroke="#1e1209" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M404 252 C 430 300, 432 350, 470 392 C 444 396, 424 388, 410 374 C 404 334, 396 300, 382 272 Z" fill="url(#silk2)" stroke="#1e1209" stroke-width="9" stroke-linejoin="round"/>
+  <!-- lotus crown -->
+  <path d="M256 18 C 284 44, 286 74, 256 96 C 226 74, 228 44, 256 18 Z" fill="url(#petal)" stroke="#1e1209" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M214 46 C 246 54, 258 80, 250 100 C 222 98, 206 74, 214 46 Z" fill="url(#petal)" stroke="#1e1209" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M298 46 C 266 54, 254 80, 262 100 C 290 98, 306 74, 298 46 Z" fill="url(#petal)" stroke="#1e1209" stroke-width="8" stroke-linejoin="round"/>
+  <!-- medallion -->
+  <circle cx="256" cy="268" r="200" fill="url(#gold)" stroke="#1e1209" stroke-width="10"/>
+  <circle cx="256" cy="268" r="181" fill="none" stroke="#8a5a14" stroke-width="12" stroke-dasharray="0.1 22.6" stroke-linecap="round"/>
+  <circle cx="256" cy="268" r="164" fill="url(#lacq)" stroke="#1e1209" stroke-width="8"/>
+  <!-- eye -->
+  <path d="M112 284 Q 256 150 400 284 Q 256 412 112 284 Z" fill="#f6ecd6" stroke="#1e1209" stroke-width="9" stroke-linejoin="round"/>
+  <circle cx="256" cy="286" r="60" fill="url(#jade)" stroke="#1e1209" stroke-width="7"/>
+  <circle cx="256" cy="290" r="25" fill="#1e1209"/>
+  <circle cx="281" cy="304" r="10" fill="#fff"/>
+  <!-- blindfold band -->
+  <path d="M60 250 Q 256 192 452 228 L 452 276 Q 256 248 60 302 Z" fill="url(#silk)" stroke="#1e1209" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M84 272 Q 256 224 430 250" fill="none" stroke="#ff8a74" stroke-opacity=".55" stroke-width="5" stroke-linecap="round"/>
+  <path d="M96 290 Q 256 248 426 266" fill="none" stroke="#6e0f0b" stroke-opacity=".55" stroke-width="4" stroke-linecap="round"/>
+  <!-- knot -->
+  <ellipse cx="420" cy="254" rx="26" ry="32" fill="url(#silk2)" stroke="#1e1209" stroke-width="9"/></svg>

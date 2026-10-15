@@ -119,3 +119,9 @@ export function uiBlocksMovement(): boolean {
 }
 
 export const colorHex = (n: number) => '#' + n.toString(16).padStart(6, '0');
+
+/** Name colour Âm Binh see on fellow Âm Binh (and themselves). Only killers ever receive `killerIds`. */
+export const KILLER_NAME_COLOR = '#ff5a4a';
+const NO_KILLERS: readonly string[] = [];
+/** ids of every Âm Binh — non-empty only when the viewer is one */
+export const useKillerIds = () => useStore((s) => s.me?.killerIds ?? NO_KILLERS);

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { PLAYER_COLORS } from '@hidden-truth/shared';
 import { send } from '../net';
-import { colorHex, useStore, type PlayerView } from '../store';
+import { colorHex, KILLER_NAME_COLOR, useKillerIds, useStore, type PlayerView } from '../store';
 import { Chat } from './Chat';
 import { Sprite } from './Cinematic';
 import { asset, Digits, fmt, useCountdown } from './common';
@@ -36,6 +36,7 @@ function VoteCard({
   onVote: () => void;
 }) {
   const votable = canVote && p.alive && !me;
+  const killer = useKillerIds().includes(p.id);
   const cls = ['vcard', p.alive ? '' : 'dead', p.connected ? '' : 'off', me ? 'me' : '', votable ? 'votable' : ''].join(' ');
   return (
     <li className={cls}>
@@ -45,7 +46,7 @@ function VoteCard({
           {!p.alive && <img className="vcard-skull" src={asset('common/ui/body-marker.webp')} alt="" />}
         </span>
         <span className="vcard-info">
-          <span className="vcard-name">
+          <span className="vcard-name" style={killer ? { color: KILLER_NAME_COLOR } : undefined}>
             {p.name}
             {me && <em className="vcard-you">Bạn</em>}
           </span>
@@ -65,6 +66,8 @@ export function Meeting() {
   const isHost = room.hostId === sessionId;
   const reveal = room.phase === 'reveal';
   const mine = room.players.find((p) => p.id === sessionId);
+  const killerIds = useKillerIds();
+  const killerNames = new Set(room.players.filter((p) => killerIds.includes(p.id)).map((p) => p.name));
   const canVote = room.phase === 'meeting' && !!mine?.alive && !mine.voted;
   const [total, setTotal] = useState(75);
   useEffect(() => {
@@ -121,7 +124,7 @@ export function Meeting() {
             {result.tally.map((t) => (
               <li key={t.name}>
                 <i className="dot" style={{ background: colorHex(PLAYER_COLORS[t.color] ?? 0xffffff) }} />
-                <span>{t.name}</span>
+                <span style={killerNames.has(t.name) ? { color: KILLER_NAME_COLOR } : undefined}>{t.name}</span>
                 <b className="tally-seals">
                   {Array.from({ length: t.votes }, (_, i) => (
                     <img key={i} src={mt('seal-eject')} alt="" style={{ animationDelay: `${2.2 + i * 0.15}s` }} />

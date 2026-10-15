@@ -31,6 +31,8 @@ export type PrivateInfo = {
   completedTasks: TaskId[];
   /** killers only: fellow killer names */
   mates?: string[];
+  /** killers only: session ids of every killer, self included (names render red for them) */
+  killerIds?: string[];
   /** killers only: server time (ms) when the next kill is available */
   killReadyAt?: number;
   /** guardian only */
