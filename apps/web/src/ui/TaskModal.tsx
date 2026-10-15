@@ -5,17 +5,7 @@ import { send } from '../net';
 import { useStore } from '../store';
 import { Modal, asset } from './common';
 import { Minigame } from './minigames';
-
-/** Pull "UNESCO, 2009"-style recognitions out of the fact to show them as badges. */
-function heritageBadges(fact: string) {
-  const out: string[] = [];
-  const re = /UNESCO(?:,\s*(\d{4}))?/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(fact))) out.push(m[1] ? `UNESCO ${m[1]}` : 'UNESCO');
-  const year = fact.match(/năm (\d{4})/);
-  if (fact.includes('UNESCO') && !out.some((b) => /\d/.test(b)) && year) out[0] = `UNESCO ${year[1]}`;
-  return [...new Set(out)];
-}
+import { QUOTES } from './minigames/quotes';
 
 export function TaskModal() {
   const task = useStore((s) => s.task);
@@ -38,7 +28,7 @@ export function TaskModal() {
   const title = en ? st.titleEn : st.title;
 
   if (result) {
-    const badges = heritageBadges(result.fact ?? '');
+    const quote = QUOTES[task.taskId];
     const done = me?.completedTasks.length ?? 0;
     const total = me?.tasks.length ?? 0;
     return (
@@ -58,26 +48,11 @@ export function TaskModal() {
             <span className="hcard-eyebrow">{en ? 'Ceremony preparations' : 'Chuẩn bị Lễ Ban Sóc'}</span>
             <h2>{title}</h2>
             <p className="hcard-result">{result.text}</p>
-            {result.fact && (
-              <div className="hcard-fact">
-                <span className="hcard-dyk">
-                  <span className="hcard-bulb" aria-hidden>
-                    💡
-                  </span>
-                  {en ? 'Did you know?' : 'Bạn có biết?'}
-                </span>
-                {result.headline && <h4>{result.headline}</h4>}
-                <p>{result.fact}</p>
-                {badges.length > 0 && (
-                  <div className="hcard-badges">
-                    {badges.map((b) => (
-                      <span key={b} className="hcard-badge">
-                        ★ {b}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+            {quote && (
+              <blockquote className="hcard-quote">
+                <p>{en ? quote.en : quote.vi}</p>
+                <cite>— {en ? quote.srcEn : quote.src}</cite>
+              </blockquote>
             )}
             <div className="hcard-foot">
               <div className="hcard-progress">

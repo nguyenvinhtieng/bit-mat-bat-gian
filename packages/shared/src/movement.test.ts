@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { getGrid, areaAt, SPAWNS, isSolidTile } from './layout';
 import { stepMovement } from './movement';
-import { TILE } from './constants';
+import { PLAYER_SPEED, SIM_DT, TILE } from './constants';
 import { HUE_STATIONS } from './maps/co-do-hue';
 
 test('spawns are walkable and inside the courtyard', () => {
@@ -23,6 +23,24 @@ test('walls block movement', () => {
   let p = { x: 21 * TILE, y: 3 * TILE - 30 }; // courtyard, north of table
   for (let i = 0; i < 200; i++) p = stepMovement(g, p, { dx: 0, dy: -1 });
   assert.ok(p.y >= 1 * TILE + 7 - 0.01, `y=${p.y}`);
+});
+
+test('analog input: speed is capped, direction is kept, keyboard diagonals unchanged', () => {
+  const g = getGrid();
+  const p0 = { x: SPAWNS[0].x, y: SPAWNS[0].y };
+  // positions are quantised to 0.01px, hence the tolerances
+  const len = (q: { x: number; y: number }) => Math.hypot(q.x - p0.x, q.y - p0.y);
+  const full = PLAYER_SPEED * SIM_DT;
+  // keyboard diagonal (1,1) still moves at full speed, not sqrt(2)x
+  assert.ok(Math.abs(len(stepMovement(g, p0, { dx: 1, dy: 1 })) - full) < 0.02);
+  // over-long analog vectors are clamped to the unit circle
+  assert.ok(Math.abs(len(stepMovement(g, p0, { dx: 5, dy: -5 })) - full) < 0.02);
+  // a half-tilted stick walks at half speed
+  assert.ok(Math.abs(len(stepMovement(g, p0, { dx: 0.5, dy: 0 })) - full / 2) < 0.02);
+  // a 30° stick keeps its angle (both axes move, x more than y)
+  const a = (30 * Math.PI) / 180;
+  const q = stepMovement(g, p0, { dx: Math.cos(a), dy: Math.sin(a) });
+  assert.ok(Math.abs(Math.atan2(q.y - p0.y, q.x - p0.x) - a) < 0.01);
 });
 
 test('every area is reachable from spawn', () => {

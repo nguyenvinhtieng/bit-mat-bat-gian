@@ -246,14 +246,13 @@ export function Guide({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** variant "link": small text button (home) · "lobby": wide framed button with the round book icon */
-export function GuideButton({ onClick, variant = 'link' }: { onClick: () => void; variant?: 'link' | 'lobby' }) {
+/** variant "link": small text button (home) · "icon": round icon-only corner button (lobby) */
+export function GuideButton({ onClick, variant = 'link' }: { onClick: () => void; variant?: 'link' | 'icon' }) {
   const lang = useLang((s) => s.lang);
-  if (variant === 'lobby')
+  if (variant === 'icon')
     return (
-      <button className="guide-open-btn" onClick={onClick}>
+      <button className="icon-tool" onClick={onClick} title={TXT[lang].lobbyBtn} aria-label={TXT[lang].lobbyBtn}>
         <img src={gui('btn-guide')} alt="" draggable={false} />
-        <span>{TXT[lang].lobbyBtn}</span>
       </button>
     );
   return (

@@ -8,8 +8,8 @@
   {
    "id": "task_moon_phase",
    "area": "editing",
-   "x": 1248,
-   "y": 1022,
+   "x": 1315,
+   "y": 1032,
    "title": "Xem trăng định ngày Sóc",
    "titleEn": "Read the moon for the new-moon day",
    "icon": "hue-station-moon"
@@ -17,17 +17,17 @@
   {
    "id": "task_woodblock_print",
    "area": "editing",
-   "x": 768,
-   "y": 1022,
+   "x": 701,
+   "y": 1032,
    "title": "In lịch bằng mộc bản",
    "titleEn": "Print the calendar from woodblocks",
    "icon": "hue-station-woodblock"
   },
   {
    "id": "task_ngo_mon_gates",
-   "area": "courtyard_checkin",
-   "x": 782,
-   "y": 274,
+   "area": "coordination",
+   "x": 1891,
+   "y": 835,
    "title": "Dẫn đoàn qua 5 cửa Ngọ Môn",
    "titleEn": "Guide the procession through the 5 gates",
    "icon": "hue-station-gates"
@@ -35,8 +35,8 @@
   {
    "id": "task_court_ranks",
    "area": "exhibition",
-   "x": 384,
-   "y": 691,
+   "x": 307,
+   "y": 605,
    "title": "Xếp bá quan theo phẩm sơn",
    "titleEn": "Line up the mandarins by rank",
    "icon": "hue-station-ranks"
@@ -44,8 +44,8 @@
   {
    "id": "task_nha_nhac",
    "area": "coordination",
-   "x": 1632,
-   "y": 600,
+   "x": 1646,
+   "y": 418,
    "title": "Dượt Nhã nhạc cung đình",
    "titleEn": "Rehearse the royal court music",
    "icon": "hue-station-nha-nhac"
@@ -53,8 +53,8 @@
   {
    "id": "task_cuu_dinh",
    "area": "artifact_storage",
-   "x": 1440,
-   "y": 1411,
+   "x": 1224,
+   "y": 1464,
    "title": "Lau bụi Cửu Đỉnh",
    "titleEn": "Dust the Nine Urns",
    "icon": "hue-station-cuu-dinh"
@@ -63,7 +63,7 @@
    "id": "task_poem_wall",
    "area": "archive",
    "x": 605,
-   "y": 1363,
+   "y": 1310,
    "title": "Phục dựng tường “nhất thi nhất họa”",
    "titleEn": "Restore the poem-and-painting wall",
    "icon": "hue-station-poem"
@@ -71,7 +71,7 @@
   {
    "id": "task_royal_seal",
    "area": "archive",
-   "x": 336,
+   "x": 216,
    "y": 1373,
    "title": "Đóng ấn lên lịch",
    "titleEn": "Seal the calendar",
@@ -79,9 +79,9 @@
   },
   {
    "id": "task_banh_beo",
-   "area": "corridor",
-   "x": 504,
-   "y": 1056,
+   "area": "artifact_storage",
+   "x": 1795,
+   "y": 1459,
    "title": "Làm bánh bèo đãi bá quan",
    "titleEn": "Make bánh bèo for the court",
    "icon": "hue-station-banh-beo"

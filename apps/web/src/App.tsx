@@ -8,8 +8,9 @@ import { IntroModal } from './ui/Panels';
 import { Meeting } from './ui/Meeting';
 import { EndScreen } from './ui/EndScreen';
 import { Cinematic } from './ui/Cinematic';
-import { Toasts } from './ui/common';
+import { Toasts, asset } from './ui/common';
 import { Joystick } from './ui/Joystick';
+import { useT } from './i18n';
 
 export function App() {
   const screen = useStore((s) => s.screen);
@@ -21,6 +22,7 @@ export function App() {
       <>
         <Home />
         <Toasts />
+        <RotateGate />
       </>
     );
 
@@ -28,6 +30,8 @@ export function App() {
     <div className="game-root">
       <PhaserGame />
       <div className="ui-layer">
+        {/* first, so every other control sits above the touch-stick zone */}
+        {(phase === 'lobby' || phase === 'explore') && <Joystick />}
         <Hud />
         {phase === 'lobby' && <LobbyPanel />}
         {(phase === 'meeting' || phase === 'reveal') && <Meeting />}
@@ -35,9 +39,21 @@ export function App() {
         <TaskModal />
         <IntroModal />
         <Cinematic />
-        {(phase === 'lobby' || phase === 'explore') && <Joystick />}
       </div>
       <Toasts />
+      <RotateGate />
+    </div>
+  );
+}
+
+/** Phones play landscape only: in portrait (CSS-gated) everything else is hidden behind this card. */
+function RotateGate() {
+  const t = useT();
+  return (
+    <div className="rotate-gate" role="alert">
+      <img src={asset('common/ui/mobile/rotate-phone.webp')} alt="" draggable={false} />
+      <h2>{t('rotateTitle')}</h2>
+      <p>{t('rotateBody')}</p>
     </div>
   );
 }

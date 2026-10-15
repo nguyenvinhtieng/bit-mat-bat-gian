@@ -1,7 +1,7 @@
 /** Sân Thế Miếu, Nội Các, Trường Lang: Cửu Đỉnh, the poem wall and the royal kitchen. */
 import { useEffect, useRef, useState } from 'react';
 import type { PoemKind, TaskData } from '@hidden-truth/shared';
-import { MgShell, mg, sfx, useShake, type Submit } from './kit';
+import { MgShell, mg, sfx, useDragDrop, useShake, type Submit } from './kit';
 
 type T<K extends TaskData['taskId']> = Extract<TaskData, { taskId: K }>;
 
@@ -199,9 +199,9 @@ export function PoemWall({ task, submit }: { task: T<'task_poem_wall'>; submit: 
     const partner = task.panels.find((p) => p.slot === (slot ^ 1))!;
     return { kind, theme: partner.theme! };
   };
-  const drop = (slot: number) => {
-    if (!sel || fill[slot] != null) return;
-    const t = tray[sel];
+  const drop = (slot: number, id = sel) => {
+    if (!id || fill[slot] != null) return;
+    const t = tray[id];
     const w = want(slot);
     if (t.kind !== w.kind) {
       sfx.bad();
@@ -217,11 +217,15 @@ export function PoemWall({ task, submit }: { task: T<'task_poem_wall'>; submit: 
     }
     sfx.ok();
     setMsg('');
-    const next = { ...fill, [slot]: sel };
+    const next = { ...fill, [slot]: id };
     setFill(next);
     setSel(null);
     if (Object.keys(next).length === missing.length) setTimeout(() => submit(next), 800);
   };
+  const dnd = useDragDrop<string>(
+    (id, slot) => drop(Number(slot), id),
+    (id) => (setSel(id), setMsg('')),
+  );
 
   return (
     <MgShell
@@ -229,7 +233,7 @@ export function PoemWall({ task, submit }: { task: T<'task_poem_wall'>; submit: 
       lore={task.prompt}
       status={`${Object.keys(fill).length}/${missing.length}`}
       tone={Object.keys(fill).length === missing.length ? 'ok' : msg ? 'bad' : 'info'}
-      hint={Object.keys(fill).length === missing.length ? 'Bức tường đã trọn vẹn!' : msg || (sel ? 'Giờ bấm vào một ô trống trên tường.' : 'Chọn một ô trong khay bên dưới.')}
+      hint={Object.keys(fill).length === missing.length ? 'Bức tường đã trọn vẹn!' : msg || (sel ? 'Giờ bấm vào một ô trống trên tường.' : 'Kéo một ô trong khay bên dưới thả vào chỗ trống trên tường.')}
     >
       <div className={`pw-wall ${shake}`}>
         {task.panels.map((p) => {
@@ -237,7 +241,12 @@ export function PoemWall({ task, submit }: { task: T<'task_poem_wall'>; submit: 
           if (p.kind) return <Panel key={p.slot} tile={p as Tile} themes={task.themes} />;
           if (placed) return <Panel key={p.slot} tile={placed} themes={task.themes} />;
           return (
-            <button key={p.slot} className={`pw-panel slot ${sel ? 'ready' : ''}`} onClick={() => drop(p.slot)}>
+            <button
+              key={p.slot}
+              className={`pw-panel slot ${sel || dnd.dragging ? 'ready' : ''} ${dnd.over === String(p.slot) ? 'drop-over' : ''}`}
+              data-drop={p.slot}
+              onClick={() => drop(p.slot)}
+            >
               <img src={mg('hue-mg-slot')} alt="" draggable={false} />
             </button>
           );
@@ -245,11 +254,17 @@ export function PoemWall({ task, submit }: { task: T<'task_poem_wall'>; submit: 
       </div>
       <div className="pw-tray">
         {task.tray.map((t) => (
-          <button key={t.id} className={`pw-tile ${sel === t.id ? 'sel' : ''}`} disabled={used.has(t.id)} onClick={() => (setSel(t.id), setMsg(''))}>
+          <button
+            key={t.id}
+            className={`pw-tile ${sel === t.id ? 'sel' : ''} ${dnd.dragging === t.id ? 'lifting' : ''}`}
+            disabled={used.has(t.id)}
+            {...dnd.source(t.id, <Panel tile={t} themes={task.themes} />, used.has(t.id))}
+          >
             <Panel tile={t} themes={task.themes} dim={used.has(t.id)} />
           </button>
         ))}
       </div>
+      {dnd.ghost}
     </MgShell>
   );
 }
@@ -270,6 +285,9 @@ export function BanhBeo({ task, submit }: { task: T<'task_banh_beo'>; submit: Su
   const [done, setDone] = useState<string[]>([]);
   const [shake, doShake] = useShake();
   const [msg, setMsg] = useState('');
+  // the cup being finished: a short plating animation plays before the next cup is active
+  const [plating, setPlating] = useState(false);
+  const [served, setServed] = useState(0);
   const finished = cup >= task.cups;
 
   const allowed = (id: string): string | null => {
@@ -283,7 +301,7 @@ export function BanhBeo({ task, submit }: { task: T<'task_banh_beo'>; submit: Su
     return null;
   };
   const step = (id: string) => {
-    if (finished) return;
+    if (finished || plating) return;
     const why = allowed(id);
     if (why) {
       sfx.bad();
@@ -294,14 +312,22 @@ export function BanhBeo({ task, submit }: { task: T<'task_banh_beo'>; submit: Su
     sfx.ok();
     setMsg('');
     const next = [...done, id];
+    setDone(next);
     if (next.length === task.steps.length) {
-      // cup served -> the next cup is active right away (no dead time where taps get lost)
-      const served = cup + 1;
-      setDone([]);
-      setCup(served);
-      if (served >= task.cups) setTimeout(() => submit({ cups: served }), 600);
-    } else setDone(next);
+      // all toppings in -> quick plating animation, then announce the cup and move on
+      const n = cup + 1;
+      setPlating(true);
+      setTimeout(() => {
+        sfx.ok();
+        setPlating(false);
+        setServed(n);
+        setDone([]);
+        setCup(n);
+        if (n >= task.cups) setTimeout(() => submit({ cups: n }), 600);
+      }, 1200);
+    }
   };
+  const dnd = useDragDrop<string>((id, target) => target === 'cup' && step(id), step);
   const stateOf = (k: number) => {
     if (k < cup) return 5;
     if (k > cup) return 0;
@@ -319,24 +345,45 @@ export function BanhBeo({ task, submit }: { task: T<'task_banh_beo'>; submit: Su
       lore={task.prompt}
       vars={{ cups: String(task.cups) }}
       status={`Chén ${Math.min(cup + 1, task.cups)}/${task.cups}`}
-      tone={finished ? 'ok' : msg ? 'bad' : 'info'}
-      hint={finished ? 'Mâm bánh bèo đã sẵn sàng!' : msg || `Bước tiếp theo: ${nextStepName(done, task.steps)}.`}
+      tone={finished ? 'ok' : msg ? 'bad' : plating || (served === cup && !done.length && served) ? 'ok' : 'info'}
+      hint={
+        finished
+          ? 'Mâm bánh bèo đã sẵn sàng!'
+          : msg ||
+            (plating
+              ? `Đang hoàn thiện chén ${cup + 1}…`
+              : served === cup && served && !done.length
+                ? `Xong chén ${served}/${task.cups}! Bắt đầu chén tiếp theo.`
+                : `Bước tiếp theo: ${nextStepName(done, task.steps)}.`)
+      }
     >
       <div className={`bb-tray ${shake}`}>
         {Array.from({ length: task.cups }, (_, k) => (
-          <div key={k} className={`bb-cup ${k === cup ? 'active' : ''} ${k < cup ? 'served' : ''}`}>
+          <div
+            key={k}
+            className={`bb-cup ${k === cup ? 'active' : ''} ${k === cup && plating ? 'plating' : ''} ${k < cup ? 'served' : ''} ${k === served - 1 && k === cup - 1 ? 'just-served' : ''} ${k === cup && dnd.dragging ? 'mg-dragging' : ''} ${k === cup && dnd.over === 'cup' ? 'drop-over' : ''}`}
+            data-drop={k === cup ? 'cup' : undefined}
+          >
             <img src={mg(`hue-mg-chen-${stateOf(k)}`)} alt="" draggable={false} />
+            {k === cup && plating && <i className="bb-steam" aria-hidden />}
+            {k < cup && <b className="bb-done" aria-hidden>✔</b>}
           </div>
         ))}
       </div>
       <div className="bb-steps">
         {task.steps.map((s) => (
-          <button key={s.id} className={`bb-step ${done.includes(s.id) ? 'used' : ''}`} onPointerDown={() => step(s.id)} disabled={finished}>
+          <button
+            key={s.id}
+            className={`bb-step ${done.includes(s.id) ? 'used' : ''} ${dnd.dragging === s.id ? 'lifting' : ''}`}
+            {...dnd.source(s.id, <img src={mg(`hue-mg-step-${s.id}`)} alt="" />, finished || plating)}
+            disabled={finished || plating}
+          >
             <img src={mg(`hue-mg-step-${s.id}`)} alt="" draggable={false} />
             <b>{s.name}</b>
           </button>
         ))}
       </div>
+      {dnd.ghost}
     </MgShell>
   );
 }

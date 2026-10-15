@@ -37,6 +37,7 @@ import { useStore } from '../store';
 import { useT } from '../i18n';
 import { Digits, Icon, RoleBadge, asset, fmt, useCountdown } from './common';
 import { MapView } from './MapView';
+import { isTouchDevice } from './Joystick';
 
 /** Sweeping ring over a round button: fills clockwise from 0 to 100% while the cooldown runs (pure CSS animation, no re-render). */
 function CooldownRing({ readyAt }: { readyAt: number }) {
@@ -129,13 +130,17 @@ function NightBar({ pct, progress, target }: { pct: number; progress: number; ta
       <div className="nw-row">
       <div className="night-clock" title={t('nightTitle')}>
         <img src={asset('maps/co-do-hue/minigames/hue-ui-trong-canh.webp')} width={26} height={26} alt="" />
-        <b className="nc-time"><Digits text={night.clock} /></b>
         <span className="nc-canh">
           {t('canh')} {en ? CANH_NAMES_EN[night.canh - 1] : CANH_NAMES[night.canh - 1]}
         </span>
-        <span className="nc-left" title={t('canhLeft')}>
-          {night.paused ? t('nightPaused') : <>{t('nightLeft')} <Digits text={fmt(night.left)} /></>}
-        </span>
+        <i className="nc-sep" aria-hidden />
+        {night.paused ? (
+          <span className="nc-left">{t('nightPaused')}</span>
+        ) : (
+          <span className="nc-left" title={t('nightLeftTitle')}>
+            {t('nightLeft')} <b className="nc-time"><Digits text={fmt(night.left)} /></b>
+          </span>
+        )}
       </div>
       <div className="night-bar" title={`${t('canhLeft')}: ${fmt(night.canhLeft)}`}>
         {Array.from({ length: GAME.canhCount }, (_, i) => {
@@ -176,6 +181,7 @@ function GhostNotice({ dead, crew }: { dead: boolean; crew: boolean }) {
     <div className="modal-backdrop ghost-backdrop">
       <div className="ghost-notice">
         <img src={asset('maps/co-do-hue/minigames/hue-ui-hon-ma.webp')} width={120} height={120} alt="" />
+        <div className="ghost-body">
         <h2>{t('ghostTitle')}</h2>
         {crew ? (
           <>
@@ -192,6 +198,7 @@ function GhostNotice({ dead, crew }: { dead: boolean; crew: boolean }) {
         <button className="btn" autoFocus onClick={() => setState('seen')}>
           {crew ? t('ghostGo') : t('close')}
         </button>
+        </div>
       </div>
     </div>
   );
@@ -205,6 +212,7 @@ export function Hud() {
   const area = useStore((s) => s.area) as AreaId | '';
   const set = useStore((s) => s.set);
   const t = useT();
+  const en = t('canh') !== 'Canh';
   const sessionId = useStore((s) => s.sessionId);
   const left = useCountdown(room.phaseEndsAt);
   const cdLeft = useCountdown(me?.killReadyAt ?? 0);
@@ -217,7 +225,9 @@ export function Hud() {
   const killReady = killer && killTarget && !cdLeft;
   const canReport = nearby?.kind === 'report';
   const [mapOpen, setMapOpen] = useState(false);
-  const [tasksOpen, setTasksOpen] = useState(true);
+  const taskOpen = useStore((s) => !!s.task);
+  // phones start with the task list folded so the left thumb (joystick) has room
+  const [tasksOpen, setTasksOpen] = useState(() => !isTouchDevice());
   const exploring = !!me && inGame && room.phase === 'explore';
   useEffect(() => {
     if (!exploring) return;
@@ -238,6 +248,26 @@ export function Hud() {
     (me?.tasks ?? [])
       .filter((id) => !me!.completedTasks.includes(id))
       .map((id) => HUE_STATIONS.find((x) => x.id === id)!.area),
+  );
+
+  const touch = isTouchDevice();
+  const taskItems = me && (
+          <ul>
+            {me.tasks.map((id) => {
+              const st = HUE_STATIONS.find((x) => x.id === id)!;
+              const done = me.completedTasks.includes(id);
+              const here = st.area === area && !done;
+              return (
+                <li key={id} className={`${done ? 'done' : ''} ${here ? 'here' : ''}`}>
+                  <i className="tick">{done ? '✔' : ''}</i>
+                  <span>
+                    {en ? st.titleEn : st.title}
+                    <small className="task-where">📍 {en ? HUE_AREAS[st.area].nameEn : HUE_AREAS[st.area].name}</small>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
   );
 
   return (
@@ -311,6 +341,16 @@ export function Hud() {
               {t('map')} <kbd>M</kbd>
             </span>
           </button>
+          {/* phones always, desktop when folded: just the notebook chip, so a closed list never blocks the view */}
+          {touch || !tasksOpen ? (
+            <button className="task-chip" onClick={() => setTasksOpen(true)} title={touch ? t('myTasks') : `${t('myTasks')} (T)`}>
+              <img src={asset('common/ui/notebook.webp')} alt="" draggable={false} />
+              <b>
+                {me.completedTasks.length}/{me.tasks.length}
+              </b>
+              {!touch && <kbd className="task-chip-key">T</kbd>}
+            </button>
+          ) : (
           <div className={`task-list ${tasksOpen ? 'open' : 'closed'}`}>
             <button className="task-head" onClick={() => setTasksOpen(!tasksOpen)} aria-expanded={tasksOpen} title={`${tasksOpen ? t('hide') : t('show')} (T)`}>
               <span className="task-head-title">{t('myTasks')}</span>
@@ -326,24 +366,37 @@ export function Hud() {
               <div style={{ width: `${(me.completedTasks.length / Math.max(1, me.tasks.length)) * 100}%` }} />
             </div>
             {tasksOpen && killer && <p className="task-note">{t('fakeTasks')}</p>}
-            {tasksOpen && (
-              <ul>
-                {me.tasks.map((id) => {
-                  const st = HUE_STATIONS.find((x) => x.id === id)!;
-                  const done = me.completedTasks.includes(id);
-                  const here = st.area === area && !done;
-                  return (
-                    <li key={id} className={`${done ? 'done' : ''} ${here ? 'here' : ''}`}>
-                      <i className="tick">{done ? '✔' : ''}</i>
-                      <span>
-                        {st.title}
-                        <small>{HUE_AREAS[st.area].name}</small>
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+            {tasksOpen && taskItems}
+          </div>
+          )}
+        </div>
+      )}
+      {me && inGame && room.phase === 'explore' && touch && tasksOpen && !taskOpen && (
+        <div className="modal-backdrop task-pop-backdrop" onClick={() => setTasksOpen(false)}>
+          <div className="task-list task-pop open" onClick={(e) => e.stopPropagation()}>
+            <div className="task-pop-head">
+              <span className="task-head-title">{t('myTasks')}</span>
+              <b className="task-count">
+                {me.completedTasks.length}/{me.tasks.length}
+              </b>
+              <button className="task-pop-x" onClick={() => setTasksOpen(false)} aria-label={t('close')}>
+                ✕
+              </button>
+            </div>
+            <div className="task-meter">
+              <div style={{ width: `${(me.completedTasks.length / Math.max(1, me.tasks.length)) * 100}%` }} />
+            </div>
+            {killer && <p className="task-note">{t('fakeTasks')}</p>}
+            {taskItems}
+            <button
+              className="btn task-pop-map"
+              onClick={() => {
+                setTasksOpen(false);
+                setMapOpen(true);
+              }}
+            >
+              🗺 {t('map')}
+            </button>
           </div>
         </div>
       )}
@@ -379,19 +432,18 @@ export function Hud() {
         </div>
       )}
 
-      {nearby && room.phase === 'explore' && (
+      {/* tasks get an in-world "tap" badge over the station (GameScene) — the pill is for report / bell only */}
+      {nearby && nearby.kind !== 'task' && room.phase === 'explore' && (
         <button
           className={`interact ${nearby.kind}`}
           onClick={() => {
-            if (nearby.kind === 'task') send('task:open', { taskId: nearby.id });
-            else if (nearby.kind === 'report') send('report', {});
+            if (nearby.kind === 'report') send('report', {});
             else send('emergency', {});
           }}
         >
           <kbd>E</kbd>
           {nearby.kind === 'emergency' && <Icon name="meeting-bell" size={22} />}
           {nearby.title}
-          {nearby.kind === 'task' && nearby.done && ' ✓'}
           {nearby.kind === 'emergency' && nearby.used && t('used')}
         </button>
       )}

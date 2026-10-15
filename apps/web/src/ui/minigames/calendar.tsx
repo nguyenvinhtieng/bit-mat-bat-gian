@@ -1,7 +1,7 @@
 /** Khâm Thiên Giám & Nội Các: define the Sóc day, print the calendar, seal it. */
 import { useEffect, useRef, useState } from 'react';
 import type { TaskData } from '@hidden-truth/shared';
-import { MgShell, mg, sfx, useShake, type Submit } from './kit';
+import { MgShell, mg, sfx, useDragDrop, useShake, type Submit } from './kit';
 
 type T<K extends TaskData['taskId']> = Extract<TaskData, { taskId: K }>;
 
@@ -31,6 +31,16 @@ export function MoonPhase({ task, submit }: { task: T<'task_moon_phase'>; submit
     setPlaced(next);
     if (next.length === 8) setTimeout(() => submit(next), 900);
   };
+  // drop on the glowing slot (or anywhere on the ring); a wrong slot just points back to the right one
+  const dnd = useDragDrop<string>((id, target) => {
+    if (target !== 'ring' && Number(target) !== placed.length) {
+      sfx.bad();
+      doShake();
+      setMsg('Đặt vào ô đang sáng — tuần trăng đi theo vòng.');
+      return;
+    }
+    tap(id);
+  }, tap);
   return (
     <MgShell
       taskId={task.taskId}
@@ -39,7 +49,7 @@ export function MoonPhase({ task, submit }: { task: T<'task_moon_phase'>; submit
       tone={placed.length === 8 ? 'ok' : msg ? 'bad' : 'info'}
       hint={placed.length === 8 ? 'Đã định xong ngày Sóc!' : msg || `Tiếp theo: ${PHASE_NAME[placed.length]}.`}
     >
-      <div className="moon-ring">
+      <div className={`moon-ring ${dnd.dragging ? 'mg-dragging' : ''} ${dnd.over === 'ring' ? 'drop-over' : ''}`} data-drop="ring">
         <div className="moon-ring-center">
           {placed.length === 8 ? 'Đã định xong ngày Sóc!' : placed.length === 0 ? 'Bắt đầu: trăng non (không thấy trăng)' : `Tiếp theo: tuần trăng ${placed.length + 1}/8`}
         </div>
@@ -47,7 +57,7 @@ export function MoonPhase({ task, submit }: { task: T<'task_moon_phase'>; submit
           const a = (i / 8) * Math.PI * 2 - Math.PI / 2;
           const id = placed[i];
           return (
-            <div key={i} className={`moon-slot ${id ? 'filled' : ''} ${i === placed.length ? 'next' : ''}`} style={{ left: `${50 + Math.cos(a) * 40}%`, top: `${50 + Math.sin(a) * 40}%` }}>
+            <div key={i} className={`moon-slot ${id ? 'filled' : ''} ${i === placed.length ? 'next' : ''} ${dnd.over === String(i) ? 'drop-over' : ''}`} data-drop={id ? undefined : i} style={{ left: `${50 + Math.cos(a) * 40}%`, top: `${50 + Math.sin(a) * 40}%` }}>
               {id && <img src={mg(`hue-mg-moon-${byId[id].phase}`)} alt="" draggable={false} />}
               {id && PHASE_LABEL[i] && <span>{PHASE_LABEL[i]}</span>}
             </div>
@@ -56,11 +66,17 @@ export function MoonPhase({ task, submit }: { task: T<'task_moon_phase'>; submit
       </div>
       <div className={`moon-tray ${shake}`}>
         {task.moons.map((m) => (
-          <button key={m.id} className={`moon-btn ${placed.includes(m.id) ? 'used' : ''} ${bad === m.id ? 'bad' : ''}`} onClick={() => tap(m.id)} disabled={placed.includes(m.id)}>
+          <button
+            key={m.id}
+            className={`moon-btn ${placed.includes(m.id) ? 'used' : ''} ${bad === m.id ? 'bad' : ''} ${dnd.dragging === m.id ? 'lifting' : ''}`}
+            {...dnd.source(m.id, <img src={mg(`hue-mg-moon-${m.phase}`)} alt="" />, placed.includes(m.id))}
+            disabled={placed.includes(m.id)}
+          >
             <img src={mg(`hue-mg-moon-${m.phase}`)} alt="" draggable={false} />
           </button>
         ))}
       </div>
+      {dnd.ghost}
     </MgShell>
   );
 }
@@ -93,6 +109,10 @@ export function WoodblockPrint({ task, submit }: { task: T<'task_woodblock_print
     setHint('');
     setStep('ink');
   };
+  const dndBlock = useDragDrop<{ id: string; flip: string }>(
+    (b, target) => target === 'paper' && pick(b.id, b.flip),
+    (b) => pick(b.id, b.flip),
+  );
   const inkAt = (e: React.PointerEvent) => {
     const r = inkBox.current!.getBoundingClientRect();
     const cx = Math.floor(((e.clientX - r.left) / r.width) * INK_N);
@@ -142,7 +162,7 @@ export function WoodblockPrint({ task, submit }: { task: T<'task_woodblock_print
       hint={
         step === 'done'
           ? `Tờ lịch đã in xong: ${task.meaning}.`
-          : hint || (step === 'pick' ? 'So sánh với bản in cần ra ở bên trái.' : step === 'ink' ? 'Giữ chuột và kéo khắp mặt ván.' : 'Chờ kim vào vùng xanh rồi bấm.')
+          : hint || (step === 'pick' ? 'Kéo ván khắc đúng thả lên tờ giấy bên trái.' : step === 'ink' ? 'Giữ chuột và kéo khắp mặt ván.' : 'Chờ kim vào vùng xanh rồi bấm.')
       }
     >
       <ol className="mg-steps">
@@ -152,19 +172,30 @@ export function WoodblockPrint({ task, submit }: { task: T<'task_woodblock_print
       </ol>
       {step === 'pick' && (
         <div className="wb-pick">
-          <div className="wb-target">
+          <div className={`wb-target ${dndBlock.dragging ? 'mg-dragging' : ''} ${dndBlock.over === 'paper' ? 'drop-over' : ''}`} data-drop="paper">
             <img src={mg('hue-mg-paper')} alt="" draggable={false} />
             <b>{task.glyph}</b>
             <small>Bản in cần ra</small>
           </div>
           <div className={`wb-blocks ${shake}`}>
             {task.blocks.map((b) => (
-              <button key={b.id} className="wb-block" onClick={() => pick(b.id, b.flip)}>
+              <button
+                key={b.id}
+                className={`wb-block ${dndBlock.dragging?.id === b.id ? 'lifting' : ''}`}
+                {...dndBlock.source(
+                  b,
+                  <div className="wb-block">
+                    <img src={mg('hue-mg-woodblock')} alt="" />
+                    <b style={{ transform: FLIP_CSS[b.flip] }}>{task.glyph}</b>
+                  </div>,
+                )}
+              >
                 <img src={mg('hue-mg-woodblock')} alt="" draggable={false} />
                 <b style={{ transform: FLIP_CSS[b.flip] }}>{task.glyph}</b>
               </button>
             ))}
           </div>
+          {dndBlock.ghost}
         </div>
       )}
       {step === 'ink' && (

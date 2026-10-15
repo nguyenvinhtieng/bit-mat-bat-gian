@@ -102,10 +102,7 @@ export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: 
               {tasks.map(({ st, n, done }) => (
                 <li key={st.id} className={`${done ? 'done' : ''} ${st.area === current && !done ? 'here' : ''}`}>
                   <b>{done ? '✓' : n}</b>
-                  <span>
-                    {en ? st.titleEn : st.title}
-                    <small>{name(st.area)}</small>
-                  </span>
+                  <span>{en ? st.titleEn : st.title}</span>
                 </li>
               ))}
             </ol>

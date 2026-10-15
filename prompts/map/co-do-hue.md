@@ -16,7 +16,7 @@ Kinh thành Huế, đêm cuối tháng Mười Một âm lịch. Rạng sáng ma
 |-----------|---------------|------|
 | `courtyard_checkin` | Sân Ngọ Môn | Án Ban Lịch, chuông Ngũ Phụng, cờ lễ |
 | `exhibition` | Điện Thái Hòa | hoành phi, bia phẩm sơn, đèn cung đình |
-| `corridor` | Hành lang Trường Lang | chậu kiểng, mâm bánh bèo |
+| `corridor` | Hành lang Trường Lang | chậu kiểng |
 | `coordination` | Duyệt Thị Đường | trống Nhã nhạc, biên khánh |
 | `editing` | Khâm Thiên Giám | bàn khắc mộc bản, hồn thiên nghi, bàn in lịch |
 | `archive` | Nội Các | kệ châu bản, hộp ấn, tường thơ |
@@ -34,7 +34,7 @@ Kinh thành Huế, đêm cuối tháng Mười Một âm lịch. Rạng sáng ma
 | `task_cuu_dinh` | Sân Thế Miếu | Chà bụi trên mặt đỉnh, tìm 3 hình đúc nổi được yêu cầu (25s) | id các ô |
 | `task_poem_wall` | Nội Các | Lắp 4 ô thiếu trên tường "nhất thi nhất họa" (xen kẽ thơ/tranh, cùng đề tài), khay có 2 ô thừa | loại + đề tài từng ô |
 | `task_royal_seal` | Nội Các | Ấn hơi rung; giữ ấn trong khung son đủ 1.2s | khoảng cách tới khung |
-| `task_banh_beo` | Trường Lang | 3 chén: đổ bột → hấp → tôm chấy + tóp mỡ → nước mắm (25s) | số chén |
+| `task_banh_beo` | Sân Thế Miếu (góc đông nam) | 3 chén: đổ bột → hấp → tôm chấy + tóp mỡ → nước mắm (25s) | số chén |
 
 - Dữ liệu, đáp án, "Bạn có biết?": `apps/server/src/content/co-do-hue.content.ts` (`buildTask` / `verifyTask`, có `minMs` chống nộp tức thì).
 - UI: `apps/web/src/ui/minigames/*` (âm thanh tổng hợp bằng WebAudio, không cần file audio).

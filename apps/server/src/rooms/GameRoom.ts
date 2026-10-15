@@ -132,8 +132,7 @@ export class GameRoom extends Room<GameState> {
       this.refreshNight();
     } else {
       p.connected = false;
-      p.alive = false;
-      this.syncAlive();
+      p.alive = false; // counter catches up at the next vote — syncing now would reveal the leaver's side
     }
     this.system(`${p.name} đã rời phòng.`);
     if (this.state.hostId === client.sessionId) {
@@ -153,8 +152,9 @@ export class GameRoom extends Room<GameState> {
       for (const raw of list.slice(0, 12)) {
         const seq = Number(raw?.seq);
         if (!Number.isInteger(seq) || seq <= m.lastQueued) continue;
-        const dx = Math.max(-1, Math.min(1, Math.round(Number(raw.dx) || 0)));
-        const dy = Math.max(-1, Math.min(1, Math.round(Number(raw.dy) || 0)));
+        // analog (touch stick) allowed; stepMovement caps the vector length at 1 so no speed gain is possible
+        const dx = Math.max(-1, Math.min(1, Math.round((Number(raw.dx) || 0) * 100) / 100));
+        const dy = Math.max(-1, Math.min(1, Math.round((Number(raw.dy) || 0) * 100) / 100));
         m.lastQueued = seq;
         m.queue.push({ seq, dx, dy });
       }
@@ -237,7 +237,8 @@ export class GameRoom extends Room<GameState> {
 
     this.onMessage('host:skip', (client) => {
       if (client.sessionId !== this.state.hostId) return;
-      if (this.state.phase === 'meeting' || this.state.phase === 'reveal') this.advancePhase();
+      // host may only skip the result screen — never cut a vote short (unfair to the others)
+      if (this.state.phase === 'reveal') this.advancePhase();
     });
 
     this.onMessage('host:restart', (client) => {
@@ -482,6 +483,7 @@ export class GameRoom extends Room<GameState> {
     return n;
   }
 
+  /** Public alive counter: only at game start and after a vote, so kills stay hidden until the meeting. */
   private syncAlive() {
     this.state.crewAlive = this.aliveCrew();
     this.state.killersAlive = this.aliveKillers();
@@ -506,7 +508,7 @@ export class GameRoom extends Room<GameState> {
     }
     this.state.progress = done;
     this.state.progressTarget = Math.max(1, target);
-    this.syncAlive();
+    // no syncAlive() here: a kill must not show on the public counter — it updates after each vote
     const total = this.totalKillers();
     const k = this.aliveKillers();
     const c = this.aliveCrew();

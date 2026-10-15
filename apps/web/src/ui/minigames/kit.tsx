@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { TaskId } from '@hidden-truth/shared';
 import { useLang } from '../../i18n';
 import { asset } from '../common';
@@ -22,9 +23,63 @@ export function useShake(): [string, () => void] {
 
 export type Tone = 'info' | 'bad' | 'ok';
 
+// ------------------------------------------------------------------ drag & drop (pointer events: mouse + touch)
+type DragState<T> = { item: T; ghost: React.ReactNode; x: number; y: number; over: string | null };
+
+/**
+ * Drag a source onto any element marked `data-drop="<key>"`. A press that never moves is a tap
+ * (`onTap`), so the old tap-to-select flow keeps working as a fallback.
+ * Usage: `<button {...dnd.source(item, <img …/>)}>` · targets: `data-drop={key}` + `dnd.over === key`.
+ */
+export function useDragDrop<T>(onDrop: (item: T, target: string) => void, onTap?: (item: T) => void) {
+  const [drag, setDrag] = useState<DragState<T> | null>(null);
+  const cb = useRef({ onDrop, onTap });
+  cb.current = { onDrop, onTap };
+
+  const source = (item: T, ghost: React.ReactNode, disabled = false) => ({
+    'data-drag': '',
+    onPointerDown: (e: React.PointerEvent) => {
+      if (disabled || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      const x0 = e.clientX, y0 = e.clientY;
+      let moved = false;
+      const targetAt = (x: number, y: number) => (document.elementFromPoint(x, y)?.closest('[data-drop]') as HTMLElement | null)?.dataset.drop ?? null;
+      const move = (ev: PointerEvent) => {
+        if (!moved && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 6) return;
+        if (!moved) sfx.scrape();
+        moved = true;
+        ev.preventDefault();
+        setDrag({ item, ghost, x: ev.clientX, y: ev.clientY, over: targetAt(ev.clientX, ev.clientY) });
+      };
+      const end = (ev: PointerEvent) => {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', end);
+        window.removeEventListener('pointercancel', end);
+        setDrag(null);
+        if (ev.type === 'pointercancel') return;
+        if (!moved) return cb.current.onTap?.(item);
+        const over = targetAt(ev.clientX, ev.clientY);
+        if (over != null) cb.current.onDrop(item, over);
+      };
+      window.addEventListener('pointermove', move, { passive: false });
+      window.addEventListener('pointerup', end);
+      window.addEventListener('pointercancel', end);
+    },
+  });
+
+  const ghost = drag
+    ? createPortal(
+        <div className="mg-ghost" style={{ left: drag.x, top: drag.y }} aria-hidden>
+          {drag.ghost}
+        </div>,
+        document.body,
+      )
+    : null;
+  return { source, ghost, dragging: drag?.item ?? null, over: drag?.over ?? null };
+}
+
 /**
  * Common frame for every mini-game: story line (from the server), the goal in one sentence,
- * numbered "how to play" steps and a status chip. No time limits anywhere — take your time.
+ * a one-line tip and a status chip. No time limits anywhere — take your time.
  */
 export function MgShell({ taskId, lore, status, children, hint, tone = 'info', vars }: {
   taskId: TaskId;
@@ -51,14 +106,7 @@ export function MgShell({ taskId, lore, status, children, hint, tone = 'info', v
           </div>
           {status && <div className="mg-status">{status}</div>}
         </header>
-        <ol className="mg-how">
-          {g.steps.map((st, i) => (
-            <li key={i}>
-              <i>{i + 1}</i>
-              <span>{fill(st)}</span>
-            </li>
-          ))}
-        </ol>
+        <p className="mg-tip">{g.steps.map(fill).join(' · ')}</p>
       </div>
       <div className="mg-play">{children}</div>
       <p className={`mg-hint ${tone}`} role="status">

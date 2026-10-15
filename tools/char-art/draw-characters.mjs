@@ -9,6 +9,7 @@
  *   assets/maps/<slug>/characters/<prefix>-player-tint-atlas.png greyscale garment the engine tints per player colour
  *   assets/maps/<slug>/characters/<prefix>-player-atlas.json     frames walk-<dir>-<i>
  *   assets/_src/maps/<slug>/characters/<prefix>-player-preview.png  8x preview sheet (base+sample tints)
+ *   assets/maps/<slug>/characters/<prefix>-player-action(-tint).png  strike/die/guard poses (96x64 frames, see ACTION_POSES)
  *   -> apps/web/public/assets/maps/<slug>/characters/*.webp + .json
  *
  *   co-do-hue   áo dài ngũ thân (tinted) + khăn đóng vàng nghệ, quần trắng, hài mũi cong
@@ -246,8 +247,13 @@ const HUE = {
   front(p, k, back) {
     return legsFront(p, k, this, back) + longTunicFront(p, k, back, this.tunic) + sleevesFront(p, k);
   },
+  hipY: 48,
+  sideParts(p, k) {
+    return { farLeg: legSide(p, k, this, -1), back: longTunicSideBack(p, k), nearLeg: legSide(p, k, this, 1), front: longTunicSideFront(p, k, this.tunic), arm: sleeveSide(p, k) };
+  },
   side(p, k) {
-    return legSide(p, k, this, -1) + longTunicSideBack(p, k) + legSide(p, k, this, 1) + longTunicSideFront(p, k, this.tunic) + sleeveSide(p, k);
+    const q = this.sideParts(p, k);
+    return q.farLeg + q.back + q.nearLeg + q.front + q.arm;
   },
 };
 
@@ -342,19 +348,22 @@ const HOI_AN = {
     s += sleevesFront(p, k);
     return s;
   },
+  hipY: 45,
   side(p, k) {
+    const q = this.sideParts(p, k);
+    return q.farLeg + q.back + q.nearLeg + q.front + q.arm;
+  },
+  sideParts(p, k) {
     const { P, L } = k;
     const b = p.bob, st = p.stride;
-    let s = '';
-    for (const ph of [-1, 1]) {
+    const leg = (ph) => {
       const dx = -st * ph * 2.3, lift = st && ph * st > 0 ? 0.8 : 0, x = 24 + dx;
-      s += P(`M${x - 2.2} 45h4.4l0.4 ${14.2 - lift}c-1.4 0.8 -3.8 0.8 -5.2 0Z`, ph < 0 ? this.trouserShade : this.trouser);
-      s += this.shoeSide(x, 60.4 - lift, k, ph < 0);
-    }
+      return P(`M${x - 2.2} 45h4.4l0.4 ${14.2 - lift}c-1.4 0.8 -3.8 0.8 -5.2 0Z`, ph < 0 ? this.trouserShade : this.trouser) + this.shoeSide(x, 60.4 - lift, k, ph < 0);
+    };
+    let s = '';
     s += P(`M20.2 ${35.4 + b}C21.6 ${34 + b} 26.4 ${34 + b} 27.8 ${35.6 + b}L27.6 ${43 + b}C27.8 ${45} 28 ${46.4} ${28.4 + st * 0.6} ${BB_HEM}C25.6 ${BB_HEM + 0.8} 22.4 ${BB_HEM + 0.8} ${19.4 - st * 0.6} ${BB_HEM}C19.6 ${46.4} 19.8 ${45} 20.2 ${43 + b}Z`, G.main, { tint: true });
     s += L(`M21 ${36 + b}V${BB_HEM}`, G.line, { tint: true, sw: 0.6 });
-    s += sleeveSide(p, k);
-    return s;
+    return { farLeg: leg(-1), back: '', nearLeg: leg(1), front: s, arm: sleeveSide(p, k) };
   },
 };
 
@@ -439,6 +448,113 @@ async function preview(baseSheet, tintSheet) {
     .toBuffer();
 }
 
+/* ------------------------------------------------------------ action poses (cinematics + world FX)
+ * Side view facing LEFT, 96x64 frames (anchor bottom-centre at x=48 so lunges / lying bodies fit), 4 cols:
+ *   row 0 strike  windup · dash · slash · follow-through   (Âm Binh, with a đao)
+ *   row 1 die     hit · stagger · collapse · lying
+ *   row 2 guard   raise · brace · pushed · relief
+ * Built from the walk rig: legs rotate at the hip, torso+head lean around the hip, the arm swings at the shoulder.
+ * Angles in degrees, SVG sense (+ = clockwise): torso/head + leans BACK, arm + swings FORWARD, leg + kicks FORWARD.
+ */
+const AW = 96, AX = (AW - FW) / 2;
+const ACTION_ROWS = ['strike', 'die', 'guard'];
+const ACTION_POSES = {
+  strike: [
+    { torso: 14, head: 6, arm: -165, near: 18, far: -14, dx: 4, blade: true, brow: true },
+    { torso: -24, head: -10, arm: -70, near: 36, far: -32, dx: -3, blade: true, brow: true },
+    { torso: -18, head: -6, arm: 100, near: 32, far: -28, dx: -7, blade: true, brow: true },
+    { torso: -28, head: -4, arm: 32, near: 30, far: -30, dx: -7, blade: true, brow: true },
+  ],
+  die: [
+    { torso: 18, head: 16, arm: -55, near: -6, far: 10, dx: 3, hurt: true },
+    { torso: 30, head: 24, arm: -95, near: 12, far: -18, dx: 6, hurt: true },
+    { torso: 14, head: 18, arm: -120, near: 20, far: -6, whole: 52, wx: -8, wy: -11, hurt: true },
+    { torso: 4, head: 6, arm: -160, near: 6, far: -4, whole: 90, wx: -24, wy: -17, closed: true },
+  ],
+  guard: [
+    { torso: 6, head: 4, arm: 150, near: 12, far: -10, dx: 1 },
+    { torso: -10, head: -4, arm: 122, near: 24, far: -20, dx: -2, brow: true },
+    { torso: 16, head: 12, arm: 70, near: -8, far: 14, dx: 5, hurt: true },
+    { torso: 0, head: 0, arm: 0, near: 0, far: 0 },
+  ],
+};
+// body groups scale around (24, 62.4): map a pre-scale y to frame y
+const fy = (y) => 62.4 + (y - 62.4) * BODY_SY;
+const rot = (a, x, y, inner) => (a ? `<g transform="rotate(${a} ${f(x)} ${f(y)})">${inner}</g>` : inner);
+
+/** Curved đao held in the hand of a hanging arm (pre-scale coords): edge faces forward (-x). */
+function dao(k) {
+  const { P, L } = k;
+  let s = P('M22.9 42.6h1.5v4.4h-1.5Z', '#4a2b1a', { sw: 0.5 });
+  s += P('M21.6 46.9h4.1v1h-4.1Z', '#d9a63a', { sw: 0.45 });
+  s += P('M22.6 47.9h2.2C25.4 52 25 56 23.4 60.4C22.6 61.6 21.2 61.8 20.4 61.4C21.8 57 22.4 52.6 22.6 47.9Z', '#dfe6ee', { sw: 0.55 });
+  s += L('M24.2 48.6C24.6 52 24.2 56 23 59.6', '#ffffff', { sw: 0.5 });
+  return s;
+}
+
+function actionSvg(c, a, mode) {
+  const kb = painter(mode, Math.sqrt(BODY_SX * BODY_SY));
+  const kh = painter(mode, HEAD_S);
+  const p = pose(0);
+  const q = c.sideParts(p, kb);
+  const hipY = c.hipY;
+  // legs swing at their own hip; the arm (and blade) at the shoulder
+  const leg = (part, ang) => rot(ang, 24, hipY, part);
+  const arm = rot(a.arm, 24, 36.2, q.arm + (a.blade ? dao(kb) : ''));
+  // keep the feet on the ground: spread legs shorten vertically
+  const legLen = 60.4 - hipY;
+  const drop = legLen * (1 - Math.cos((Math.max(Math.abs(a.near), Math.abs(a.far)) * Math.PI) / 180)) * BODY_SY;
+  const hx = 24, hy = fy(hipY);
+  let head = headSide(p, kh, c);
+  const y = 22;
+  if (a.closed) head += kh.E(16.4, y + 2.8, 1.8, 2.2, SKIN.main, { stroke: false }) + kh.L(`M14.9 ${y + 3.2}q1.5 1.1 3 0`, INK, { sw: 0.7 });
+  else if (a.hurt) head += kh.E(16.4, y + 2.8, 1.7, 2.1, SKIN.main, { stroke: false }) + kh.L(`M15 ${y + 1.8}l2.8 2.2M17.8 ${y + 1.8}l-2.8 2.2`, INK, { sw: 0.7 });
+  if (a.brow) head += kh.L(`M14.6 ${y - 0.4}l3.6 1.4`, INK, { sw: 0.8 });
+  const upper = (inner) => rot(a.torso, hx, hy, inner);
+  let s = '';
+  s += bodyG(leg(q.farLeg, a.far));
+  s += upper(bodyG(q.back));
+  s += bodyG(leg(q.nearLeg, a.near));
+  s += upper(bodyG(q.front) + rot(a.head, 24, 33.4, headG(head)) + bodyG(arm));
+  s = `<g transform="translate(${f(AX + (a.dx || 0))} ${f(drop)})">${s}</g>`;
+  if (a.whole) s = `<g transform="translate(${a.wx} ${a.wy}) rotate(${a.whole} ${AW / 2} 62)">${s}</g>`;
+  const bg = mode === 'mask' ? `<rect width="${AW}" height="${FH}" fill="#000"/>` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${AW * SS}" height="${FH * SS}" viewBox="0 0 ${AW} ${FH}">${bg}${s}</svg>`;
+}
+
+async function renderAction(c, a) {
+  const col = await sharp(Buffer.from(actionSvg(c, a, 'color'))).resize(AW, FH, { kernel: 'lanczos3' }).ensureAlpha().raw().toBuffer();
+  const mask = await sharp(Buffer.from(actionSvg(c, a, 'mask'))).resize(AW, FH, { kernel: 'lanczos3' }).greyscale().raw().toBuffer();
+  const tint = Buffer.from(col);
+  for (let px = 0; px < AW * FH; px++) {
+    const m = mask[px] / 255;
+    tint[px * 4 + 3] = Math.round(col[px * 4 + 3] * (m > 0.97 ? 1 : m < 0.05 ? 0 : m));
+  }
+  const toPng = (raw) => sharp(raw, { raw: { width: AW, height: FH, channels: 4 } }).png().toBuffer();
+  return { base: await toPng(col), tint: await toPng(tint) };
+}
+
+const actionSheet = (bufs) =>
+  sharp({ create: { width: AW * 4, height: FH * ACTION_ROWS.length, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite(bufs.map((b, n) => ({ input: b, left: (n % 4) * AW, top: Math.floor(n / 4) * FH })))
+    .png()
+    .toBuffer();
+
+function actionJson(image) {
+  const frames = {};
+  ACTION_ROWS.forEach((r, ri) => {
+    for (let c = 0; c < 4; c++)
+      frames[`${r}-${c}`] = {
+        frame: { x: c * AW, y: ri * FH, w: AW, h: FH },
+        rotated: false,
+        trimmed: false,
+        spriteSourceSize: { x: 0, y: 0, w: AW, h: FH },
+        sourceSize: { w: AW, h: FH },
+      };
+  });
+  return { frames, meta: { app: 'the-hidden-truth/char-art', image, size: { w: AW * 4, h: FH * ACTION_ROWS.length }, scale: '1' } };
+}
+
 const COSTUMES = [HUE, HOI_AN, THANG_LONG];
 
 for (const c of COSTUMES) {
@@ -464,4 +580,22 @@ for (const c of COSTUMES) {
   fs.writeFileSync(path.join(PUB, `${tname}.json`), JSON.stringify(atlasJson(`${tname}.webp`)));
   fs.writeFileSync(path.join(SRC, `${c.prefix}-player-preview.png`), await preview(bs, ts));
   console.log(`[char-art] ${c.slug}: ${name} + ${tname}`);
+
+  const ab = [], at = [];
+  for (const r of ACTION_ROWS)
+    for (const a of ACTION_POSES[r]) {
+      const x = await renderAction(c, a);
+      ab.push(x.base);
+      at.push(x.tint);
+    }
+  const abs = await actionSheet(ab), ats = await actionSheet(at);
+  const an = `${c.prefix}-player-action`, atn = `${c.prefix}-player-action-tint`;
+  fs.writeFileSync(path.join(OUT, `${an}.png`), abs);
+  fs.writeFileSync(path.join(OUT, `${atn}.png`), ats);
+  await sharp(abs).webp({ quality: 90, alphaQuality: 100 }).toFile(path.join(PUB, `${an}.webp`));
+  await sharp(ats).webp({ quality: 90, alphaQuality: 100 }).toFile(path.join(PUB, `${atn}.webp`));
+  fs.writeFileSync(path.join(PUB, `${an}.json`), JSON.stringify(actionJson(`${an}.webp`)));
+  fs.writeFileSync(path.join(PUB, `${atn}.json`), JSON.stringify(actionJson(`${atn}.webp`)));
+  fs.writeFileSync(path.join(SRC, `${c.prefix}-player-action-preview.png`), await sharp(await actionSheet(ab)).resize(AW * 4 * 3, FH * 3 * 3, { kernel: 'nearest' }).flatten({ background: '#b5643c' }).png().toBuffer());
+  console.log(`[char-art] ${c.slug}: ${an} + ${atn}`);
 }

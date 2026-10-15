@@ -30,15 +30,15 @@ export const AREA_RECTS: Record<AreaId, Rect[]> = {
 /** Furniture slots that block movement (tile rects). Skins decide which prop art sits on each slot. */
 export const FURNITURE_SLOTS: Record<string, Rect> = {
   meeting_table: [19, 3, 4, 2],
-  exhibition_panel: [7, 12, 2, 1],
-  editing_printer: [15, 19, 2, 1],
-  editing_scanner: [25, 19, 2, 1],
+  exhibition_panel: [5, 11, 2, 1],
+  editing_printer: [14, 20, 2, 1],
+  editing_scanner: [26, 20, 2, 1],
   editing_desk: [19, 22, 3, 1],
   archive_shelf: [5, 26, 4, 1],
   storage_copy_stand: [32, 27, 2, 1],
-  storage_crate: [26, 27, 2, 1],
+  storage_crate: [26, 29, 1, 1], // the station cell (25,30) sits between lantern + censer: keep 25,29 open
   coord_whiteboard: [30, 8, 3, 1],
-  coord_desk: [36, 9, 2, 1],
+  coord_desk: [33, 7, 2, 1],
   courtyard_bench: [24, 1, 3, 1],
   // decor footprints (columns, lanterns, plants, shelves…) — keep every station reachable (movement.test.ts)
   decor_cy_urn_w: [15, 1, 1, 1],

@@ -18,11 +18,13 @@ function collides(g: LayoutGrid, x: number, y: number): boolean {
  * Axis-separated collision against the tile grid.
  */
 export function stepMovement(g: LayoutGrid, pos: Vec, input: InputDir, dt = SIM_DT): Vec {
-  let dx = Math.sign(input.dx);
-  let dy = Math.sign(input.dy);
-  if (dx !== 0 && dy !== 0) {
-    dx *= Math.SQRT1_2;
-    dy *= Math.SQRT1_2;
+  // keys send ±1 per axis, the touch stick sends any vector — both are capped to the unit circle
+  let dx = Number.isFinite(input.dx) ? input.dx : 0;
+  let dy = Number.isFinite(input.dy) ? input.dy : 0;
+  const len = Math.hypot(dx, dy);
+  if (len > 1) {
+    dx /= len;
+    dy /= len;
   }
   const sx = dx * PLAYER_SPEED * dt;
   const sy = dy * PLAYER_SPEED * dt;

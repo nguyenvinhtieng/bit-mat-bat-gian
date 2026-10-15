@@ -49,26 +49,27 @@ export const HUE_PROPS: PropPlacement[] = [
   { key: 'hue-prop-co-le', x: t(16.3), y: t(3.2) },
   // Điện Thái Hòa — hoành phi, bia phẩm sơn, đèn cung đình
   { key: 'hue-prop-hoanh-phi', x: t(7), y: t(8.35), wall: true },
-  { key: 'hue-prop-bia-pham-son', x: t(8), y: t(13.1) },
+  { key: 'hue-prop-bia-pham-son', x: t(6.4), y: t(12.6) + 16 },
   { key: 'hue-prop-den-cung-dinh', x: t(3.6), y: t(14.5) },
   { key: 'hue-prop-den-cung-dinh', x: t(11.6), y: t(14.5) },
-  // Trường Lang — chậu kiểng, mâm bánh bèo
+  // Trường Lang — chậu kiểng
   { key: 'hue-prop-chau-kieng', x: t(19.5), y: t(8.6) },
   { key: 'hue-prop-chau-kieng', x: t(22.5), y: t(17.8) },
-  { key: 'hue-prop-mam-banh-beo', x: t(11.45), y: t(21.2) },
+  // Sân Thế Miếu — mâm bánh bèo (beside its station in the SE corner)
+  { key: 'hue-prop-mam-banh-beo', x: t(37.4), y: t(30.4) + 16 },
   // Duyệt Thị Đường — trống, biên khánh
   { key: 'hue-prop-trong-nha-nhac', x: t(31.5), y: t(9.05) },
-  { key: 'hue-prop-bien-khanh', x: t(37), y: t(10.05) },
+  { key: 'hue-prop-bien-khanh', x: t(34.3), y: t(8.7) + 16 },
   // Khâm Thiên Giám — bàn khắc, hồn thiên nghi, bàn in lịch
-  { key: 'hue-prop-ban-khac', x: t(16), y: t(20.05) },
-  { key: 'hue-prop-hon-thien-nghi', x: t(26), y: t(20.05) },
+  { key: 'hue-prop-ban-khac', x: t(14.6), y: t(21.5) + 16 },
+  { key: 'hue-prop-hon-thien-nghi', x: t(27.4), y: t(21.5) + 16 },
   { key: 'hue-prop-ban-in-lich', x: t(20.5), y: t(23.1) },
   // Nội Các — kệ châu bản, hộp ấn, tường thơ
   { key: 'hue-prop-ke-chau-ban', x: t(7), y: t(27.05) },
-  { key: 'hue-prop-hop-an', x: t(10.6), y: t(27.4) },
+  { key: 'hue-prop-hop-an', x: t(4.5), y: t(28.6) + 16 },
   { key: 'hue-prop-tuong-tho', x: t(12.6), y: t(26.1), wall: true },
   // Sân Thế Miếu — Cửu Đỉnh
-  { key: 'hue-prop-dinh-dong', x: t(27), y: t(28.05) },
+  { key: 'hue-prop-dinh-dong', x: t(25.5), y: t(30.5) + 16 },
   { key: 'hue-prop-dinh-dong', x: t(33), y: t(28.05) },
   // ---- room decor (footprints = decor_* slots in layout.ts)
   // Sân Ngọ Môn — vạc đồng
@@ -112,19 +113,31 @@ export const HUE_PROPS: PropPlacement[] = [
   { key: 'hue-decor-lu-huong', x: t(26.5), y: t(31.0) },
 ];
 
-export type StationDef = { id: TaskId; area: AreaId; x: number; y: number; title: string; titleEn: string; icon: string };
+export type StationDef = {
+  id: TaskId;
+  area: AreaId;
+  x: number;
+  y: number;
+  title: string;
+  titleEn: string;
+  icon: string;
+};
 
-/** Task stations (hitbox 96x96 around x, y). Each one is a mini-game that prepares the Ban Sóc ceremony. */
+/**
+ * Task stations (hitbox 96x96 around x, y). Each one is a mini-game that prepares the Ban Sóc ceremony.
+ * Placed in corners / against walls, away from doors and walkways, so a player at work is not in plain sight.
+ * Sân Ngọ Môn (the spawn hall) has none on purpose.
+ */
 export const HUE_STATIONS: StationDef[] = [
-  { id: 'task_moon_phase', area: 'editing', x: t(26), y: t(21.3), title: 'Xem trăng định ngày Sóc', titleEn: 'Read the moon for the new-moon day', icon: 'hue-station-moon' },
-  { id: 'task_woodblock_print', area: 'editing', x: t(16), y: t(21.3), title: 'In lịch bằng mộc bản', titleEn: 'Print the calendar from woodblocks', icon: 'hue-station-woodblock' },
-  { id: 'task_ngo_mon_gates', area: 'courtyard_checkin', x: t(16.3), y: t(5.7), title: 'Dẫn đoàn qua 5 cửa Ngọ Môn', titleEn: 'Guide the procession through the 5 gates', icon: 'hue-station-gates' },
-  { id: 'task_court_ranks', area: 'exhibition', x: t(8), y: t(14.4), title: 'Xếp bá quan theo phẩm sơn', titleEn: 'Line up the mandarins by rank', icon: 'hue-station-ranks' },
-  { id: 'task_nha_nhac', area: 'coordination', x: t(34), y: t(12.5), title: 'Dượt Nhã nhạc cung đình', titleEn: 'Rehearse the royal court music', icon: 'hue-station-nha-nhac' },
-  { id: 'task_cuu_dinh', area: 'artifact_storage', x: t(30), y: t(29.4), title: 'Lau bụi Cửu Đỉnh', titleEn: 'Dust the Nine Urns', icon: 'hue-station-cuu-dinh' },
-  { id: 'task_poem_wall', area: 'archive', x: t(12.6), y: t(28.4), title: 'Phục dựng tường “nhất thi nhất họa”', titleEn: 'Restore the poem-and-painting wall', icon: 'hue-station-poem' },
-  { id: 'task_royal_seal', area: 'archive', x: t(7), y: t(28.6), title: 'Đóng ấn lên lịch', titleEn: 'Seal the calendar', icon: 'hue-station-seal' },
-  { id: 'task_banh_beo', area: 'corridor', x: t(10.5), y: t(22), title: 'Làm bánh bèo đãi bá quan', titleEn: 'Make bánh bèo for the court', icon: 'hue-station-banh-beo' },
+  { id: 'task_moon_phase', area: 'editing', x: t(27.4), y: t(21.5), title: 'Xem trăng định ngày Sóc', titleEn: 'Read the moon for the new-moon day', icon: 'hue-station-moon' },
+  { id: 'task_woodblock_print', area: 'editing', x: t(14.6), y: t(21.5), title: 'In lịch bằng mộc bản', titleEn: 'Print the calendar from woodblocks', icon: 'hue-station-woodblock' },
+  { id: 'task_ngo_mon_gates', area: 'coordination', x: t(39.4), y: t(17.4), title: 'Dẫn đoàn qua 5 cửa Ngọ Môn', titleEn: 'Guide the procession through the 5 gates', icon: 'hue-station-gates' },
+  { id: 'task_court_ranks', area: 'exhibition', x: t(6.4), y: t(12.6), title: 'Xếp bá quan theo phẩm sơn', titleEn: 'Line up the mandarins by rank', icon: 'hue-station-ranks' },
+  { id: 'task_nha_nhac', area: 'coordination', x: t(34.3), y: t(8.7), title: 'Dượt Nhã nhạc cung đình', titleEn: 'Rehearse the royal court music', icon: 'hue-station-nha-nhac' },
+  { id: 'task_cuu_dinh', area: 'artifact_storage', x: t(25.5), y: t(30.5), title: 'Lau bụi Cửu Đỉnh', titleEn: 'Dust the Nine Urns', icon: 'hue-station-cuu-dinh' },
+  { id: 'task_poem_wall', area: 'archive', x: t(12.6), y: t(27.3), title: 'Phục dựng tường “nhất thi nhất họa”', titleEn: 'Restore the poem-and-painting wall', icon: 'hue-station-poem' },
+  { id: 'task_royal_seal', area: 'archive', x: t(4.5), y: t(28.6), title: 'Đóng ấn lên lịch', titleEn: 'Seal the calendar', icon: 'hue-station-seal' },
+  { id: 'task_banh_beo', area: 'artifact_storage', x: t(37.4), y: t(30.4), title: 'Làm bánh bèo đãi bá quan', titleEn: 'Make bánh bèo for the court', icon: 'hue-station-banh-beo' },
 ];
 
 export const HUE_STORY_TITLE = 'Năm Canh Trước Bình Minh';

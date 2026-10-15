@@ -1,38 +1,74 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { asset } from './common';
 
-/** Virtual joystick for touch devices — writes to window.__joy, read by GameScene. */
+const R = 56; // knob travel radius (px)
+const DEAD = 0.15; // fraction of R ignored
+const FULL = 0.65; // fraction of R that already means full speed
+
+type Joy = { dx: number; dy: number };
+const setJoy = (j: Joy) => ((window as unknown as { __joy?: Joy }).__joy = j);
+
+export const isTouchDevice = () =>
+  typeof window !== 'undefined' && ((typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window);
+
+/**
+ * Floating analog stick for touch devices (Among Us style): press anywhere in the left-hand zone,
+ * the stick appears under the finger and the drag vector sets direction + speed.
+ * Writes window.__joy (unit-circle vector, 0.01 steps to match the server), read by GameScene.
+ */
 export function Joystick() {
-  const base = useRef<HTMLDivElement>(null);
+  const [origin, setOrigin] = useState<{ x: number; y: number } | null>(null);
   const [knob, setKnob] = useState({ x: 0, y: 0 });
-  if (!('ontouchstart' in window)) return null;
-  const w = window as unknown as { __joy?: { dx: number; dy: number } };
-  const move = (e: React.PointerEvent) => {
-    const r = base.current!.getBoundingClientRect();
-    const x = e.clientX - (r.left + r.width / 2);
-    const y = e.clientY - (r.top + r.height / 2);
-    const len = Math.min(40, Math.hypot(x, y));
-    const a = Math.atan2(y, x);
-    setKnob({ x: Math.cos(a) * len, y: Math.sin(a) * len });
-    const dz = 12;
-    w.__joy = { dx: Math.abs(x) > dz ? Math.sign(x) : 0, dy: Math.abs(y) > dz ? Math.sign(y) : 0 };
+  const pid = useRef<number | null>(null);
+  useEffect(() => () => void setJoy({ dx: 0, dy: 0 }), []);
+  if (!isTouchDevice()) return null;
+
+  const move = (e: React.PointerEvent, o: { x: number; y: number }) => {
+    const x = e.clientX - o.x, y = e.clientY - o.y;
+    const len = Math.hypot(x, y);
+    const k = len > R ? R / len : 1;
+    setKnob({ x: x * k, y: y * k });
+    const m = Math.max(0, Math.min(1, (len / R - DEAD) / (FULL - DEAD)));
+    const r2 = (v: number) => Math.round(v * 100) / 100;
+    setJoy(len ? { dx: r2((x / len) * m), dy: r2((y / len) * m) } : { dx: 0, dy: 0 });
   };
-  const end = () => {
+  const end = (e: React.PointerEvent) => {
+    if (e.pointerId !== pid.current) return;
+    pid.current = null;
+    setOrigin(null);
     setKnob({ x: 0, y: 0 });
-    w.__joy = { dx: 0, dy: 0 };
+    setJoy({ dx: 0, dy: 0 });
   };
+
   return (
     <div
-      ref={base}
-      className="joystick"
+      className="joy-zone"
       onPointerDown={(e) => {
-        (e.target as HTMLElement).setPointerCapture(e.pointerId);
-        move(e);
+        if (pid.current != null) return;
+        pid.current = e.pointerId;
+        e.currentTarget.setPointerCapture(e.pointerId);
+        const o = { x: e.clientX, y: e.clientY };
+        setOrigin(o);
+        move(e, o);
       }}
-      onPointerMove={(e) => e.buttons && move(e)}
+      onPointerMove={(e) => e.pointerId === pid.current && origin && move(e, origin)}
       onPointerUp={end}
       onPointerCancel={end}
     >
-      <div className="knob" style={{ transform: `translate(${knob.x}px, ${knob.y}px)` }} />
+      <div
+        className={`joystick ${origin ? 'is-active' : ''}`}
+        style={origin ? { left: origin.x, top: origin.y, bottom: 'auto' } : undefined}
+        aria-hidden
+      >
+        <img className="joy-base" src={asset('common/ui/mobile/joy-base.webp')} alt="" draggable={false} />
+        <img
+          className="joy-knob"
+          src={asset('common/ui/mobile/joy-knob.webp')}
+          alt=""
+          draggable={false}
+          style={{ transform: `translate(calc(-50% + ${knob.x}px), calc(-50% + ${knob.y}px))` }}
+        />
+      </div>
     </div>
   );
 }

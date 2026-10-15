@@ -70,11 +70,16 @@ export const playableMap = (slug?: string | null): string => {
 };
 
 /** Path under /assets for a map's art. */
-/** Player atlas paths (under /assets, no extension) for a map: its own costume, or the common avatar. */
-export const playerArt = (slug?: string | null): { atlas: string; tint: string } => {
+/**
+ * Player atlas paths (under /assets, no extension) for a map: its own costume, or the common avatar.
+ * `action`/`actionTint`: strike · die · guard poses (96x64 frames `<row>-<i>`, facing left) from tools/char-art;
+ * the common avatar has none, so it borrows the Huế costume's.
+ */
+export const playerArt = (slug?: string | null): { atlas: string; tint: string; action: string; actionTint: string } => {
   const m = MAP_CATALOG.find((x) => x.slug === slug);
   const base = m?.charPrefix ? `maps/${m.slug}/characters/${m.charPrefix}-player` : 'common/characters/player';
-  return { atlas: `${base}-atlas`, tint: `${base}-tint-atlas` };
+  const act = m?.charPrefix ? base : 'maps/co-do-hue/characters/hue-player';
+  return { atlas: `${base}-atlas`, tint: `${base}-tint-atlas`, action: `${act}-action`, actionTint: `${act}-action-tint` };
 };
 
 export const mapArt = (slug: string, kind: 'home-bg' | 'thumb') => `maps/${slug}/meta/${kind}.webp`;

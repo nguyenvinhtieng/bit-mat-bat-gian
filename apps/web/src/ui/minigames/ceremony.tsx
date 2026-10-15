@@ -1,7 +1,7 @@
 /** Sân Ngọ Môn, Điện Thái Hòa, Duyệt Thị Đường: rehearse the ceremony itself. */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GateTraveler, TaskData } from '@hidden-truth/shared';
-import { MgShell, mg, sfx, useShake, type Submit } from './kit';
+import { MgShell, mg, sfx, useDragDrop, useShake, type Submit } from './kit';
 
 type T<K extends TaskData['taskId']> = Extract<TaskData, { taskId: K }>;
 
@@ -11,12 +11,16 @@ const KIND_LABEL: Record<GateTraveler, string> = { vua: 'Nhà vua', van: 'Quan v
 const ALLOWED: Record<GateTraveler, number[]> = { vua: [2], vo: [1], van: [3], linh: [0, 4], voi: [0, 4], ngua: [0, 4] };
 const GATE_X = [0.1, 0.27, 0.5, 0.73, 0.9];
 const GATE_W = [0.07, 0.08, 0.11, 0.08, 0.07];
+/** keep in sync with the gateWalk animation in styles.css */
+const WALK_MS = 950;
 
 export function NgoMonGates({ task, submit }: { task: T<'task_ngo_mon_gates'>; submit: Submit }) {
   const [i, setI] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [miss, setMiss] = useState(0);
   const [walking, setWalking] = useState<number | null>(null);
+  const [deny, setDeny] = useState<number | null>(null);
+  const [passed, setPassed] = useState(0);
   const [shake, doShake] = useShake();
   const [msg, setMsg] = useState('');
   const done = i >= task.travelers.length;
@@ -33,6 +37,8 @@ export function NgoMonGates({ task, submit }: { task: T<'task_ngo_mon_gates'>; s
   const choose = (g: number) => {
     if (done || walking != null) return;
     if (!ALLOWED[cur.kind].includes(g)) {
+      setDeny(g);
+      setTimeout(() => setDeny((d) => (d === g ? null : d)), 650);
       fail(`${KIND_LABEL[cur.kind]} không đi ${task.gates[g].name} — cửa này dành cho ${task.gates[g].for.toLowerCase()}.`);
       return;
     }
@@ -43,10 +49,14 @@ export function NgoMonGates({ task, submit }: { task: T<'task_ngo_mon_gates'>; s
     setAnswers(next);
     setTimeout(() => {
       setWalking(null);
+      setPassed((n) => n + 1);
       setI((x) => x + 1);
-      if (next.length === task.travelers.length) setTimeout(() => submit(next), 300);
-    }, 420);
+      if (next.length === task.travelers.length) setTimeout(() => submit(next), 500);
+    }, WALK_MS);
   };
+
+  const dnd = useDragDrop<string>((_, target) => choose(Number(target)));
+  const overGate = dnd.over != null ? Number(dnd.over) : null;
 
   return (
     <MgShell
@@ -54,18 +64,37 @@ export function NgoMonGates({ task, submit }: { task: T<'task_ngo_mon_gates'>; s
       lore={task.prompt}
       status={`${Math.min(i, task.travelers.length)}/${task.travelers.length}`}
       tone={done ? 'ok' : msg ? 'bad' : 'info'}
-      hint={done ? 'Cả đoàn rước đã qua đúng cửa!' : msg || `Đến lượt: ${KIND_LABEL[cur.kind]}. Bấm vào cửa phù hợp.${miss ? ` (đã nhầm ${miss} lần)` : ''}`}
+      hint={done ? 'Cả đoàn rước đã qua đúng cửa!' : msg || `Đến lượt: ${KIND_LABEL[cur.kind]}. Kéo vào cửa phù hợp.${miss ? ` (đã nhầm ${miss} lần)` : ''}`}
     >
-      <div className={`gates ${shake}`}>
+      <div className={`gates ${shake} ${dnd.dragging ? 'mg-dragging' : ''} ${done ? 'all-done' : ''}`}>
         <img src={mg('hue-mg-ngo-mon')} alt="Ngọ Môn" draggable={false} />
         {GATE_X.map((x, g) => (
-          <button key={g} className="gate-hit" style={{ left: `${(x - GATE_W[g] / 2) * 100}%`, width: `${GATE_W[g] * 100}%` }} onClick={() => choose(g)} aria-label={task.gates[g].name} />
+          <button
+            key={g}
+            className={['gate-hit', overGate === g ? 'drop-over' : '', walking === g ? 'pass' : '', deny === g ? 'deny' : ''].join(' ')}
+            data-drop={g}
+            style={{ left: `${(x - GATE_W[g] / 2) * 100}%`, width: `${GATE_W[g] * 100}%` }}
+            onClick={() => choose(g)}
+            aria-label={task.gates[g].name}
+          >
+            {walking === g && (
+              <span className="gate-spark" key={passed} aria-hidden>
+                {Array.from({ length: 8 }, (_, k) => (
+                  <i key={k} style={{ '--a': `${k * 45}deg` } as React.CSSProperties} />
+                ))}
+              </span>
+            )}
+          </button>
         ))}
-        {walking != null && <img className="gate-walker" src={mg(`hue-mg-trav-${cur.kind}`)} style={{ left: `${GATE_X[walking] * 100}%` }} alt="" />}
+        {walking != null && (
+          <span className="gate-walker" key={passed} style={{ left: `${GATE_X[walking] * 100}%` }}>
+            <img src={mg(`hue-mg-trav-${cur.kind}`)} alt="" draggable={false} />
+          </span>
+        )}
       </div>
       <div className="gate-labels">
         {task.gates.map((g, k) => (
-          <button key={k} className="gate-label" onClick={() => choose(k)}>
+          <button key={k} className={`gate-label ${overGate === k ? 'drop-over' : ''}`} data-drop={k} onClick={() => choose(k)}>
             <b>{g.name}</b>
             <small>{g.for}</small>
           </button>
@@ -73,7 +102,7 @@ export function NgoMonGates({ task, submit }: { task: T<'task_ngo_mon_gates'>; s
       </div>
       <div className="gate-queue">
         {!done && walking == null && (
-          <div className="gate-traveler" key={cur.id}>
+          <div className={`gate-traveler ${dnd.dragging ? 'lifting' : ''} ${deny != null ? 'denied' : ''}`} key={cur.id} {...dnd.source(cur.id, <img src={mg(`hue-mg-trav-${cur.kind}`)} alt="" />)}>
             <img src={mg(`hue-mg-trav-${cur.kind}`)} alt="" draggable={false} />
             <b>{KIND_LABEL[cur.kind]}</b>
           </div>
@@ -87,6 +116,7 @@ export function NgoMonGates({ task, submit }: { task: T<'task_ngo_mon_gates'>; s
           </span>
         </div>
       </div>
+      {dnd.ghost}
     </MgShell>
   );
 }
@@ -106,9 +136,9 @@ export function CourtRanks({ task, submit }: { task: T<'task_court_ranks'>; subm
   const byId = Object.fromEntries(task.officials.map((o) => [o.id, o]));
   const used = new Set(Object.values(placed));
 
-  const drop = (slot: string) => {
-    if (!sel || placed[slot]) return;
-    const o = byId[sel];
+  const drop = (slot: string, id = sel) => {
+    if (!id || placed[slot]) return;
+    const o = byId[id];
     const [side, rank] = slot.split('-');
     if (o.side !== side) {
       sfx.bad();
@@ -124,11 +154,15 @@ export function CourtRanks({ task, submit }: { task: T<'task_court_ranks'>; subm
     }
     sfx.ok();
     setMsg('');
-    const next = { ...placed, [slot]: sel };
+    const next = { ...placed, [slot]: id };
     setPlaced(next);
     setSel(null);
     if (Object.keys(next).length === task.officials.length) setTimeout(() => submit(next), 700);
   };
+  const dnd = useDragDrop<string>(
+    (id, slot) => drop(slot, id),
+    (id) => (setSel(id), setMsg('')),
+  );
 
   return (
     <MgShell
@@ -136,7 +170,7 @@ export function CourtRanks({ task, submit }: { task: T<'task_court_ranks'>; subm
       lore={task.prompt}
       status={`${Object.keys(placed).length}/${task.officials.length}`}
       tone={Object.keys(placed).length === task.officials.length ? 'ok' : msg ? 'bad' : 'info'}
-      hint={Object.keys(placed).length === task.officials.length ? 'Hàng chầu đã ngay ngắn!' : msg || (sel ? 'Giờ bấm vào bia phẩm sơn phù hợp.' : 'Chọn một vị quan ở khay bên dưới.')}
+      hint={Object.keys(placed).length === task.officials.length ? 'Hàng chầu đã ngay ngắn!' : msg || (sel ? 'Giờ bấm vào bia phẩm sơn phù hợp.' : 'Kéo một vị quan ở khay bên dưới thả vào bia phẩm sơn.')}
     >
       <div className={`court ${shake}`}>
         <img className="court-hall" src={mg('hue-mg-thai-hoa')} alt="Điện Thái Hòa" draggable={false} />
@@ -152,7 +186,12 @@ export function CourtRanks({ task, submit }: { task: T<'task_court_ranks'>; subm
                 const slot = `${s.side}-${r}`;
                 const o = placed[slot] ? byId[placed[slot]] : null;
                 return (
-                  <button key={slot} className={`court-slot ${o ? 'filled' : sel ? 'ready' : ''}`} onClick={() => drop(slot)}>
+                  <button
+                    key={slot}
+                    className={`court-slot ${o ? 'filled' : sel || dnd.dragging ? 'ready' : ''} ${dnd.over === slot ? 'drop-over' : ''}`}
+                    data-drop={o ? undefined : slot}
+                    onClick={() => drop(slot)}
+                  >
                     <img className="stele" src={mg('hue-mg-pham-son')} alt="" draggable={false} />
                     <small>{RANKS[r - 1]}</small>
                     {o && <img className="official" src={mg(`hue-mg-trav-${o.side}`)} alt="" draggable={false} />}
@@ -165,12 +204,18 @@ export function CourtRanks({ task, submit }: { task: T<'task_court_ranks'>; subm
       </div>
       <div className="court-tray">
         {task.officials.map((o) => (
-          <button key={o.id} className={`official-card ${sel === o.id ? 'sel' : ''} ${used.has(o.id) ? 'used' : ''}`} disabled={used.has(o.id)} onClick={() => (setSel(o.id), setMsg(''))}>
+          <button
+            key={o.id}
+            className={`official-card ${sel === o.id ? 'sel' : ''} ${used.has(o.id) ? 'used' : ''} ${dnd.dragging === o.id ? 'lifting' : ''}`}
+            disabled={used.has(o.id)}
+            {...dnd.source(o.id, <img src={mg(`hue-mg-trav-${o.side}`)} alt="" />, used.has(o.id))}
+          >
             <img src={mg(`hue-mg-trav-${o.side}`)} alt="" draggable={false} />
             <small>{o.name}</small>
           </button>
         ))}
       </div>
+      {dnd.ghost}
     </MgShell>
   );
 }

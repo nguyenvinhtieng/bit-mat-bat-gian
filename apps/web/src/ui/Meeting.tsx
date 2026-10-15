@@ -4,7 +4,7 @@ import { send } from '../net';
 import { colorHex, useStore, type PlayerView } from '../store';
 import { Chat } from './Chat';
 import { Sprite } from './Cinematic';
-import { asset, Digits, fmt, useCountdown, useEscape } from './common';
+import { asset, Digits, fmt, useCountdown } from './common';
 
 const mt = (n: string) => asset(`common/ui/meeting/${n}.webp`);
 /** RoomView players carry the hex colour; the sprite renderer wants the palette index. */
@@ -28,20 +28,18 @@ function VoteCard({
   p,
   me,
   canVote,
-  selected,
-  onSelect,
+  onVote,
 }: {
   p: PlayerView;
   me: boolean;
   canVote: boolean;
-  selected: boolean;
-  onSelect: () => void;
+  onVote: () => void;
 }) {
   const votable = canVote && p.alive && !me;
-  const cls = ['vcard', p.alive ? '' : 'dead', p.connected ? '' : 'off', me ? 'me' : '', votable ? 'votable' : '', selected ? 'sel' : ''].join(' ');
+  const cls = ['vcard', p.alive ? '' : 'dead', p.connected ? '' : 'off', me ? 'me' : '', votable ? 'votable' : ''].join(' ');
   return (
     <li className={cls}>
-      <button className="vcard-hit" disabled={!votable} onClick={onSelect} title={me ? 'Bạn không thể bỏ phiếu cho chính mình' : undefined}>
+      <button className="vcard-hit" disabled={!votable} onClick={onVote} title={me ? 'Bạn không thể bỏ phiếu cho chính mình' : undefined}>
         <span className="vcard-portrait" style={{ '--pc': colorHex(p.color) } as React.CSSProperties}>
           <Sprite color={colorIndex(p.color)} dir="down" scale={1.5} />
           {!p.alive && <img className="vcard-skull" src={asset('common/ui/body-marker.webp')} alt="" />}
@@ -51,20 +49,10 @@ function VoteCard({
             {p.name}
             {me && <em className="vcard-you">Bạn</em>}
           </span>
-          <span className="vcard-sub">{!p.alive ? 'Đã bị hạ gục' : !p.connected ? 'Mất kết nối' : me ? 'Không thể tự bỏ phiếu' : votable ? 'Chọn để bỏ phiếu loại' : ' '}</span>
+          <span className="vcard-sub">{!p.alive ? 'Đã bị hạ gục' : !p.connected ? 'Mất kết nối' : me ? 'Không thể tự bỏ phiếu' : votable ? 'Chạm để loại' : ' '}</span>
         </span>
         {p.alive && p.voted && <img className="vcard-stamp" src={mt('stamp-voted')} alt="đã bỏ phiếu" title="Đã bỏ phiếu" />}
       </button>
-      {selected && (
-        <div className="vcard-confirm">
-          <button className="vc-yes" onClick={() => send('vote', { target: p.id })}>
-            <img src={mt('seal-eject')} alt="" /> Loại {p.name}
-          </button>
-          <button className="vc-no" onClick={onSelect} aria-label="Huỷ">
-            ✕
-          </button>
-        </div>
-      )}
     </li>
   );
 }
@@ -78,15 +66,10 @@ export function Meeting() {
   const reveal = room.phase === 'reveal';
   const mine = room.players.find((p) => p.id === sessionId);
   const canVote = room.phase === 'meeting' && !!mine?.alive && !mine.voted;
-  const [sel, setSel] = useState<string | null>(null);
   const [total, setTotal] = useState(75);
   useEffect(() => {
     if (left != null && left > total) setTotal(left);
   }, [left]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (!canVote) setSel(null);
-  }, [canVote]);
-  useEscape(() => setSel(null), !!sel);
   const alive = room.players.filter((p) => p.alive && p.connected);
   const votedN = alive.filter((p) => p.voted).length;
   const emergency = /chuông|khẩn/i.test(room.meetingReason);
@@ -103,9 +86,9 @@ export function Meeting() {
           <span className="meet-reason">{room.meetingReason}</span>
         </div>
         <TimerRing left={left} total={reveal ? 6 : total} />
-        {isHost && (
+        {isHost && reveal && (
           <button className="btn small meet-skip-host" onClick={() => send('host:skip', {})}>
-            {reveal ? 'Bỏ qua' : 'Chốt phiếu'}
+            Bỏ qua
           </button>
         )}
       </header>
@@ -168,7 +151,7 @@ export function Meeting() {
             </div>
             <ul className="vcards">
               {room.players.map((p) => (
-                <VoteCard key={p.id} p={p} me={p.id === sessionId} canVote={canVote} selected={sel === p.id} onSelect={() => setSel(sel === p.id ? null : p.id)} />
+                <VoteCard key={p.id} p={p} me={p.id === sessionId} canVote={canVote} onVote={() => send('vote', { target: p.id })} />
               ))}
             </ul>
             <div className="meet-actions">

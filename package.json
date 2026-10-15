@@ -10,6 +10,7 @@
     "assets:ui-art": "node tools/ui-art/draw-ui.mjs",
     "assets:fx": "node tools/ui-art/draw-fx.mjs",
     "assets:guide": "node tools/ui-art/draw-guide.mjs",
+    "assets:mobile": "node tools/ui-art/draw-mobile.mjs",
     "assets:chars": "node tools/char-art/draw-characters.mjs",
     "assets:hue-bansoc": "node tools/ui-art/draw-hue-bansoc.mjs",
     "assets:check": "node tools/assets-pack/check.mjs",
