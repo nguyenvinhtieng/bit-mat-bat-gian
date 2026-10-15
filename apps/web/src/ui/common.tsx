@@ -45,6 +45,13 @@ export function useEscape(onEsc: (() => void) | undefined, active = true) {
 /** Small "Esc" hint shown next to close buttons. */
 export const EscHint = () => <kbd className="esc-hint">Esc</kbd>;
 
+/** Painted round close button (same art as the guide popup) used by every popup. */
+export const CloseButton = ({ onClick, label = 'Đóng', className = '' }: { onClick: () => void; label?: string; className?: string }) => (
+  <button type="button" className={`x-btn ${className}`} onClick={onClick} aria-label={label} title={label}>
+    <img src={asset('common/ui/guide/btn-close.webp')} alt="" draggable={false} />
+  </button>
+);
+
 /** Ward spot (px) while a ward sabotage runs. Primitive selectors: an object selector would re-render forever. */
 export function useWardSpot() {
   const on = useStore((s) => s.room?.sabotage === 'ward');
@@ -93,9 +100,7 @@ export function Modal({ title, onClose, children, wide, className = '' }: { titl
           {onClose && (
             <span className="modal-close-wrap">
               <EscHint />
-              <button className="close" onClick={onClose} aria-label="Đóng">
-                ×
-              </button>
+              <CloseButton onClick={onClose} />
             </span>
           )}
         </header>

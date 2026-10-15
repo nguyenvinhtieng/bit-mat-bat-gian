@@ -8,7 +8,7 @@
  *   apps/web/public/assets/common/ui/<name>.webp (runtime)
  *
  * Assets:
- *   btn-kill / btn-report  round lacquer action buttons (256px)
+ *   btn-kill / btn-report / btn-task  round lacquer action buttons (256px)
  *   frame-task-panel       9-slice, 384px, slice 72  (dark wood + gold, jade gem corners)
  *   frame-modal            9-slice, 512px, slice 96  (red-brown lacquer + gold scroll corners)
  *   frame-chat             9-slice, 384px, slice 60, edges repeat "round" (bamboo + brass lotus studs)
@@ -79,6 +79,20 @@ const DAGGER = `
     <path d="M119 162 H137 M119 171 H137 M119 180 H137" stroke="#e8b54a" stroke-width="2.5"/>
     <circle cx="128" cy="196" r="11" fill="url(#gold)"/>
   </g>`;
+
+/** unrolled paper scroll with a red brush tick — "do the task here" */
+const SCROLL_TICK = `
+  <g stroke="${INK}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" paint-order="stroke">
+    <path d="M78 74 L178 74 L178 182 L78 182 Z" fill="url(#horn)"/>
+    <path d="M94 98 H160 M94 116 H150 M94 134 H140" stroke="#b89a70" stroke-width="5" fill="none"/>
+    <rect x="64" y="62" width="128" height="16" rx="8" fill="#8a4b16"/>
+    <rect x="64" y="178" width="128" height="16" rx="8" fill="#8a4b16"/>
+    <circle cx="62" cy="70" r="7" fill="#f3c75a"/><circle cx="194" cy="70" r="7" fill="#f3c75a"/>
+    <circle cx="62" cy="186" r="7" fill="#f3c75a"/><circle cx="194" cy="186" r="7" fill="#f3c75a"/>
+  </g>
+  <path d="M104 142 L128 166 L184 102" fill="none" stroke="${INK}" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M104 142 L128 166 L184 102" fill="none" stroke="#d8261c" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M110 144 L128 160" fill="none" stroke="#ff8a70" stroke-width="3" stroke-linecap="round" opacity=".7"/>`;
 
 const MEGAPHONE = `
   <g transform="translate(-12 4)" stroke="${INK}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" paint-order="stroke">
@@ -265,6 +279,7 @@ function frameAreaDoor() {
 const JOBS = [
   ['btn-kill', roundButton({ disc: ['#ef5a45', '#a8231d', '#540d0a'], icon: DAGGER }), 256, 256],
   ['btn-report', roundButton({ disc: ['#ffc25c', '#e07a12', '#7e3505'], icon: MEGAPHONE }), 256, 256],
+  ['btn-task', roundButton({ disc: ['#6fe0a8', '#1f8a5c', '#0b3d27'], icon: SCROLL_TICK }), 256, 256],
   ['frame-task-panel', frameTaskPanel(), 384, 384],
   ['frame-modal', frameModal(), 512, 512],
   ['frame-chat', frameChat(), 384, 384],
@@ -272,7 +287,9 @@ const JOBS = [
 ];
 
 for (const dir of [SRC, OUT, PUB]) fs.mkdirSync(dir, { recursive: true });
-for (const [name, code, w, h] of JOBS) {
+// optional filter: UI_ART_ONLY=btn-task,frame-chat node tools/ui-art/draw-ui.mjs
+const ONLY = process.env.UI_ART_ONLY?.split(',');
+for (const [name, code, w, h] of JOBS.filter(([n]) => !ONLY || ONLY.includes(n))) {
   fs.writeFileSync(path.join(SRC, `${name}.svg`), code);
   const png = await sharp(Buffer.from(code), { density: 72 * (w / Number(code.match(/width="(\d+)"/)[1])) })
     .resize(w, h)

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { GAME, MAP_CATALOG, MIN_PLAYERS, autoNightMin, clampKillers, killersFor, maxKillersFor, mapArt, mapMeta } from '@hidden-truth/shared';
 import { leaveRoom, send } from '../net';
 import { colorHex, useStore } from '../store';
-import { Modal, asset, useSkin } from './common';
+import { CloseButton, Modal, asset, useSkin } from './common';
 import { Chat } from './Chat';
 import { useLang, useT } from '../i18n';
 import { Guide, GuideButton } from './Guide';
@@ -24,6 +24,18 @@ export function LobbyPanel() {
   const maxKillers = maxKillersFor(total);
   const killers = room.killers ? clampKillers(room.killers, total) : killersFor(total);
   const canStart = total >= MIN_PLAYERS;
+  // the panel unmounts when the phase flips; the timeout only matters if the server refused (toast explains why)
+  const [starting, setStarting] = useState(false);
+  useEffect(() => {
+    if (!starting) return;
+    const id = setTimeout(() => setStarting(false), 5000);
+    return () => clearTimeout(id);
+  }, [starting]);
+  const start = () => {
+    if (starting) return;
+    setStarting(true);
+    send('start', {});
+  };
   // always open on entering the lobby so players see it exists; the tab folds it away
   const [panelOpen, setPanelOpen] = useState(true);
   const [chatOpen, setChatOpen] = usePersisted('tht:lobbyChat', !isTouch());
@@ -105,8 +117,8 @@ export function LobbyPanel() {
               {me?.ready ? t('unready') : t('readyBtn')}
             </button>
             {isHost && (
-              <button className="btn big wide primary start" disabled={!canStart} title={canStart ? undefined : t('hint')} onClick={() => send('start', {})}>
-                ▶ {t('start')} ({readyCount}/{total})
+              <button className="btn big wide primary start" disabled={!canStart || starting} title={canStart ? undefined : t('hint')} onClick={start}>
+                {starting ? t('starting') : <>▶ {t('start')} ({readyCount}/{total})</>}
               </button>
             )}
             <button className="btn ghost small wide" onClick={leaveRoom}>
@@ -131,8 +143,8 @@ export function LobbyPanel() {
         <div className="all-ready-bar" role="status">
           <span>✓ {isHost ? t('allReady') : t('allReadyWait')}</span>
           {isHost && (
-            <button className="btn primary start" disabled={!canStart} title={canStart ? undefined : t('hint')} onClick={() => send('start', {})}>
-              ▶ {t('start')}
+            <button className="btn primary start" disabled={!canStart || starting} title={canStart ? undefined : t('hint')} onClick={start}>
+              {starting ? t('starting') : <>▶ {t('start')}</>}
             </button>
           )}
         </div>
@@ -225,9 +237,7 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
             <h3>{t('settings')}</h3>
             <small>{t('settingsSub')}</small>
           </div>
-          <button className="close" onClick={onClose} aria-label={t('close')}>
-            ×
-          </button>
+          <CloseButton onClick={onClose} label={t('close')} />
         </header>
         <div className="modal-content">
           <SliderRow

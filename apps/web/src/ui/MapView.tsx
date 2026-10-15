@@ -1,7 +1,7 @@
 import { AREA_RECTS, LAYOUT_H, LAYOUT_W, MEETING_POINT, TILE, type AreaId } from '@hidden-truth/shared';
 import { useLang } from '../i18n';
 import { useStore } from '../store';
-import { EscHint, asset, useEscape, useSkin, useWardSpot } from './common';
+import { CloseButton, EscHint, asset, useEscape, useSkin, useWardSpot } from './common';
 
 /** Label anchor per room (tile units) — kept off the furniture. */
 const LABEL_AT: Partial<Record<AreaId, [number, number]>> = {
@@ -38,9 +38,10 @@ export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: 
             <small>{en ? skin.labels.mapSubtitle.en : skin.labels.mapSubtitle.vi}</small>
           </div>
           <span className="mapview-orn r" aria-hidden />
-          <button className="mapview-close" onClick={onClose} aria-label="Close">
-            <EscHint />✕
-          </button>
+          <span className="mapview-close">
+            <EscHint />
+            <CloseButton onClick={onClose} label={en ? 'Close' : 'Đóng'} />
+          </span>
         </header>
 
         <div className="mapview-body">

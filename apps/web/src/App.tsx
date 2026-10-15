@@ -41,8 +41,22 @@ export function App() {
         <IntroModal />
         <Cinematic />
       </div>
+      <ReconnectBanner />
       <Toasts />
       <RotateGate />
+    </div>
+  );
+}
+
+/** shown while net.recover() retries after an unexpected drop; the stale room stays on screen behind it */
+function ReconnectBanner() {
+  const t = useT();
+  const on = useStore((s) => s.reconnecting);
+  if (!on) return null;
+  return (
+    <div className="reconnect-banner" role="status" aria-live="polite">
+      <i className="spinner" aria-hidden />
+      {t('reconnecting')}
     </div>
   );
 }

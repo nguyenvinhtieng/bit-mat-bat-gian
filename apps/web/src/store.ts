@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import type { Cinematic, ChatMsg, EndReveal, Phase, PrivateInfo, SabotageKind, TaskData, TaskId, ToastMsg, VoteResult } from '@hidden-truth/shared';
 
+/** which matchmaking call is in flight (false = idle) */
+export type Connecting = false | 'create' | 'join' | 'reconnect';
+
 export type PlayerView = {
   id: string;
   name: string;
@@ -57,7 +60,9 @@ type TaskResult = { ok: boolean; text: string; fact?: string; headline?: string 
 
 type Store = {
   screen: 'home' | 'room';
-  connecting: boolean;
+  connecting: Connecting;
+  /** lost the room unexpectedly and retrying in the background */
+  reconnecting: boolean;
   error: string;
   sessionId: string;
   room: RoomView | null;
@@ -94,6 +99,7 @@ let toastId = 0;
 export const useStore = create<Store>((set, get) => ({
   screen: 'home',
   connecting: false,
+  reconnecting: false,
   error: '',
   sessionId: '',
   room: null,

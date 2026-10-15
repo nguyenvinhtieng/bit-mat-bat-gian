@@ -1,6 +1,6 @@
 import { Client, type Room } from 'colyseus.js';
 import { PLAYER_COLORS, ROOM_NAME, type ClientMessages, type Cinematic } from '@hidden-truth/shared';
-import { useStore, type RoomView } from './store';
+import { useStore, type Connecting, type RoomView } from './store';
 
 function endpoint(): string {
   const env = import.meta.env.VITE_SERVER_URL as string | undefined;
@@ -81,6 +81,8 @@ function snapshot(state: any): RoomView {
 }
 
 let pingTimer: ReturnType<typeof setInterval> | undefined;
+/** set by leaveRoom() so onLeave can tell our own exit from the server closing the room */
+let leaving = false;
 
 function bind(r: Room) {
   room = r;
@@ -140,62 +142,121 @@ function bind(r: Room) {
   r.send('ping', performance.now());
 
   r.onLeave((code) => {
+    if (room !== r) return; // a newer room already replaced this one
     room = null;
     if (pingTimer) clearInterval(pingTimer);
     useStore.getState().set({ ping: 0 });
-    if (code > 1000 && code !== 4001) {
-      // unexpected disconnect -> try to reconnect once
-      reconnect().then((ok) => {
-        if (!ok) useStore.getState().set({ screen: 'home', room: null, error: 'Mất kết nối với phòng.' });
-      });
+    const self = leaving;
+    leaving = false;
+    if (!self && code > 1000 && code !== 4000 && code !== 4001 && sessionStorage.getItem(TOKEN_KEY)) {
+      // unexpected disconnect (network blip, phone backgrounded) -> keep retrying while the server holds our seat
+      recover();
     } else {
       sessionStorage.removeItem(TOKEN_KEY);
-      useStore.getState().set({ screen: 'home', room: null });
+      // 4000 we didn't ask for = the server closed the room (restart/deploy); 4001 = kicked (server toasts why)
+      const error = !self && code === 4000 ? 'Phòng đã đóng (máy chủ vừa khởi động lại). Hãy tạo hoặc vào phòng mới.' : '';
+      useStore.getState().set({ screen: 'home', room: null, reconnecting: false, error });
       history.replaceState(null, '', '/');
     }
   });
   for (const cb of roomListeners) cb(r);
 }
 
+/** server-side rejections (room not found, full, token expired…) — retrying won't help */
+const rejected = (e: unknown) => typeof (e as { code?: unknown })?.code === 'number' && (e as { code: number }).code >= 4000;
+
 function friendly(e: unknown): string {
-  const msg = e instanceof Error ? e.message : String(e);
-  if (/not found|invalid/i.test(msg)) return 'Không tìm thấy phòng với mã này.';
+  const msg = e instanceof Error ? e.message : String(e ?? '');
+  if (!navigator.onLine) return 'Thiết bị đang mất mạng. Kiểm tra Wi-Fi/4G rồi thử lại.';
+  if (/timeout/i.test(msg)) return 'Máy chủ phản hồi quá lâu. Thử lại sau giây lát.';
+  if (/not found|invalid|expired/i.test(msg)) return 'Không tìm thấy phòng với mã này.';
   if (/locked|full/i.test(msg)) return 'Phòng đã đầy hoặc đang chơi.';
-  if (/ECONNREFUSED|Failed to fetch|NetworkError|connect/i.test(msg)) return 'Không kết nối được game server (cổng 2567).';
-  return msg;
+  if (/đang chơi|already|started/i.test(msg)) return msg;
+  if (!rejected(e)) return 'Không kết nối được máy chủ game. Thử lại sau giây lát.';
+  return msg || 'Có lỗi xảy ra, thử lại nhé.';
 }
 
-export async function createRoom(name: string, map?: string) {
-  useStore.getState().set({ connecting: true, error: '' });
+const OP_TIMEOUT = 12_000;
+let opSeq = 0;
+
+/** race a matchmaking call against a timeout; a room that arrives after we gave up is left right away */
+async function attempt(fn: () => Promise<Room>, ms = OP_TIMEOUT): Promise<Room> {
+  const p = fn();
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    bind(await client.create(ROOM_NAME, { name, map }));
+    return await Promise.race([p, new Promise<never>((_, rej) => (timer = setTimeout(() => rej(new Error('timeout')), ms)))]);
   } catch (e) {
-    useStore.getState().set({ connecting: false, error: friendly(e) });
+    p.then((late) => late.leave(true), () => {});
+    throw e;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
-export async function joinRoom(code: string, name: string) {
-  useStore.getState().set({ connecting: true, error: '' });
-  try {
-    bind(await client.joinById(code.trim().toUpperCase(), { name }));
-  } catch (e) {
-    useStore.getState().set({ connecting: false, error: friendly(e) });
+/** single in-flight create/join/reconnect; stale results (superseded or already in a room) are discarded */
+async function connect(kind: Connecting, fn: () => Promise<Room>, quiet = false): Promise<boolean> {
+  const st = useStore.getState();
+  if (st.connecting || room) return false;
+  if (!navigator.onLine && !quiet) {
+    st.set({ error: friendly(null) });
+    return false;
   }
-}
-
-export async function reconnect(): Promise<boolean> {
-  const token = sessionStorage.getItem(TOKEN_KEY);
-  if (!token) return false;
+  const seq = ++opSeq;
+  st.set({ connecting: kind, error: '' });
   try {
-    bind(await client.reconnect(token));
+    const r = await attempt(fn);
+    if (seq !== opSeq || room) {
+      r.leave(true);
+      return false;
+    }
+    bind(r);
     return true;
-  } catch {
-    sessionStorage.removeItem(TOKEN_KEY);
+  } catch (e) {
+    if (seq === opSeq) useStore.getState().set({ connecting: false, error: quiet ? '' : friendly(e) });
     return false;
   }
 }
 
+export const createRoom = (name: string, map?: string) => connect('create', () => client.create(ROOM_NAME, { name, map }));
+
+export const joinRoom = (code: string, name: string) => connect('join', () => client.joinById(code.trim().toUpperCase(), { name }));
+
+/** resume a saved seat (page reload); silent — a dead token just means we start at home */
+export async function reconnect(): Promise<boolean> {
+  const token = sessionStorage.getItem(TOKEN_KEY);
+  if (!token) return false;
+  const ok = await connect('reconnect', () => client.reconnect(token), true);
+  if (!ok && !room) sessionStorage.removeItem(TOKEN_KEY);
+  return ok;
+}
+
+/** after an unexpected drop: retry with backoff while the server keeps the seat (45s in game, 20s in lobby) */
+async function recover() {
+  const s = useStore.getState();
+  s.set({ reconnecting: true });
+  const deadline = Date.now() + 40_000;
+  for (let i = 0; Date.now() < deadline; i++) {
+    const token = sessionStorage.getItem(TOKEN_KEY);
+    if (!token || room) break;
+    if (navigator.onLine) {
+      try {
+        bind(await attempt(() => client.reconnect(token), 8_000));
+        useStore.getState().set({ reconnecting: false });
+        return;
+      } catch (e) {
+        if (rejected(e)) break;
+      }
+    }
+    await new Promise((res) => setTimeout(res, Math.min(1000 * 2 ** i, 5000)));
+  }
+  if (room) return useStore.getState().set({ reconnecting: false });
+  sessionStorage.removeItem(TOKEN_KEY);
+  useStore.getState().set({ screen: 'home', room: null, reconnecting: false, error: 'Mất kết nối với phòng. Hãy vào lại bằng mã phòng.' });
+  history.replaceState(null, '', '/');
+}
+
 export function leaveRoom() {
   sessionStorage.removeItem(TOKEN_KEY);
+  if (room) leaving = true;
   room?.leave(true);
 }

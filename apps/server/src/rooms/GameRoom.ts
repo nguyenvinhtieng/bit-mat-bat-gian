@@ -129,10 +129,11 @@ export class GameRoom extends Room<GameState> {
   async onLeave(client: Client, consented: boolean) {
     const p = this.state.players.get(client.sessionId);
     if (!p) return;
-    if (!consented && this.state.phase !== 'lobby') {
+    if (!consented) {
+      // flaky mobile networks / app switching: hold the seat (shorter in the lobby so a dead player doesn't block the start)
       p.connected = false;
       try {
-        const rc = await this.allowReconnection(client, 45);
+        const rc = await this.allowReconnection(client, this.state.phase === 'lobby' ? 20 : 45);
         p.connected = true;
         rc.send('time', Date.now());
         this.sendPrivate(client.sessionId);

@@ -41,9 +41,9 @@ function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''
   );
 }
 import { fix, send } from '../net';
-import { KILLER_NAME_COLOR, useStore } from '../store';
+import { KILLER_NAME_COLOR, uiBlocksMovement, useStore } from '../store';
 import { useLang, useT } from '../i18n';
-import { Digits, Icon, RoleBadge, asset, fmt, useCountdown, useSkin, useWardSpot } from './common';
+import { CloseButton, Digits, Icon, RoleBadge, asset, fmt, useCountdown, useSkin, useWardSpot } from './common';
 import { MapView } from './MapView';
 import { isTouchDevice } from './Joystick';
 
@@ -363,6 +363,8 @@ const room = useStore((s) => s.room)!;
   const pos = useStore((s) => s.pos);
   const killReady = killer && killTarget && !cdLeft;
   const canReport = nearby?.kind === 'report';
+  // phones: a big "do task" button pops in only while standing at one of my unfinished stations
+  const taskHere = nearby?.kind === 'task' && !nearby.done ? nearby : null;
   const [mapOpen, setMapOpen] = useState(false);
   const taskOpen = useStore((s) => !!s.task);
   // phones start with the task list folded so the left thumb (joystick) has room
@@ -519,9 +521,7 @@ const room = useStore((s) => s.room)!;
               <b className="task-count">
                 {me.completedTasks.length}/{me.tasks.length}
               </b>
-              <button className="task-pop-x" onClick={() => setTasksOpen(false)} aria-label={t('close')}>
-                ✕
-              </button>
+              <CloseButton className="task-pop-x" onClick={() => setTasksOpen(false)} label={t('close')} />
             </div>
             <div className="task-meter">
               <div style={{ width: `${(me.completedTasks.length / Math.max(1, me.tasks.length)) * 100}%` }} />
@@ -570,6 +570,18 @@ const room = useStore((s) => s.room)!;
             <kbd>R</kbd>
             <em>{t('report')}</em>
           </button>}
+          {alive && touch && taskHere && (
+            <button
+              key={taskHere.id}
+              className="round-btn task ready"
+              onClick={() => !uiBlocksMovement() && send('task:open', { taskId: taskHere.id })}
+              title={taskHere.title}
+              aria-label={`${t('doTask')}: ${taskHere.title}`}
+            >
+              <img src={asset('common/ui/btn-task.webp')} alt="" draggable={false} />
+              <em>{t('doTask')}</em>
+            </button>
+          )}
         </div>
       )}
 
