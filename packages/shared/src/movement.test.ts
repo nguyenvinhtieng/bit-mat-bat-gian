@@ -43,3 +43,21 @@ test('every area is reachable from spawn', () => {
     assert.ok(seen.has(Math.floor(st.y / TILE) * g.w + Math.floor(st.x / TILE)), `${st.id} unreachable`);
   }
 });
+
+test('decor never seals off floor: every walkable cell is reachable from spawn', () => {
+  const g = getGrid();
+  const start = [Math.floor(SPAWNS[0].x / TILE), Math.floor(SPAWNS[0].y / TILE)];
+  const seen = new Set<number>([start[1] * g.w + start[0]]);
+  const q = [start];
+  while (q.length) {
+    const [x, y] = q.shift()!;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy;
+      if (isSolidTile(g, nx, ny) || seen.has(ny * g.w + nx)) continue;
+      seen.add(ny * g.w + nx);
+      q.push([nx, ny]);
+    }
+  }
+  for (let y = 0; y < g.h; y++)
+    for (let x = 0; x < g.w; x++) if (!isSolidTile(g, x, y)) assert.ok(seen.has(y * g.w + x), `pocket at ${x},${y}`);
+});

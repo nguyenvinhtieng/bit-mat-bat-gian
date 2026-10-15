@@ -97,10 +97,17 @@ function bind(r: Room) {
   r.onMessage('chat', (m) => useStore.getState().set({ chat: [...useStore.getState().chat, m].slice(-200) }));
   r.onMessage('toast', (t) => useStore.getState().toast(t));
   r.onMessage('task:data', (task) => useStore.getState().set({ task, taskResult: null }));
-  r.onMessage('task:result', (res: { ok: boolean; text: string; fact?: string }) => {
+  r.onMessage('task:result', (res: { ok: boolean; text: string; fact?: string; headline?: string }) => {
     const s = useStore.getState();
     if (res.ok) s.set({ taskResult: res });
-    else s.toast({ text: res.text, kind: 'warn' });
+    else {
+      s.toast({ text: res.text, kind: 'warn' });
+      s.set({ taskAttempt: s.taskAttempt + 1 });
+    }
+  });
+  r.onMessage('canh', (c: { canh: number; text: string }) => {
+    const s = useStore.getState();
+    s.set({ canh: { n: c.canh, text: c.text, id: Date.now() } });
   });
   r.onMessage('task:close', () => useStore.getState().set({ task: null, taskResult: null }));
   r.onMessage('vote:result', (voteResult) => useStore.getState().set({ voteResult }));

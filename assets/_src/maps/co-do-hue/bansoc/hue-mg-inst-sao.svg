@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"><defs><linearGradient id="g193" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1d58a"/><stop offset="0.5" stop-color="#c9a24c"/><stop offset="1" stop-color="#8a6a24"/></linearGradient></defs><ellipse cx="80" cy="132" rx="62" ry="6" fill="#000" opacity="0.28"/>
+    <g transform="rotate(-20 80 80)"><rect x="8" y="70" width="144" height="20" rx="10" fill="url(#g193)" stroke="#22100a" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <ellipse cx="30" cy="80" rx="4" ry="5" fill="#22100a"/><ellipse cx="100" cy="80" rx="4" ry="5" fill="#22100a"/><ellipse cx="112" cy="80" rx="4" ry="5" fill="#22100a"/><ellipse cx="124" cy="80" rx="4" ry="5" fill="#22100a"/><ellipse cx="136" cy="80" rx="4" ry="5" fill="#22100a"/>
+    <path d="M50 70 V90" stroke="#8a6a24" stroke-width="2.4"/><path d="M80 70 V90" stroke="#8a6a24" stroke-width="2.4"/>
+    <path d="M14 76 H146" stroke="#fff6cf" stroke-width="2" opacity=".6"/>
+    <path d="M152 80 Q160 92 150 108" stroke="#d8473a" stroke-width="4" fill="none"/></g></svg>

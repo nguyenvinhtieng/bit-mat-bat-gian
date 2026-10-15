@@ -1,170 +1,110 @@
-import { useEffect, useRef, useState } from 'react';
-import { HUE_STATIONS, type TaskData } from '@hidden-truth/shared';
+import { useEffect } from 'react';
+import { HUE_AREAS, HUE_STATIONS } from '@hidden-truth/shared';
+import { useLang } from '../i18n';
 import { send } from '../net';
 import { useStore } from '../store';
-import { Modal } from './common';
+import { Modal, asset } from './common';
+import { Minigame } from './minigames';
+
+/** Pull "UNESCO, 2009"-style recognitions out of the fact to show them as badges. */
+function heritageBadges(fact: string) {
+  const out: string[] = [];
+  const re = /UNESCO(?:,\s*(\d{4}))?/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(fact))) out.push(m[1] ? `UNESCO ${m[1]}` : 'UNESCO');
+  const year = fact.match(/năm (\d{4})/);
+  if (fact.includes('UNESCO') && !out.some((b) => /\d/.test(b)) && year) out[0] = `UNESCO ${year[1]}`;
+  return [...new Set(out)];
+}
 
 export function TaskModal() {
   const task = useStore((s) => s.task);
   const result = useStore((s) => s.taskResult);
+  const attempt = useStore((s) => s.taskAttempt);
+  const me = useStore((s) => s.me);
   const set = useStore((s) => s.set);
+  const lang = useLang((s) => s.lang);
+  const en = lang === 'en';
+  const close = () => set({ task: null, taskResult: null });
+  useEffect(() => {
+    if (!result) return;
+    const h = (e: KeyboardEvent) => e.key === 'Enter' && close();
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [!!result]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!task) return null;
   const st = HUE_STATIONS.find((x) => x.id === task.taskId)!;
-  const close = () => set({ task: null, taskResult: null });
   const submit = (answer: unknown) => send('task:submit', { taskId: task.taskId, answer });
+  const title = en ? st.titleEn : st.title;
 
-  return (
-    <Modal title={st.title} onClose={close} wide>
-      {result ? (
-        <div className="task-done">
-          <p className="success">✅ {result.text}</p>
-          {result.fact && (
-            <p className="fact">
-              💡 <b>Bạn có biết?</b> {result.fact}
-            </p>
-          )}
-          <button className="btn primary" onClick={close}>
-            Tiếp tục
-          </button>
-        </div>
-      ) : (
-        <div className="minigame">
-          <div className="minigame-inner">
-            <Minigame task={task} submit={submit} />
+  if (result) {
+    const badges = heritageBadges(result.fact ?? '');
+    const done = me?.completedTasks.length ?? 0;
+    const total = me?.tasks.length ?? 0;
+    return (
+      <Modal title={en ? 'Task complete' : 'Hoàn thành nhiệm vụ'} onClose={close} wide>
+        <div className="hcard">
+          <figure className="hcard-art">
+            <img src={asset(`maps/co-do-hue/cards/hue-card-${task.taskId}.webp`)} alt="" draggable={false} />
+            <figcaption>{en ? HUE_AREAS[st.area].nameEn : HUE_AREAS[st.area].name}</figcaption>
+            <span className="hcard-stamp" aria-hidden>
+              <b>{en ? 'DONE' : 'ĐÃ XONG'}</b>
+            </span>
+            <i className="hcard-spark s1" />
+            <i className="hcard-spark s2" />
+            <i className="hcard-spark s3" />
+          </figure>
+          <div className="hcard-body">
+            <span className="hcard-eyebrow">{en ? 'Ceremony preparations' : 'Chuẩn bị Lễ Ban Sóc'}</span>
+            <h2>{title}</h2>
+            <p className="hcard-result">{result.text}</p>
+            {result.fact && (
+              <div className="hcard-fact">
+                <span className="hcard-dyk">
+                  <span className="hcard-bulb" aria-hidden>
+                    💡
+                  </span>
+                  {en ? 'Did you know?' : 'Bạn có biết?'}
+                </span>
+                {result.headline && <h4>{result.headline}</h4>}
+                <p>{result.fact}</p>
+                {badges.length > 0 && (
+                  <div className="hcard-badges">
+                    {badges.map((b) => (
+                      <span key={b} className="hcard-badge">
+                        ★ {b}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="hcard-foot">
+              <div className="hcard-progress">
+                <span>{en ? 'Your tasks' : 'Nhiệm vụ của bạn'}</span>
+                <div className="hcard-pips">
+                  {Array.from({ length: total }, (_, i) => (
+                    <i key={i} className={i < done ? 'on' : ''} />
+                  ))}
+                </div>
+              </div>
+              <button className="btn primary" onClick={close} autoFocus>
+                {en ? 'Continue' : 'Tiếp tục'} <kbd>Enter</kbd>
+              </button>
+            </div>
           </div>
         </div>
-      )}
-    </Modal>
-  );
-}
-
-function Minigame({ task, submit }: { task: TaskData; submit: (a: unknown) => void }) {
-  switch (task.taskId) {
-    case 'task_hue_cuisine':
-      return <Pick prompt={task.prompt} items={task.items} submit={submit} />;
-    case 'task_woodblock':
-      return <HoldPrint prompt={task.prompt} holdMs={task.holdMs} submit={submit} />;
-    case 'task_citadel_gates':
-    case 'task_lanterns':
-      return <Sequence prompt={task.prompt} sequence={task.sequence} options={task.options} submit={submit} />;
-    case 'task_conical_hat':
-    case 'task_heritage_quiz':
-      return <Quiz prompt={task.prompt} question={task.question} options={task.options} submit={submit} />;
+      </Modal>
+    );
   }
-}
 
-function Pick({ prompt, items, submit }: { prompt: string; items: { id: string; label: string }[]; submit: (a: unknown) => void }) {
-  const [checked, setChecked] = useState<Set<string>>(new Set());
-  const toggle = (id: string) => {
-    const n = new Set(checked);
-    n.has(id) ? n.delete(id) : n.add(id);
-    setChecked(n);
-  };
   return (
-    <div className="mg-center">
-      <p>{prompt}</p>
-      <div className="option-grid">
-        {items.map((i) => (
-          <button key={i.id} className={`btn ${checked.has(i.id) ? 'on' : ''}`} onClick={() => toggle(i.id)}>
-            {checked.has(i.id) ? '✔ ' : ''}
-            {i.label}
-          </button>
-        ))}
+    <Modal title={title} onClose={close} wide className="task-modal">
+      <div className={`minigame mg-${task.taskId}`}>
+        <div className="minigame-inner">
+          <Minigame key={attempt} task={task} submit={submit} />
+        </div>
       </div>
-      <button className="btn primary" disabled={!checked.size} onClick={() => submit([...checked])}>
-        Dọn mâm cỗ
-      </button>
-    </div>
-  );
-}
-
-function HoldPrint({ prompt, holdMs, submit }: { prompt: string; holdMs: number; submit: (a: unknown) => void }) {
-  const [p, setP] = useState(0);
-  const start = useRef(0);
-  const raf = useRef(0);
-  const done = useRef(false);
-  const tick = () => {
-    const k = Math.min(1, (performance.now() - start.current) / holdMs);
-    setP(k);
-    if (k >= 1 && !done.current) {
-      done.current = true;
-      submit({ held: true });
-      return;
-    }
-    raf.current = requestAnimationFrame(tick);
-  };
-  const down = () => {
-    if (done.current) return;
-    start.current = performance.now();
-    raf.current = requestAnimationFrame(tick);
-  };
-  const up = () => {
-    cancelAnimationFrame(raf.current);
-    if (!done.current) setP(0);
-  };
-  useEffect(() => () => cancelAnimationFrame(raf.current), []);
-  return (
-    <div className="mg-center">
-      <p>{prompt}</p>
-      <div className="scan-bar">
-        <div style={{ width: `${p * 100}%` }} />
-      </div>
-      <button className="btn primary big" onPointerDown={down} onPointerUp={up} onPointerLeave={up}>
-        {p >= 1 ? 'Đã in xong' : 'Giữ để in'}
-      </button>
-    </div>
-  );
-}
-
-function Sequence({ prompt, sequence, options, submit }: { prompt: string; sequence: string[]; options: string[]; submit: (a: unknown) => void }) {
-  const [picked, setPicked] = useState<string[]>([]);
-  const [wrong, setWrong] = useState(false);
-  const click = (o: string) => {
-    if (picked.includes(o)) return;
-    const next = [...picked, o];
-    if (sequence[next.length - 1] !== o) {
-      setWrong(true);
-      setPicked([]);
-      setTimeout(() => setWrong(false), 600);
-      return;
-    }
-    setPicked(next);
-    if (next.length === sequence.length) submit(next);
-  };
-  return (
-    <div className="mg-center">
-      <p>{prompt}</p>
-      <ol className="sequence">
-        {sequence.map((s, i) => (
-          <li key={s} className={i < picked.length ? 'done' : ''}>
-            {s}
-          </li>
-        ))}
-      </ol>
-      <div className={`option-grid ${wrong ? 'shake' : ''}`}>
-        {options.map((o) => (
-          <button key={o} className={`btn ${picked.includes(o) ? 'on' : ''}`} onClick={() => click(o)}>
-            {picked.includes(o) ? '💡 ' : ''}
-            {o}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Quiz({ prompt, question, options, submit }: { prompt: string; question: string; options: string[]; submit: (a: unknown) => void }) {
-  return (
-    <div className="mg-center">
-      <p className="muted">{prompt}</p>
-      <p className="quiz-q">{question}</p>
-      <div className="option-grid">
-        {options.map((o) => (
-          <button key={o} className="btn" onClick={() => submit(o)}>
-            {o}
-          </button>
-        ))}
-      </div>
-    </div>
+    </Modal>
   );
 }

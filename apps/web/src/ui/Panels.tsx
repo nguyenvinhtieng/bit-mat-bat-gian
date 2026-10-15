@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { HUE_INTRO, HUE_STORY_TITLE, ROLE_INFO, mapArt } from '@hidden-truth/shared';
+import { HUE_INTRO, HUE_STORY_SUBTITLE, HUE_STORY_TITLE, ROLE_INFO, mapArt } from '@hidden-truth/shared';
 import { useStore } from '../store';
-import { RoleBadge, asset } from './common';
+import { RoleBadge, asset, useEscape } from './common';
 
 const LINE_GAP = 1.9; // seconds between story lines
 const LINES = HUE_INTRO.split(/(?<=[.!?])\s+/).filter(Boolean);
@@ -36,6 +36,7 @@ export function IntroModal() {
     setTimeout(() => set({ introOpen: false }), 600);
   };
   const next = () => (stage === 'story' ? setStage('role') : close());
+  useEscape(close, open && !!me);
 
   useEffect(() => {
     if (!open) return;
@@ -59,6 +60,7 @@ export function IntroModal() {
         <div className="opening-story" key="story">
           <img className="opening-art" src={asset(mapArt(mapSlug, 'home-bg'))} alt="" />
           <h1 className="opening-title">{HUE_STORY_TITLE}</h1>
+          <span className="opening-subtitle">{HUE_STORY_SUBTITLE}</span>
           <div className="opening-lines">
             {LINES.map((l, i) => (
               <p key={i} style={{ animationDelay: `${1.2 + i * LINE_GAP}s` }}>
@@ -99,7 +101,7 @@ export function IntroModal() {
               close();
             }}
           >
-            Vào Đêm Hội
+            Vào Kinh thành
           </button>
         </div>
       )}

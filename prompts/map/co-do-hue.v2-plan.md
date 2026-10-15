@@ -1,6 +1,6 @@
-# [PLAN v2] Cố đô Huế — *Năm Canh Trước Bình Minh* (Đêm Ban Sóc)
+# [PLAN v2 — ĐÃ TRIỂN KHAI] Cố đô Huế — *Năm Canh Trước Bình Minh* (Đêm Ban Sóc)
 
-> Trạng thái: **planning, chưa code**. Khi chốt sẽ thay thế cốt truyện + bảng nhiệm vụ trong `co-do-hue.md`.
+> Trạng thái: **đã triển khai** (spec đang chạy: `co-do-hue.md`).
 > Giữ nguyên: layout 7 khu, 3 role, luật thắng/thua, cơ chế hạ gục/họp (theo `cot-truyen-role.md`).
 > ⚠ = chi tiết lịch sử cần kiểm chứng lại trước khi đưa vào nội dung chính thức.
 

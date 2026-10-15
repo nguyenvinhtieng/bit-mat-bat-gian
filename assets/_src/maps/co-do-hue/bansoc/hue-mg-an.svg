@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 140 140"><defs><linearGradient id="g230" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9fd8b6"/><stop offset="0.5" stop-color="#3f9c72"/><stop offset="1" stop-color="#1f5c43"/></linearGradient><linearGradient id="g231" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff2bf"/><stop offset="0.3333333333333333" stop-color="#f3c75a"/><stop offset="0.6666666666666666" stop-color="#c58b26"/><stop offset="1" stop-color="#7d4f12"/></linearGradient><linearGradient id="g232" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe8cf"/><stop offset="1" stop-color="#6fbf96"/></linearGradient></defs><ellipse cx="70" cy="128" rx="46" ry="8" fill="#000" opacity="0.35"/>
+    <path d="M26 84 L114 84 L114 118 Q70 126 26 118 Z" fill="url(#g230)" stroke="#22100a" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M26 84 Q70 74 114 84 Q70 94 26 84 Z" fill="url(#g232)" stroke="#22100a" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M30 104 Q70 112 110 104" stroke="#1f5c43" stroke-width="2" fill="none"/>
+    <!-- gold knob (núm ấn) with a cloud-scroll pattern -->
+    <path d="M44 84 Q40 58 52 44 Q70 24 88 44 Q100 58 96 84 Z" fill="url(#g231)" stroke="#22100a" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M56 70 q-6 -10 4 -14 q10 -2 8 8 M84 70 q6 -10 -4 -14 q-10 -2 -8 8 M62 52 q8 -8 16 0" stroke="#9a6b12" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <ellipse cx="70" cy="40" rx="9" ry="6" fill="url(#g231)" stroke="#22100a" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <!-- red silk cord + tassel -->
+    <path d="M70 36 Q60 22 72 16 Q86 14 82 30" stroke="#c8281e" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M96 66 Q112 60 116 70 L120 96" stroke="#c8281e" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M116 94 L114 112 M120 94 L120 114 M124 94 L126 112" stroke="#c8281e" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="120" cy="94" r="4" fill="url(#g231)" stroke="#22100a" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M50 52 Q56 42 64 40" stroke="#fff6cf" stroke-width="3" fill="none" opacity=".7" stroke-linecap="round"/></svg>

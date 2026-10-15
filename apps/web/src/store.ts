@@ -35,7 +35,7 @@ export type Nearby =
   | { kind: 'emergency'; title: string; used: boolean }
   | null;
 
-type TaskResult = { ok: boolean; text: string; fact?: string };
+type TaskResult = { ok: boolean; text: string; fact?: string; headline?: string };
 
 type Store = {
   screen: 'home' | 'room';
@@ -48,6 +48,10 @@ type Store = {
   toasts: (ToastMsg & { id: number })[];
   task: TaskData | null;
   taskResult: TaskResult | null;
+  /** bumps when the server rejects an answer -> the mini-game restarts */
+  taskAttempt: number;
+  /** night-watch drum banner (5 canh) */
+  canh: { n: number; text: string; id: number } | null;
   nearby: Nearby;
   /** a player (not killer-mate) is within kill range of me */
   killTarget: boolean;
@@ -78,6 +82,8 @@ export const useStore = create<Store>((set, get) => ({
   toasts: [],
   task: null,
   taskResult: null,
+  taskAttempt: 0,
+  canh: null,
   nearby: null,
   killTarget: false,
   area: '',

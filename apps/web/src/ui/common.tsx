@@ -1,8 +1,46 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ROLE_INFO, type RoleId } from '@hidden-truth/shared';
 import { useStore } from '../store';
 
 export const asset = (p: string) => `/assets/${p}`;
+
+/**
+ * ESC closes the top-most popup only. Every open popup pushes its close handler on a stack;
+ * a single window listener pops the last one (map > role card > task > guide …).
+ */
+const escStack: { cb: () => void }[] = [];
+let escBound = false;
+function onEscKey(e: KeyboardEvent) {
+  if (e.key !== 'Escape' || !escStack.length) return;
+  const ae = document.activeElement as HTMLElement | null;
+  // first ESC inside a text field just leaves the field
+  if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA') && ae.closest('.chat')) {
+    ae.blur();
+    return;
+  }
+  e.preventDefault();
+  e.stopPropagation();
+  escStack[escStack.length - 1].cb();
+}
+export function useEscape(onEsc: (() => void) | undefined, active = true) {
+  const ref = useRef(onEsc);
+  ref.current = onEsc;
+  useEffect(() => {
+    if (!active || !ref.current) return;
+    if (!escBound) {
+      window.addEventListener('keydown', onEscKey, true);
+      escBound = true;
+    }
+    const entry = { cb: () => ref.current?.() };
+    escStack.push(entry);
+    return () => {
+      const i = escStack.indexOf(entry);
+      if (i >= 0) escStack.splice(i, 1);
+    };
+  }, [active, !!onEsc]);
+}
+/** Small "Esc" hint shown next to close buttons. */
+export const EscHint = () => <kbd className="esc-hint">Esc</kbd>;
 
 export function useCountdown(endsAt: number) {
   const offset = useStore((s) => s.timeOffset);
@@ -25,16 +63,20 @@ export function Icon({ name, size = 24 }: { name: string; size?: number }) {
   return <img src={asset(`common/ui/${name}.webp`)} width={size} height={size} alt="" className="ui-icon" />;
 }
 
-export function Modal({ title, onClose, children, wide }: { title: string; onClose?: () => void; children: React.ReactNode; wide?: boolean }) {
+export function Modal({ title, onClose, children, wide, className = '' }: { title: string; onClose?: () => void; children: React.ReactNode; wide?: boolean; className?: string }) {
+  useEscape(onClose);
   return (
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
-      <div className={`modal ${wide ? 'wide' : ''}`}>
+      <div className={`modal ${wide ? 'wide' : ''} ${className}`}>
         <header>
           <h3>{title}</h3>
           {onClose && (
-            <button className="close" onClick={onClose} aria-label="Đóng">
-              ×
-            </button>
+            <span className="modal-close-wrap">
+              <EscHint />
+              <button className="close" onClick={onClose} aria-label="Đóng">
+                ×
+              </button>
+            </span>
           )}
         </header>
         <div className="modal-content">{children}</div>

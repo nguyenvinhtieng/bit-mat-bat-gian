@@ -79,17 +79,45 @@ async function walkTo(b: Bot, target: Vec) {
   return Math.hypot(sp.x - target.x, sp.y - target.y);
 }
 
+/** Solve a mini-game from the client payload only (what a skilled player can see on screen). */
 function solve(t: TaskData): unknown {
   switch (t.taskId) {
-    case 'task_woodblock':
-      return { held: true };
-    case 'task_citadel_gates':
-    case 'task_lanterns':
+    case 'task_moon_phase':
+      return [...t.moons].sort((a, b) => a.phase - b.phase).map((m) => m.id);
+    case 'task_woodblock_print':
+      return { block: t.blocks.find((b) => b.flip === 'mirror')!.id };
+    case 'task_ngo_mon_gates': {
+      const g: Record<string, number> = { vua: 2, vo: 1, van: 3, linh: 0, voi: 4, ngua: 0 };
+      return t.travelers.map((x) => g[x.kind]);
+    }
+    case 'task_court_ranks':
+      return Object.fromEntries(t.officials.map((o) => [`${o.side}-${o.rank}`, o.id]));
+    case 'task_nha_nhac':
       return t.sequence;
-    default:
-      return null; // cuisine / quizzes: the answer never leaves the server
+    case 'task_cuu_dinh':
+      return t.cells.filter((c) => t.targets.includes(c.motif)).map((c) => c.id);
+    case 'task_poem_wall': {
+      const ans: Record<number, string> = {};
+      const used = new Set<string>();
+      for (const p of t.panels.filter((x) => !x.kind)) {
+        const row = p.slot >> 2, col = p.slot & 3;
+        const kind = (row + col) % 2 === 0 ? 'tho' : 'hoa';
+        const theme = t.panels.find((x) => x.slot === (p.slot ^ 1))!.theme;
+        const tile = t.tray.find((x) => !used.has(x.id) && x.kind === kind && x.theme === theme)!;
+        used.add(tile.id);
+        ans[p.slot] = tile.id;
+      }
+      return ans;
+    }
+    case 'task_royal_seal':
+      return { x: t.target.x + 0.01, y: t.target.y - 0.01 };
+    case 'task_banh_beo':
+      return { cups: t.cups };
   }
 }
+
+/** minimum play time the server expects per task (anti-instant-submit) */
+const MIN_MS: Partial<Record<TaskData['taskId'], number>> = { task_woodblock_print: 3000, task_ngo_mon_gates: 3000, task_nha_nhac: 3500, task_banh_beo: 4000, task_royal_seal: 1500 };
 
 function wire(b: Bot) {
   b.room.onMessage('private', (m) => (b.me = m));
@@ -97,7 +125,7 @@ function wire(b: Bot) {
   b.room.onMessage('task:result', (r) => (b.lastResult = r));
   b.room.onMessage('vote:result', (r) => (b.voteResult = r));
   b.room.onMessage('end', (e) => (b.end = e));
-  for (const t of ['chat', 'chat:history', 'toast', 'intro', 'teleport', 'task:close', 'time']) b.room.onMessage(t, () => {});
+  for (const t of ['chat', 'chat:history', 'toast', 'intro', 'teleport', 'task:close', 'time', 'canh', 'cinematic', 'pong', 'private:refresh']) b.room.onMessage(t, () => {});
 }
 
 async function until(fn: () => unknown, ms = 5000, label = 'condition') {
@@ -133,20 +161,29 @@ async function main() {
   if (!killer) throw new Error('no killer assigned');
   if (killer.me!.tasks.length === 0) throw new Error('killer has no fake task list');
 
-  // a crew member completes a real task -> shared progress goes up
+  // a crew member plays EVERY assigned mini-game -> shared progress goes up, night-watch drum strikes
   const worker = crew[0];
-  const tid = worker.me!.tasks.find((id) => id === 'task_woodblock' || id === 'task_citadel_gates' || id === 'task_lanterns');
-  if (tid) {
+  let canh = 0;
+  host.room.onMessage('canh', (c: { canh: number }) => (canh = c.canh));
+  for (const tid of worker.me!.tasks) {
     const st = HUE_STATIONS.find((x) => x.id === tid)!;
     await walkTo(worker, st);
+    worker.task = undefined;
+    worker.lastResult = undefined;
     worker.room.send('task:open', { taskId: tid });
-    await until(() => worker.task, 4000, 'task:data');
-    if (tid === 'task_woodblock') await sleep(2000);
+    await until(() => worker.task, 4000, `task:data ${tid}`);
+    // a wrong answer must be rejected
+    worker.room.send('task:submit', { taskId: tid, answer: { wrong: true } });
+    await until(() => worker.lastResult, 4000, `reject ${tid}`);
+    if (worker.lastResult!.ok) throw new Error(`${tid}: wrong answer accepted`);
+    worker.lastResult = undefined;
+    await sleep((MIN_MS[tid] ?? 2500) + 100);
     worker.room.send('task:submit', { taskId: tid, answer: solve(worker.task!) });
-    await until(() => worker.lastResult?.ok, 4000, 'task result');
-    log('task done, progress', host.room.state.progress, '/', host.room.state.progressTarget);
-    if (host.room.state.progress < 1) throw new Error('progress did not increase');
+    await until(() => worker.lastResult, 4000, `task result ${tid}`);
+    if (!worker.lastResult!.ok) throw new Error(`${tid}: correct answer rejected`);
+    log('task done', tid, '-> progress', host.room.state.progress, '/', host.room.state.progressTarget, 'canh', canh);
   }
+  if (host.room.state.progress < worker.me!.tasks.length) throw new Error('progress did not increase');
 
   // killer walks to a victim and kills (server validates range + cooldown)
   const victim = crew[crew.length - 1];

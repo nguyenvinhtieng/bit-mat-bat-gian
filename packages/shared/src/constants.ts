@@ -37,7 +37,7 @@ export const ROLE_INFO: Record<RoleId, { name: string; faction: Faction; icon: s
     faction: 'crew',
     icon: 'local_guide',
     short: 'Làm nhiệm vụ, tránh Hắc Ảnh',
-    desc: 'Bạn là một người trong đoàn chuẩn bị Đêm Hội Hoàng Cung. Hoàn thành các nhiệm vụ văn hoá, tránh xa kẻ đáng ngờ và báo khi thấy thi thể.',
+    desc: 'Bạn là một người trong đoàn chuẩn bị Lễ Ban Sóc. Hoàn thành các nhiệm vụ trước canh năm, tránh xa kẻ đáng ngờ và báo khi thấy thi thể.',
   },
   guardian: {
     name: 'Lính Ngự Lâm',
@@ -51,7 +51,7 @@ export const ROLE_INFO: Record<RoleId, { name: string; faction: Faction; icon: s
     faction: 'killer',
     icon: 'forger',
     short: 'Hạ gục mọi người để thắng',
-    desc: 'Bạn trà trộn trong đoàn. Lại gần một người và bấm Hạ gục (có thời gian hồi). Giả vờ làm nhiệm vụ, đừng để ai thấy, và thuyết phục mọi người trong cuộc họp.',
+    desc: 'Bạn là bóng đêm muốn giữ kinh thành mãi ở đêm cuối năm. Lại gần một người và bấm Hạ gục (có thời gian hồi). Giả vờ làm nhiệm vụ, đừng để ai thấy, và thuyết phục mọi người trong cuộc họp.',
   },
 };
 
@@ -62,12 +62,15 @@ export const PLAYER_COLORS = [
 ];
 
 export const TASK_IDS = [
-  'task_hue_cuisine',
-  'task_woodblock',
-  'task_citadel_gates',
-  'task_lanterns',
-  'task_conical_hat',
-  'task_heritage_quiz',
+  'task_moon_phase',
+  'task_woodblock_print',
+  'task_ngo_mon_gates',
+  'task_court_ranks',
+  'task_nha_nhac',
+  'task_cuu_dinh',
+  'task_poem_wall',
+  'task_royal_seal',
+  'task_banh_beo',
 ] as const;
 export type TaskId = (typeof TASK_IDS)[number];
 

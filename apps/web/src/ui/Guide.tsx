@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { GAME, HUE_AREAS, HUE_STATIONS, ROLE_IDS, ROLE_INFO, type RoleId } from '@hidden-truth/shared';
 import { useLang } from '../i18n';
-import { RoleBadge, asset } from './common';
+import { RoleBadge, asset, useEscape } from './common';
 
 const gui = (n: string) => asset(`common/ui/guide/${n}.webp`);
 
@@ -12,7 +12,7 @@ const l = (vi: string, en: string): L => ({ vi, en });
 const ROLE_GUIDE: Record<RoleId, { name: L; what: L; todo: L[]; note: L }> = {
   villager: {
     name: l('Nghệ Nhân Cố Đô', 'Heritage Artisan'),
-    what: l('Một người trong đoàn chuẩn bị Đêm Hội. Bạn không có siêu năng lực — chỉ có đôi chân, đôi mắt và lá phiếu.', 'A member of the festival crew. No powers — just your legs, your eyes and your vote.'),
+    what: l('Một người trong đoàn chuẩn bị Lễ Ban Sóc. Bạn không có siêu năng lực — chỉ có đôi chân, đôi mắt và lá phiếu.', 'A member of the crew preparing the Calendar Ceremony. No powers — just your legs, your eyes and your vote.'),
     todo: [
       l('Chạy tới các vòng sáng vàng, hoàn thành nhiệm vụ văn hoá Huế của bạn.', 'Run to the golden rings and finish your Huế culture tasks.'),
       l('Tránh ở một mình với người đáng ngờ. Thấy thi thể thì bấm R để báo cáo.', 'Avoid being alone with a suspect. Press R when you find a body.'),
@@ -48,18 +48,18 @@ const TXT = {
     lobbyBtn: 'Hướng dẫn chơi',
     close: 'Đóng',
     tabs: { story: 'Câu chuyện', flow: 'Cách chơi', roles: 'Vai trò' },
-    storyH: 'Đêm Hội Hoàng Cung',
+    storyH: 'Năm Canh Trước Bình Minh',
     story: [
-      'Đêm nay Đại Nội Huế thắp hàng nghìn ngọn đèn lồng. Đoàn nghệ nhân, đầu bếp, nhạc công và hướng dẫn viên phải hoàn tất chuẩn bị trước khi đèn lên.',
-      'Nhưng có một kẻ lạ trà trộn trong đoàn — Hắc Ảnh. Hắn muốn dập tắt từng ngọn đèn, từng con người, để Đêm Hội không bao giờ diễn ra.',
-      'Mỗi nhiệm vụ là một mảnh văn hoá Huế: món ăn xứ Huế, mộc bản triều Nguyễn, các cổng Hoàng Thành, đèn lồng, nón bài thơ, di sản UNESCO… Hoàn thành chúng để thắp sáng Đêm Hội.',
+      'Kinh thành Huế, đêm cuối tháng Mười Một. Rạng sáng mai, Lễ Ban Sóc — lễ ban lịch năm mới của triều Nguyễn — sẽ diễn ra trước Ngọ Môn. Đoàn chỉ còn năm canh để chuẩn bị.',
+      'Nhưng trong đoàn có Hắc Ảnh — bóng đêm muốn giữ kinh thành mãi ở đêm cuối năm. Không có lịch, cả kinh thành sẽ lạc mất thời gian. (Truyện hư cấu trong game.)',
+      'Mỗi nhiệm vụ là một việc thật của buổi lễ: xem trăng định ngày Sóc, in lịch bằng mộc bản, đóng ấn, dượt Nhã nhạc, xếp bá quan theo phẩm sơn, dẫn đoàn qua 5 cửa Ngọ Môn, lau Cửu Đỉnh, phục dựng tường thơ, làm bánh bèo. Cứ mỗi 20% tiến độ, trống điểm sang canh mới — tới canh năm là bình minh!',
     ],
     flowH: 'Một ván diễn ra thế nào?',
     steps: (m: number) => [
       ['1. Nhận vai', 'Mỗi người nhận một vai bí mật: Nghệ Nhân, Lính Ngự Lâm hoặc Hắc Ảnh (1–2 người tuỳ số người chơi).'],
-      ['2. Chạy & làm nhiệm vụ', 'Đi bằng WASD / phím mũi tên / joystick. Tới vòng sáng vàng và bấm E / Space để làm mini-game. Thanh Tiến độ là tổng nhiệm vụ của cả phe Người Dân.'],
+      ['2. Chạy & làm nhiệm vụ', 'Đi bằng WASD / phím mũi tên / joystick. Tới vòng sáng vàng và bấm E / Space để làm mini-game. Thanh tiến độ là 5 canh trống của cả đoàn — đủ canh năm là trời sáng.'],
       ['3. Hắc Ảnh ra tay', `Hắc Ảnh lại gần và bấm K để hạ gục (hồi ${GAME.killCooldownSec}s). Nạn nhân thành hồn ma, để lại thi thể.`],
-      ['4. Báo cáo / họp khẩn', 'Thấy thi thể thì bấm R. Hoặc ra bàn họp ở Sân Ngọ Môn để rung chuông (mỗi người 1 lần).'],
+      ['4. Báo cáo / họp khẩn', 'Thấy thi thể thì bấm R. Hoặc ra Án Ban Lịch ở Sân Ngọ Môn đánh chuông Ngũ Phụng (mỗi người 1 lần).'],
       ['5. Bỏ phiếu', `Họp tối đa ~${m}s: chat và bỏ phiếu loại một người (hoặc bỏ qua). Nhiều phiếu nhất bị loại; hoà phiếu thì không ai bị loại.`],
       ['6. Kết thúc', 'Người Dân thắng khi loại hết Hắc Ảnh hoặc xong mọi nhiệm vụ. Hắc Ảnh thắng khi số Hắc Ảnh ≥ số Người Dân còn sống.'],
     ],
@@ -86,18 +86,18 @@ const TXT = {
     lobbyBtn: 'How to play',
     close: 'Close',
     tabs: { story: 'Story', flow: 'How to play', roles: 'Roles' },
-    storyH: 'Royal Lantern Night',
+    storyH: 'Five Watches Before Dawn',
     story: [
-      'Tonight the Imperial City of Huế lights thousands of lanterns. Artisans, cooks, musicians and guides must finish preparing before the lights go up.',
-      'But a stranger is hiding among the crew — the Shadow. It wants to snuff out every lantern and every person so the festival never happens.',
-      'Every task is a piece of Huế culture: local dishes, Nguyễn-dynasty woodblocks, the citadel gates, lanterns, poem hats, UNESCO heritage… finish them to light up the night.',
+      'The Imperial City of Huế, the last night of the 11th lunar month. At dawn the Ban Sóc ceremony — when the Nguyễn court granted the new year’s calendar — will be held at the Meridian Gate. The crew has five night watches left.',
+      'But the Shadow hides among them — a darkness that wants the old year’s last night to last forever. Without a calendar the whole capital would lose track of time. (Fictional story.)',
+      'Every task is a real part of the ceremony: read the moon for the new-moon day, print the calendar from woodblocks, seal it, rehearse royal court music, line up the mandarins by rank, guide the procession through the 5 gates, dust the Nine Urns, restore a poem wall, make bánh bèo. Every 20% the night drum strikes the next watch — the fifth watch is dawn!',
     ],
     flowH: 'How does a game go?',
     steps: (m: number) => [
       ['1. Get a role', 'Everyone secretly gets a role: Artisan, Royal Guard or Shadow (1–2 Shadows depending on player count).'],
-      ['2. Run & do tasks', 'Move with WASD / arrows / joystick. Go to a golden ring and press E / Space to play a mini-game. The progress bar is the whole crew’s tasks.'],
+      ['2. Run & do tasks', 'Move with WASD / arrows / joystick. Go to a golden ring and press E / Space to play a mini-game. The progress bar is the five night watches of the whole crew — the fifth watch is dawn.'],
       ['3. The Shadow strikes', `The Shadow gets close and presses K to kill (${GAME.killCooldownSec}s cooldown). The victim becomes a ghost and leaves a body.`],
-      ['4. Report / emergency', 'Found a body? Press R. Or ring the bell at the meeting table in Ngọ Môn Courtyard (once per player).'],
+      ['4. Report / emergency', 'Found a body? Press R. Or strike the Ngũ Phụng bell at the calendar table in the Meridian Gate Courtyard (once per player).'],
       ['5. Vote', `Meeting lasts up to ~${m}s: chat and vote to eject one player (or skip). Most votes is ejected; a tie ejects nobody.`],
       ['6. The end', 'Villagers win by ejecting every Shadow or finishing all tasks. Shadows win when Shadows ≥ living villagers.'],
     ],
@@ -123,6 +123,7 @@ const TXT = {
 type Tab = 'story' | 'flow' | 'roles';
 
 export function Guide({ onClose }: { onClose: () => void }) {
+  useEscape(onClose);
   const lang = useLang((s) => s.lang);
   const tx = TXT[lang];
   const [tab, setTab] = useState<Tab>('story');
@@ -173,7 +174,7 @@ export function Guide({ onClose }: { onClose: () => void }) {
               <ul>
                 {HUE_STATIONS.map((s) => (
                   <li key={s.id}>
-                    <b>{s.title}</b> — {tx.area}: {lang === 'vi' ? HUE_AREAS[s.area].name : HUE_AREAS[s.area].nameEn}
+                    <b>{lang === 'vi' ? s.title : s.titleEn}</b> — {tx.area}: {lang === 'vi' ? HUE_AREAS[s.area].name : HUE_AREAS[s.area].nameEn}
                   </li>
                 ))}
               </ul>

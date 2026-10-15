@@ -13,6 +13,8 @@ import {
   SPAWNS,
   TASK_IDS,
   HUE_STATIONS,
+  HUE_CANH,
+  HUE_ENDINGS,
   dirFromInput,
   dist,
   getGrid,
@@ -25,9 +27,10 @@ import {
   type PrivateInfo,
   type RoleId,
   type TaskId,
+  type TaskResultMsg,
   type VoteResult,
 } from '@hidden-truth/shared';
-import { FUN_FACTS, buildTask, type Pending } from '../content/co-do-hue.content';
+import { FUN_FACTS, buildTask, verifyTask, type Pending } from '../content/co-do-hue.content';
 import { GameState, Player } from './schema';
 
 type Secret = {
@@ -179,10 +182,10 @@ export class GameRoom extends Room<GameState> {
     this.onMessage('emergency', (client) => {
       const p = this.state.players.get(client.sessionId);
       if (!p || !p.alive || this.state.phase !== 'explore' || p.emergencyUsed) return;
-      if (dist(p, MEETING_POINT) > INTERACT_RADIUS + 60) return client.send('toast', { text: 'Hãy đến bàn họp ở Sân Ngọ Môn để rung chuông.', kind: 'warn' });
+      if (dist(p, MEETING_POINT) > INTERACT_RADIUS + 60) return client.send('toast', { text: 'Hãy đến Án Ban Lịch ở Sân Ngọ Môn để đánh chuông Ngũ Phụng.', kind: 'warn' });
       p.emergencyUsed = true;
       this.broadcast('cinematic', { kind: 'emergency', actor: { name: p.name, color: p.color } });
-      this.startMeeting(`${p.name} rung chuông gọi họp khẩn`);
+      this.startMeeting(`${p.name} đánh chuông Ngũ Phụng gọi họp khẩn`);
     });
 
     this.onMessage('chat', (client, msg: { text: string }) => {
@@ -205,6 +208,8 @@ export class GameRoom extends Room<GameState> {
       if (!p || !s || !p.alive || this.state.phase !== 'meeting' || p.voted) return;
       const target = String(msg?.target ?? '');
       if (target !== 'skip') {
+        // you can never vote yourself out
+        if (target === client.sessionId) return client.send('toast', { text: 'Bạn không thể bỏ phiếu cho chính mình.', kind: 'warn' });
         const t = this.state.players.get(target);
         if (!t || !t.alive) return;
       }
@@ -300,7 +305,7 @@ export class GameRoom extends Room<GameState> {
         objective:
           faction === 'killer'
             ? 'Hạ gục người trong đoàn cho tới khi số Hắc Ảnh bằng hoặc nhiều hơn số người còn sống. Đừng để bị phát hiện và bị bỏ phiếu loại.'
-            : 'Hoàn thành mọi nhiệm vụ để thắp sáng Đêm Hội — hoặc tìm ra Hắc Ảnh trong cuộc họp và bỏ phiếu loại họ.',
+            : 'Hoàn thành mọi nhiệm vụ trước canh năm để Lễ Ban Sóc diễn ra lúc bình minh — hoặc tìm ra Hắc Ảnh trong cuộc họp và bỏ phiếu loại họ.',
         tasks: shuffle(TASK_IDS).slice(0, tpp),
         completed: new Set(),
         shield: role === 'guardian',
@@ -314,6 +319,7 @@ export class GameRoom extends Room<GameState> {
     });
     this.state.progress = 0;
     this.state.progressTarget = Math.max(1, n * tpp);
+    this.canh = 0;
     this.state.meetingReason = '';
     this.teleportToSpawns();
     this.setPhase('explore', 0);
@@ -459,9 +465,9 @@ export class GameRoom extends Room<GameState> {
     const total = this.totalKillers();
     const k = this.aliveKillers();
     const c = this.aliveCrew();
-    if (total > 0 && k === 0) return this.finishGame('crew', 'Hắc Ảnh đã bị trục xuất khỏi đoàn!');
-    if (total > 0 && k >= c) return this.finishGame('killer', 'Hắc Ảnh đã hạ gục đủ người — đèn đêm hội tắt lịm.');
-    if (this.state.progress >= this.state.progressTarget) return this.finishGame('crew', 'Mọi nhiệm vụ đã hoàn thành — Đêm Hội Hoàng Cung rực sáng!');
+    if (total > 0 && k === 0) return this.finishGame('crew', HUE_ENDINGS.vote);
+    if (total > 0 && k >= c) return this.finishGame('killer', HUE_ENDINGS.killer);
+    if (this.state.progress >= this.state.progressTarget) return this.finishGame('crew', HUE_ENDINGS.tasks);
     return false;
   }
 
@@ -557,8 +563,22 @@ export class GameRoom extends Room<GameState> {
     if (!me || !me.alive || this.state.phase !== 'explore') return;
     const body = [...this.state.players.values()].find((p) => p.body && dist(me, { x: p.bodyX, y: p.bodyY }) <= GAME.reportRange);
     if (!body) return client.send('toast', { text: 'Không có thi thể nào ở gần.', kind: 'info' });
-    this.broadcast('cinematic', { kind: 'report', actor: { name: me.name, color: me.color }, victim: { name: body.name, color: body.color } });
+    this.broadcast('cinematic', { kind: 'report', actor: { name: me.name, color: me.color }, victim: { name: body.name, color: body.color }, at: { x: body.bodyX, y: body.bodyY } });
     this.startMeeting(`${me.name} phát hiện thi thể của ${body.name}`);
+  }
+
+  // ---------------------------------------------------------------- night watch (5 canh)
+  private canh = 0;
+
+  /** Every 20% of the shared progress the night-watch drum strikes the next canh (canh 5 = dawn = win). */
+  private announceCanh() {
+    const c = Math.min(4, Math.floor((this.state.progress / Math.max(1, this.state.progressTarget)) * 5));
+    while (this.canh < c) {
+      this.canh++;
+      const text = HUE_CANH[this.canh - 1];
+      this.broadcast('canh', { canh: this.canh, text });
+      this.system(text);
+    }
   }
 
   // ---------------------------------------------------------------- tasks
@@ -575,7 +595,7 @@ export class GameRoom extends Room<GameState> {
     if (!this.near(p, st.x, st.y)) return client.send('toast', { text: 'Bạn cần đứng gần điểm nhiệm vụ.', kind: 'warn' });
     if (s.completed.has(taskId)) return client.send('toast', { text: 'Bạn đã hoàn thành nhiệm vụ này.', kind: 'info' });
     const built = buildTask(taskId);
-    s.pending = { expected: built.expected, openedAt: Date.now(), reward: built.fact, taskId };
+    s.pending = { expected: built.expected, openedAt: Date.now(), reward: built.fact, done: built.done, taskId, minMs: built.minMs };
     client.send('task:data', built.data);
   }
 
@@ -583,37 +603,20 @@ export class GameRoom extends Room<GameState> {
     const p = this.state.players.get(client.sessionId);
     const s = this.secrets.get(client.sessionId);
     if (!p || !s || !p.alive || this.state.phase !== 'explore' || !s.pending || s.pending.taskId !== msg?.taskId) return;
-    const { taskId, expected, openedAt, reward } = s.pending;
+    const { taskId, reward, done } = s.pending;
     const st = HUE_STATIONS.find((x) => x.id === taskId)!;
     if (!this.near(p, st.x, st.y)) return client.send('toast', { text: 'Bạn đã rời khỏi điểm nhiệm vụ.', kind: 'warn' });
-    const a = msg.answer;
-    let ok = false;
-    switch (taskId) {
-      case 'task_hue_cuisine':
-        ok = Array.isArray(a) && JSON.stringify([...a].map(String).sort()) === JSON.stringify(expected);
-        break;
-      case 'task_woodblock':
-        ok = Date.now() - openedAt >= (expected as number) - 250;
-        break;
-      case 'task_citadel_gates':
-      case 'task_lanterns':
-        ok = JSON.stringify(a) === JSON.stringify(expected);
-        break;
-      case 'task_conical_hat':
-      case 'task_heritage_quiz':
-        ok = a === expected;
-        break;
-    }
-    if (!ok) return client.send('task:result', { ok: false, text: 'Chưa đúng — thử lại.' });
+    const ok = verifyTask(s.pending, msg.answer);
+    if (!ok) return client.send('task:result', { ok: false, text: 'Chưa đúng — thử lại nhé.' } satisfies TaskResultMsg);
 
     s.pending = undefined;
     s.completed.add(taskId);
     p.tasksDone = s.completed.size;
     // every player (killers included) advances the shared bar
     this.state.progress += 1;
-    client.send('task:result', { ok: true, text: `Hoàn thành: ${st.title}.`, fact: reward });
+    client.send('task:result', { ok: true, text: done ?? `Hoàn thành: ${st.title}.`, fact: reward?.text, headline: reward?.headline } satisfies TaskResultMsg);
     this.sendPrivate(client.sessionId);
-    this.checkWin();
+    if (!this.checkWin()) this.announceCanh();
   }
 
   // ---------------------------------------------------------------- utils

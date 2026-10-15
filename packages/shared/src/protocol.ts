@@ -36,13 +36,42 @@ export type PrivateInfo = {
   shield?: boolean;
 };
 
+/** Ngọ Môn traveller kinds (task_ngo_mon_gates). */
+export type GateTraveler = 'vua' | 'van' | 'vo' | 'linh' | 'voi' | 'ngua';
+export type PoemKind = 'tho' | 'hoa';
+
+/**
+ * Mini-game payloads (server -> client). Answers stay on the server; the client only gets
+ * what it needs to draw the game. See apps/server/src/content/co-do-hue.content.ts.
+ */
 export type TaskData =
-  | { taskId: 'task_hue_cuisine'; prompt: string; items: { id: string; label: string }[] }
-  | { taskId: 'task_woodblock'; prompt: string; holdMs: number }
-  | { taskId: 'task_citadel_gates'; prompt: string; sequence: string[]; options: string[] }
-  | { taskId: 'task_lanterns'; prompt: string; sequence: string[]; options: string[] }
-  | { taskId: 'task_conical_hat'; prompt: string; question: string; options: string[] }
-  | { taskId: 'task_heritage_quiz'; prompt: string; question: string; options: string[] };
+  /** tap the 8 moon phases in cycle order, starting from Sóc (new moon). Answer: moon ids in order. */
+  | { taskId: 'task_moon_phase'; prompt: string; moons: { id: string; phase: number }[] }
+  /** pick the mirrored block, ink it, press the paper. Answer: { block } */
+  | { taskId: 'task_woodblock_print'; prompt: string; glyph: string; meaning: string; blocks: { id: string; flip: 'none' | 'mirror' | 'flipV' | 'rot180' }[] }
+  /** route each traveller to one of the 5 gates (index 0..4, screen left -> right). Answer: gate index per traveller. */
+  | { taskId: 'task_ngo_mon_gates'; prompt: string; travelers: { id: string; kind: GateTraveler }[]; gates: { name: string; for: string }[] }
+  /** place 6 officials on the phẩm sơn steles. Answer: Record<slotId, officialId>, slotId = `${side}-${rank}` */
+  | { taskId: 'task_court_ranks'; prompt: string; officials: { id: string; side: 'van' | 'vo'; rank: number; name: string }[] }
+  /** repeat the instrument sequence. Answer: instrument ids. */
+  | { taskId: 'task_nha_nhac'; prompt: string; instruments: { id: string; name: string }[]; sequence: string[] }
+  /** scratch the dust, tap the requested relief images. Answer: cell ids. */
+  | { taskId: 'task_cuu_dinh'; prompt: string; urn: string; cells: { id: string; motif: string; name: string }[]; targets: string[] }
+  /** fill the missing wall panels (alternate poem / painting, matching themes). Answer: Record<slot, trayId>. */
+  | {
+      taskId: 'task_poem_wall';
+      prompt: string;
+      panels: { slot: number; kind?: PoemKind; theme?: string }[];
+      tray: { id: string; kind: PoemKind; theme: string }[];
+      themes: Record<string, { han: string; name: string }>;
+    }
+  /** move the swaying seal onto the red frame, then hold to press. Answer: { x, y } (0..1 of the paper). */
+  | { taskId: 'task_royal_seal'; prompt: string; target: { x: number; y: number }; tolerance: number; holdMs: number }
+  /** build N bánh bèo cups step by step. Answer: { cups } */
+  | { taskId: 'task_banh_beo'; prompt: string; cups: number; steps: { id: string; name: string }[] };
+
+/** Sent when a task is solved: success line + the heritage card ("Bạn có biết?"). */
+export type TaskResultMsg = { ok: boolean; text: string; fact?: string; headline?: string };
 
 export type ChatMsg = { from: string; name: string; color: number; text: string; t: number; system?: boolean };
 
@@ -62,6 +91,9 @@ export type EndReveal = {
   roles: { name: string; color: number; role: RoleId; faction: Faction; alive: boolean; tasksDone: number }[];
   fact: string;
 };
+
+/** Night-watch drum (5 canh) progress announcement. */
+export type CanhMsg = { canh: number; text: string };
 
 export type ToastMsg = { text: string; kind?: 'info' | 'warn' | 'success' };
 

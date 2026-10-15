@@ -46,7 +46,7 @@ Role dùng chung cho mọi map; map chỉ đổi tên khu vực, nhiệm vụ v�
 
 | File | Địa điểm | Trạng thái |
 |------|----------|------------|
-| [`map/co-do-hue.md`](map/co-do-hue.md) | Cố đô Huế — *Đêm Hội Hoàng Cung* | **Có** |
+| [`map/co-do-hue.md`](map/co-do-hue.md) | Cố đô Huế — *Năm Canh Trước Bình Minh* (Đêm Ban Sóc) | **Có** |
 | `pho-co-hoi-an` | Phố cổ Hội An — Đêm rằm đèn lồng | Kế hoạch |
 | `ha-noi-am-thuc` | Hà Nội — Phiên chợ ẩm thực | Kế hoạch |
 | `dong-bang-song-cuu-long` | ĐBSCL — Chợ nổi | Kế hoạch |

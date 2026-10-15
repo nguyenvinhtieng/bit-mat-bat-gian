@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { PLAYER_COLORS, playerArt } from '@hidden-truth/shared';
 import { colorHex, useStore } from '../store';
-import { asset } from './common';
+import { asset, useEscape } from './common';
 
 const ROW = { down: 0, left: 1, right: 2, up: 3 } as const;
 const DURATION: Record<string, number> = { kill: 3200, shield: 2600, report: 3400, emergency: 2800, witness: 1300 };
@@ -98,6 +98,7 @@ function Fx({ name, className = '', ms = 700, delay = 0 }: { name: string; class
 export function Cinematic() {
   const c = useStore((s) => s.cinematic);
   const set = useStore((s) => s.set);
+  useEscape(() => set({ cinematic: null }), !!c);
   useEffect(() => {
     if (!c) return;
     const t = setTimeout(() => set({ cinematic: null }), DURATION[c.kind] ?? 3000);
@@ -124,7 +125,7 @@ export function Cinematic() {
     sub = <>{nm(c.actor.name, actorCol)} vừa hạ gục {nm(c.victim!.name, victimCol)}</>;
   } else {
     title = 'HỌP KHẨN';
-    sub = <>{nm(c.actor.name, actorCol)} đã rung chuông</>;
+    sub = <>{nm(c.actor.name, actorCol)} đã đánh chuông Ngũ Phụng</>;
   }
 
   if (c.kind === 'witness')
@@ -149,10 +150,14 @@ export function Cinematic() {
         <div className="cine-ground" />
         {c.kind === 'kill' && (
           <>
+            <img className="cine-splat" src={asset('common/ui/fx/ink-splat.webp')} alt="" draggable={false} />
             <div className="cine-actor runin"><Sprite color={c.actor.color} dir="right" walking scale={4} /></div>
             <div className="cine-victim fall"><Sprite color={c.victim!.color} dir="left" scale={4} /></div>
             <div className="cine-slash" />
-            <Fx name="fx-kill-slash" className="cine-fx-slash" ms={650} delay={1050} />
+            <Fx name="fx-kill-slash" className="cine-fx-slash" ms={620} delay={1000} />
+            {Array.from({ length: 10 }, (_, i) => (
+              <i key={i} className="cine-drop" style={{ '--a': `${i * 36 + 10}deg`, '--d': `${1150 + (i % 3) * 40}ms` } as React.CSSProperties} />
+            ))}
             <img className="cine-skull" src={asset('common/ui/body-marker.webp')} alt="" draggable={false} />
           </>
         )}
@@ -161,7 +166,12 @@ export function Cinematic() {
             <div className="cine-actor runin"><Sprite color={c.actor.color} dir="right" walking scale={4} /></div>
             <div className="cine-victim guard"><Sprite color={c.victim!.color} dir="left" scale={4} /></div>
             <div className="cine-slash blocked" />
-            <Fx name="fx-shield-block" className="cine-fx-shield" ms={720} delay={1000} />
+            <Fx name="fx-shield-block" className="cine-fx-shield" ms={760} delay={1000} />
+            <i className="cine-ring gold r1" />
+            <i className="cine-ring gold r2" />
+            {Array.from({ length: 12 }, (_, i) => (
+              <i key={i} className="cine-spark" style={{ '--a': `${i * 30}deg`, '--d': `${1020 + (i % 4) * 30}ms` } as React.CSSProperties} />
+            ))}
             <img className="cine-shield-icon" src={asset('common/ui/shield.webp')} alt="" draggable={false} />
           </>
         )}
@@ -172,7 +182,12 @@ export function Cinematic() {
               <Sprite color={c.actor.color} dir="right" walking scale={4} />
               <Fx name="fx-witness" className="cine-bang-fx" ms={500} delay={1450} />
             </div>
-            <Fx name="fx-report-burst" className="cine-fx-burst" ms={800} delay={1450} />
+            <i className="cine-spot" />
+            <i className="cine-ring red r1" />
+            <i className="cine-ring red r2" />
+            <i className="cine-ring red r3" />
+            <img className="cine-horn" src={asset('common/ui/btn-report.webp')} alt="" draggable={false} />
+            <Fx name="fx-report-burst" className="cine-fx-burst" ms={900} delay={1450} />
           </>
         )}
         {c.kind === 'emergency' && (
@@ -183,6 +198,7 @@ export function Cinematic() {
         )}
       </div>
       <div className="cine-text">
+        <img className="cine-brush" src={asset('common/ui/fx/brush-stroke.webp')} alt="" draggable={false} />
         <h1>{title}</h1>
         <p>{sub}</p>
       </div>

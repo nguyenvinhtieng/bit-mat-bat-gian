@@ -6,52 +6,85 @@
  ],
  "stations": [
   {
-   "id": "task_hue_cuisine",
-   "area": "editing",
-   "x": 768,
-   "y": 1022,
-   "title": "Chọn món ngon xứ Huế",
-   "frame": 0
-  },
-  {
-   "id": "task_woodblock",
+   "id": "task_moon_phase",
    "area": "editing",
    "x": 1248,
    "y": 1022,
-   "title": "In mộc bản triều Nguyễn",
-   "frame": 1
+   "title": "Xem trăng định ngày Sóc",
+   "titleEn": "Read the moon for the new-moon day",
+   "icon": "hue-station-moon"
   },
   {
-   "id": "task_citadel_gates",
+   "id": "task_woodblock_print",
+   "area": "editing",
+   "x": 768,
+   "y": 1022,
+   "title": "In lịch bằng mộc bản",
+   "titleEn": "Print the calendar from woodblocks",
+   "icon": "hue-station-woodblock"
+  },
+  {
+   "id": "task_ngo_mon_gates",
+   "area": "courtyard_checkin",
+   "x": 782,
+   "y": 274,
+   "title": "Dẫn đoàn qua 5 cửa Ngọ Môn",
+   "titleEn": "Guide the procession through the 5 gates",
+   "icon": "hue-station-gates"
+  },
+  {
+   "id": "task_court_ranks",
+   "area": "exhibition",
+   "x": 384,
+   "y": 691,
+   "title": "Xếp bá quan theo phẩm sơn",
+   "titleEn": "Line up the mandarins by rank",
+   "icon": "hue-station-ranks"
+  },
+  {
+   "id": "task_nha_nhac",
    "area": "coordination",
    "x": 1632,
-   "y": 624,
-   "title": "Dẫn đường vào Hoàng Thành",
-   "frame": 2
+   "y": 600,
+   "title": "Dượt Nhã nhạc cung đình",
+   "titleEn": "Rehearse the royal court music",
+   "icon": "hue-station-nha-nhac"
   },
   {
-   "id": "task_lanterns",
-   "area": "exhibition",
-   "x": 504,
-   "y": 504,
-   "title": "Thắp đèn lồng đêm hội",
-   "frame": 3
-  },
-  {
-   "id": "task_conical_hat",
+   "id": "task_cuu_dinh",
    "area": "artifact_storage",
-   "x": 1296,
-   "y": 1406,
-   "title": "Nón bài thơ — điền chữ còn thiếu",
-   "frame": 4
+   "x": 1440,
+   "y": 1411,
+   "title": "Lau bụi Cửu Đỉnh",
+   "titleEn": "Dust the Nine Urns",
+   "icon": "hue-station-cuu-dinh"
   },
   {
-   "id": "task_heritage_quiz",
+   "id": "task_poem_wall",
+   "area": "archive",
+   "x": 605,
+   "y": 1363,
+   "title": "Phục dựng tường “nhất thi nhất họa”",
+   "titleEn": "Restore the poem-and-painting wall",
+   "icon": "hue-station-poem"
+  },
+  {
+   "id": "task_royal_seal",
    "area": "archive",
    "x": 336,
    "y": 1373,
-   "title": "Đố vui di sản Cố đô",
-   "frame": 5
+   "title": "Đóng ấn lên lịch",
+   "titleEn": "Seal the calendar",
+   "icon": "hue-station-seal"
+  },
+  {
+   "id": "task_banh_beo",
+   "area": "corridor",
+   "x": 504,
+   "y": 1056,
+   "title": "Làm bánh bèo đãi bá quan",
+   "titleEn": "Make bánh bèo for the court",
+   "icon": "hue-station-banh-beo"
   }
  ]
 }

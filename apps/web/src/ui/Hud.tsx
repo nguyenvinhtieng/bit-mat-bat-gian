@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { sfx } from './minigames/kit';
 import { AREA_RECTS, HUE_AREAS, HUE_STATIONS, LAYOUT_H, LAYOUT_W, ROLE_INFO, type AreaId } from '@hidden-truth/shared';
 
 function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''; pending: Set<AreaId>; pos: { x: number; y: number } | null; big?: boolean; onClick?: () => void }) {
@@ -35,6 +36,7 @@ import { send } from '../net';
 import { useStore } from '../store';
 import { useT } from '../i18n';
 import { Icon, RoleBadge, asset, fmt, useCountdown } from './common';
+import { MapView } from './MapView';
 
 /** Sweeping ring over a round button: fills clockwise from 0 to 100% while the cooldown runs (pure CSS animation, no re-render). */
 function CooldownRing({ readyAt }: { readyAt: number }) {
@@ -59,6 +61,33 @@ function CooldownRing({ readyAt }: { readyAt: number }) {
   );
 }
 
+/** Night-watch drum banner: shown each time the shared progress reaches the next canh. */
+function CanhBanner() {
+  const canh = useStore((s) => s.canh);
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    if (!canh) return;
+    setShow(true);
+    sfx.watch();
+    const t = setTimeout(() => setShow(false), 4200);
+    return () => clearTimeout(t);
+  }, [canh?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!canh || !show) return null;
+  return (
+    <div className="canh-banner" key={canh.id}>
+      <img src={asset('maps/co-do-hue/minigames/hue-ui-trong-canh.webp')} alt="" />
+      <div>
+        <b>
+          {Array.from({ length: 5 }, (_, i) => (
+            <i key={i} className={i < canh.n ? 'on' : ''} />
+          ))}
+        </b>
+        <span>{canh.text}</span>
+      </div>
+    </div>
+  );
+}
+
 export function Hud() {
   const room = useStore((s) => s.room)!;
   const me = useStore((s) => s.me);
@@ -80,6 +109,22 @@ export function Hud() {
   const canReport = nearby?.kind === 'report';
   const [mapOpen, setMapOpen] = useState(false);
   const [tasksOpen, setTasksOpen] = useState(true);
+  const exploring = !!me && inGame && room.phase === 'explore';
+  useEffect(() => {
+    if (!exploring) return;
+    const h = (e: KeyboardEvent) => {
+      const ae = document.activeElement;
+      if (e.repeat || (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA'))) return;
+      if (useStore.getState().task || useStore.getState().introOpen) return;
+      if (e.code === 'KeyM') setMapOpen((v) => !v);
+      else if (e.code === 'KeyT') setTasksOpen((v) => !v);
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [exploring]);
+  useEffect(() => {
+    if (!exploring) setMapOpen(false);
+  }, [exploring]);
   const pendingAreas = new Set<AreaId>(
     (me?.tasks ?? [])
       .filter((id) => !me!.completedTasks.includes(id))
@@ -88,6 +133,7 @@ export function Hud() {
 
   return (
     <>
+      {inGame && <CanhBanner />}
       <div className="hud-top">
         {area && (
           <div className="area-name" key={area}>
@@ -105,11 +151,14 @@ export function Hud() {
 
       {inGame && room.phase !== 'ended' && (
         <div className="progress-wrap" title={t('progress')}>
-          <Icon name="progress-star" size={22} />
+          <img className="ui-icon" src={asset('maps/co-do-hue/minigames/hue-ui-trong-canh.webp')} width={26} height={26} alt="" />
           <div className="progress">
             <div className="fill" style={{ width: `${pct}%` }} />
+            {[1, 2, 3, 4].map((k) => (
+              <i key={k} className={`canh-tick ${pct >= k * 20 ? 'on' : ''}`} style={{ left: `${k * 20}%` }} />
+            ))}
             <span>
-              {t('progress')} {room.progress}/{room.progressTarget} ({pct}%)
+              {t('canh')} {Math.min(5, Math.floor(pct / 20) + (pct >= 100 ? 0 : 1))}/5 · {room.progress}/{room.progressTarget} ({pct}%)
             </span>
           </div>
         </div>
@@ -138,43 +187,50 @@ export function Hud() {
         </div>
       )}
 
-      {mapOpen && (
-        <div className="map-popup" onClick={() => setMapOpen(false)}>
-          <div className="map-popup-card" onClick={(e) => e.stopPropagation()}>
-            <button className="map-close" onClick={() => setMapOpen(false)}>✕</button>
-            <MiniMap big current={area} pending={pendingAreas} pos={pos} />
-          </div>
-        </div>
-      )}
+      {mapOpen && <MapView current={area} pos={pos} onClose={() => setMapOpen(false)} />}
 
       {me && inGame && room.phase === 'explore' && (
         <div className="hud-left">
-          <div className="hud-left-btns">
-            <button className="chip" onClick={() => setMapOpen(true)}>
-              🗺️ {t('map')}
+          <button className="minimap-btn" onClick={() => setMapOpen(true)} title={`${t('map')} (M)`}>
+            <MiniMap current={area} pending={pendingAreas} pos={pos} />
+            <span className="minimap-cap">
+              {t('map')} <kbd>M</kbd>
+            </span>
+          </button>
+          <div className={`task-list ${tasksOpen ? 'open' : 'closed'}`}>
+            <button className="task-head" onClick={() => setTasksOpen(!tasksOpen)} aria-expanded={tasksOpen} title={`${tasksOpen ? t('hide') : t('show')} (T)`}>
+              <span className="task-head-title">{t('myTasks')}</span>
+              <b className="task-count">
+                {me.completedTasks.length}/{me.tasks.length}
+              </b>
+              <span className="task-toggle" aria-hidden>
+                <kbd>T</kbd>
+                <i className="chev" />
+              </span>
             </button>
-            <button className={`chip ${tasksOpen ? 'on' : ''}`} onClick={() => setTasksOpen(!tasksOpen)}>
-              📋 {t('tasksToggle')} {me.completedTasks.length}/{me.tasks.length}
-            </button>
+            <div className="task-meter">
+              <div style={{ width: `${(me.completedTasks.length / Math.max(1, me.tasks.length)) * 100}%` }} />
+            </div>
+            {tasksOpen && killer && <p className="task-note">{t('fakeTasks')}</p>}
+            {tasksOpen && (
+              <ul>
+                {me.tasks.map((id) => {
+                  const st = HUE_STATIONS.find((x) => x.id === id)!;
+                  const done = me.completedTasks.includes(id);
+                  const here = st.area === area && !done;
+                  return (
+                    <li key={id} className={`${done ? 'done' : ''} ${here ? 'here' : ''}`}>
+                      <i className="tick">{done ? '✔' : ''}</i>
+                      <span>
+                        {st.title}
+                        <small>{HUE_AREAS[st.area].name}</small>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
-          <MiniMap current={area} pending={pendingAreas} pos={pos} onClick={() => setMapOpen(true)} />
-          {tasksOpen && (
-        <div className="task-list">
-          <h5>{killer ? t('fakeTasks') : t('myTasks')}</h5>
-          <ul>
-            {me.tasks.map((id) => {
-              const st = HUE_STATIONS.find((x) => x.id === id)!;
-              const done = me.completedTasks.includes(id);
-              return (
-                <li key={id} className={done ? 'done' : ''}>
-                  {done ? '✔' : '○'} {st.title}
-                  <small>{HUE_AREAS[st.area].name}</small>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-          )}
         </div>
       )}
 

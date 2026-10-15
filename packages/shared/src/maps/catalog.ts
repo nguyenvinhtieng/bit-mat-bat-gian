@@ -25,10 +25,10 @@ export const MAP_CATALOG: MapMeta[] = [
     slug: 'co-do-hue',
     available: true,
     name: { vi: 'Cố đô Huế', en: 'Imperial City of Huế' },
-    subtitle: { vi: 'Đêm Hội Hoàng Cung', en: 'Royal Lantern Night' },
+    subtitle: { vi: 'Năm Canh Trước Bình Minh', en: 'Five Watches Before Dawn' },
     hook: {
-      vi: 'Làm nhiệm vụ văn hoá Huế, tránh Hắc Ảnh — hoặc trà trộn và hạ gục cả đoàn!',
-      en: 'Do Huế-culture tasks and avoid the Shadow — or blend in and take everyone down!',
+      vi: 'Đêm trước Lễ Ban Sóc: in lịch, dượt Nhã nhạc, xếp bá quan trước canh năm — và tìm ra Hắc Ảnh đang muốn đêm không bao giờ tàn!',
+      en: 'The night before the Calendar Ceremony: print the calendar, rehearse court music, line up the mandarins before dawn — and unmask the Shadow who wants the night to last forever!',
     },
     players: '4–10',
     charPrefix: 'hue', // áo dài + khăn đóng

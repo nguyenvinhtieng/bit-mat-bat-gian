@@ -3,6 +3,9 @@ import { getStateCallbacks, type Room } from 'colyseus.js';
 import {
   AREA_ORDER,
   HUE_AREAS,
+  HUE_ATLAS,
+  HUE_DECOR_ATLAS,
+  HUE_FLOOR_BAKE,
   HUE_PROPS,
   HUE_STATIONS,
   HUE_TILESET_ORDER,
@@ -29,12 +32,13 @@ import { uiBlocksMovement, useStore, type Nearby } from '../store';
 const A = '/assets';
 const DIRS = ['down', 'left', 'right', 'up'] as const;
 const INTERP_MS = 140; // > 2 patch intervals (PATCH_MS=50) to absorb network jitter
-/** FX strips: 6 frames x 256px (tools/ui-art/draw-fx.mjs). rate = fps, size = on-screen px in world units */
+/** FX strips: 8 frames x 256px, painted per pixel (tools/paint/fx.py). rate = fps, size = on-screen px in world units */
+const FX_FRAMES = 8;
 const FX = {
-  'fx-kill-slash': { rate: 16, size: 120 },
-  'fx-shield-block': { rate: 10, size: 110 },
-  'fx-witness': { rate: 14, size: 64 },
-  'fx-report-burst': { rate: 10, size: 110 },
+  'fx-kill-slash': { rate: 18, size: 170 },
+  'fx-shield-block': { rate: 13, size: 140 },
+  'fx-witness': { rate: 16, size: 72 },
+  'fx-report-burst': { rate: 12, size: 150 },
 } as const;
 type FxKey = keyof typeof FX;
 
@@ -82,6 +86,11 @@ export class GameScene extends Phaser.Scene {
   preload() {
     this.load.spritesheet('hue-tiles', `${A}/maps/co-do-hue/tileset/hue-interior-48.webp`, { frameWidth: TILE, frameHeight: TILE });
     this.load.atlas('hue', `${A}/maps/co-do-hue/atlas/hue-gameplay-0.webp`, `${A}/maps/co-do-hue/atlas/hue-gameplay-0.json`);
+    // Đêm Ban Sóc props + station icons (tools/ui-art/draw-hue-bansoc.mjs)
+    this.load.atlas('hue-bansoc', `${A}/${HUE_ATLAS}.webp`, `${A}/${HUE_ATLAS}.json`);
+    // painted (raster) props + room decor, and the pre-rendered floor/wall bake (tools/paint/*.py)
+    this.load.atlas('hue-decor', `${A}/${HUE_DECOR_ATLAS}.webp`, `${A}/${HUE_DECOR_ATLAS}.json`);
+    this.load.image('hue-floor', `${A}/${HUE_FLOOR_BAKE}.webp`);
     // costume follows the map (Huế: áo dài + khăn đóng…), common avatar otherwise
     const art = playerArt(useStore.getState().room?.mapSlug);
     this.load.atlas('player', `${A}/${art.atlas}.webp`, `${A}/${art.atlas}.json`);
@@ -89,6 +98,7 @@ export class GameScene extends Phaser.Scene {
     this.load.image('shadow', `${A}/common/characters/shadow.webp`);
     this.load.image('body-marker', `${A}/common/ui/body-marker.webp`);
     for (const k of Object.keys(FX)) this.load.spritesheet(k, `${A}/common/ui/fx/${k}.webp`, { frameWidth: 256, frameHeight: 256 });
+    for (const k of ['spark', 'ink-drop', 'ink-splat']) this.load.image(k, `${A}/common/ui/fx/${k}.webp`);
   }
 
   create() {
@@ -105,7 +115,7 @@ export class GameScene extends Phaser.Scene {
         }),
       );
 
-    for (const [k, v] of Object.entries(FX)) this.anims.create({ key: k, frames: this.anims.generateFrameNumbers(k, { start: 0, end: 5 }), frameRate: v.rate });
+    for (const [k, v] of Object.entries(FX)) this.anims.create({ key: k, frames: this.anims.generateFrameNumbers(k, { start: 0, end: FX_FRAMES - 1 }), frameRate: v.rate });
 
     const kb = this.input.keyboard!;
     this.keys = kb.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,E,SPACE', false) as Record<string, Phaser.Input.Keyboard.Key>;
@@ -136,6 +146,10 @@ export class GameScene extends Phaser.Scene {
 
   // ------------------------------------------------------------ world
   private buildMap() {
+    if (this.textures.exists('hue-floor')) {
+      this.add.image(0, 0, 'hue-floor').setOrigin(0).setDepth(-10);
+      return;
+    }
     const map = this.make.tilemap({ tileWidth: TILE, tileHeight: TILE, width: LAYOUT_W, height: LAYOUT_H });
     const ts = map.addTilesetImage('hue-tiles', 'hue-tiles', TILE, TILE, 0, 0)!;
     const layer = map.createBlankLayer('floor', ts, 0, 0)!;
@@ -185,18 +199,32 @@ export class GameScene extends Phaser.Scene {
     fog.erase(this.fogBrush!, me.x, me.y - 30);
   }
 
+  /** Tall props (columns, trees…) fade when a player walks behind them so nobody hides in the art. */
+  private tallProps: Phaser.GameObjects.Image[] = [];
+
   private buildProps() {
+    const decor = this.textures.get('hue-decor');
     for (const p of HUE_PROPS) {
-      const img = this.add.image(p.x, p.y, 'hue', p.key).setOrigin(0.5, 1);
+      const atlas = decor.has(p.key) ? 'hue-decor' : 'hue-bansoc';
+      const img = this.add.image(p.x, p.y, atlas, p.key).setOrigin(0.5, 1);
       img.setDepth(p.wall ? -5 : p.y);
+      if (!p.wall && img.height >= 150) this.tallProps.push(img);
+    }
+  }
+
+  private fadeTallProps(x: number, y: number) {
+    for (const img of this.tallProps) {
+      const b = img.getBounds();
+      const behind = y < img.y - 4 && y > b.top + 10 && x > b.left + 6 && x < b.right - 6;
+      const a = behind ? 0.45 : 1;
+      if (Math.abs(img.alpha - a) > 0.01) img.setAlpha(img.alpha + (a - img.alpha) * 0.2);
     }
   }
 
   private buildStations() {
     for (const st of HUE_STATIONS) {
       const ring = this.add.image(st.x, st.y, 'hue', 'task-marker').setDisplaySize(84, 84).setDepth(-4).setAlpha(0.9);
-      const key = `hue-station-${['print-checklist', 'scan-footnote', 'floor-plan', 'lights-labels', 'seal-box', 'return-shelf'][st.frame]}`;
-      const icon = this.add.image(st.x, st.y - 6, 'hue', key).setDisplaySize(52, 52).setDepth(st.y - 20);
+      const icon = this.add.image(st.x, st.y - 6, 'hue-bansoc', st.icon).setDisplaySize(52, 52).setDepth(st.y - 20);
       icon.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.tryTask(st.id));
       this.tweens.add({ targets: ring, alpha: 0.45, scale: ring.scale * 1.08, yoyo: true, repeat: -1, duration: 900, ease: 'Sine.inOut' });
       this.stationSprites.set(st.id, { icon, ring });
@@ -283,21 +311,84 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     if (existing) return;
+    const fresh = live && useStore.getState().room?.phase === 'explore';
+    const splat = this.add.image(0, -4, 'ink-splat').setDisplaySize(96, 56).setAlpha(0.9);
     const shadow = this.add.image(0, -2, 'shadow').setDisplaySize(40, 16);
-    const base = this.add.sprite(0, -6, 'player', 'walk-down-0').setOrigin(0.5, 1).setAngle(90).setAlpha(0.9);
-    const tint = this.add.sprite(0, -6, 'player-tint', 'walk-down-0').setOrigin(0.5, 1).setAngle(90).setTint(PLAYER_COLORS[p.color] ?? 0xffffff).setAlpha(0.9);
+    const base = this.add.sprite(0, -6, 'player', 'walk-down-0').setOrigin(0.5, 1).setAngle(90).setAlpha(0.95);
+    const tint = this.add.sprite(0, -6, 'player-tint', 'walk-down-0').setOrigin(0.5, 1).setAngle(90).setTint(PLAYER_COLORS[p.color] ?? 0xffffff).setAlpha(0.95);
     const mark = this.add.image(0, -30, 'body-marker').setDisplaySize(30, 30).setOrigin(0.5, 1);
-    const c = this.add.container(p.bodyX, p.bodyY, [shadow, base, tint, mark]).setDepth(p.bodyY - 1);
-    this.tweens.add({ targets: mark, y: -40, yoyo: true, repeat: -1, duration: 700 });
+    const c = this.add.container(p.bodyX, p.bodyY, [splat, shadow, base, tint, mark]).setDepth(p.bodyY - 1);
+    this.tweens.add({ targets: mark, y: -40, yoyo: true, repeat: -1, duration: 700, ease: 'Sine.inOut' });
     this.bodies.set(id, c);
-    // collapse-in effect + expanding red ring
-    c.setAlpha(0).setScale(1.4);
-    this.tweens.add({ targets: c, alpha: 1, scale: 1, duration: 350, ease: 'Bounce.easeOut' });
-    const ring = this.add.circle(p.bodyX, p.bodyY, 6, 0xff3b2a, 0.5).setDepth(p.bodyY - 2);
-    this.tweens.add({ targets: ring, radius: 60, alpha: 0, duration: 700, ease: 'Cubic.easeOut', onComplete: () => ring.destroy() });
-    this.cameras.main.shake(180, 0.004);
-    // a fresh kill (not a body that already existed when we joined): slash FX on the spot
-    if (live && useStore.getState().room?.phase === 'explore' && this.canSee(p.bodyX, p.bodyY)) this.playFx('fx-kill-slash', p.bodyX, p.bodyY - 34);
+    if (!fresh || !this.canSee(p.bodyX, p.bodyY)) return;
+    // ---- fresh kill on screen: blade flash -> victim topples -> ink bursts and pools
+    const x = p.bodyX, y = p.bodyY;
+    this.playFx('fx-kill-slash', x, y - 36);
+    for (const s of [base, tint]) {
+      s.setAngle(0);
+      this.tweens.add({ targets: s, angle: 90, duration: 420, delay: 140, ease: 'Bounce.easeOut' });
+    }
+    mark.setAlpha(0);
+    this.tweens.add({ targets: mark, alpha: 1, delay: 650, duration: 250 });
+    splat.setScale(0.05);
+    this.tweens.add({ targets: splat, scaleX: 96 / 256, scaleY: 56 / 256, delay: 260, duration: 520, ease: 'Cubic.easeOut' });
+    this.burst('ink-drop', x, y - 30, { count: 26, speed: [90, 260], life: 650, scale: [0.35, 0.1], gravity: 520, tint: 0xffffff, add: false, delay: 160 });
+    this.burst('spark', x, y - 34, { count: 14, speed: [120, 300], life: 380, scale: [0.6, 0], gravity: 0, tint: 0xff6a40, add: true, delay: 120 });
+    this.shockRing(x, y - 20, 0xff3b2a, 90, 520);
+    const cam = this.cameras.main;
+    cam.flash(140, 255, 70, 50);
+    cam.shake(260, 0.007);
+    this.zoomPunch(1.1, 380);
+    this.hitStop(110);
+  }
+
+  /** Particle explosion that cleans itself up. */
+  private burst(
+    tex: string,
+    x: number,
+    y: number,
+    o: { count: number; speed: [number, number]; life: number; scale: [number, number]; gravity: number; tint: number; add: boolean; delay?: number },
+  ) {
+    const fire = () => {
+      const em = this.add.particles(x, y, tex, {
+        speed: { min: o.speed[0], max: o.speed[1] },
+        angle: { min: 0, max: 360 },
+        lifespan: o.life,
+        scale: { start: o.scale[0], end: o.scale[1] },
+        alpha: { start: 1, end: 0 },
+        gravityY: o.gravity,
+        tint: o.tint,
+        blendMode: o.add ? Phaser.BlendModes.ADD : Phaser.BlendModes.NORMAL,
+        emitting: false,
+      });
+      em.setDepth(y + 10001);
+      em.explode(o.count);
+      this.time.delayedCall(o.life + 100, () => em.destroy());
+    };
+    if (o.delay) this.time.delayedCall(o.delay, fire);
+    else fire();
+  }
+
+  private shockRing(x: number, y: number, color: number, radius: number, ms: number) {
+    const ring = this.add.circle(x, y, 8).setStrokeStyle(5, color, 0.9).setDepth(y + 9999);
+    ring.setScale(0.2, 0.12);
+    this.tweens.add({ targets: ring, scaleX: radius / 8, scaleY: (radius / 8) * 0.55, alpha: 0, duration: ms, ease: 'Cubic.easeOut', onComplete: () => ring.destroy() });
+  }
+
+  private zoomPunch(k: number, ms: number) {
+    const cam = this.cameras.main;
+    const z = cam.zoom;
+    this.tweens.add({ targets: cam, zoom: z * k, duration: ms * 0.35, yoyo: true, hold: ms * 0.3, ease: 'Quad.easeOut', onComplete: () => cam.setZoom(z) });
+  }
+
+  /** A few frames of near-freeze to sell the impact. */
+  private hitStop(ms: number) {
+    this.tweens.timeScale = 0.15;
+    this.anims.globalTimeScale = 0.15;
+    setTimeout(() => {
+      this.tweens.timeScale = 1;
+      this.anims.globalTimeScale = 1;
+    }, ms);
   }
 
   /** One-shot FX sprite in the world; destroyed when the animation ends. */
@@ -315,9 +406,28 @@ export class GameScene extends Phaser.Scene {
   /** Server cinematics -> matching in-world FX (the React overlay handles the full-screen part). */
   private onCinematic(c: { kind: string; at?: { x: number; y: number } }) {
     const me = room ? this.avatars.get(room.sessionId) : undefined;
-    if (c.kind === 'shield' && c.at) this.playFx('fx-shield-block', c.at.x, c.at.y - 34);
-    else if (c.kind === 'witness' && me) this.playFx('fx-witness', me.c.x, me.c.y - 84, me.c);
-    else if (c.kind === 'report' && me) this.playFx('fx-report-burst', me.c.x, me.c.y - 40);
+    if (c.kind === 'shield' && c.at) {
+      const { x, y } = c.at;
+      this.playFx('fx-shield-block', x, y - 34);
+      this.burst('spark', x, y - 34, { count: 22, speed: [140, 320], life: 520, scale: [0.7, 0], gravity: 120, tint: 0xffd36a, add: true });
+      this.shockRing(x, y - 20, 0xffd36a, 110, 600);
+      this.cameras.main.flash(160, 255, 220, 120);
+      this.cameras.main.shake(180, 0.005);
+      this.zoomPunch(1.06, 320);
+    } else if (c.kind === 'witness' && me) {
+      this.playFx('fx-witness', me.c.x, me.c.y - 84, me.c);
+      this.cameras.main.shake(140, 0.004);
+    } else if (c.kind === 'report') {
+      // burst over the reported body (or over me when the body is out of view)
+      const at = c.at && this.canSee(c.at.x, c.at.y) ? c.at : me ? { x: me.c.x, y: me.c.y } : null;
+      if (!at) return;
+      this.playFx('fx-report-burst', at.x, at.y - 46);
+      this.shockRing(at.x, at.y - 10, 0xff5a3a, 120, 700);
+      this.time.delayedCall(180, () => this.shockRing(at.x, at.y - 10, 0xffc04a, 150, 800));
+      this.burst('spark', at.x, at.y - 40, { count: 16, speed: [100, 240], life: 600, scale: [0.6, 0], gravity: 0, tint: 0xffa040, add: true });
+      this.cameras.main.shake(200, 0.004);
+      this.zoomPunch(1.08, 420);
+    }
   }
 
   /** Same rule as the fog: a living player only sees within vision radius and line of sight. */
@@ -417,7 +527,7 @@ export class GameScene extends Phaser.Scene {
       }
     }
     if (alive && dist(this.pred, MEETING_POINT) < INTERACT_RADIUS + 50 && bestD >= INTERACT_RADIUS) {
-      best = { kind: 'emergency', title: 'Rung chuông gọi họp khẩn', used: !!me?.emergencyUsed };
+      best = { kind: 'emergency', title: 'Đánh chuông Ngũ Phụng (họp khẩn)', used: !!me?.emergencyUsed };
     }
     return best;
   }
@@ -479,6 +589,7 @@ export class GameScene extends Phaser.Scene {
         mine.c.setPosition(mine.c.x + (tx - mine.c.x) * k, mine.c.y + (ty - mine.c.y) * k);
       }
       this.animate(mine, this.myDir, this.myMoving);
+      this.fadeTallProps(mine.c.x, mine.c.y);
     }
     // others — interpolate
     const renderT = performance.now() - INTERP_MS;

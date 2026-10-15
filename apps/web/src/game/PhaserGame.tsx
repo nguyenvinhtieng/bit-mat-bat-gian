@@ -17,6 +17,8 @@ export function PhaserGame() {
       scene: [GameScene],
       fps: { target: 60 },
     });
+    // dev-only handle for visual checks (tools/smoke)
+    if (import.meta.env.DEV) (window as unknown as { __game?: Phaser.Game }).__game = game;
     return () => game.destroy(true);
   }, []);
   return <div ref={host} className="phaser-host" />;
