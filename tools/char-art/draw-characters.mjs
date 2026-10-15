@@ -474,7 +474,7 @@ const ACTION_POSES = {
   guard: [
     { torso: 6, head: 4, arm: 150, near: 12, far: -10, dx: 1 },
     { torso: -10, head: -4, arm: 122, near: 24, far: -20, dx: -2, brow: true },
-    { torso: 16, head: 12, arm: 70, near: -8, far: 14, dx: 5, hurt: true },
+    { torso: 16, head: 12, arm: 70, near: -8, far: 14, dx: 5, wince: true },
     { torso: 0, head: 0, arm: 0, near: 0, far: 0 },
   ],
 };
@@ -508,7 +508,9 @@ function actionSvg(c, a, mode) {
   let head = headSide(p, kh, c);
   const y = 22;
   if (a.closed) head += kh.E(16.4, y + 2.8, 1.8, 2.2, SKIN.main, { stroke: false }) + kh.L(`M14.9 ${y + 3.2}q1.5 1.1 3 0`, INK, { sw: 0.7 });
+  // X eyes only for the one actually cut down (die row); a pushed-back guard / repelled striker just squeezes them shut
   else if (a.hurt) head += kh.E(16.4, y + 2.8, 1.7, 2.1, SKIN.main, { stroke: false }) + kh.L(`M15 ${y + 1.8}l2.8 2.2M17.8 ${y + 1.8}l-2.8 2.2`, INK, { sw: 0.7 });
+  else if (a.wince) head += kh.E(16.4, y + 2.8, 1.7, 2.1, SKIN.main, { stroke: false }) + kh.L(`M17.8 ${y + 1.7}l-2.6 1.3l2.6 1.3`, INK, { sw: 0.7 });
   if (a.brow) head += kh.L(`M14.6 ${y - 0.4}l3.6 1.4`, INK, { sw: 0.8 });
   const upper = (inner) => rot(a.torso, hx, hy, inner);
   let s = '';

@@ -11,7 +11,7 @@ const SET_W = 1000, SET_H = 420;
 // Pose timelines (ms). Impact lands at 900: dash 300-750 → wind-up → slash.
 const ACTOR_STRIKE: PoseTrack = [[0, 'strike-1'], [750, 'strike-0'], [900, 'strike-2'], [1050, 'strike-3']];
 const VICTIM_DIE: PoseTrack = [[0, 'guard-3'], [900, 'die-0'], [1100, 'die-1'], [1350, 'die-2'], [1600, 'die-3']];
-const ACTOR_REPELLED: PoseTrack = [[0, 'strike-1'], [750, 'strike-0'], [900, 'strike-2'], [960, 'die-0'], [1150, 'die-1'], [1450, 'guard-3']];
+const ACTOR_REPELLED: PoseTrack = [[0, 'strike-1'], [750, 'strike-0'], [900, 'strike-2'], [960, 'guard-2'], [1450, 'guard-3']];
 const VICTIM_GUARD: PoseTrack = [[0, 'guard-3'], [780, 'guard-0'], [900, 'guard-1'], [1150, 'guard-2'], [1450, 'guard-3']];
 const BODY: PoseTrack = [[0, 'die-3']];
 const FINDER_STARTLE: PoseTrack = [[0, 'guard-0'], [1350, 'guard-1'], [1650, 'guard-2']];
