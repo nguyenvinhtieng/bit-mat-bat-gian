@@ -4,7 +4,7 @@ import { send } from '../net';
 import { colorHex, useStore, type PlayerView } from '../store';
 import { Chat } from './Chat';
 import { Sprite } from './Cinematic';
-import { asset, fmt, useCountdown, useEscape } from './common';
+import { asset, Digits, fmt, useCountdown, useEscape } from './common';
 
 const mt = (n: string) => asset(`common/ui/meeting/${n}.webp`);
 /** RoomView players carry the hex colour; the sprite renderer wants the palette index. */
@@ -19,7 +19,7 @@ function TimerRing({ left, total }: { left: number | null; total: number }) {
         <circle className="trk" cx="50" cy="50" r="44" />
         <circle className="arc" cx="50" cy="50" r="44" pathLength="100" style={{ strokeDashoffset: 100 - pct * 100 }} />
       </svg>
-      <span>{fmt(left)}</span>
+      <span><Digits text={fmt(left)} /></span>
     </div>
   );
 }

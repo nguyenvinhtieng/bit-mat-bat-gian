@@ -12,6 +12,8 @@ import {
   SIM_HZ,
   SPAWNS,
   TASK_IDS,
+  autoNightMin,
+  canhMs as canhMsFor,
   HUE_STATIONS,
   HUE_CANH,
   HUE_ENDINGS,
@@ -102,6 +104,7 @@ export class GameRoom extends Room<GameState> {
     this.moves.set(client.sessionId, { queue: [], budget: 0, lastQueued: 0 });
     this.lastActive.set(client.sessionId, Date.now());
     if (!this.state.hostId) this.state.hostId = client.sessionId;
+    this.refreshNight();
     this.system(`${p.name} đã vào phòng.`);
     client.send('time', Date.now());
     client.send('chat:history', this.chatLog.slice(-40));
@@ -126,6 +129,7 @@ export class GameRoom extends Room<GameState> {
     if (this.state.phase === 'lobby') {
       this.state.players.delete(client.sessionId);
       this.moves.delete(client.sessionId);
+      this.refreshNight();
     } else {
       p.connected = false;
       p.alive = false;
@@ -165,7 +169,7 @@ export class GameRoom extends Room<GameState> {
       if (p && this.state.phase === 'lobby') p.ready = !!msg?.ready;
     });
 
-    this.onMessage('configure', (client, msg: { killers?: number; tasksPerPlayer?: number }) => {
+    this.onMessage('configure', (client, msg: { killers?: number; tasksPerPlayer?: number; nightMin?: number; nightAuto?: boolean }) => {
       if (client.sessionId !== this.state.hostId || this.state.phase !== 'lobby') return;
       if (Number.isFinite(msg?.tasksPerPlayer)) {
         this.state.tasksPerPlayer = Math.max(1, Math.min(TASK_IDS.length, Math.floor(msg.tasksPerPlayer!)));
@@ -174,6 +178,12 @@ export class GameRoom extends Room<GameState> {
         const maxK = Math.max(1, Math.floor(this.state.players.size / 2));
         this.state.killers = Math.max(1, Math.min(maxK, Math.floor(msg.killers!)));
       }
+      if (msg?.nightAuto === true) this.state.nightAuto = true;
+      else if (Number.isFinite(msg?.nightMin)) {
+        this.state.nightAuto = false;
+        this.state.nightMin = Math.max(GAME.nightMinMin, Math.min(GAME.nightMinMax, Math.floor(msg.nightMin!)));
+      }
+      this.refreshNight();
     });
 
     this.onMessage('start', (client) => {
@@ -287,6 +297,7 @@ export class GameRoom extends Room<GameState> {
       p.moving = moved;
     }
     if (this.state.phaseEndsAt && Date.now() >= this.state.phaseEndsAt) this.advancePhase();
+    if (this.state.phase === 'explore') this.tickNight();
   }
 
   // ---------------------------------------------------------------- phases
@@ -304,8 +315,7 @@ export class GameRoom extends Room<GameState> {
     const players = [...this.state.players.values()];
     const n = players.length;
     const c = this.cfg();
-    const maxK = Math.max(1, Math.floor(n / 2));
-    const killers = Math.min(this.state.killers > 0 ? Math.min(this.state.killers, maxK) : killersFor(n), n);
+    const killers = this.plannedKillers(n);
     const crew = n - killers;
     const roles: RoleId[] = [];
     for (let i = 0; i < killers; i++) roles.push('killer');
@@ -316,6 +326,8 @@ export class GameRoom extends Room<GameState> {
 
     this.secrets.clear();
     const now = Date.now();
+    // the night (and the first kill cooldown) only starts once the role reveal is over
+    const dusk = now + GAME.introSec * 1000;
     players.forEach((p, i) => {
       const role = assigned[i];
       const faction = ROLE_INFO[role].faction;
@@ -329,7 +341,7 @@ export class GameRoom extends Room<GameState> {
         tasks: shuffle(TASK_IDS).slice(0, tpp),
         completed: new Set(),
         shield: role === 'guardian',
-        killReadyAt: now + c.firstCd,
+        killReadyAt: dusk + c.firstCd,
       });
       p.tasksDone = 0;
       p.voted = false;
@@ -340,6 +352,8 @@ export class GameRoom extends Room<GameState> {
     this.state.progress = 0;
     this.state.progressTarget = Math.max(1, n * tpp);
     this.canh = 0;
+    this.state.nightStartAt = dusk;
+    this.state.nightPausedAt = 0;
     this.state.meetingReason = '';
     this.teleportToSpawns();
     this.setPhase('explore', 0);
@@ -365,6 +379,7 @@ export class GameRoom extends Room<GameState> {
       for (const s of this.secrets.values()) if (s.faction === 'killer') s.killReadyAt = now + this.cfg().postMeetingCd;
       this.state.meetingReason = '';
       this.setPhase('explore', 0);
+      this.resumeNight();
       for (const id of this.secrets.keys()) this.sendPrivate(id);
       this.system('Cuộc họp kết thúc — mọi người trở lại làm việc.');
     }
@@ -382,6 +397,7 @@ export class GameRoom extends Room<GameState> {
     }
     this.teleportToSpawns();
     this.broadcast('task:close', {});
+    if (!this.state.nightPausedAt) this.state.nightPausedAt = Date.now();
     this.setPhase('meeting', this.cfg().meetingMs);
     this.system(`Họp khẩn: ${reason}. Thảo luận và bỏ phiếu loại người đáng ngờ (hoặc bỏ qua).`);
   }
@@ -480,12 +496,13 @@ export class GameRoom extends Room<GameState> {
   /** Returns true if the game ended. */
   private checkWin(): boolean {
     if (this.state.phase === 'ended' || this.state.phase === 'lobby') return false;
-    // dead players can't finish their remaining tasks: drop them from the target
+    // only the crew's tasks count (killers fake theirs); ghosts keep working, so their tasks stay in the target
     let done = 0;
     let target = 0;
-    for (const [id, s] of this.secrets) {
+    for (const s of this.secrets.values()) {
+      if (s.faction !== 'crew') continue;
       done += s.completed.size;
-      target += this.state.players.get(id)?.alive ? s.tasks.length : s.completed.size;
+      target += s.tasks.length;
     }
     this.state.progress = done;
     this.state.progressTarget = Math.max(1, target);
@@ -511,6 +528,7 @@ export class GameRoom extends Room<GameState> {
       }),
     };
     this.setPhase('ended', 0);
+    this.state.nightPausedAt ||= Date.now();
     this.broadcast('end', reveal);
     this.system(winner === 'crew' ? `Phe Người Dân thắng! ${reason}` : `Âm Binh thắng! ${reason}`);
     return true;
@@ -521,6 +539,8 @@ export class GameRoom extends Room<GameState> {
     this.syncAlive();
     this.state.progress = 0;
     this.state.meetingReason = '';
+    this.state.nightStartAt = 0;
+    this.state.nightPausedAt = 0;
     for (const [id, p] of this.state.players) {
       if (!p.connected) this.state.players.delete(id);
       else {
@@ -599,9 +619,43 @@ export class GameRoom extends Room<GameState> {
   // ---------------------------------------------------------------- night watch (5 canh)
   private canh = 0;
 
-  /** Every 20% of the shared progress the night-watch drum strikes the next canh (canh 5 = dawn = win). */
-  private announceCanh() {
-    const c = Math.min(4, Math.floor((this.state.progress / Math.max(1, this.state.progressTarget)) * 5));
+  private nightElapsed() {
+    const { nightStartAt, nightPausedAt } = this.state;
+    return nightStartAt ? (nightPausedAt || Date.now()) - nightStartAt : 0;
+  }
+
+  /** Shift the start forward by the paused span so meetings don't eat the night. */
+  private resumeNight() {
+    if (!this.state.nightPausedAt) return;
+    this.state.nightStartAt += Date.now() - this.state.nightPausedAt;
+    this.state.nightPausedAt = 0;
+  }
+
+  /** killers the next game will get (manual count clamped to ½ room, else auto) */
+  private plannedKillers(n = this.state.players.size) {
+    const maxK = Math.max(1, Math.floor(n / 2));
+    return Math.min(this.state.killers > 0 ? Math.min(this.state.killers, maxK) : killersFor(n), n);
+  }
+
+  /** auto night length follows the lobby (players, killers, tasks) until the host sets it by hand */
+  private refreshNight() {
+    if (!this.state.nightAuto) return;
+    const n = this.state.players.size;
+    this.state.nightMin = autoNightMin(n, this.plannedKillers(n), Math.min(this.state.tasksPerPlayer, TASK_IDS.length));
+  }
+
+  /** The clock runs on time: the drum strikes each new canh; when canh năm runs out the Shadows win. */
+  private tickNight() {
+    if (!this.state.nightStartAt || this.state.nightPausedAt) return;
+    const canhMs = canhMsFor(this.state.nightMin);
+    const elapsed = this.nightElapsed();
+    if (elapsed < 0) return; // role reveal still showing
+    if (elapsed >= canhMs * GAME.canhCount) {
+      this.broadcast('canh', { canh: GAME.canhCount + 1, text: HUE_ENDINGS.timeout });
+      this.finishGame('killer', HUE_ENDINGS.timeout);
+      return;
+    }
+    const c = Math.min(GAME.canhCount, Math.floor(elapsed / canhMs) + 1);
     while (this.canh < c) {
       this.canh++;
       const text = HUE_CANH[this.canh - 1];
@@ -619,7 +673,8 @@ export class GameRoom extends Room<GameState> {
     const p = this.state.players.get(client.sessionId);
     const s = this.secrets.get(client.sessionId);
     const st = HUE_STATIONS.find((x) => x.id === taskId);
-    if (!p || !s || !st || this.state.phase !== 'explore' || !p.alive) return;
+    // ghosts of the crew keep working: their tasks still count toward dawn
+    if (!p || !s || !st || this.state.phase !== 'explore' || (!p.alive && s.faction !== 'crew')) return;
     if (!s.tasks.includes(taskId)) return client.send('toast', { text: 'Đây không phải nhiệm vụ của bạn.', kind: 'info' });
     if (!this.near(p, st.x, st.y)) return client.send('toast', { text: 'Bạn cần đứng gần điểm nhiệm vụ.', kind: 'warn' });
     if (s.completed.has(taskId)) return client.send('toast', { text: 'Bạn đã hoàn thành nhiệm vụ này.', kind: 'info' });
@@ -631,7 +686,7 @@ export class GameRoom extends Room<GameState> {
   private submitTask(client: Client, msg: { taskId: TaskId; answer: unknown }) {
     const p = this.state.players.get(client.sessionId);
     const s = this.secrets.get(client.sessionId);
-    if (!p || !s || !p.alive || this.state.phase !== 'explore' || !s.pending || s.pending.taskId !== msg?.taskId) return;
+    if (!p || !s || (!p.alive && s.faction !== 'crew') || this.state.phase !== 'explore' || !s.pending || s.pending.taskId !== msg?.taskId) return;
     const { taskId, reward, done } = s.pending;
     const st = HUE_STATIONS.find((x) => x.id === taskId)!;
     if (!this.near(p, st.x, st.y)) return client.send('toast', { text: 'Bạn đã rời khỏi điểm nhiệm vụ.', kind: 'warn' });
@@ -641,11 +696,10 @@ export class GameRoom extends Room<GameState> {
     s.pending = undefined;
     s.completed.add(taskId);
     p.tasksDone = s.completed.size;
-    // every player (killers included) advances the shared bar
-    this.state.progress += 1;
+    // only the crew advances the shared bar (checkWin recounts it)
     client.send('task:result', { ok: true, text: done ?? `Hoàn thành: ${st.title}.`, fact: reward?.text, headline: reward?.headline } satisfies TaskResultMsg);
     this.sendPrivate(client.sessionId);
-    if (!this.checkWin()) this.announceCanh();
+    this.checkWin();
   }
 
   // ---------------------------------------------------------------- utils

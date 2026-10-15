@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MIN_RECOMMENDED_PLAYERS, TASK_IDS, mapArt } from '@hidden-truth/shared';
+import { GAME, MIN_RECOMMENDED_PLAYERS, TASK_IDS, autoNightMin, killersFor, mapArt } from '@hidden-truth/shared';
 import { leaveRoom, send } from '../net';
 import { colorHex, useStore } from '../store';
 import { asset } from './common';
@@ -86,7 +86,7 @@ export function LobbyPanel() {
             <img src={asset('common/ui/settings.webp')} alt="" draggable={false} />
             <span>{t('settings')}</span>
             <small>
-              {room.tasksPerPlayer} · {killers}
+              {room.tasksPerPlayer} · {killers} · {room.nightMin}′
             </small>
           </button>
           <button
@@ -108,63 +108,115 @@ export function LobbyPanel() {
       <aside className="lobby-chat">
         <Chat compact />
       </aside>
-      {showSettings && (
-        <div className="modal-backdrop settings-backdrop" onClick={() => setShowSettings(false)}>
-          <div className="modal settings-modal" role="dialog" aria-label={t('settings')} onClick={(e) => e.stopPropagation()}>
-            <header>
-              <img className="settings-crest" src={asset('common/ui/settings.webp')} alt="" draggable={false} />
-              <div>
-                <h3>{t('settings')}</h3>
-                <small>{t('settingsSub')}</small>
-              </div>
-              <button className="close" onClick={() => setShowSettings(false)} aria-label={t('close')}>
-                ×
-              </button>
-            </header>
-            <div className="modal-content">
-              <SliderRow
-                icon="common/ui/clue.webp"
-                label={t('tasksPer')}
-                hint={t('tasksPerHint')}
-                min={1}
-                max={TASK_IDS.length}
-                value={room.tasksPerPlayer}
-                disabled={!isHost}
-                onChange={(v) => send('configure', { tasksPerPlayer: v })}
-              />
-              <SliderRow
-                icon="common/ui/count-killer.webp"
-                tone="killer"
-                label={t('killersCount')}
-                hint={t('killersHint')}
-                min={1}
-                max={maxKillers}
-                value={killers}
-                disabled={!isHost}
-                onChange={(v) => send('configure', { killers: v })}
-              />
-              {!isHost && <p className="settings-note">{t('hostOnly')}</p>}
-              <button className="btn primary wide" onClick={() => setShowSettings(false)}>
-                {t('close')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showSettings && <SettingsModal isHost={isHost} total={total} killers={killers} maxKillers={maxKillers} onClose={() => setShowSettings(false)} />}
       {showGuide && <Guide onClose={() => setShowGuide(false)} />}
     </>
+  );
+}
+
+/** Edits a local draft; nothing reaches the server until the host presses Save (× / backdrop = discard). */
+function SettingsModal(props: { isHost: boolean; total: number; killers: number; maxKillers: number; onClose: () => void }) {
+  const room = useStore((s) => s.room)!;
+  const t = useT();
+  const { isHost, total, maxKillers, onClose } = props;
+  const [draft, setDraft] = useState({ tasks: room.tasksPerPlayer, killers: props.killers, nightAuto: room.nightAuto, nightMin: room.nightMin });
+  // guests just watch the live values; only the host edits a draft
+  const { tasks, killers, nightAuto, nightMin } = isHost
+    ? draft
+    : { tasks: room.tasksPerPlayer, killers: props.killers, nightAuto: room.nightAuto, nightMin: room.nightMin };
+  const edit = (patch: Partial<typeof draft>) => setDraft((d) => ({ ...d, ...patch }));
+  // auto preview mirrors the server: an untouched auto killer count follows the room size
+  const previewKillers = !room.killers && killers === props.killers ? killersFor(total) : killers;
+  const shownNight = nightAuto && isHost ? autoNightMin(total, previewKillers, tasks) : nightMin;
+
+  const save = () => {
+    const msg: { tasksPerPlayer?: number; killers?: number; nightMin?: number; nightAuto?: boolean } = {};
+    if (tasks !== room.tasksPerPlayer) msg.tasksPerPlayer = tasks;
+    if (killers !== props.killers) msg.killers = killers;
+    if (nightAuto && !room.nightAuto) msg.nightAuto = true;
+    if (!nightAuto && (room.nightAuto || nightMin !== room.nightMin)) msg.nightMin = nightMin;
+    if (Object.keys(msg).length) send('configure', msg);
+    onClose();
+  };
+
+  return (
+    <div className="modal-backdrop settings-backdrop" onClick={onClose}>
+      <div className="modal settings-modal" role="dialog" aria-label={t('settings')} onClick={(e) => e.stopPropagation()}>
+        <header>
+          <img className="settings-crest" src={asset('common/ui/settings.webp')} alt="" draggable={false} />
+          <div>
+            <h3>{t('settings')}</h3>
+            <small>{t('settingsSub')}</small>
+          </div>
+          <button className="close" onClick={onClose} aria-label={t('close')}>
+            ×
+          </button>
+        </header>
+        <div className="modal-content">
+          <SliderRow
+            icon="common/ui/clue.webp"
+            label={t('tasksPer')}
+            hint={t('tasksPerHint')}
+            min={1}
+            max={TASK_IDS.length}
+            value={tasks}
+            disabled={!isHost}
+            onChange={(v) => edit({ tasks: v })}
+          />
+          <SliderRow
+            icon="common/ui/count-killer.webp"
+            tone="killer"
+            label={t('killersCount')}
+            min={1}
+            max={maxKillers}
+            value={killers}
+            disabled={!isHost}
+            onChange={(v) => edit({ killers: v })}
+          />
+          <SliderRow
+            icon="maps/co-do-hue/minigames/hue-mg-moon-4.webp"
+            label={t('nightLen')}
+            hint={nightAuto ? t('nightAutoHint') : t('nightManualHint')}
+            min={GAME.nightMinMin}
+            max={GAME.nightMinMax}
+            value={shownNight}
+            unit={t('minutesShort')}
+            disabled={!isHost}
+            onChange={(v) => edit({ nightAuto: false, nightMin: v })}
+            extra={
+              nightAuto ? (
+                <em className="slider-badge auto">{t('auto')}</em>
+              ) : (
+                <button className="slider-badge reset" disabled={!isHost} onClick={() => edit({ nightAuto: true })}>
+                  ↺ {t('auto')}
+                </button>
+              )
+            }
+          />
+          {isHost ? (
+            <button className="btn primary wide" onClick={save}>
+              {t('save')}
+            </button>
+          ) : (
+            <p className="settings-note">{t('hostOnly')}</p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
 function SliderRow(props: {
   icon: string;
   label: string;
-  hint: string;
+  hint?: string;
   min: number;
   max: number;
   value: number;
   disabled?: boolean;
   tone?: 'killer';
+  unit?: string;
+  extra?: React.ReactNode;
   onChange: (v: number) => void;
 }) {
   const { min, max, value } = props;
@@ -176,10 +228,12 @@ function SliderRow(props: {
         <img src={asset(props.icon)} alt="" draggable={false} />
         <div className="slider-text">
           <strong>{props.label}</strong>
-          <small>{props.hint}</small>
+          {props.hint && <small>{props.hint}</small>}
         </div>
+        {props.extra}
         <b className="slider-value" key={value}>
           {value}
+          {props.unit && <small>{props.unit}</small>}
         </b>
       </div>
       <input

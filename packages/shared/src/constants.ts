@@ -86,9 +86,27 @@ export const GAME = {
   /** after a meeting */
   postMeetingCooldownSec: 15,
   meetingSec: 75,
+  /** 5 canh = the whole round; length is per-room (`nightMin`), the clock pauses during meetings */
+  canhCount: 5,
+  /** host-adjustable range for the whole night, in minutes */
+  nightMinMin: 2,
+  nightMinMax: 15,
   revealSec: 6,
+  /** prelude + role reveal on game start; the night clock (canh một) starts when it ends */
+  introSec: 9.5,
   emergencyPerPlayer: 1,
 };
 
 /** Number of killers for a given player count. */
 export const killersFor = (n: number) => (n >= 8 ? 2 : n >= 2 ? 1 : 0);
+
+/**
+ * Auto night length (minutes) so the crew can just finish in time:
+ * ~50s per task each (play + walk; crew work in parallel), extra slack per killer (deaths slow the crew)
+ * and per player (crowding, emergency calls). Meetings pause the clock, so they are not counted.
+ */
+export const autoNightMin = (players: number, killers: number, tasksPerPlayer: number) =>
+  Math.max(3, Math.min(GAME.nightMinMax, Math.round((60 + tasksPerPlayer * 50 + killers * 30 + players * 5) / 60)));
+
+/** real ms of one canh for a night of `nightMin` minutes */
+export const canhMs = (nightMin: number) => (nightMin * 60_000) / GAME.canhCount;

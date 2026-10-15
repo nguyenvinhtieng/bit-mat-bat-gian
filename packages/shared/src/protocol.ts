@@ -6,7 +6,7 @@ export type InputMsg = { seq: number; dx: number; dy: number }[];
 export type ClientMessages = {
   input: InputMsg;
   ready: { ready: boolean };
-  configure: { killers?: number; tasksPerPlayer?: number };
+  configure: { killers?: number; tasksPerPlayer?: number; nightMin?: number; nightAuto?: boolean };
   start: Record<string, never>;
   'task:open': { taskId: TaskId };
   'task:submit': { taskId: TaskId; answer: unknown };

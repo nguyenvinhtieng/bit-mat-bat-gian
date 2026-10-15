@@ -133,17 +133,22 @@ export const HUE_STORY_SUBTITLE = 'Đêm Ban Sóc';
 export const HUE_INTRO =
   'Kinh thành Huế, đêm cuối tháng Mười Một. Rạng sáng mai, Lễ Ban Sóc sẽ diễn ra trước Ngọ Môn — lịch năm mới phải được trao tận tay bá quan và muôn dân. Đoàn nghệ nhân, thợ in, nhạc công và lính Ngự Lâm chỉ còn năm canh để chuẩn bị. Nhưng trong đoàn có Âm Binh — kẻ muốn đêm nay không bao giờ kết thúc. Không có lịch, cả kinh thành sẽ lạc mất thời gian.';
 
-/** Night-watch drum: one line per canh (progress 20%, 40% … 100%). */
+/** Short dark prelude before the role reveal on game start (one line per beat). */
+export const HUE_PRELUDE = ['Hoàng hôn tắt sau Kinh thành Huế…', 'Đêm Ban Sóc buông xuống — trống canh sắp điểm.'];
+/** Night-watch drum: HUE_CANH[i] is announced when canh i+1 begins (the clock runs on time, not on progress). */
 export const HUE_CANH = [
-  'Trống điểm canh một — Khâm Thiên Giám đã định xong ngày Sóc.',
-  'Trống điểm canh hai — ván khắc lịch đã lên mực.',
-  'Trống điểm canh ba — Nhã nhạc đã dượt xong bài nghênh giá.',
-  'Trống điểm canh tư — bá quan đã vào vị trí trên sân chầu.',
-  'Trống điểm canh năm — trời hửng sáng trên Lầu Ngũ Phụng!',
+  'Trống điểm canh một (19 giờ) — đêm Ban Sóc bắt đầu, mọi người vào việc!',
+  'Trống điểm canh hai (21 giờ) — đã hết một canh, lịch vẫn chưa xong.',
+  'Trống điểm canh ba (23 giờ) — nửa đêm rồi, khẩn trương lên!',
+  'Trống điểm canh tư (1 giờ sáng) — chỉ còn hai canh trước bình minh.',
+  'Trống điểm canh năm (3 giờ sáng) — canh cuối! Hết canh này mà chưa xong là Âm Binh thắng.',
 ];
+/** Clock face for the night: canh một starts 19:00, canh năm ends 05:00 (2 hours per canh). */
+export const HUE_NIGHT_START_HOUR = 19;
 
 export const HUE_ENDINGS = {
   tasks: 'Canh năm đã điểm — bình minh lên trên Lầu Ngũ Phụng, lịch năm mới được ban cho muôn dân!',
   vote: 'Bóng đêm tan — Âm Binh bị trục xuất, bình minh đến đúng giờ.',
   killer: 'Trống canh năm không bao giờ điểm — kinh thành chìm trong một đêm không có ngày mai.',
+  timeout: 'Hết canh năm mà việc vẫn còn dang dở — trời sáng không có lịch, Âm Binh đã giữ được đêm dài.',
 };

@@ -40,24 +40,27 @@ export function MgShell({ taskId, lore, status, children, hint, tone = 'info', v
   const fill = (t: string) => t.replace(/\{(\w+)\}/g, (_, k) => vars?.[k] ?? '');
   return (
     <div className="mg-col">
-      <header className="mg-head">
-        <div className="mg-head-text">
-          <p className="mg-lore">{lore}</p>
-          <p className="mg-goal">
-            <b>{lang === 'en' ? 'Goal' : 'Mục tiêu'}</b> {fill(g.goal)}
-          </p>
-        </div>
-        {status && <div className="mg-status">{status}</div>}
-      </header>
-      <ol className="mg-how">
-        {g.steps.map((st, i) => (
-          <li key={i}>
-            <i>{i + 1}</i>
-            <span>{fill(st)}</span>
-          </li>
-        ))}
-      </ol>
-      {children}
+      {/* guide / play wrappers are display: contents, except on short landscape screens (side by side) */}
+      <div className="mg-guide">
+        <header className="mg-head">
+          <div className="mg-head-text">
+            <p className="mg-lore">{lore}</p>
+            <p className="mg-goal">
+              <b>{lang === 'en' ? 'Goal' : 'Mục tiêu'}</b> {fill(g.goal)}
+            </p>
+          </div>
+          {status && <div className="mg-status">{status}</div>}
+        </header>
+        <ol className="mg-how">
+          {g.steps.map((st, i) => (
+            <li key={i}>
+              <i>{i + 1}</i>
+              <span>{fill(st)}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <div className="mg-play">{children}</div>
       <p className={`mg-hint ${tone}`} role="status">
         {hint ?? ' '}
       </p>
@@ -107,6 +110,48 @@ function noise(dur: number, vol = 0.25, hp = 2000) {
   src.start();
 }
 
+/** Recorded-style drum hit (tools/sfx/draw-drum.mjs), decoded once; falls back to the synth drum. */
+let drumBuf: AudioBuffer | null = null;
+let drumLoading: Promise<void> | null = null;
+function loadDrum() {
+  const a = ac();
+  if (!a || drumBuf || drumLoading) return drumLoading;
+  drumLoading = fetch('/assets/maps/co-do-hue/sfx/trong-canh.wav')
+    .then((r) => r.arrayBuffer())
+    .then((b) => a.decodeAudioData(b))
+    .then((b) => void (drumBuf = b))
+    .catch(() => {});
+  return drumLoading;
+}
+function drumHit(at: number, vol: number) {
+  const a = ac();
+  if (!a) return;
+  if (!drumBuf) return void setTimeout(sfx.drum, Math.max(0, (at - a.currentTime) * 1000));
+  const src = a.createBufferSource();
+  src.buffer = drumBuf;
+  const g = a.createGain();
+  g.gain.value = vol;
+  src.connect(g).connect(a.destination);
+  src.start(at);
+}
+/** Night-watch pattern: canh n = a slow roll then n strikes; n > 5 = the long dawn roll. */
+async function watchDrum(n: number) {
+  await loadDrum();
+  const a = ac();
+  if (!a) return;
+  let t = a.currentTime + 0.05;
+  const roll = n > 5 ? 14 : 5;
+  for (let i = 0; i < roll; i++) {
+    drumHit(t, 0.35 + (0.4 * i) / roll);
+    t += Math.max(0.09, 0.32 - i * 0.04);
+  }
+  t += 0.55;
+  for (let i = 0; i < Math.min(n, 5); i++) {
+    drumHit(t, 1);
+    t += 0.75;
+  }
+}
+
 export const sfx = {
   ok: () => (tone(660, 0.12, 'triangle', 0.15), setTimeout(() => tone(990, 0.16, 'triangle', 0.12), 70)),
   bad: () => tone(180, 0.25, 'sawtooth', 0.1, 0.6),
@@ -116,8 +161,6 @@ export const sfx = {
   sao: (f = 784) => tone(f, 0.55, 'sine', 0.18, 1.01),
   stamp: () => (tone(90, 0.18, 'sine', 0.4, 0.6), noise(0.05, 0.12, 800)),
   scrape: () => noise(0.04, 0.05, 2500),
-  watch: () => {
-    sfx.drum();
-    setTimeout(sfx.drum, 380);
-  },
+  watch: (n = 2) => void watchDrum(n),
+  preloadDrum: () => void loadDrum(),
 };

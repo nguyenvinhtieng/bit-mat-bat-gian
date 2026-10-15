@@ -34,7 +34,7 @@ const ROLE_GUIDE: Record<RoleId, { name: L; what: L; todo: L[]; note: L }> = {
     what: l('Kẻ sát nhân trà trộn trong đoàn. Hạ gục người khác để thắng.', 'The killer hiding in the crew. Take people down to win.'),
     todo: [
       l('Lại gần một người rồi bấm K / nút Hạ gục (có thời gian hồi).', 'Get close to someone and press K / the Kill button (it has a cooldown).'),
-      l('Làm nhiệm vụ để chứng minh mình trong sạch — nhiệm vụ của bạn vẫn tính vào tiến độ chung.', 'Do tasks to prove you are innocent — they still count toward the shared progress.'),
+      l('Giả vờ làm nhiệm vụ để ngụy trang — nhiệm vụ của bạn không tính vào tiến độ. Câu giờ cho tới hết canh năm cũng là thắng.', 'Pretend to do tasks to blend in — yours do not count. Stalling until the fifth watch ends is also a win.'),
       l('Trong họp: nói dối khéo, đổ nghi ngờ sang người khác.', 'In meetings: lie smoothly and shift suspicion.'),
     ],
     note: l('Không thể hạ gục đồng bọn. Thắng khi số Âm Binh ≥ số Người Dân còn sống.', 'You cannot kill partners. Win when Shadows ≥ living villagers.'),
@@ -50,14 +50,18 @@ const TXT = {
     tabs: { story: 'Câu chuyện', flow: 'Cách chơi', roles: 'Vai trò' },
     storyH: 'Năm Canh Trước Bình Minh',
     story: [
-      'Kinh thành Huế, đêm cuối tháng Mười Một. Rạng sáng mai, Lễ Ban Sóc — lễ ban lịch năm mới của triều Nguyễn — sẽ diễn ra trước Ngọ Môn. Đoàn chỉ còn năm canh để chuẩn bị.',
-      'Nhưng trong đoàn có Âm Binh — bóng đêm muốn giữ kinh thành mãi ở đêm cuối năm. Không có lịch, cả kinh thành sẽ lạc mất thời gian. (Truyện hư cấu trong game.)',
-      'Mỗi nhiệm vụ là một việc thật của buổi lễ: xem trăng định ngày Sóc, in lịch bằng mộc bản, đóng ấn, dượt Nhã nhạc, xếp bá quan theo phẩm sơn, dẫn đoàn qua 5 cửa Ngọ Môn, lau Cửu Đỉnh, phục dựng tường thơ, làm bánh bèo. Cứ mỗi 20% tiến độ, trống điểm sang canh mới — tới canh năm là bình minh!',
+      'Đêm cuối tháng Mười Một tại kinh thành Huế.',
+      'Sáng mai, triều đình cử hành Lễ Ban Sóc trước Ngọ Môn để ban lịch năm mới cho cả nước. Bá quan sẽ xếp hàng ngoài sân, dân chúng đứng chờ từ sớm, và từng cuốn lịch phải được trao tận tay khi trời vừa hửng sáng.',
+      'Thợ in, nhạc công, nghệ nhân và lính Ngự Lâm đã thức suốt mấy đêm liền. Vậy mà việc vẫn còn ngổn ngang: trăng chưa xem xong để định ngày Sóc, mộc bản chưa in, ấn chưa đóng, Nhã nhạc chưa tập lại lần cuối, Cửu Đỉnh còn phủ bụi. Đoàn chỉ còn năm canh để lo cho xong mọi việc.',
+      'Nhưng Âm Binh đã trà trộn vào đoàn. Chúng đi lại, nói cười, làm việc như mọi người. Chúng muốn kinh thành mắc kẹt mãi trong đêm cuối năm. Không có lịch, sẽ không ai biết hôm nay là ngày nào, và trời sẽ không bao giờ sáng.',
+      'Đêm có năm canh, mỗi canh trống lại điểm báo giờ. Hết canh năm mà việc chưa xong thì trời sáng không có lịch — Âm Binh thắng.',
+      'Hãy hoàn thành nhiệm vụ, lật mặt Âm Binh và đưa kinh thành tới bình minh!',
     ],
+    storyLink: { term: 'Lễ Ban Sóc', title: 'Xem giới thiệu về Lễ Ban Sóc', url: 'https://vi.wikipedia.org/wiki/L%E1%BB%85_Ban_S%C3%B3c' },
     flowH: 'Một ván diễn ra thế nào?',
     steps: (m: number) => [
       ['1. Nhận vai', 'Mỗi người nhận một vai bí mật: Nghệ Nhân, Lính Ngự Lâm hoặc Âm Binh (1–2 người tuỳ số người chơi).'],
-      ['2. Chạy & làm nhiệm vụ', 'Đi bằng WASD / phím mũi tên / joystick. Tới vòng sáng vàng và bấm E / Space để làm mini-game. Thanh tiến độ là 5 canh trống của cả đoàn — đủ canh năm là trời sáng.'],
+      ['2. Chạy & làm nhiệm vụ', 'Đi bằng WASD / phím mũi tên / joystick. Tới vòng sáng vàng và bấm E / Space để làm mini-game. Thanh thời gian chia 5 canh tự chạy (dừng khi họp); thanh xanh bên dưới là tiến độ nhiệm vụ cả đoàn — phải đầy trước khi hết canh năm. Bị hạ gục vẫn phải làm tiếp nhiệm vụ.'],
       ['3. Âm Binh ra tay', `Âm Binh lại gần và bấm K để hạ gục (hồi ${GAME.killCooldownSec}s). Nạn nhân thành hồn ma, để lại thi thể.`],
       ['4. Báo cáo / họp khẩn', 'Thấy thi thể thì bấm R. Hoặc ra Án Ban Lịch ở Sân Ngọ Môn đánh chuông Ngũ Phụng (mỗi người 1 lần).'],
       ['5. Bỏ phiếu', `Họp tối đa ~${m}s: chat và bỏ phiếu loại một người (hoặc bỏ qua). Nhiều phiếu nhất bị loại; hoà phiếu thì không ai bị loại.`],
@@ -88,14 +92,18 @@ const TXT = {
     tabs: { story: 'Story', flow: 'How to play', roles: 'Roles' },
     storyH: 'Five Watches Before Dawn',
     story: [
-      'The Imperial City of Huế, the last night of the 11th lunar month. At dawn the Ban Sóc ceremony — when the Nguyễn court granted the new year’s calendar — will be held at the Meridian Gate. The crew has five night watches left.',
-      'But the Shadow hides among them — a darkness that wants the old year’s last night to last forever. Without a calendar the whole capital would lose track of time. (Fictional story.)',
-      'Every task is a real part of the ceremony: read the moon for the new-moon day, print the calendar from woodblocks, seal it, rehearse royal court music, line up the mandarins by rank, guide the procession through the 5 gates, dust the Nine Urns, restore a poem wall, make bánh bèo. Every 20% the night drum strikes the next watch — the fifth watch is dawn!',
+      'The last night of the 11th lunar month in the Imperial City of Huế.',
+      'At dawn the court will hold the Ban Sóc ceremony at the Meridian Gate to grant the new year’s calendar to the whole country. The mandarins will line up in the courtyard, crowds will gather early, and every calendar must be handed out as the sky begins to brighten.',
+      'Printers, musicians, artisans and Royal Guards have been awake for nights on end. Yet so much is still undone: the moon has not been read to fix the new-moon day, the woodblocks are not printed, the seals are not stamped, the court music needs one last rehearsal, and dust still covers the Nine Urns. The crew has only five night watches left to get everything ready.',
+      'But Shadows have slipped in among them. They walk, laugh and work like everyone else. They want the capital stuck in the old year’s last night forever. Without a calendar no one will know what day it is, and the sun will never rise.',
+      'The night has five watches and the drum strikes each one. If the work is not done when the fifth watch ends, dawn comes without a calendar — the Shadows win.',
+      'Finish your tasks, unmask the Shadows and lead the capital to dawn!',
     ],
+    storyLink: { term: 'Ban Sóc ceremony', title: 'About the Ban Sóc ceremony (Vietnamese Wikipedia)', url: 'https://vi.wikipedia.org/wiki/L%E1%BB%85_Ban_S%C3%B3c' },
     flowH: 'How does a game go?',
     steps: (m: number) => [
       ['1. Get a role', 'Everyone secretly gets a role: Artisan, Royal Guard or Shadow (1–2 Shadows depending on player count).'],
-      ['2. Run & do tasks', 'Move with WASD / arrows / joystick. Go to a golden ring and press E / Space to play a mini-game. The progress bar is the five night watches of the whole crew — the fifth watch is dawn.'],
+      ['2. Run & do tasks', 'Move with WASD / arrows / joystick. Go to a golden ring and press E / Space to play a mini-game. The time bar runs through 5 night watches (paused in meetings); the green bar below is the crew’s task progress — fill it before the fifth watch ends. Ghosts keep doing tasks too.'],
       ['3. The Shadow strikes', `The Shadow gets close and presses K to kill (${GAME.killCooldownSec}s cooldown). The victim becomes a ghost and leaves a body.`],
       ['4. Report / emergency', 'Found a body? Press R. Or strike the Ngũ Phụng bell at the calendar table in the Meridian Gate Courtyard (once per player).'],
       ['5. Vote', `Meeting lasts up to ~${m}s: chat and vote to eject one player (or skip). Most votes is ejected; a tie ejects nobody.`],
@@ -151,9 +159,20 @@ export function Guide({ onClose }: { onClose: () => void }) {
           {tab === 'story' && (
             <>
               <h4>{tx.storyH}</h4>
-              {tx.story.map((p) => (
-                <p key={p}>{p}</p>
-              ))}
+              {tx.story.map((p) => {
+                const { term, title, url } = tx.storyLink;
+                const at = p.indexOf(term);
+                if (at < 0) return <p key={p}>{p}</p>;
+                return (
+                  <p key={p}>
+                    {p.slice(0, at)}
+                    <a className="guide-ref" href={url} title={title} target="_blank" rel="noopener noreferrer">
+                      {term}
+                    </a>
+                    {p.slice(at + term.length)}
+                  </p>
+                );
+              })}
             </>
           )}
 

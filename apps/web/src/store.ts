@@ -24,9 +24,15 @@ export type RoomView = {
   phaseEndsAt: number;
   progress: number;
   progressTarget: number;
+  /** night clock: elapsed = (nightPausedAt || serverNow) - nightStartAt; 0 = not running */
+  nightStartAt: number;
+  nightPausedAt: number;
   meetingReason: string;
   killers: number;
   tasksPerPlayer: number;
+  /** whole-night length (min); nightAuto = follows lobby size until the host sets it */
+  nightMin: number;
+  nightAuto: boolean;
   crewAlive: number;
   killersAlive: number;
   players: PlayerView[];

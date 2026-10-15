@@ -55,6 +55,15 @@ export function useCountdown(endsAt: number) {
 
 export const fmt = (sec: number | null) => (sec == null ? '' : `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`);
 
+/** Countdown text with fixed-width digit cells: the UI font has no tabular figures, so ticking numbers would jitter. */
+export function Digits({ text }: { text: string | number }) {
+  return (
+    <span className="digits">
+      {[...String(text)].map((c, i) => (/\d/.test(c) ? <i key={i}>{c}</i> : c))}
+    </span>
+  );
+}
+
 export function RoleBadge({ role, size = 48 }: { role: RoleId; size?: number }) {
   return <img className="role-icon" src={asset(`common/ui/roles/${ROLE_INFO[role].icon}.webp`)} width={size} height={size} alt={ROLE_INFO[role].name} />;
 }

@@ -33,9 +33,16 @@ export class GameState extends Schema {
   @type('uint16') progress = 0;
   @type('uint16') progressTarget = 6;
   @type('string') meetingReason = '';
+  /** night clock (5 canh): elapsed = (nightPausedAt || now) - nightStartAt; 0 = not running */
+  @type('float64') nightStartAt = 0;
+  /** non-zero while the clock is paused (meetings) */
+  @type('float64') nightPausedAt = 0;
   /** 0 = auto */
   @type('uint8') killers = 0;
   @type('uint8') tasksPerPlayer = 4;
+  /** whole-night length in minutes; recomputed from players/killers/tasks while nightAuto */
+  @type('uint8') nightMin = 5;
+  @type('boolean') nightAuto = true;
   /** living players per faction — counts only, never who */
   @type('uint8') crewAlive = 0;
   @type('uint8') killersAlive = 0;

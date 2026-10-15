@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { sfx } from './minigames/kit';
-import { AREA_RECTS, HUE_AREAS, HUE_STATIONS, LAYOUT_H, LAYOUT_W, ROLE_INFO, type AreaId } from '@hidden-truth/shared';
+import { AREA_RECTS, GAME, HUE_AREAS, canhMs as canhMsFor, HUE_NIGHT_START_HOUR, HUE_STATIONS, LAYOUT_H, LAYOUT_W, ROLE_INFO, type AreaId } from '@hidden-truth/shared';
 
 function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''; pending: Set<AreaId>; pos: { x: number; y: number } | null; big?: boolean; onClick?: () => void }) {
   const ids = Object.keys(AREA_RECTS) as AreaId[];
@@ -35,7 +35,7 @@ function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''
 import { send } from '../net';
 import { useStore } from '../store';
 import { useT } from '../i18n';
-import { Icon, RoleBadge, asset, fmt, useCountdown } from './common';
+import { Digits, Icon, RoleBadge, asset, fmt, useCountdown } from './common';
 import { MapView } from './MapView';
 
 /** Sweeping ring over a round button: fills clockwise from 0 to 100% while the cooldown runs (pure CSS animation, no re-render). */
@@ -61,28 +61,137 @@ function CooldownRing({ readyAt }: { readyAt: number }) {
   );
 }
 
-/** Night-watch drum banner: shown each time the shared progress reaches the next canh. */
+/** Night-watch drum banner: shown (with the drum) each time a new canh begins. */
 function CanhBanner() {
   const canh = useStore((s) => s.canh);
   const [show, setShow] = useState(false);
+  useEffect(() => sfx.preloadDrum(), []);
   useEffect(() => {
     if (!canh) return;
     setShow(true);
-    sfx.watch();
-    const t = setTimeout(() => setShow(false), 4200);
+    sfx.watch(canh.n);
+    const t = setTimeout(() => setShow(false), 5200);
     return () => clearTimeout(t);
   }, [canh?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!canh || !show) return null;
   return (
-    <div className="canh-banner" key={canh.id}>
+    <div className={`canh-banner ${canh.n > GAME.canhCount ? 'dawn' : ''}`} key={canh.id}>
       <img src={asset('maps/co-do-hue/minigames/hue-ui-trong-canh.webp')} alt="" />
       <div>
         <b>
-          {Array.from({ length: 5 }, (_, i) => (
+          {Array.from({ length: GAME.canhCount }, (_, i) => (
             <i key={i} className={i < canh.n ? 'on' : ''} />
           ))}
         </b>
         <span>{canh.text}</span>
+      </div>
+    </div>
+  );
+}
+
+const CANH_NAMES = ['một', 'hai', 'ba', 'tư', 'năm'];
+const CANH_NAMES_EN = ['I', 'II', 'III', 'IV', 'V'];
+
+/** Night clock: 5 canh that run on time (paused during meetings). Elapsed is derived from synced timestamps. */
+function useNight() {
+  const room = useStore((s) => s.room)!;
+  const offset = useStore((s) => s.timeOffset);
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(t);
+  }, []);
+  if (!room.nightStartAt) return null;
+  const canhMs = canhMsFor(room.nightMin);
+  const total = canhMs * GAME.canhCount;
+  const elapsed = Math.min(total, Math.max(0, (room.nightPausedAt || now + offset) - room.nightStartAt));
+  // in-game hour: canh một starts 19:00, each canh is 2 hours
+  const mins = Math.floor((elapsed / canhMs) * 120);
+  const h = (HUE_NIGHT_START_HOUR + Math.floor(mins / 60)) % 24;
+  return {
+    frac: elapsed / total,
+    canh: Math.min(GAME.canhCount, Math.floor(elapsed / canhMs) + 1),
+    clock: `${String(h).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`,
+    left: Math.ceil((total - elapsed) / 1000),
+    canhLeft: Math.ceil((canhMs - (elapsed % canhMs)) / 1000),
+    paused: !!room.nightPausedAt,
+  };
+}
+
+function NightBar({ pct, progress, target }: { pct: number; progress: number; target: number }) {
+  const night = useNight();
+  const t = useT();
+  const en = t('canh') !== 'Canh';
+  if (!night) return null;
+  const last = night.canh === GAME.canhCount;
+  return (
+    <div className={`night-wrap ${last ? 'last' : ''} ${night.paused ? 'paused' : ''}`}>
+      <div className="nw-row">
+      <div className="night-clock" title={t('nightTitle')}>
+        <img src={asset('maps/co-do-hue/minigames/hue-ui-trong-canh.webp')} width={26} height={26} alt="" />
+        <b className="nc-time"><Digits text={night.clock} /></b>
+        <span className="nc-canh">
+          {t('canh')} {en ? CANH_NAMES_EN[night.canh - 1] : CANH_NAMES[night.canh - 1]}
+        </span>
+        <span className="nc-left" title={t('canhLeft')}>
+          {night.paused ? t('nightPaused') : <>{t('nightLeft')} <Digits text={fmt(night.left)} /></>}
+        </span>
+      </div>
+      <div className="night-bar" title={`${t('canhLeft')}: ${fmt(night.canhLeft)}`}>
+        {Array.from({ length: GAME.canhCount }, (_, i) => {
+          const f = Math.min(1, Math.max(0, night.frac * GAME.canhCount - i));
+          return (
+            <div key={i} className={`nb-seg ${f >= 1 ? 'done' : f > 0 ? 'cur' : ''}`}>
+              <i style={{ width: `${f * 100}%` }} />
+              <span>{en ? CANH_NAMES_EN[i] : CANH_NAMES[i]}</span>
+            </div>
+          );
+        })}
+        <img className="nb-moon" src={asset('maps/co-do-hue/minigames/hue-mg-moon-4.webp')} alt="" style={{ left: `${night.frac * 100}%` }} />
+      </div>
+      </div>
+      <div className="progress" title={t('progress')}>
+        <div className="fill" style={{ width: `${pct}%` }} />
+        <span>
+          {t('progress')} · {progress}/{target} ({pct}%)
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** After dying: tell the player (once) that ghosts keep doing tasks — the crew still needs them before canh năm ends. */
+function GhostNotice({ dead, crew }: { dead: boolean; crew: boolean }) {
+  const phase = useStore((s) => s.room?.phase);
+  const cinematic = useStore((s) => s.cinematic);
+  const t = useT();
+  const [state, setState] = useState<'none' | 'open' | 'seen'>('none');
+  useEffect(() => {
+    if (!dead) setState('none');
+    else if (state === 'none' && phase === 'explore' && !cinematic) setState('open');
+  }, [dead, phase, cinematic, state]);
+  if (!dead || phase !== 'explore') return null;
+  if (state !== 'open') return <div className="ghost-strip">{crew ? t('ghostStrip') : t('ghostStripKiller')}</div>;
+  return (
+    <div className="modal-backdrop ghost-backdrop">
+      <div className="ghost-notice">
+        <img src={asset('maps/co-do-hue/minigames/hue-ui-hon-ma.webp')} width={120} height={120} alt="" />
+        <h2>{t('ghostTitle')}</h2>
+        {crew ? (
+          <>
+            <p>{t('ghostBody1')}</p>
+            <p className="ghost-em">{t('ghostBody2')}</p>
+            <ul>
+              <li>{t('ghostRule1')}</li>
+              <li>{t('ghostRule2')}</li>
+            </ul>
+          </>
+        ) : (
+          <p>{t('ghostKillerBody')}</p>
+        )}
+        <button className="btn" autoFocus onClick={() => setState('seen')}>
+          {crew ? t('ghostGo') : t('close')}
+        </button>
       </div>
     </div>
   );
@@ -134,50 +243,40 @@ export function Hud() {
   return (
     <>
       {inGame && <CanhBanner />}
+      {/* top centre: the (small) location plate on top, night clock + progress under it */}
       <div className="hud-top">
         {area && (
           <div className="area-name" key={area}>
             <span>{HUE_AREAS[area].name}</span>
           </div>
         )}
+        {inGame && room.phase !== 'ended' && <NightBar pct={pct} progress={room.progress} target={room.progressTarget} />}
         {inGame && left != null && (
           <div className="hud-status">
             <span className="timer">
-              <Icon name="timer" size={20} /> {fmt(left)}
-            </span>
-          </div>
-        )}
-        {inGame && room.phase !== 'ended' && room.crewAlive + room.killersAlive > 0 && (
-          <div className="alive-count" title={t('aliveTitle')}>
-            <span className="ac crew" key={`c${room.crewAlive}`}>
-              <img src={asset('common/ui/count-crew.webp')} alt="" draggable={false} />
-              <b>{room.crewAlive}</b>
-              <small>{t('crewAlive')}</small>
-            </span>
-            <i className="ac-sep" aria-hidden />
-            <span className="ac killer" key={`k${room.killersAlive}`}>
-              <img src={asset('common/ui/count-killer.webp')} alt="" draggable={false} />
-              <b>{room.killersAlive}</b>
-              <small>{t('killersAlive')}</small>
+              <Icon name="timer" size={20} /> <Digits text={fmt(left)} />
             </span>
           </div>
         )}
       </div>
-
-      {inGame && room.phase !== 'ended' && (
-        <div className="progress-wrap" title={t('progress')}>
-          <img className="ui-icon" src={asset('maps/co-do-hue/minigames/hue-ui-trong-canh.webp')} width={26} height={26} alt="" />
-          <div className="progress">
-            <div className="fill" style={{ width: `${pct}%` }} />
-            {[1, 2, 3, 4].map((k) => (
-              <i key={k} className={`canh-tick ${pct >= k * 20 ? 'on' : ''}`} style={{ left: `${k * 20}%` }} />
-            ))}
-            <span>
-              {t('canh')} {Math.min(5, Math.floor(pct / 20) + (pct >= 100 ? 0 : 1))}/5 · {room.progress}/{room.progressTarget} ({pct}%)
-            </span>
-          </div>
+      {/* top right: who is still standing */}
+      {inGame && room.phase !== 'ended' && room.crewAlive + room.killersAlive > 0 && (
+        <div className="alive-count" title={t('aliveTitle')}>
+          <span className="ac crew" key={`c${room.crewAlive}`}>
+            <img src={asset('common/ui/count-crew.webp')} alt="" draggable={false} />
+            <b>{room.crewAlive}</b>
+            <small>{t('crewAlive')}</small>
+          </span>
+          <i className="ac-sep" aria-hidden />
+          <span className="ac killer" key={`k${room.killersAlive}`}>
+            <img src={asset('common/ui/count-killer.webp')} alt="" draggable={false} />
+            <b>{room.killersAlive}</b>
+            <small>{t('killersAlive')}</small>
+          </span>
         </div>
       )}
+
+      {me && inGame && <GhostNotice dead={!alive} crew={me.faction === 'crew'} />}
 
       {me && inGame && (
         <button className={`role-card ${me.faction}`} onClick={() => set({ introOpen: true, introQuick: true })} title={t('roleGoal')}>
@@ -261,7 +360,7 @@ export function Hud() {
             >
               <img src={asset('common/ui/btn-kill.webp')} alt="" draggable={false} />
               {cdLeft ? <CooldownRing readyAt={me!.killReadyAt ?? 0} /> : null}
-              {cdLeft ? <span className="cd">{cdLeft}</span> : null}
+              {cdLeft ? <span className="cd"><Digits text={cdLeft} /></span> : null}
               <kbd>K</kbd>
               <em>{t('kill')}</em>
             </button>
