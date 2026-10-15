@@ -5,6 +5,9 @@ import { RoleBadge, asset, useEscape } from './common';
 
 const LINE_GAP = 1.9; // seconds between story lines
 const LINES = HUE_INTRO.split(/(?<=[.!?])\s+/).filter(Boolean);
+// last line starts at 1.2 + (n-1)*gap and its fade-in lasts 1.1s; then a short beat before the role
+const STORY_MS = (1.2 + (LINES.length - 1) * LINE_GAP + 1.1 + 0.8) * 1000;
+const ROLE_MS = 5000; // role reveal is held this long before everyone drops into the game together
 
 /** Cinematic opening: fade to dark -> story lines -> role reveal -> fade into the festival night. */
 export function IntroModal() {
@@ -13,7 +16,7 @@ export function IntroModal() {
   const quick = useStore((s) => s.introQuick);
   const set = useStore((s) => s.set);
   const mapSlug = useStore((s) => s.room?.mapSlug ?? 'co-do-hue');
-  const [stage, setStage] = useState<'story' | 'role'>('story');
+  const [stage, setStage] = useState<'story' | 'role' | 'game'>('story');
   const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
@@ -23,27 +26,30 @@ export function IntroModal() {
     }
   }, [open]);
 
-  // auto-advance from story to role once all lines have been shown
+  // the opening is not skippable so all players enter at the same moment: story -> role -> game
   useEffect(() => {
-    if (!open || stage !== 'story') return;
-    const t = setTimeout(() => setStage('role'), (LINES.length * LINE_GAP + 2.2) * 1000);
+    if (!open || quick) return;
+    const t = setTimeout(() => setStage(stage === 'story' ? 'role' : 'game'), stage === 'story' ? STORY_MS : ROLE_MS);
     return () => clearTimeout(t);
-  }, [open, stage]);
+  }, [open, quick, stage]);
+  useEffect(() => {
+    if (stage === 'game') close();
+  }, [stage]);
 
   const close = () => {
     if (leaving) return;
     setLeaving(true);
     setTimeout(() => set({ introOpen: false }), 600);
   };
-  const next = () => (stage === 'story' ? setStage('role') : close());
-  useEscape(close, open && !!me);
+  // only the quick re-open (from the HUD role card) can be dismissed by the player
+  useEscape(close, open && quick && !!me);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !quick) return;
     const h = (e: KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        next();
+        close();
       }
     };
     window.addEventListener('keydown', h);
@@ -55,7 +61,7 @@ export function IntroModal() {
   const killer = me.faction === 'killer';
 
   return (
-    <div className={`opening ${leaving ? 'leaving' : ''} ${quick ? 'quick' : ''}`} onClick={next}>
+    <div className={`opening ${leaving ? 'leaving' : ''} ${quick ? 'quick' : ''}`} onClick={quick ? close : undefined}>
       {stage === 'story' ? (
         <div className="opening-story" key="story">
           <img className="opening-art" src={asset(mapArt(mapSlug, 'home-bg'))} alt="" />
@@ -68,7 +74,6 @@ export function IntroModal() {
               </p>
             ))}
           </div>
-          <span className="opening-hint">Bấm để tiếp tục</span>
         </div>
       ) : (
         <div className={`opening-role ${me.faction}`} key="role">
@@ -76,7 +81,7 @@ export function IntroModal() {
           <div className="opening-badge">
             <RoleBadge role={me.role} size={140} />
           </div>
-          <span className="faction">{killer ? 'Phe Hắc Ảnh' : 'Phe Người Dân'}</span>
+          <span className="faction">{killer ? 'Phe Âm Binh' : 'Phe Người Dân'}</span>
           <h2>{info.name}</h2>
           <p className="opening-desc">{info.desc}</p>
           {killer && me.mates && me.mates.length > 0 && (
@@ -94,15 +99,17 @@ export function IntroModal() {
               <>Làm nhiệm vụ ở các vòng sáng vàng. Thấy thi thể thì bấm <kbd>R</kbd>.</>
             )}
           </p>
-          <button
-            className="btn primary big"
-            onClick={(e) => {
-              e.stopPropagation();
-              close();
-            }}
-          >
-            Vào Kinh thành
-          </button>
+          {quick && (
+            <button
+              className="btn primary big"
+              onClick={(e) => {
+                e.stopPropagation();
+                close();
+              }}
+            >
+              Đóng
+            </button>
+          )}
         </div>
       )}
     </div>

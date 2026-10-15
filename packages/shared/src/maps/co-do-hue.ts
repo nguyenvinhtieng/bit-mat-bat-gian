@@ -131,7 +131,7 @@ export const HUE_STORY_TITLE = 'Năm Canh Trước Bình Minh';
 export const HUE_STORY_SUBTITLE = 'Đêm Ban Sóc';
 
 export const HUE_INTRO =
-  'Kinh thành Huế, đêm cuối tháng Mười Một. Rạng sáng mai, Lễ Ban Sóc sẽ diễn ra trước Ngọ Môn — lịch năm mới phải được trao tận tay bá quan và muôn dân. Đoàn nghệ nhân, thợ in, nhạc công và lính Ngự Lâm chỉ còn năm canh để chuẩn bị. Nhưng trong đoàn có Hắc Ảnh — kẻ muốn đêm nay không bao giờ kết thúc. Không có lịch, cả kinh thành sẽ lạc mất thời gian.';
+  'Kinh thành Huế, đêm cuối tháng Mười Một. Rạng sáng mai, Lễ Ban Sóc sẽ diễn ra trước Ngọ Môn — lịch năm mới phải được trao tận tay bá quan và muôn dân. Đoàn nghệ nhân, thợ in, nhạc công và lính Ngự Lâm chỉ còn năm canh để chuẩn bị. Nhưng trong đoàn có Âm Binh — kẻ muốn đêm nay không bao giờ kết thúc. Không có lịch, cả kinh thành sẽ lạc mất thời gian.';
 
 /** Night-watch drum: one line per canh (progress 20%, 40% … 100%). */
 export const HUE_CANH = [
@@ -144,6 +144,6 @@ export const HUE_CANH = [
 
 export const HUE_ENDINGS = {
   tasks: 'Canh năm đã điểm — bình minh lên trên Lầu Ngũ Phụng, lịch năm mới được ban cho muôn dân!',
-  vote: 'Bóng đêm tan — Hắc Ảnh bị trục xuất, bình minh đến đúng giờ.',
+  vote: 'Bóng đêm tan — Âm Binh bị trục xuất, bình minh đến đúng giờ.',
   killer: 'Trống canh năm không bao giờ điểm — kinh thành chìm trong một đêm không có ngày mai.',
 };

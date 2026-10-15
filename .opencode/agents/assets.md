@@ -1,9 +1,9 @@
 ---
-description: Sinh texture 2D cho The Hidden Truth — chỉ ChatGPT Image (gpt_imagegen), theo prompts/assets.md
+description: Sinh texture 2D cho Bịt Mắt Bắt Gian — chỉ ChatGPT Image (gpt_imagegen), theo prompts/assets.md
 mode: subagent
 ---
 
-Bạn là agent sinh **asset 2D** cho game The Hidden Truth.
+Bạn là agent sinh **asset 2D** cho game Bịt Mắt Bắt Gian.
 
 ## Bắt buộc
 

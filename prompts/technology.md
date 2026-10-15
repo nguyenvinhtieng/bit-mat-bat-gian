@@ -1,4 +1,4 @@
-# Công nghệ đề xuất — The Hidden Truth (Web multiplayer realtime)
+# Công nghệ đề xuất — Bịt Mắt Bắt Gian (Web multiplayer realtime)
 
 > Mục tiêu: chơi trên **trình duyệt**, **nhiều người cùng phòng**, **mời bạn bè** (mã phòng / link), gameplay **mượt** trên layout cố định (di chuyển, task, họp) như mô tả trong `cot-truyen-role.md`.  
 > Tài liệu này chọn hướng **ưu tiên hiệu năng + tốc độ phát triển**, và **quy trình AI** (thiết kế → sinh asset → code → chạy thử) để agent có thể triển khai end-to-end.
@@ -22,7 +22,7 @@ Chi tiết cài plugin, OAuth, và quy trình gọi tool: **`prompts/opencode.md
 
 Game **2D** chạy trên **Canvas / WebGL**: quản lý **scene**, **animation**, **input**, **camera** và **physics** (Arcade / Matter tùy map).
 
-| Khả năng | Dùng trong The Hidden Truth |
+| Khả năng | Dùng trong Bịt Mắt Bắt Gian |
 |----------|-----------------------------|
 | Scene / loader | Boot → Lobby → Game; preload atlas theo `manifests/*.assets.json` |
 | Sprite & animation | Avatar common, prop map, marker task |

@@ -1,4 +1,4 @@
-# The Hidden Truth: Bí Ẩn Việt Nam
+# Bịt Mắt Bắt Gian: Truy Tìm Kẻ Gian Giữa Di Sản Việt
 
 > **Thể loại:** trốn chạy · nhiệm vụ văn hoá · tìm kẻ sát nhân (kiểu Among Us, đơn giản).
 > Cốt truyện / nhiệm vụ theo địa điểm nằm trong `map/*.md`. Không còn cơ chế điều tra bằng manh mối.
@@ -20,8 +20,8 @@ Sau mỗi nhiệm vụ, người chơi được học một điều thật về 
 
 ## 3. Điều kiện thắng
 
-- **Người Dân:** loại hết Hắc Ảnh, **hoặc** hoàn thành toàn bộ nhiệm vụ.
-- **Hắc Ảnh:** số Hắc Ảnh còn sống ≥ số Người Dân còn sống.
+- **Người Dân:** loại hết Âm Binh, **hoặc** hoàn thành toàn bộ nhiệm vụ.
+- **Âm Binh:** số Âm Binh còn sống ≥ số Người Dân còn sống.
 
 ## 4. Role (đơn giản, 3 vai)
 
@@ -29,9 +29,9 @@ Sau mỗi nhiệm vụ, người chơi được học một điều thật về 
 |------|-----|----------|
 | **Nghệ Nhân Cố Đô** | Người Dân | Không có; làm nhiệm vụ, quan sát, bỏ phiếu |
 | **Lính Ngự Lâm** | Người Dân | Một lá chắn: chặn đòn hạ gục đầu tiên (cả hai cùng biết) |
-| **Hắc Ảnh** | Sát nhân | Hạ gục (có hồi chiêu). Có danh sách nhiệm vụ giả. Biết đồng bọn |
+| **Âm Binh** | Sát nhân | Hạ gục (có hồi chiêu). Có danh sách nhiệm vụ giả. Biết đồng bọn |
 
-Số Hắc Ảnh: 1 (2–7 người), 2 (8–10 người). Lính Ngự Lâm xuất hiện khi có ≥3 Người Dân.
+Số Âm Binh: 1 (2–7 người), 2 (8–10 người). Lính Ngự Lâm xuất hiện khi có ≥3 Người Dân.
 
 Role dùng chung cho mọi map; map chỉ đổi tên khu vực, nhiệm vụ và kiến thức.
 

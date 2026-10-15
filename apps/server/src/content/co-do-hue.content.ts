@@ -155,7 +155,7 @@ function build(taskId: TaskId): Built {
       return {
         data: {
           taskId,
-          prompt: 'Khâm Thiên Giám phải định đúng ngày Sóc để soạn lịch năm mới, nhưng Hắc Ảnh đã xáo trộn sổ chiêm nghiệm.',
+          prompt: 'Khâm Thiên Giám phải định đúng ngày Sóc để soạn lịch năm mới, nhưng Âm Binh đã xáo trộn sổ chiêm nghiệm.',
           moons: shuffle(moons),
         },
         expected: moons.map((m) => m.id),
@@ -198,7 +198,7 @@ function build(taskId: TaskId): Built {
       return {
         data: {
           taskId,
-          prompt: 'Hắc Ảnh đã làm rối hàng chầu trước điện Thái Hòa. Hãy đưa bá quan về đúng chỗ trước giờ thiết triều.',
+          prompt: 'Âm Binh đã làm rối hàng chầu trước điện Thái Hòa. Hãy đưa bá quan về đúng chỗ trước giờ thiết triều.',
           officials: shuffle(officials),
         },
         expected: Object.fromEntries(officials.map((o) => [`${o.side}-${o.rank}`, o.id])),
@@ -225,7 +225,7 @@ function build(taskId: TaskId): Built {
       return {
         data: {
           taskId,
-          prompt: 'Hắc Ảnh đã phủ tro lên Cửu Đỉnh trước Thế Miếu. Lau sạch để kiểm tra các hình đúc nổi.',
+          prompt: 'Âm Binh đã phủ tro lên Cửu Đỉnh trước Thế Miếu. Lau sạch để kiểm tra các hình đúc nổi.',
           urn: pick(URNS),
           cells,
           targets: targets.map((c) => c.motif),
@@ -256,7 +256,7 @@ function build(taskId: TaskId): Built {
       return {
         data: {
           taskId,
-          prompt: 'Hắc Ảnh đã gỡ mất 4 ô trên tường “nhất thi nhất họa” của điện Nội Các.',
+          prompt: 'Âm Binh đã gỡ mất 4 ô trên tường “nhất thi nhất họa” của điện Nội Các.',
           panels: full.map((p) => (missing.has(p.slot) ? { slot: p.slot } : p)),
           tray,
           themes: THEMES,

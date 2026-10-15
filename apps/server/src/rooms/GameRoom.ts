@@ -129,6 +129,7 @@ export class GameRoom extends Room<GameState> {
     } else {
       p.connected = false;
       p.alive = false;
+      this.syncAlive();
     }
     this.system(`${p.name} đã rời phòng.`);
     if (this.state.hostId === client.sessionId) {
@@ -164,9 +165,15 @@ export class GameRoom extends Room<GameState> {
       if (p && this.state.phase === 'lobby') p.ready = !!msg?.ready;
     });
 
-    this.onMessage('configure', (client, msg: { quick?: boolean }) => {
+    this.onMessage('configure', (client, msg: { killers?: number; tasksPerPlayer?: number }) => {
       if (client.sessionId !== this.state.hostId || this.state.phase !== 'lobby') return;
-      if (typeof msg?.quick === 'boolean') this.state.quick = msg.quick;
+      if (Number.isFinite(msg?.tasksPerPlayer)) {
+        this.state.tasksPerPlayer = Math.max(1, Math.min(TASK_IDS.length, Math.floor(msg.tasksPerPlayer!)));
+      }
+      if (Number.isFinite(msg?.killers)) {
+        const maxK = Math.max(1, Math.floor(this.state.players.size / 2));
+        this.state.killers = Math.max(1, Math.min(maxK, Math.floor(msg.killers!)));
+      }
     });
 
     this.onMessage('start', (client) => {
@@ -227,6 +234,19 @@ export class GameRoom extends Room<GameState> {
       if (client.sessionId !== this.state.hostId || this.state.phase !== 'ended') return;
       this.resetToLobby();
     });
+
+    this.onMessage('host:kick', (client, msg: { target: string }) => {
+      if (client.sessionId !== this.state.hostId || this.state.phase !== 'lobby') return;
+      const target = String(msg?.target ?? '');
+      if (!target || target === client.sessionId) return;
+      const victim = this.clients.find((c) => c.sessionId === target);
+      if (!victim) return;
+      const name = this.state.players.get(target)?.name ?? '';
+      victim.send('toast', { text: 'Bạn đã bị chủ phòng mời ra khỏi phòng.', kind: 'warn' });
+      this.lastActive.delete(target);
+      victim.leave(4001);
+      this.system(`Chủ phòng đã mời ${name} ra khỏi phòng.`);
+    });
   }
 
   /** Kick non-host players idle in the lobby for too long. */
@@ -271,13 +291,12 @@ export class GameRoom extends Room<GameState> {
 
   // ---------------------------------------------------------------- phases
   private cfg() {
-    const q = this.state.quick;
     return {
-      tasksPerPlayer: q ? 3 : GAME.tasksPerPlayer,
-      meetingMs: (q ? 45 : GAME.meetingSec) * 1000,
-      killCd: (q ? 15 : GAME.killCooldownSec) * 1000,
-      firstCd: (q ? 10 : GAME.firstKillCooldownSec) * 1000,
-      postMeetingCd: (q ? 10 : GAME.postMeetingCooldownSec) * 1000,
+      tasksPerPlayer: this.state.tasksPerPlayer,
+      meetingMs: GAME.meetingSec * 1000,
+      killCd: GAME.killCooldownSec * 1000,
+      firstCd: GAME.firstKillCooldownSec * 1000,
+      postMeetingCd: GAME.postMeetingCooldownSec * 1000,
     };
   }
 
@@ -285,7 +304,8 @@ export class GameRoom extends Room<GameState> {
     const players = [...this.state.players.values()];
     const n = players.length;
     const c = this.cfg();
-    const killers = Math.min(killersFor(n), n);
+    const maxK = Math.max(1, Math.floor(n / 2));
+    const killers = Math.min(this.state.killers > 0 ? Math.min(this.state.killers, maxK) : killersFor(n), n);
     const crew = n - killers;
     const roles: RoleId[] = [];
     for (let i = 0; i < killers; i++) roles.push('killer');
@@ -304,8 +324,8 @@ export class GameRoom extends Room<GameState> {
         faction,
         objective:
           faction === 'killer'
-            ? 'Hạ gục người trong đoàn cho tới khi số Hắc Ảnh bằng hoặc nhiều hơn số người còn sống. Đừng để bị phát hiện và bị bỏ phiếu loại.'
-            : 'Hoàn thành mọi nhiệm vụ trước canh năm để Lễ Ban Sóc diễn ra lúc bình minh — hoặc tìm ra Hắc Ảnh trong cuộc họp và bỏ phiếu loại họ.',
+            ? 'Hạ gục người trong đoàn cho tới khi số Âm Binh bằng hoặc nhiều hơn số người còn sống. Đừng để bị phát hiện và bị bỏ phiếu loại.'
+            : 'Hoàn thành mọi nhiệm vụ trước canh năm để Lễ Ban Sóc diễn ra lúc bình minh — hoặc tìm ra Âm Binh trong cuộc họp và bỏ phiếu loại họ.',
         tasks: shuffle(TASK_IDS).slice(0, tpp),
         completed: new Set(),
         shield: role === 'guardian',
@@ -323,10 +343,11 @@ export class GameRoom extends Room<GameState> {
     this.state.meetingReason = '';
     this.teleportToSpawns();
     this.setPhase('explore', 0);
+    this.syncAlive();
     for (const p of players) this.sendPrivate(p.id);
     this.broadcast('intro', {});
-    this.system(`Ván bắt đầu — ${killers} Hắc Ảnh đang trà trộn trong đoàn. Làm nhiệm vụ, giữ khoảng cách và quan sát!`);
-    if (n < 4) this.system(`Lưu ý: game thiết kế cho 4–10 người; với ${n} người có ${killers} Hắc Ảnh.`);
+    this.system(`Ván bắt đầu — ${killers} Âm Binh đang trà trộn trong đoàn. Làm nhiệm vụ, giữ khoảng cách và quan sát!`);
+    if (n < 4) this.system(`Lưu ý: game thiết kế cho 4–10 người; với ${n} người có ${killers} Âm Binh.`);
   }
 
   private setPhase(phase: GameState['phase'], durationMs: number) {
@@ -419,6 +440,7 @@ export class GameRoom extends Room<GameState> {
       result.wasKiller = this.secrets.get(ejectedId)?.faction === 'killer';
     }
     result.killersLeft = this.aliveKillers();
+    this.syncAlive();
     this.broadcast('vote:result', result);
     this.system(
       result.ejected
@@ -444,6 +466,11 @@ export class GameRoom extends Room<GameState> {
     return n;
   }
 
+  private syncAlive() {
+    this.state.crewAlive = this.aliveCrew();
+    this.state.killersAlive = this.aliveKillers();
+  }
+
   private totalKillers() {
     let n = 0;
     for (const s of this.secrets.values()) if (s.faction === 'killer') n++;
@@ -462,6 +489,7 @@ export class GameRoom extends Room<GameState> {
     }
     this.state.progress = done;
     this.state.progressTarget = Math.max(1, target);
+    this.syncAlive();
     const total = this.totalKillers();
     const k = this.aliveKillers();
     const c = this.aliveCrew();
@@ -484,12 +512,13 @@ export class GameRoom extends Room<GameState> {
     };
     this.setPhase('ended', 0);
     this.broadcast('end', reveal);
-    this.system(winner === 'crew' ? `Phe Người Dân thắng! ${reason}` : `Hắc Ảnh thắng! ${reason}`);
+    this.system(winner === 'crew' ? `Phe Người Dân thắng! ${reason}` : `Âm Binh thắng! ${reason}`);
     return true;
   }
 
   private resetToLobby() {
     this.secrets.clear();
+    this.syncAlive();
     this.state.progress = 0;
     this.state.meetingReason = '';
     for (const [id, p] of this.state.players) {

@@ -51,7 +51,7 @@ await sleep(meKiller ? 1000 : 120); await shot(meKiller ? 'kill-cine-1' : 'kill-
 await sleep(meKiller ? 450 : 250); await shot(meKiller ? 'kill-cine-2' : 'kill-world-2');
 await page.evaluate(() => window.__store.getState().set({ cinematic: null }));
 await sleep(700); await shot('kill-world-after');
-await page.evaluate(() => { const s = window.__game.scene.getScene('game'); window.__store.getState().set({ cinematic: { kind: 'shield', actor: { name: 'Hắc Ảnh', color: 0 }, victim: { name: 'Lính', color: 1 }, youAre: 'victim', at: { x: s.pred.x + 40, y: s.pred.y }, id: Date.now() } }); });
+await page.evaluate(() => { const s = window.__game.scene.getScene('game'); window.__store.getState().set({ cinematic: { kind: 'shield', actor: { name: 'Âm Binh', color: 0 }, victim: { name: 'Lính', color: 1 }, youAre: 'victim', at: { x: s.pred.x + 40, y: s.pred.y }, id: Date.now() } }); });
 await sleep(1250); await shot('shield-cine');
 await page.evaluate(() => window.__store.getState().set({ cinematic: null }));
 await sleep(120); await shot('shield-world');

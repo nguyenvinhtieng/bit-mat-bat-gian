@@ -6,8 +6,11 @@ import { asset } from './common';
 import { useLang, useT } from '../i18n';
 import { Guide, GuideButton } from './Guide';
 import { LangSwitch } from './LangSwitch';
+import { randomDevName } from '../devNames';
 
 const NAME_KEY = 'tht:name';
+/** dev: every tab gets a fresh themed name so multi-tab testing needs no typing */
+const DEV = import.meta.env.DEV;
 const MAP_KEY = 'tht:map';
 const home = (n: string) => asset(`common/ui/home/${n}.webp`);
 
@@ -24,7 +27,8 @@ export function Home() {
   const t = useT();
   const lang = useLang((s) => s.lang);
   const [showGuide, setShowGuide] = useState(false);
-  const [name, setName] = useState(() => localStorage.getItem(NAME_KEY) ?? '');
+  const [name, setName] = useState(() => (DEV ? randomDevName(readMap()) : localStorage.getItem(NAME_KEY) ?? ''));
+  const [autoName, setAutoName] = useState(DEV);
   const joinMatch = /^\/join\/([A-Za-z0-9]{4,8})/.exec(location.pathname);
   const invited = !!joinMatch;
   const [code, setCode] = useState(joinMatch?.[1]?.toUpperCase() ?? '');
@@ -34,6 +38,7 @@ export function Home() {
   const pickMap = (slug: string) => {
     if (!mapMeta(slug).available) return toast({ text: t('comingSoonToast'), kind: 'info' });
     setMapSlug(slug);
+    if (autoName) setName(randomDevName(slug));
     try {
       localStorage.setItem(MAP_KEY, slug);
     } catch {}
@@ -58,14 +63,37 @@ export function Home() {
       <div className="home-card">
         <img className="home-crest" src={home('home-crest')} alt="" draggable={false} />
         <h1>
-          The Hidden Truth
-          <small>Bí Ẩn Việt Nam</small>
+          Bịt Mắt Bắt Gian
+          <small>Truy Tìm Kẻ Gian Giữa Di Sản Việt</small>
         </h1>
         <p className="tagline">{t('tagline')}</p>
 
         <label className="field">
           {t('displayName')}
-          <input value={name} maxLength={16} placeholder={t('namePlaceholder')} onChange={(e) => setName(e.target.value)} />
+          <span className="name-row">
+            <input
+              value={name}
+              maxLength={16}
+              placeholder={t('namePlaceholder')}
+              onChange={(e) => {
+                setName(e.target.value);
+                setAutoName(false);
+              }}
+            />
+            {DEV && (
+              <button
+                type="button"
+                className="name-dice"
+                title="Dev: random name"
+                onClick={() => {
+                  setName(randomDevName(mapSlug, name));
+                  setAutoName(true);
+                }}
+              >
+                🎲
+              </button>
+            )}
+          </span>
         </label>
 
         {!invited && (

@@ -1,4 +1,4 @@
-Implement The Hidden Truth in this repo. Content/spec already exists — do NOT rewrite a new GDD; follow the markdown specs as source of truth.
+Implement Bịt Mắt Bắt Gian in this repo. Content/spec already exists — do NOT rewrite a new GDD; follow the markdown specs as source of truth.
 
 Read in order:
 - prompts/opencode.md (models & tools)

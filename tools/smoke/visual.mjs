@@ -114,7 +114,7 @@ if (want('kill')) {
   await sleep(100);
   await shot('kill-world', live[0] ?? witness);
   // shield: inject the cinematic locally (overlay + in-world FX)
-  await p1.evaluate(() => { const s = window.__game.scene.getScene('game'); window.__store.getState().set({ cinematic: { kind: 'shield', actor: { name: 'Hắc Ảnh', color: 0 }, victim: { name: 'Lính', color: 1 }, youAre: 'victim', at: { x: s.pred.x + 40, y: s.pred.y }, id: Date.now() } }); });
+  await p1.evaluate(() => { const s = window.__game.scene.getScene('game'); window.__store.getState().set({ cinematic: { kind: 'shield', actor: { name: 'Âm Binh', color: 0 }, victim: { name: 'Lính', color: 1 }, youAre: 'victim', at: { x: s.pred.x + 40, y: s.pred.y }, id: Date.now() } }); });
   await sleep(1250); await shot('shield-cine', p1);
   await p1.evaluate(() => window.__store.getState().set({ cinematic: null }));
   await sleep(150); await shot('shield-world', p1);

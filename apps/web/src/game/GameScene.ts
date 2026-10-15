@@ -119,6 +119,11 @@ export class GameScene extends Phaser.Scene {
 
     const kb = this.input.keyboard!;
     this.keys = kb.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,E,SPACE', false) as Record<string, Phaser.Input.Keyboard.Key>;
+    // Clicking the map releases focus from any HTML input (e.g. chat) so movement keys work again.
+    this.input.on('pointerdown', () => {
+      const ae = document.activeElement as HTMLElement | null;
+      if (ae && ae !== document.body && ['INPUT', 'TEXTAREA', 'SELECT'].includes(ae.tagName)) ae.blur();
+    });
     kb.on('keydown-E', () => this.interact());
     kb.on('keydown-SPACE', () => this.interact());
     kb.on('keydown-K', () => this.doKill());

@@ -113,7 +113,7 @@ export function Cinematic() {
   let sub: React.ReactNode = null;
   if (c.kind === 'kill') {
     title = c.youAre === 'victim' ? 'BẠN BỊ HẠ GỤC' : 'HẠ GỤC';
-    sub = c.youAre === 'victim' ? <>{nm(c.actor.name, actorCol)} là Hắc Ảnh!</> : <>Bạn đã hạ gục {nm(c.victim!.name, victimCol)}</>;
+    sub = c.youAre === 'victim' ? <>{nm(c.actor.name, actorCol)} là Âm Binh!</> : <>Bạn đã hạ gục {nm(c.victim!.name, victimCol)}</>;
   } else if (c.kind === 'shield') {
     title = 'LÁ CHẮN!';
     sub = c.youAre === 'victim' ? <>Lá chắn đã cứu bạn khỏi {nm(c.actor.name, actorCol)}</> : <>{nm(c.victim!.name, victimCol)} đã chặn đòn của bạn</>;

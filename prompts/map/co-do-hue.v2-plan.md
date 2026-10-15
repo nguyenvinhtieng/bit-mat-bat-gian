@@ -23,9 +23,9 @@ Bản mới bám vào **một nghi lễ chỉ có ở cung đình Huế** để 
 **Tựa:** *Năm Canh Trước Bình Minh* — Đêm Ban Sóc
 
 **Intro (≈60 chữ, dùng cho Cinematic):**
-> Kinh thành Huế, đêm cuối tháng Mười Một. Rạng sáng mai, Lễ Ban Sóc sẽ diễn ra trước Ngọ Môn — lịch năm mới phải được trao tận tay bá quan và muôn dân. Đoàn nghệ nhân, thợ in, nhạc công và lính Ngự Lâm còn đúng năm canh để chuẩn bị. Nhưng trong đoàn có **Hắc Ảnh** — kẻ muốn đêm nay không bao giờ kết thúc. Không có lịch, cả kinh thành sẽ lạc mất thời gian.
+> Kinh thành Huế, đêm cuối tháng Mười Một. Rạng sáng mai, Lễ Ban Sóc sẽ diễn ra trước Ngọ Môn — lịch năm mới phải được trao tận tay bá quan và muôn dân. Đoàn nghệ nhân, thợ in, nhạc công và lính Ngự Lâm còn đúng năm canh để chuẩn bị. Nhưng trong đoàn có **Âm Binh** — kẻ muốn đêm nay không bao giờ kết thúc. Không có lịch, cả kinh thành sẽ lạc mất thời gian.
 
-**Hắc Ảnh là ai (hư cấu, gắn nhãn "truyện trong game"):** một bóng đêm "ăn trộm bình minh" — muốn giữ kinh thành mãi ở đêm cuối năm. Không gắn với nhân vật/sự kiện lịch sử có thật nào.
+**Âm Binh là ai (hư cấu, gắn nhãn "truyện trong game"):** một bóng đêm "ăn trộm bình minh" — muốn giữ kinh thành mãi ở đêm cuối năm. Không gắn với nhân vật/sự kiện lịch sử có thật nào.
 
 **Thanh tiến độ = 5 canh trống:** mỗi 20% tiến độ → tiếng trống canh + một dòng tường thuật ngắn:
 
@@ -40,7 +40,7 @@ Bản mới bám vào **một nghi lễ chỉ có ở cung đình Huế** để 
 **Kết thúc:**
 - *Người Dân thắng bằng nhiệm vụ:* bình minh trên Lầu Ngũ Phụng, lịch Hiệp Kỷ được ban.
 - *Người Dân thắng bằng bỏ phiếu:* "Bóng đêm tan. Bình minh đến đúng giờ."
-- *Hắc Ảnh thắng:* "Trống canh năm không bao giờ điểm. Kinh thành chìm trong một đêm không có ngày mai."
+- *Âm Binh thắng:* "Trống canh năm không bao giờ điểm. Kinh thành chìm trong một đêm không có ngày mai."
 
 **Đổi tên theo cốt truyện:**
 - Bàn họp → **Án Ban Lịch** (trước Ngọ Môn).
@@ -63,17 +63,17 @@ Bản mới bám vào **một nghi lễ chỉ có ở cung đình Huế** để 
 
 ## 5. Nhiệm vụ — 9 mini-game
 
-Nguyên tắc: ≤ ~20 giây · một thao tác chính · hiểu được không cần đọc nhiều chữ · luôn có "Bạn có biết?" · có lý do trong cốt truyện ("Hắc Ảnh đã làm rối…").
+Nguyên tắc: ≤ ~20 giây · một thao tác chính · hiểu được không cần đọc nhiều chữ · luôn có "Bạn có biết?" · có lý do trong cốt truyện ("Âm Binh đã làm rối…").
 
 | # | Id (đề xuất) | Khu | Mini-game | Lý do trong truyện | Bạn có biết? |
 |---|--------------|-----|-----------|--------------------|--------------|
 | 1 | `task_moon_phase` | Khâm Thiên Giám | **Xếp tuần trăng:** kéo 6–8 hình mặt trăng vào vòng tròn theo đúng chu kỳ, rồi chạm vào trăng **Sóc** (trăng non) | Phải định đúng ngày Sóc để ghi lịch | "Sóc" là ngày trăng non (mồng 1), "Vọng" là trăng tròn (rằm) |
 | 2 | `task_woodblock_print` | Khâm Thiên Giám | **In mộc bản lịch:** (a) chọn đúng ván khắc **chữ ngược** để in ra chữ thuận; (b) quét chổi mực phủ ≥90% ván; (c) ép giấy đúng lúc kim đồng hồ vào vùng xanh | Lịch phải in ra hàng nghìn bản trước sáng | Mộc bản khắc chữ ngược trên gỗ; Mộc bản triều Nguyễn là Di sản Tư liệu Thế giới (UNESCO 2009) |
 | 3 | `task_ngo_mon_gates` | Sân Ngọ Môn | **Dẫn đúng cửa:** người/vật chạy dần tới, vuốt vào 1 trong 5 lối: giữa = Vua; Tả/Hữu Giáp Môn = quan văn/võ; Tả/Hữu Dịch Môn = lính, voi, ngựa. Sai 2 lần là làm lại | Diễn tập đoàn rước cho lễ sáng mai | Ngọ Môn có 5 lối đi, lối giữa dành riêng cho nhà vua ⚠ (đối chiếu tên các cửa) |
-| 4 | `task_court_ranks` | Điện Thái Hòa | **Xếp bá quan:** kéo 6 vị quan vào các bia **phẩm sơn**: bổ tử hình chim → bên văn, hình thú → bên võ; phẩm cao đứng gần điện | Hắc Ảnh xáo trộn thứ tự đứng của bá quan | Trên sân Đại Triều Nghi có hàng bia đá phẩm sơn đánh dấu chỗ đứng theo phẩm hàm ⚠ (vị trí văn tả / võ hữu, hình bổ tử) |
-| 5 | `task_nha_nhac` | Duyệt Thị Đường | **Dượt Nhã nhạc (nhịp):** nghe-nhìn chuỗi 4–6 nhạc cụ (trống, sênh tiền, đàn nguyệt, sáo…) sáng lên, rồi gõ lại đúng thứ tự và nhịp | Hắc Ảnh đã xé lẫn bản tổng phổ | Nhã nhạc cung đình Huế được UNESCO ghi danh (2003) |
+| 4 | `task_court_ranks` | Điện Thái Hòa | **Xếp bá quan:** kéo 6 vị quan vào các bia **phẩm sơn**: bổ tử hình chim → bên văn, hình thú → bên võ; phẩm cao đứng gần điện | Âm Binh xáo trộn thứ tự đứng của bá quan | Trên sân Đại Triều Nghi có hàng bia đá phẩm sơn đánh dấu chỗ đứng theo phẩm hàm ⚠ (vị trí văn tả / võ hữu, hình bổ tử) |
+| 5 | `task_nha_nhac` | Duyệt Thị Đường | **Dượt Nhã nhạc (nhịp):** nghe-nhìn chuỗi 4–6 nhạc cụ (trống, sênh tiền, đàn nguyệt, sáo…) sáng lên, rồi gõ lại đúng thứ tự và nhịp | Âm Binh đã xé lẫn bản tổng phổ | Nhã nhạc cung đình Huế được UNESCO ghi danh (2003) |
 | 6 | `task_cuu_dinh` | Sân Thế Miếu | **Lau Cửu Đỉnh:** cào lớp bụi trên mặt đỉnh (scratch-reveal) để tìm đủ 3 hình đúc nổi được yêu cầu trên cuộn giấy (sông, núi, voi, thuyền, chim…) trước khi hết giờ | Đỉnh phải sạch trước lễ | Cửu Đỉnh đúc thời Minh Mạng; hình đúc nổi trên đỉnh là Di sản Tư liệu Châu Á–TBD (2024) ⚠ (số lượng hình, năm đúc) |
-| 7 | `task_poem_wall` | Nội Các | **Phục dựng tường "Nhất thi nhất họa":** lắp 4 ô còn thiếu sao cho ô thơ và ô tranh xen kẽ, và tranh khớp chủ đề với bài thơ bên cạnh (sen–sen, núi–núi) | Hắc Ảnh gỡ các ô ốp trên tường điện | Thơ văn trên kiến trúc cung đình Huế (UNESCO Châu Á–TBD, 2016); thường bố trí "một thơ một họa" |
+| 7 | `task_poem_wall` | Nội Các | **Phục dựng tường "Nhất thi nhất họa":** lắp 4 ô còn thiếu sao cho ô thơ và ô tranh xen kẽ, và tranh khớp chủ đề với bài thơ bên cạnh (sen–sen, núi–núi) | Âm Binh gỡ các ô ốp trên tường điện | Thơ văn trên kiến trúc cung đình Huế (UNESCO Châu Á–TBD, 2016); thường bố trí "một thơ một họa" |
 | 8 | `task_royal_seal` | Nội Các | **Đóng ấn:** kéo ấn khớp đúng khung đỏ trên tờ lịch (thanh run tay nhẹ), nhấn giữ đủ lực → ấn hiện đều | Lịch chưa đóng ấn thì chưa được ban | Văn bản triều Nguyễn có bút phê son của vua gọi là Châu bản (UNESCO Châu Á–TBD, 2014) |
 | 9 | `task_banh_beo` | Hành lang Trường Lang (gian dọn cỗ) | **Làm bánh bèo chén:** 6 chén chạy qua băng chuyền; chạm đúng thứ tự: đổ bột → tôm chấy → tóp mỡ/hành → chan nước mắm | Cỗ đãi bá quan sau lễ | Ẩm thực Huế nổi tiếng với các món bánh nhỏ trong chén/lá: bánh bèo, bánh nậm, bánh bột lọc |
 
@@ -86,7 +86,7 @@ Nguyên tắc: ≤ ~20 giây · một thao tác chính · hiểu được không
 
 **Liên kết nhiệm vụ (tuỳ chọn, tăng chiều sâu):** `task_moon_phase` → mở khoá `task_woodblock_print` → mở khoá `task_royal_seal` (chuỗi "định ngày → in → đóng ấn"). Chỉ áp dụng nếu người chơi có cả ba; nếu không thì độc lập.
 
-## 6. Hắc Ảnh — gắn theo map (giai đoạn 2, tuỳ chọn)
+## 6. Âm Binh — gắn theo map (giai đoạn 2, tuỳ chọn)
 
 Hiện spec chung không có phá hoại. Nếu muốn map Huế đặc sắc hơn, đề xuất 1–2 phá hoại đơn giản, hồi chiêu dài:
 - **Tắt đèn Trường Lang:** giảm tầm nhìn khu hành lang 20s; sửa bằng cách thắp lại 3 đèn lồng (mini-game chạm nhanh).
@@ -113,7 +113,7 @@ Loại `TaskData` mới cần thêm vào `protocol.ts` (hiện chỉ có pick/se
 
 - Icon/prop trạm (9): bảng tuần trăng, ván khắc + giấy dó, 5 cửa Ngọ Môn, bia phẩm sơn, bộ Nhã nhạc, đỉnh đồng, tường thơ-họa, ấn son, mâm bánh bèo.
 - UI mini-game: mặt trăng các pha, ván khắc chữ ngược, quan văn/võ với bổ tử, nhạc cụ, mặt đỉnh có hình đúc + lớp bụi, ô thơ/ô tranh, con dấu, chén bánh bèo.
-- Cinematic: trống canh (5 trạng thái), bình minh trên Lầu Ngũ Phụng, đêm không sáng (Hắc Ảnh thắng).
+- Cinematic: trống canh (5 trạng thái), bình minh trên Lầu Ngũ Phụng, đêm không sáng (Âm Binh thắng).
 - Đổi prop cũ kiểu văn phòng (máy in, màn hình, bảng trắng) sang prop cung đình.
 
 ## 9. Việc cần kiểm chứng trước khi viết nội dung

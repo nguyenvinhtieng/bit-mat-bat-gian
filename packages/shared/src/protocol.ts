@@ -6,7 +6,7 @@ export type InputMsg = { seq: number; dx: number; dy: number }[];
 export type ClientMessages = {
   input: InputMsg;
   ready: { ready: boolean };
-  configure: { quick?: boolean };
+  configure: { killers?: number; tasksPerPlayer?: number };
   start: Record<string, never>;
   'task:open': { taskId: TaskId };
   'task:submit': { taskId: TaskId; answer: unknown };
@@ -18,6 +18,7 @@ export type ClientMessages = {
   vote: { target: string };
   'host:skip': Record<string, never>;
   'host:restart': Record<string, never>;
+  'host:kick': { target: string };
 };
 
 /** Server -> client (private, only to the owner) */

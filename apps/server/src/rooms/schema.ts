@@ -33,6 +33,11 @@ export class GameState extends Schema {
   @type('uint16') progress = 0;
   @type('uint16') progressTarget = 6;
   @type('string') meetingReason = '';
-  @type('boolean') quick = false;
+  /** 0 = auto */
+  @type('uint8') killers = 0;
+  @type('uint8') tasksPerPlayer = 4;
+  /** living players per faction — counts only, never who */
+  @type('uint8') crewAlive = 0;
+  @type('uint8') killersAlive = 0;
   @type({ map: Player }) players = new MapSchema<Player>();
 }

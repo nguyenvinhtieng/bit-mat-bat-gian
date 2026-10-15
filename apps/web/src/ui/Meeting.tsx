@@ -125,7 +125,7 @@ export function Meeting() {
               <h1 className="eject-line">
                 <span style={{ color: colorHex(PLAYER_COLORS[result.ejectedColor ?? 0] ?? 0xffffff) }}>{result.ejected}</span> bị trục xuất khỏi Kinh thành.
               </h1>
-              <p className={`eject-verdict ${result.wasKiller ? 'good' : 'bad'}`}>{result.wasKiller ? 'Họ CHÍNH LÀ Hắc Ảnh!' : 'Họ KHÔNG phải là Hắc Ảnh…'}</p>
+              <p className={`eject-verdict ${result.wasKiller ? 'good' : 'bad'}`}>{result.ejected} {result.wasKiller ? 'CHÍNH LÀ Âm Binh!' : 'KHÔNG phải là Âm Binh…'}</p>
             </>
           ) : (
             <>
@@ -133,7 +133,7 @@ export function Meeting() {
               <h1 className="eject-line">Không ai bị loại.</h1>
             </>
           )}
-          <p className="muted">{result.killersLeft > 0 ? `Vẫn còn ${result.killersLeft} Hắc Ảnh trong đoàn.` : 'Không còn Hắc Ảnh nào!'}</p>
+          <p className="muted">{result.killersLeft > 0 ? `Vẫn còn ${result.killersLeft} Âm Binh trong đoàn.` : 'Không còn Âm Binh nào!'}</p>
           <ul className="tally v2">
             {result.tally.map((t) => (
               <li key={t.name}>

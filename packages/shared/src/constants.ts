@@ -36,7 +36,7 @@ export const ROLE_INFO: Record<RoleId, { name: string; faction: Faction; icon: s
     name: 'Nghệ Nhân Cố Đô',
     faction: 'crew',
     icon: 'local_guide',
-    short: 'Làm nhiệm vụ, tránh Hắc Ảnh',
+    short: 'Làm nhiệm vụ, tránh Âm Binh',
     desc: 'Bạn là một người trong đoàn chuẩn bị Lễ Ban Sóc. Hoàn thành các nhiệm vụ trước canh năm, tránh xa kẻ đáng ngờ và báo khi thấy thi thể.',
   },
   guardian: {
@@ -44,10 +44,10 @@ export const ROLE_INFO: Record<RoleId, { name: string; faction: Faction; icon: s
     faction: 'crew',
     icon: 'conservator',
     short: 'Có một lá chắn chống bị hạ gục',
-    desc: 'Bạn thuộc phe Người Dân và có MỘT lá chắn: lần đầu Hắc Ảnh ra tay với bạn, đòn đánh bị chặn (cả hai cùng biết). Sau đó bạn như người thường.',
+    desc: 'Bạn thuộc phe Người Dân và có MỘT lá chắn: lần đầu Âm Binh ra tay với bạn, đòn đánh bị chặn (cả hai cùng biết). Sau đó bạn như người thường.',
   },
   killer: {
-    name: 'Hắc Ảnh',
+    name: 'Âm Binh',
     faction: 'killer',
     icon: 'forger',
     short: 'Hạ gục mọi người để thắng',

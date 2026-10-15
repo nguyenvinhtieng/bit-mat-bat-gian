@@ -25,7 +25,10 @@ export type RoomView = {
   progress: number;
   progressTarget: number;
   meetingReason: string;
-  quick: boolean;
+  killers: number;
+  tasksPerPlayer: number;
+  crewAlive: number;
+  killersAlive: number;
   players: PlayerView[];
 };
 

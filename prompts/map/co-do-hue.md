@@ -4,7 +4,7 @@
 
 ## Cốt truyện
 
-Kinh thành Huế, đêm cuối tháng Mười Một âm lịch. Rạng sáng mai, **Lễ Ban Sóc** — lễ ban lịch năm mới của triều Nguyễn — diễn ra trước **Ngọ Môn**. Đoàn nghệ nhân, thợ in, nhạc công và lính Ngự Lâm còn đúng **năm canh** để chuẩn bị. Trong đoàn có **Hắc Ảnh** — bóng đêm muốn giữ kinh thành mãi ở đêm cuối năm (truyện hư cấu). Không có lịch, cả kinh thành sẽ lạc mất thời gian.
+Kinh thành Huế, đêm cuối tháng Mười Một âm lịch. Rạng sáng mai, **Lễ Ban Sóc** — lễ ban lịch năm mới của triều Nguyễn — diễn ra trước **Ngọ Môn**. Đoàn nghệ nhân, thợ in, nhạc công và lính Ngự Lâm còn đúng **năm canh** để chuẩn bị. Trong đoàn có **Âm Binh** — bóng đêm muốn giữ kinh thành mãi ở đêm cuối năm (truyện hư cấu). Không có lịch, cả kinh thành sẽ lạc mất thời gian.
 
 - **Thanh tiến độ = 5 canh trống.** Mỗi 20% tiến độ: server gửi `canh` → banner + tiếng trống (`HUE_CANH`). Canh năm = bình minh = Người Dân thắng.
 - Bàn họp = **Án Ban Lịch**; họp khẩn = **đánh chuông Ngũ Phụng**.

@@ -55,7 +55,10 @@ function snapshot(state: any): RoomView {
     progress: state.progress,
     progressTarget: state.progressTarget,
     meetingReason: state.meetingReason,
-    quick: state.quick,
+    killers: state.killers,
+    tasksPerPlayer: state.tasksPerPlayer,
+    crewAlive: state.crewAlive ?? 0,
+    killersAlive: state.killersAlive ?? 0,
     players,
   };
 }

@@ -147,6 +147,21 @@ export function Hud() {
             </span>
           </div>
         )}
+        {inGame && room.phase !== 'ended' && room.crewAlive + room.killersAlive > 0 && (
+          <div className="alive-count" title={t('aliveTitle')}>
+            <span className="ac crew" key={`c${room.crewAlive}`}>
+              <img src={asset('common/ui/count-crew.webp')} alt="" draggable={false} />
+              <b>{room.crewAlive}</b>
+              <small>{t('crewAlive')}</small>
+            </span>
+            <i className="ac-sep" aria-hidden />
+            <span className="ac killer" key={`k${room.killersAlive}`}>
+              <img src={asset('common/ui/count-killer.webp')} alt="" draggable={false} />
+              <b>{room.killersAlive}</b>
+              <small>{t('killersAlive')}</small>
+            </span>
+          </div>
+        )}
       </div>
 
       {inGame && room.phase !== 'ended' && (
@@ -165,7 +180,7 @@ export function Hud() {
       )}
 
       {me && inGame && (
-        <div className={`role-card ${me.faction}`}>
+        <button className={`role-card ${me.faction}`} onClick={() => set({ introOpen: true, introQuick: true })} title={t('roleGoal')}>
           <RoleBadge role={me.role} size={48} />
           <div>
             <strong>{ROLE_INFO[me.role].name}</strong>
@@ -184,7 +199,7 @@ export function Hud() {
             </span>
             {killer && me.mates && me.mates.length > 0 && <span className="ability">{t('mates')}: {me.mates.join(', ')}</span>}
           </div>
-        </div>
+        </button>
       )}
 
       {mapOpen && <MapView current={area} pos={pos} onClose={() => setMapOpen(false)} />}
@@ -231,15 +246,6 @@ export function Hud() {
               </ul>
             )}
           </div>
-        </div>
-      )}
-
-      {me && (
-        <div className="hud-buttons">
-          <button className="btn icon-btn ghost" onClick={() => set({ introOpen: true, introQuick: true })}>
-            <Icon name="clue" size={28} />
-            {t('roleGoal')}
-          </button>
         </div>
       )}
 
