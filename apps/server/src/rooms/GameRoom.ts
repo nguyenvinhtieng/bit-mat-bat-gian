@@ -1,5 +1,7 @@
 import { Room, type Client } from '@colyseus/core';
 import {
+  mapMeta,
+  mapSkin,
   playableMap,
   GAME,
   INTERACT_RADIUS,
@@ -8,31 +10,34 @@ import {
   PATCH_MS,
   PLAYER_COLORS,
   ROLE_INFO,
+  SABOTAGE,
   SIM_DT,
   SIM_HZ,
   SPAWNS,
-  TASK_IDS,
+  WARD_SPOTS,
+  areaAt,
   autoNightMin,
   canhMs as canhMsFor,
-  HUE_STATIONS,
-  HUE_CANH,
-  HUE_ENDINGS,
   dirFromInput,
   dist,
   getGrid,
   hasLineOfSight,
+  clampKillers,
   killersFor,
+  MIN_PLAYERS,
   stepMovement,
   type ChatMsg,
   type EndReveal,
   type Faction,
   type PrivateInfo,
   type RoleId,
+  type SabotageKind,
   type TaskId,
   type TaskResultMsg,
   type VoteResult,
 } from '@hidden-truth/shared';
-import { FUN_FACTS, buildTask, verifyTask, type Pending } from '../content/co-do-hue.content';
+import { contentFor, type Pending } from '../content';
+import { Sabotage } from './sabotage';
 import { GameState, Player } from './schema';
 
 type Secret = {
@@ -70,6 +75,17 @@ export class GameRoom extends Room<GameState> {
   private lastChat = new Map<string, number>();
   private chatLog: ChatMsg[] = [];
   private lastActive = new Map<string, number>();
+  private sab = new Sabotage();
+
+  private get skin() {
+    return mapSkin(this.state.mapSlug);
+  }
+  private get content() {
+    return contentFor(this.state.mapSlug);
+  }
+  private station(taskId: TaskId) {
+    return this.skin.stations.find((x) => x.id === taskId);
+  }
 
   onCreate(options: { name?: string; map?: string }) {
     this.setState(new GameState());
@@ -172,11 +188,10 @@ export class GameRoom extends Room<GameState> {
     this.onMessage('configure', (client, msg: { killers?: number; tasksPerPlayer?: number; nightMin?: number; nightAuto?: boolean }) => {
       if (client.sessionId !== this.state.hostId || this.state.phase !== 'lobby') return;
       if (Number.isFinite(msg?.tasksPerPlayer)) {
-        this.state.tasksPerPlayer = Math.max(1, Math.min(TASK_IDS.length, Math.floor(msg.tasksPerPlayer!)));
+        this.state.tasksPerPlayer = Math.max(1, Math.min(this.skin.taskIds.length, Math.floor(msg.tasksPerPlayer!)));
       }
       if (Number.isFinite(msg?.killers)) {
-        const maxK = Math.max(1, Math.floor(this.state.players.size / 2));
-        this.state.killers = Math.max(1, Math.min(maxK, Math.floor(msg.killers!)));
+        this.state.killers = clampKillers(msg.killers!, this.state.players.size);
       }
       if (msg?.nightAuto === true) this.state.nightAuto = true;
       else if (Number.isFinite(msg?.nightMin)) {
@@ -188,6 +203,8 @@ export class GameRoom extends Room<GameState> {
 
     this.onMessage('start', (client) => {
       if (client.sessionId !== this.state.hostId || this.state.phase !== 'lobby') return;
+      const n = this.state.players.size;
+      if (n < MIN_PLAYERS) return client.send('toast', { text: `Cần ít nhất ${MIN_PLAYERS} người để bắt đầu (hiện có ${n}).`, kind: 'warn' });
       this.startGame();
     });
 
@@ -195,14 +212,17 @@ export class GameRoom extends Room<GameState> {
     this.onMessage('task:submit', (client, msg: { taskId: TaskId; answer: unknown }) => this.submitTask(client, msg));
     this.onMessage('kill', (client) => this.kill(client));
     this.onMessage('report', (client) => this.report(client));
+    this.onMessage('sabotage', (client, msg: { kind: SabotageKind }) => this.sabotage(client, msg?.kind));
+    this.onMessage('sabotage:fix', (client, msg: { on: boolean }) => this.sabotageFix(client, !!msg?.on));
 
     this.onMessage('emergency', (client) => {
       const p = this.state.players.get(client.sessionId);
       if (!p || !p.alive || this.state.phase !== 'explore' || p.emergencyUsed) return;
-      if (dist(p, MEETING_POINT) > INTERACT_RADIUS + 60) return client.send('toast', { text: 'Hãy đến Án Ban Lịch ở Sân Ngọ Môn để đánh chuông Ngũ Phụng.', kind: 'warn' });
+      if (this.sab.kind === 'ward') return client.send('toast', { text: `Không thể họp khẩn lúc này — hãy ${this.skin.sabotage.ward.fix.vi.toLowerCase()} trước!`, kind: 'warn' });
+      if (dist(p, MEETING_POINT) > INTERACT_RADIUS + 60) return client.send('toast', { text: `Hãy đến bàn họp ở ${this.skin.areas[areaAt(grid, MEETING_POINT.x, MEETING_POINT.y)!].name} để đánh ${this.skin.emergency.vi}.`, kind: 'warn' });
       p.emergencyUsed = true;
       this.broadcast('cinematic', { kind: 'emergency', actor: { name: p.name, color: p.color } });
-      this.startMeeting(`${p.name} đánh chuông Ngũ Phụng gọi họp khẩn`);
+      this.startMeeting(`${p.name} đánh ${this.skin.emergency.vi} gọi họp khẩn`);
     });
 
     this.onMessage('chat', (client, msg: { text: string }) => {
@@ -232,6 +252,7 @@ export class GameRoom extends Room<GameState> {
       }
       s.vote = target;
       p.voted = true;
+      p.voteFor = target;
       this.maybeResolveVotes();
     });
 
@@ -244,6 +265,17 @@ export class GameRoom extends Room<GameState> {
     this.onMessage('host:restart', (client) => {
       if (client.sessionId !== this.state.hostId || this.state.phase !== 'ended') return;
       this.resetToLobby();
+    });
+
+    this.onMessage('host:map', (client, msg: { map: string }) => {
+      if (client.sessionId !== this.state.hostId || this.state.phase !== 'lobby') return;
+      const slug = playableMap(String(msg?.map ?? ''));
+      if (slug === this.state.mapSlug) return;
+      this.state.mapSlug = slug;
+      this.state.tasksPerPlayer = Math.max(1, Math.min(this.skin.taskIds.length, this.state.tasksPerPlayer));
+      this.setMetadata({ ...this.metadata, map: slug });
+      this.refreshNight();
+      this.system(`Chủ phòng đã đổi bản đồ: ${mapMeta(slug).name.vi}.`);
     });
 
     this.onMessage('host:kick', (client, msg: { target: string }) => {
@@ -299,6 +331,7 @@ export class GameRoom extends Room<GameState> {
     }
     if (this.state.phaseEndsAt && Date.now() >= this.state.phaseEndsAt) this.advancePhase();
     if (this.state.phase === 'explore') this.tickNight();
+    if (this.state.phase === 'explore') this.tickSabotage();
   }
 
   // ---------------------------------------------------------------- phases
@@ -323,7 +356,7 @@ export class GameRoom extends Room<GameState> {
     if (crew >= 3) roles.push('guardian');
     while (roles.length < n) roles.push('villager');
     const assigned = shuffle(roles);
-    const tpp = Math.min(c.tasksPerPlayer, TASK_IDS.length);
+    const tpp = Math.min(c.tasksPerPlayer, this.skin.taskIds.length);
 
     this.secrets.clear();
     const now = Date.now();
@@ -335,17 +368,15 @@ export class GameRoom extends Room<GameState> {
       this.secrets.set(p.id, {
         role,
         faction,
-        objective:
-          faction === 'killer'
-            ? 'Hạ gục người trong đoàn cho tới khi số Âm Binh bằng hoặc nhiều hơn số người còn sống. Đừng để bị phát hiện và bị bỏ phiếu loại.'
-            : 'Hoàn thành mọi nhiệm vụ trước canh năm để Lễ Ban Sóc diễn ra lúc bình minh — hoặc tìm ra Âm Binh trong cuộc họp và bỏ phiếu loại họ.',
-        tasks: shuffle(TASK_IDS).slice(0, tpp),
+        objective: faction === 'killer' ? this.skin.story.objective.killer : this.skin.story.objective.crew,
+        tasks: shuffle(this.skin.taskIds).slice(0, tpp),
         completed: new Set(),
         shield: role === 'guardian',
         killReadyAt: dusk + c.firstCd,
       });
       p.tasksDone = 0;
       p.voted = false;
+      p.voteFor = '';
       p.emergencyUsed = false;
       p.alive = true;
       p.body = false;
@@ -356,13 +387,14 @@ export class GameRoom extends Room<GameState> {
     this.state.nightStartAt = dusk;
     this.state.nightPausedAt = 0;
     this.state.meetingReason = '';
+    this.sab.reset(dusk + SABOTAGE.firstCooldownSec * 1000);
+    this.syncSabotage();
     this.teleportToSpawns();
     this.setPhase('explore', 0);
     this.syncAlive();
     for (const p of players) this.sendPrivate(p.id);
     this.broadcast('intro', {});
-    this.system(`Ván bắt đầu — ${killers} Âm Binh đang trà trộn trong đoàn. Làm nhiệm vụ, giữ khoảng cách và quan sát!`);
-    if (n < 4) this.system(`Lưu ý: game thiết kế cho 4–10 người; với ${n} người có ${killers} Âm Binh.`);
+    this.system(`Ván bắt đầu — ${killers} ${this.skin.killerName.vi} đang trà trộn trong đoàn. Làm nhiệm vụ, giữ khoảng cách và quan sát!`);
   }
 
   private setPhase(phase: GameState['phase'], durationMs: number) {
@@ -378,6 +410,7 @@ export class GameRoom extends Room<GameState> {
       if (this.checkWin()) return;
       const now = Date.now();
       for (const s of this.secrets.values()) if (s.faction === 'killer') s.killReadyAt = now + this.cfg().postMeetingCd;
+      this.sab.cooldown(now + SABOTAGE.postMeetingCooldownSec * 1000);
       this.state.meetingReason = '';
       this.setPhase('explore', 0);
       this.resumeNight();
@@ -391,11 +424,14 @@ export class GameRoom extends Room<GameState> {
     for (const p of this.state.players.values()) {
       p.body = false;
       p.voted = false;
+      p.voteFor = '';
     }
     for (const s of this.secrets.values()) {
       s.pending = undefined;
       s.vote = undefined;
     }
+    this.sab.interrupt();
+    this.syncSabotage();
     this.teleportToSpawns();
     this.broadcast('task:close', {});
     if (!this.state.nightPausedAt) this.state.nightPausedAt = Date.now();
@@ -466,7 +502,10 @@ export class GameRoom extends Room<GameState> {
           ? 'Hoà phiếu — không ai bị loại.'
           : 'Không ai bị loại.',
     );
-    for (const p of this.state.players.values()) p.voted = false;
+    for (const p of this.state.players.values()) {
+      p.voted = false;
+      p.voteFor = '';
+    }
     this.setPhase('reveal', GAME.revealSec * 1000);
   }
 
@@ -512,9 +551,9 @@ export class GameRoom extends Room<GameState> {
     const total = this.totalKillers();
     const k = this.aliveKillers();
     const c = this.aliveCrew();
-    if (total > 0 && k === 0) return this.finishGame('crew', HUE_ENDINGS.vote);
-    if (total > 0 && k >= c) return this.finishGame('killer', HUE_ENDINGS.killer);
-    if (this.state.progress >= this.state.progressTarget) return this.finishGame('crew', HUE_ENDINGS.tasks);
+    if (total > 0 && k === 0) return this.finishGame('crew', this.skin.story.endings.vote);
+    if (total > 0 && k >= c) return this.finishGame('killer', this.skin.story.endings.killer);
+    if (this.state.progress >= this.state.progressTarget) return this.finishGame('crew', this.skin.story.endings.tasks);
     return false;
   }
 
@@ -523,16 +562,18 @@ export class GameRoom extends Room<GameState> {
     const reveal: EndReveal = {
       winner,
       reason,
-      fact: pick(FUN_FACTS),
+      fact: pick(this.content.funFacts),
       roles: [...this.state.players.values()].map((p) => {
         const s = this.secrets.get(p.id)!;
         return { name: p.name, color: p.color, role: s.role, faction: s.faction, alive: p.alive, tasksDone: s.completed.size };
       }),
     };
     this.setPhase('ended', 0);
+    this.sab.interrupt();
+    this.syncSabotage();
     this.state.nightPausedAt ||= Date.now();
     this.broadcast('end', reveal);
-    this.system(winner === 'crew' ? `Phe Người Dân thắng! ${reason}` : `Âm Binh thắng! ${reason}`);
+    this.system(winner === 'crew' ? `Phe Người Dân thắng! ${reason}` : `${this.skin.killerName.vi} thắng! ${reason}`);
     return true;
   }
 
@@ -543,11 +584,14 @@ export class GameRoom extends Room<GameState> {
     this.state.meetingReason = '';
     this.state.nightStartAt = 0;
     this.state.nightPausedAt = 0;
+    this.sab.reset(0);
+    this.syncSabotage();
     for (const [id, p] of this.state.players) {
       if (!p.connected) this.state.players.delete(id);
       else {
         p.ready = false;
         p.voted = false;
+        p.voteFor = '';
         p.tasksDone = 0;
         p.emergencyUsed = false;
         p.alive = true;
@@ -586,7 +630,7 @@ export class GameRoom extends Room<GameState> {
       const sh = { kind: 'shield', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, at: { x: target.x, y: target.y } };
       client.send('cinematic', { ...sh, youAre: 'actor' });
       this.clients.getById(target.id)?.send('cinematic', { ...sh, youAre: 'victim' });
-      client.send('toast', { text: 'Đòn đánh bị chặn bởi lá chắn của Lính Ngự Lâm!', kind: 'warn' });
+      client.send('toast', { text: `Đòn đánh bị chặn bởi lá chắn của ${this.skin.roles.guardian.name}!`, kind: 'warn' });
       this.clients.getById(target.id)?.send('toast', { text: '🛡️ Lá chắn của bạn đã cứu bạn khỏi một đòn hạ gục!', kind: 'success' });
       this.sendPrivate(target.id);
       this.sendPrivate(me.id);
@@ -597,7 +641,7 @@ export class GameRoom extends Room<GameState> {
     this.clients.getById(target.id)?.send('cinematic', { kind: 'kill', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, youAre: 'victim', at });
     for (const w of this.state.players.values()) {
       if (w.id === me.id || w.id === target.id || !w.alive) continue;
-      if (dist(w, target) > GAME.visionRadius || !hasLineOfSight(grid, { x: w.x, y: w.y - 30 }, { x: target.x, y: target.y - 30 })) continue;
+      if (dist(w, target) > this.visionRadius() || !hasLineOfSight(grid, { x: w.x, y: w.y - 30 }, { x: target.x, y: target.y - 30 })) continue;
       this.clients.getById(w.id)?.send('cinematic', { kind: 'witness', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, at });
     }
     target.alive = false;
@@ -633,17 +677,16 @@ export class GameRoom extends Room<GameState> {
     this.state.nightPausedAt = 0;
   }
 
-  /** killers the next game will get (manual count clamped to ½ room, else auto) */
+  /** killers the next game will get (manual count clamped to the room's cap, else auto) */
   private plannedKillers(n = this.state.players.size) {
-    const maxK = Math.max(1, Math.floor(n / 2));
-    return Math.min(this.state.killers > 0 ? Math.min(this.state.killers, maxK) : killersFor(n), n);
+    return this.state.killers > 0 ? clampKillers(this.state.killers, n) : killersFor(n);
   }
 
   /** auto night length follows the lobby (players, killers, tasks) until the host sets it by hand */
   private refreshNight() {
     if (!this.state.nightAuto) return;
     const n = this.state.players.size;
-    this.state.nightMin = autoNightMin(n, this.plannedKillers(n), Math.min(this.state.tasksPerPlayer, TASK_IDS.length));
+    this.state.nightMin = autoNightMin(n, this.plannedKillers(n), Math.min(this.state.tasksPerPlayer, this.skin.taskIds.length));
   }
 
   /** The clock runs on time: the drum strikes each new canh; when canh năm runs out the Shadows win. */
@@ -653,17 +696,68 @@ export class GameRoom extends Room<GameState> {
     const elapsed = this.nightElapsed();
     if (elapsed < 0) return; // role reveal still showing
     if (elapsed >= canhMs * GAME.canhCount) {
-      this.broadcast('canh', { canh: GAME.canhCount + 1, text: HUE_ENDINGS.timeout });
-      this.finishGame('killer', HUE_ENDINGS.timeout);
+      this.broadcast('canh', { canh: GAME.canhCount + 1, text: this.skin.story.endings.timeout });
+      this.finishGame('killer', this.skin.story.endings.timeout);
       return;
     }
     const c = Math.min(GAME.canhCount, Math.floor(elapsed / canhMs) + 1);
     while (this.canh < c) {
       this.canh++;
-      const text = HUE_CANH[this.canh - 1];
+      const text = this.skin.story.canh[this.canh - 1];
       this.broadcast('canh', { canh: this.canh, text });
       this.system(text);
     }
+  }
+
+  // ---------------------------------------------------------------- sabotage (common rules in ./sabotage, names from skin.sabotage)
+  private sabotage(client: Client, kind: SabotageKind) {
+    const s = this.secrets.get(client.sessionId);
+    if (!s || s.faction !== 'killer' || this.state.phase !== 'explore' || (kind !== 'blind' && kind !== 'ward')) return;
+    const now = Date.now();
+    if (this.nightElapsed() < 0) return client.send('toast', { text: 'Chưa thể phá lúc này.', kind: 'info' });
+    const res = this.sab.start(kind, now, kind === 'ward' ? pick(WARD_SPOTS) : undefined);
+    if (res === 'busy') return client.send('toast', { text: 'Đang có một trò phá khác diễn ra.', kind: 'info' });
+    if (res === 'cooldown') return client.send('toast', { text: 'Kỹ năng phá đang hồi — chờ một chút.', kind: 'info' });
+    this.syncSabotage();
+    const sk = this.skin.sabotage[kind];
+    this.system(sk.alert.vi.replace('{area}', this.state.sabotageArea ? this.skin.areas[this.state.sabotageArea as keyof typeof this.skin.areas].name : ''));
+    for (const [id, x] of this.secrets) if (x.faction === 'killer') this.sendPrivate(id);
+  }
+
+  private sabotageFix(client: Client, on: boolean) {
+    const p = this.state.players.get(client.sessionId);
+    if (!on) return this.sab.fixStop(client.sessionId);
+    if (!p || !p.alive || this.state.phase !== 'explore') return;
+    if (!this.sab.fixStart(p.id, Date.now(), p)) client.send('toast', { text: 'Hãy đứng sát chỗ bị phá.', kind: 'warn' });
+  }
+
+  private tickSabotage() {
+    const ev = this.sab.tick(Date.now(), (id) => {
+      const p = this.state.players.get(id);
+      return p && p.alive && p.connected ? p : null;
+    });
+    if (!ev) return;
+    this.syncSabotage();
+    if (ev.type === 'expired') this.finishGame('killer', this.skin.story.endings.sabotage);
+    else if (ev.type === 'fixed') {
+      const p = this.state.players.get(ev.by);
+      this.system(`${p?.name ?? '?'} đã ${this.skin.sabotage.ward.fix.vi.toLowerCase()} kịp thời!`);
+    }
+  }
+
+  /** mirror the engine into public state (spot/area only while a ward runs) */
+  private syncSabotage() {
+    const st = this.state;
+    st.sabotage = this.sab.kind ?? '';
+    st.sabotageEndsAt = this.sab.endsAt;
+    st.sabotageArea = this.sab.spot?.area ?? '';
+    st.sabotageX = this.sab.spot?.x ?? 0;
+    st.sabotageY = this.sab.spot?.y ?? 0;
+  }
+
+  /** living crew see less while a `blind` sabotage runs (also bounds who witnesses a kill) */
+  private visionRadius() {
+    return GAME.visionRadius * (this.sab.kind === 'blind' ? SABOTAGE.blindVision : 1);
   }
 
   // ---------------------------------------------------------------- tasks
@@ -674,13 +768,14 @@ export class GameRoom extends Room<GameState> {
   private openTask(client: Client, taskId: TaskId) {
     const p = this.state.players.get(client.sessionId);
     const s = this.secrets.get(client.sessionId);
-    const st = HUE_STATIONS.find((x) => x.id === taskId);
+    const st = this.station(taskId);
     // ghosts of the crew keep working: their tasks still count toward dawn
     if (!p || !s || !st || this.state.phase !== 'explore' || (!p.alive && s.faction !== 'crew')) return;
     if (!s.tasks.includes(taskId)) return client.send('toast', { text: 'Đây không phải nhiệm vụ của bạn.', kind: 'info' });
     if (!this.near(p, st.x, st.y)) return client.send('toast', { text: 'Bạn cần đứng gần điểm nhiệm vụ.', kind: 'warn' });
     if (s.completed.has(taskId)) return client.send('toast', { text: 'Bạn đã hoàn thành nhiệm vụ này.', kind: 'info' });
-    const built = buildTask(taskId);
+    const built = this.content.buildTask(taskId);
+    if (!built) return;
     s.pending = { expected: built.expected, openedAt: Date.now(), reward: built.fact, done: built.done, taskId, minMs: built.minMs };
     client.send('task:data', built.data);
   }
@@ -690,9 +785,9 @@ export class GameRoom extends Room<GameState> {
     const s = this.secrets.get(client.sessionId);
     if (!p || !s || (!p.alive && s.faction !== 'crew') || this.state.phase !== 'explore' || !s.pending || s.pending.taskId !== msg?.taskId) return;
     const { taskId, reward, done } = s.pending;
-    const st = HUE_STATIONS.find((x) => x.id === taskId)!;
+    const st = this.station(taskId)!;
     if (!this.near(p, st.x, st.y)) return client.send('toast', { text: 'Bạn đã rời khỏi điểm nhiệm vụ.', kind: 'warn' });
-    const ok = verifyTask(s.pending, msg.answer);
+    const ok = this.content.verifyTask(s.pending, msg.answer);
     if (!ok) return client.send('task:result', { ok: false, text: 'Chưa đúng — thử lại nhé.' } satisfies TaskResultMsg);
 
     s.pending = undefined;
@@ -718,6 +813,7 @@ export class GameRoom extends Room<GameState> {
     };
     if (s.faction === 'killer') {
       info.killReadyAt = s.killReadyAt;
+      info.sabotageReadyAt = this.sab.readyAt;
       const killers = [...this.secrets.entries()].filter(([, x]) => x.faction === 'killer').map(([pid]) => pid);
       info.killerIds = killers;
       info.mates = killers.filter((pid) => pid !== id).map((pid) => this.state.players.get(pid)?.name ?? '?');

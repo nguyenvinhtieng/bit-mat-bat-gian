@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { PLAYER_COLORS, playerArt } from '@hidden-truth/shared';
+import { PLAYER_COLORS, mapSkin, playerArt } from '@hidden-truth/shared';
 import { colorHex, useStore } from '../store';
 import { asset, useEscape } from './common';
 
@@ -190,7 +190,7 @@ export function Cinematic() {
   let sub: React.ReactNode = null;
   if (c.kind === 'kill') {
     title = c.youAre === 'victim' ? 'BẠN BỊ HẠ GỤC' : 'HẠ GỤC';
-    sub = c.youAre === 'victim' ? <>{nm(c.actor.name, actorCol)} là Âm Binh!</> : <>Bạn đã hạ gục {nm(c.victim!.name, victimCol)}</>;
+    sub = c.youAre === 'victim' ? <>{nm(c.actor.name, actorCol)} là {mapSkin(useStore.getState().room?.mapSlug).killerName.vi}!</> : <>Bạn đã hạ gục {nm(c.victim!.name, victimCol)}</>;
   } else if (c.kind === 'shield') {
     title = 'LÁ CHẮN!';
     sub = c.youAre === 'victim' ? <>Lá chắn đã cứu bạn khỏi {nm(c.actor.name, actorCol)}</> : <>{nm(c.victim!.name, victimCol)} đã chặn đòn của bạn</>;
@@ -202,7 +202,7 @@ export function Cinematic() {
     sub = <>{nm(c.actor.name, actorCol)} vừa hạ gục {nm(c.victim!.name, victimCol)}</>;
   } else {
     title = 'HỌP KHẨN';
-    sub = <>{nm(c.actor.name, actorCol)} đã đánh chuông Ngũ Phụng</>;
+    sub = <>{nm(c.actor.name, actorCol)} đã gọi họp khẩn ({mapSkin(useStore.getState().room?.mapSlug).emergency.vi})</>;
   }
 
   if (c.kind === 'witness')

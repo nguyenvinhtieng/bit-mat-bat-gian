@@ -1,5 +1,8 @@
 import type { Faction, RoleId, TaskId } from './constants';
 
+/** `blind` = vision cut for a few seconds; `ward` = critical, fix at a spot before time runs out. */
+export type SabotageKind = 'blind' | 'ward';
+
 /** Client -> server */
 export type InputMsg = { seq: number; dx: number; dy: number }[];
 
@@ -16,9 +19,15 @@ export type ClientMessages = {
   chat: { text: string };
   /** target = player id, or 'skip' */
   vote: { target: string };
+  /** killers only */
+  sabotage: { kind: SabotageKind };
+  /** press (on) / release (off) the fix button at the ward spot */
+  'sabotage:fix': { on: boolean };
   'host:skip': Record<string, never>;
   'host:restart': Record<string, never>;
   'host:kick': { target: string };
+  /** lobby only: switch the room's map (falls back to the default when not playable) */
+  'host:map': { map: string };
 };
 
 /** Server -> client (private, only to the owner) */
@@ -35,6 +44,8 @@ export type PrivateInfo = {
   killerIds?: string[];
   /** killers only: server time (ms) when the next kill is available */
   killReadyAt?: number;
+  /** killers only: server time (ms) when the next sabotage is available */
+  sabotageReadyAt?: number;
   /** guardian only */
   shield?: boolean;
 };
@@ -45,7 +56,7 @@ export type PoemKind = 'tho' | 'hoa';
 
 /**
  * Mini-game payloads (server -> client). Answers stay on the server; the client only gets
- * what it needs to draw the game. See apps/server/src/content/co-do-hue.content.ts.
+ * what it needs to draw the game. See apps/server/src/content/<slug>/.
  */
 export type TaskData =
   /** tap the 8 moon phases in cycle order, starting from Sóc (new moon). Answer: moon ids in order. */
@@ -71,7 +82,28 @@ export type TaskData =
   /** move the swaying seal onto the red frame, then hold to press. Answer: { x, y } (0..1 of the paper). */
   | { taskId: 'task_royal_seal'; prompt: string; target: { x: number; y: number }; tolerance: number; holdMs: number }
   /** build N bánh bèo cups step by step. Answer: { cups } */
-  | { taskId: 'task_banh_beo'; prompt: string; cups: number; steps: { id: string; name: string }[] };
+  | { taskId: 'task_banh_beo'; prompt: string; cups: number; steps: { id: string; name: string }[] }
+  // ---- thang-long
+  /** stack the layers into the mould bottom -> top, then tie the lạt. Answer: { layers: kind[], ties } */
+  | { taskId: 'task_banh_chung'; prompt: string; tray: { kind: string; name: string }[]; slots: number; ties: number }
+  /** match each Đông Hồ colour to its natural source. Answer: Record<colorId, sourceId> */
+  | { taskId: 'task_dong_ho'; prompt: string; painting: string; colors: { id: string; name: string; hex: string }[]; sources: { id: string; name: string; hex?: string }[] }
+  /** trace the calligraphy strokes in order (points 0..1 of the paper). Answer: { x, y }[][] */
+  | { taskId: 'task_cho_chu'; prompt: string; glyph: string; meaning: string; strokes: Pt[][] }
+  /** hang the right ornaments, then raise the swaying pole upright. Answer: { ornaments: id[], tilt } (tilt in degrees) */
+  | { taskId: 'task_cay_neu'; prompt: string; tray: { id: string; name: string; desc?: string }[]; need: number; maxTilt: number }
+  /** pair each first line with its second line. Answer: Record<topId, bottomId> */
+  | { taskId: 'task_cau_doi'; prompt: string; tops: CoupletLine[]; bottoms: CoupletLine[] }
+  /** nam: line fruits up to spell the saying; bac: chuối at the base, bưởi/phật thủ at the centre + 3 more. Answer: kind[] (nam) | { base, center, ring: kind[] } (bac) */
+  | { taskId: 'task_ngu_qua'; prompt: string; region: 'bac' | 'nam'; fruits: { kind: string; name: string }[]; slots: number }
+  /** tap the phách on the beats (ms from the first beat). Answer: tap times, ms */
+  | { taskId: 'task_ca_tru'; prompt: string; beats: number[]; tolerance: number }
+  /** steer the puppet across the pond through the marks in order. Answer: { x, y, t }[] (0..1, ms) */
+  | { taskId: 'task_roi_nuoc'; prompt: string; puppet: string; start: Pt; marks: Pt[]; radius: number; speed: number };
+
+export type Pt = { x: number; y: number };
+/** `hint` = the paired words of a first line, e.g. "Đông ↔ Nam" (helps players who don't know the couplet) */
+export type CoupletLine = { id: string; text: string; han?: string; hint?: string };
 
 /** Sent when a task is solved: success line + the heritage card ("Bạn có biết?"). */
 export type TaskResultMsg = { ok: boolean; text: string; fact?: string; headline?: string };

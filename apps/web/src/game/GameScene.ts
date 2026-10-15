@@ -2,14 +2,8 @@ import Phaser from 'phaser';
 import { getStateCallbacks, type Room } from 'colyseus.js';
 import {
   AREA_ORDER,
-  HUE_AREAS,
-  HUE_ATLAS,
-  HUE_DECOR_ATLAS,
-  HUE_FLOOR_BAKE,
-  HUE_PROPS,
-  HUE_STATIONS,
-  HUE_TILESET_ORDER,
   GAME,
+  SABOTAGE,
   INTERACT_RADIUS,
   LAYOUT_H,
   LAYOUT_W,
@@ -22,11 +16,12 @@ import {
   dist,
   getGrid,
   hasLineOfSight,
+  mapSkin,
   playerArt,
   stepMovement,
   type TaskId,
 } from '@hidden-truth/shared';
-import { onRoom, room, send } from '../net';
+import { fix, onRoom, room, send } from '../net';
 import { KILLER_NAME_COLOR, uiBlocksMovement, useStore, type Nearby } from '../store';
 
 const NAME_COLOR = '#fff8e8';
@@ -49,12 +44,27 @@ const POSES = { strike: 14, die: 8, guard: 10 } as const;
 type Pose = keyof typeof POSES;
 type FxKey = keyof typeof FX;
 
+/** Hand-held oil lamp (tools/paint/lantern.py): where the hand is per facing, and whether the body hides it. */
+const LAMP_SCALE = 0.38;
+const LAMP_GRIP: Record<(typeof DIRS)[number], { x: number; y: number; behind: boolean }> = {
+  down: { x: 14, y: -29, behind: false },
+  left: { x: -9, y: -29, behind: false },
+  right: { x: 9, y: -29, behind: false },
+  up: { x: -14, y: -29, behind: true },
+};
+const GLOW_SIZE = 230;
+
 type Snap = { t: number; x: number; y: number };
 type Avatar = {
   c: Phaser.GameObjects.Container;
   base: Phaser.GameObjects.Sprite;
   tint: Phaser.GameObjects.Sprite;
   label: Phaser.GameObjects.Text;
+  lamp: Phaser.GameObjects.Image;
+  /** warm pool on the floor under the lamp; lives outside the container so it sits below every sprite */
+  glow: Phaser.GameObjects.Image;
+  /** per-avatar phase so the flames don't flicker in sync */
+  seed: number;
   buf: Snap[];
   dir: number;
   moving: boolean;
@@ -92,26 +102,35 @@ export class GameScene extends Phaser.Scene {
   private lastArea = '';
   private fog?: Phaser.GameObjects.RenderTexture;
   private fogBrush?: Phaser.GameObjects.Image;
+  /** warm wash over my whole sight circle: the room reads as lit by my lamp, not by daylight */
+  private myLight?: Phaser.GameObjects.Image;
 
   constructor() {
     super('game');
   }
 
+  private skin = mapSkin(useStore.getState().room?.mapSlug);
+
   preload() {
-    this.load.spritesheet('hue-tiles', `${A}/maps/co-do-hue/tileset/hue-interior-48.webp`, { frameWidth: TILE, frameHeight: TILE });
-    this.load.atlas('hue', `${A}/maps/co-do-hue/atlas/hue-gameplay-0.webp`, `${A}/maps/co-do-hue/atlas/hue-gameplay-0.json`);
-    // Đêm Ban Sóc props + station icons (tools/ui-art/draw-hue-bansoc.mjs)
-    this.load.atlas('hue-bansoc', `${A}/${HUE_ATLAS}.webp`, `${A}/${HUE_ATLAS}.json`);
+    this.skin = mapSkin(useStore.getState().room?.mapSlug);
+    // the scene is remounted when the lobby switches map (PhaserGame key), so the skin is fixed for its lifetime
+    const art = this.skin.art;
+    if (art.tileset) this.load.spritesheet('map-tiles', `${A}/${art.tileset.file}.webp`, { frameWidth: TILE, frameHeight: TILE });
+    // station icons (+ the task-marker ring, maybe in its own atlas)
+    this.load.atlas('map-stations', `${A}/${art.stations}.webp`, `${A}/${art.stations}.json`);
+    if (art.marker) this.load.atlas('map-marker', `${A}/${art.marker}.webp`, `${A}/${art.marker}.json`);
     // painted (raster) props + room decor, and the pre-rendered floor/wall bake (tools/paint/*.py)
-    this.load.atlas('hue-decor', `${A}/${HUE_DECOR_ATLAS}.webp`, `${A}/${HUE_DECOR_ATLAS}.json`);
-    this.load.image('hue-floor', `${A}/${HUE_FLOOR_BAKE}.webp`);
+    this.load.atlas('map-decor', `${A}/${art.decor}.webp`, `${A}/${art.decor}.json`);
+    this.load.image('map-floor', `${A}/${art.floorBake}.webp`);
     // costume follows the map (Huế: áo dài + khăn đóng…), common avatar otherwise
-    const art = playerArt(useStore.getState().room?.mapSlug);
-    this.load.atlas('player', `${A}/${art.atlas}.webp`, `${A}/${art.atlas}.json`);
-    this.load.atlas('player-tint', `${A}/${art.tint}.webp`, `${A}/${art.tint}.json`);
-    this.load.atlas('player-action', `${A}/${art.action}.webp`, `${A}/${art.action}.json`);
-    this.load.atlas('player-action-tint', `${A}/${art.actionTint}.webp`, `${A}/${art.actionTint}.json`);
+    const pa = playerArt(this.skin.slug);
+    this.load.atlas('player', `${A}/${pa.atlas}.webp`, `${A}/${pa.atlas}.json`);
+    this.load.atlas('player-tint', `${A}/${pa.tint}.webp`, `${A}/${pa.tint}.json`);
+    this.load.atlas('player-action', `${A}/${pa.action}.webp`, `${A}/${pa.action}.json`);
+    this.load.atlas('player-action-tint', `${A}/${pa.actionTint}.webp`, `${A}/${pa.actionTint}.json`);
     this.load.image('shadow', `${A}/common/characters/shadow.webp`);
+    this.load.image('lantern', `${A}/common/characters/lantern.webp`);
+    this.load.image('lantern-glow', `${A}/common/characters/lantern-glow.webp`);
     this.load.image('body-marker', `${A}/common/ui/body-marker.webp`);
     for (const k of Object.keys(FX)) this.load.spritesheet(k, `${A}/common/ui/fx/${k}.webp`, { frameWidth: 256, frameHeight: 256 });
     for (const k of ['spark', 'ink-drop', 'ink-splat']) this.load.image(k, `${A}/common/ui/fx/${k}.webp`);
@@ -144,8 +163,10 @@ export class GameScene extends Phaser.Scene {
       const ae = document.activeElement as HTMLElement | null;
       if (ae && ae !== document.body && ['INPUT', 'TEXTAREA', 'SELECT'].includes(ae.tagName)) ae.blur();
     });
-    kb.on('keydown-E', () => this.interact());
-    kb.on('keydown-SPACE', () => this.interact());
+    kb.on('keydown-E', (e: KeyboardEvent) => !e.repeat && this.interact());
+    kb.on('keydown-SPACE', (e: KeyboardEvent) => !e.repeat && this.interact());
+    kb.on('keyup-E', () => fix(false));
+    kb.on('keyup-SPACE', () => fix(false));
     kb.on('keydown-K', () => this.doKill());
     kb.on('keydown-R', () => this.doReport());
 
@@ -160,6 +181,7 @@ export class GameScene extends Phaser.Scene {
     this.unbind.push(onRoom((r) => this.bindRoom(r)));
     this.unbind.push(useStore.subscribe((s, prev) => s.cinematic && s.cinematic !== prev.cinematic && this.onCinematic(s.cinematic)));
     this.unbind.push(useStore.subscribe((s, prev) => s.me?.killerIds !== prev.me?.killerIds && this.refreshNameColors()));
+    this.unbind.push(useStore.subscribe((s, prev) => (s.room?.sabotage ?? '') !== (prev.room?.sabotage ?? '') && this.onSabotage(s.room?.sabotage ?? '')));
     this.unbind.push(useStore.subscribe((s, prev) => (s.me?.completedTasks !== prev.me?.completedTasks || s.me?.tasks !== prev.me?.tasks) && this.refreshStations()));
     this.events.once('shutdown', () => this.unbind.forEach((u) => u()));
   }
@@ -172,16 +194,18 @@ export class GameScene extends Phaser.Scene {
 
   // ------------------------------------------------------------ world
   private buildMap() {
-    if (this.textures.exists('hue-floor')) {
-      this.add.image(0, 0, 'hue-floor').setOrigin(0).setDepth(-10);
+    if (this.textures.exists('map-floor')) {
+      this.add.image(0, 0, 'map-floor').setOrigin(0).setDepth(-10);
       return;
     }
+    const order = this.skin.art.tileset?.order;
+    if (!order || !this.textures.exists('map-tiles')) return;
     const map = this.make.tilemap({ tileWidth: TILE, tileHeight: TILE, width: LAYOUT_W, height: LAYOUT_H });
-    const ts = map.addTilesetImage('hue-tiles', 'hue-tiles', TILE, TILE, 0, 0)!;
+    const ts = map.addTilesetImage('map-tiles', 'map-tiles', TILE, TILE, 0, 0)!;
     const layer = map.createBlankLayer('floor', ts, 0, 0)!;
-    const cols = HUE_TILESET_ORDER.length * 2;
+    const cols = order.length * 2;
     const idx = (name: string, x: number, y: number) => {
-      const i = HUE_TILESET_ORDER.indexOf(name as (typeof HUE_TILESET_ORDER)[number]);
+      const i = order.indexOf(name);
       return (y % 2) * cols + i * 2 + (x % 2);
     };
     const g = this.grid;
@@ -189,7 +213,7 @@ export class GameScene extends Phaser.Scene {
       for (let x = 0; x < g.w; x++) {
         const a = g.area[y * g.w + x];
         if (a >= 0) {
-          const info = HUE_AREAS[AREA_ORDER[a]];
+          const info = this.skin.areas[AREA_ORDER[a]];
           const t = layer.putTileAt(idx(info.floor, x, y), x, y);
           if (info.tint) t.tint = info.tint;
         } else {
@@ -206,32 +230,73 @@ export class GameScene extends Phaser.Scene {
     const size = R * 2 + 64;
     const tex = this.textures.createCanvas('fog-brush', size, size)!;
     const ctx = tex.getContext();
-    const gr = ctx.createRadialGradient(size / 2, size / 2, R * 0.55, size / 2, size / 2, R + 24);
+    // lamp falloff: bright near the flame, a long dim shoulder, black just past the vision radius
+    const gr = ctx.createRadialGradient(size / 2, size / 2, R * 0.3, size / 2, size / 2, R + 24);
     gr.addColorStop(0, 'rgba(255,255,255,1)');
+    gr.addColorStop(0.55, 'rgba(255,255,255,0.86)');
+    gr.addColorStop(0.85, 'rgba(255,255,255,0.45)');
     gr.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = gr;
     ctx.fillRect(0, 0, size, size);
     tex.refresh();
     this.fogBrush = this.make.image({ key: 'fog-brush', add: false }).setOrigin(0.5);
     this.fog = this.add.renderTexture(0, 0, LAYOUT_W * TILE, LAYOUT_H * TILE).setOrigin(0).setDepth(100000).setVisible(false);
+    this.myLight = this.add.image(0, 0, 'lantern-glow').setBlendMode(Phaser.BlendModes.ADD).setDepth(99999).setVisible(false);
   }
 
   private updateFog(me: { x: number; y: number } | null, show: boolean) {
     const fog = this.fog;
     if (!fog) return;
     fog.setVisible(show && !!me);
+    this.myLight?.setVisible(show && !!me);
     if (!show || !me) return;
     fog.fill(0x0a0605, 0.94);
+    // the lamp flame breathes the edge of the light a little (cosmetic; canSee() uses the steady radius)
+    const t = performance.now() / 1000;
+    this.fogBrush!.setScale(this.vis * (1 + Math.sin(t * 11) * 0.012 + Math.sin(t * 4.1) * 0.01));
     fog.erase(this.fogBrush!, me.x, me.y - 30);
+    const d = GAME.visionRadius * 2 * this.fogBrush!.scaleX;
+    this.myLight!.setPosition(me.x, me.y - 30).setDisplaySize(d, d).setAlpha(0.2 + Math.sin(t * 7.3) * 0.015);
+  }
+
+  // ------------------------------------------------------------ sabotage
+  /** 1 = normal vision; eased toward SABOTAGE.blindVision during a blind sabotage */
+  private vis = 1;
+  private wardMark?: Phaser.GameObjects.Container;
+
+  private onSabotage(kind: string) {
+    const cam = this.cameras.main;
+    const killer = useStore.getState().me?.faction === 'killer';
+    if (kind === 'blind' && !killer) {
+      cam.flash(520, 255, 244, 214);
+      cam.shake(420, 0.008);
+    } else if (kind === 'ward') cam.flash(260, 200, 40, 30);
+    this.wardMark?.destroy();
+    this.wardMark = undefined;
+    const r = useStore.getState().room;
+    if (kind !== 'ward' || !r) return;
+    // the broken lime ring on the floor: dashed arcs with a gap, over a red pulse
+    const g = this.add.graphics();
+    g.fillStyle(0xd23a2a, 0.22).fillCircle(0, 0, 54);
+    g.lineStyle(7, 0xf3efe0, 0.95);
+    for (let a = 0; a < 360; a += 30) {
+      if (a >= 210 && a < 300) continue;
+      g.beginPath();
+      g.arc(0, 0, 40, Phaser.Math.DegToRad(a), Phaser.Math.DegToRad(a + 18));
+      g.strokePath();
+    }
+    const pulse = this.add.circle(0, 0, 40).setStrokeStyle(3, 0xff5a3c, 0.9);
+    this.tweens.add({ targets: pulse, scale: 1.7, alpha: 0, duration: 1100, repeat: -1 });
+    this.wardMark = this.add.container(r.sabotageX, r.sabotageY, [g, pulse]).setScale(1, 0.62).setDepth(r.sabotageY - 48);
   }
 
   /** Tall props (columns, trees…) fade when a player walks behind them so nobody hides in the art. */
   private tallProps: Phaser.GameObjects.Image[] = [];
 
   private buildProps() {
-    const decor = this.textures.get('hue-decor');
-    for (const p of HUE_PROPS) {
-      const atlas = decor.has(p.key) ? 'hue-decor' : 'hue-bansoc';
+    const decor = this.textures.get('map-decor');
+    for (const p of this.skin.props) {
+      const atlas = decor.has(p.key) ? 'map-decor' : 'map-stations';
       const img = this.add.image(p.x, p.y, atlas, p.key).setOrigin(0.5, 1);
       img.setDepth(p.wall ? -5 : p.y);
       if (!p.wall && img.height >= 150) this.tallProps.push(img);
@@ -250,9 +315,10 @@ export class GameScene extends Phaser.Scene {
 
   private buildStations() {
     this.makeBeamTexture();
-    for (const st of HUE_STATIONS) {
-      const ring = this.add.image(st.x, st.y, 'hue', 'task-marker').setDisplaySize(84, 84).setDepth(-4).setAlpha(0.9);
-      const icon = this.add.image(st.x, st.y - 6, 'hue-bansoc', st.icon).setDisplaySize(52, 52).setDepth(st.y - 20);
+    const markerAtlas = this.skin.art.marker ? 'map-marker' : 'map-stations';
+    for (const st of this.skin.stations) {
+      const ring = this.add.image(st.x, st.y, markerAtlas, 'task-marker').setDisplaySize(84, 84).setDepth(-4).setAlpha(0.9);
+      const icon = this.add.image(st.x, st.y - 6, 'map-stations', st.icon).setDisplaySize(52, 52).setDepth(st.y - 20);
       // the object standing on the station (bia, bàn khắc…) is the station: the floating icon would just cover it
       const prop = this.propImgs.find((img) => Math.abs(img.x - st.x) < 24 && img.y - st.y > -8 && img.y - st.y < 40);
       const hit = prop ?? icon;
@@ -355,7 +421,7 @@ export class GameScene extends Phaser.Scene {
 
   // ------------------------------------------------------------ network
   private bindRoom(r: Room) {
-    for (const a of this.avatars.values()) a.c.destroy();
+    for (const a of this.avatars.values()) this.dropAvatar(a);
     this.avatars.clear();
     for (const b of this.bodies.values()) b.destroy();
     this.bodies.clear();
@@ -393,7 +459,8 @@ export class GameScene extends Phaser.Scene {
       });
     }, true);
     players.onRemove((_p: unknown, id: string) => {
-      this.avatars.get(id)?.c.destroy();
+      const av = this.avatars.get(id);
+      if (av) this.dropAvatar(av);
       this.avatars.delete(id);
       this.bodies.get(id)?.destroy();
       this.bodies.delete(id);
@@ -415,8 +482,36 @@ export class GameScene extends Phaser.Scene {
       .text(0, -68, name, { fontFamily: 'Be Vietnam Pro, system-ui, sans-serif', fontSize: '13px', color: NAME_COLOR, stroke: '#2a1a10', strokeThickness: 4 })
       .setOrigin(0.5, 1)
       .setResolution(2);
-    const c = this.add.container(0, 0, [shadow, base, tint, label]);
-    return { c, base, tint, label, buf: [], dir: 0, moving: false, lastMoveAt: 0, name, alive: true, posedUntil: 0 };
+    const lamp = this.add.image(0, 0, 'lantern').setOrigin(0.5, 0.05).setScale(LAMP_SCALE).setVisible(false);
+    const glow = this.add.image(0, 0, 'lantern-glow').setDisplaySize(GLOW_SIZE, GLOW_SIZE * 0.8).setBlendMode(Phaser.BlendModes.ADD).setDepth(-5).setVisible(false);
+    const c = this.add.container(0, 0, [shadow, base, tint, lamp, label]);
+    return { c, base, tint, label, lamp, glow, seed: Math.random() * 100, buf: [], dir: 0, moving: false, lastMoveAt: 0, name, alive: true, posedUntil: 0 };
+  }
+
+  private dropAvatar(av: Avatar) {
+    av.c.destroy();
+    av.glow.destroy();
+  }
+
+  /** In the dark every living player carries an oil lamp: it swings with the stride, the flame flickers and lights the floor. */
+  private updateLamp(av: Avatar, dir: number, moving: boolean, on: boolean, now: number) {
+    const show = on && av.alive && av.c.visible && !av.posedUntil;
+    av.lamp.setVisible(show);
+    av.glow.setVisible(show);
+    if (!show) return;
+    const d = DIRS[dir] ?? 'down';
+    const g = LAMP_GRIP[d];
+    const t = now / 1000 + av.seed;
+    // pendulum: big swing while walking (sideways when walking up/down, fore-aft is just a small bob when walking sideways)
+    const swing = moving ? (d === 'left' || d === 'right' ? 7 : 16) : 3;
+    av.lamp.setAngle(Math.sin(t * (moving ? 9 : 1.6)) * swing);
+    av.lamp.setPosition(g.x, g.y + (moving ? Math.abs(Math.sin(t * 9)) * -1.5 : 0));
+    // behind the body when walking away from the camera, in front otherwise
+    if (g.behind) av.c.moveBelow(av.lamp, av.base);
+    else av.c.moveAbove(av.lamp, av.tint);
+    const flick = 0.92 + Math.sin(t * 13) * 0.04 + Math.sin(t * 29.7) * 0.03 + Math.sin(t * 5.3) * 0.02;
+    av.glow.setPosition(av.c.x + g.x, av.c.y + g.y + 18).setAlpha(0.42 * flick);
+    av.glow.setDisplaySize(GLOW_SIZE * flick, GLOW_SIZE * 0.8 * flick);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -568,7 +663,7 @@ export class GameScene extends Phaser.Scene {
     const lobby = useStore.getState().room?.phase !== 'explore';
     if (iAmGhost || lobby || !mine) return true;
     const eye = { x: this.pred.x, y: this.pred.y - 30 };
-    return Math.hypot(x - this.pred.x, y - this.pred.y) <= GAME.visionRadius && hasLineOfSight(this.grid, eye, { x, y: y - 30 });
+    return Math.hypot(x - this.pred.x, y - this.pred.y) <= GAME.visionRadius * this.vis && hasLineOfSight(this.grid, eye, { x, y: y - 30 });
   }
 
   private reconcile(sx: number, sy: number, lastSeq: number) {
@@ -603,7 +698,7 @@ export class GameScene extends Phaser.Scene {
   private tryTask(id: TaskId) {
     const s = useStore.getState();
     if (s.room?.phase !== 'explore' || uiBlocksMovement()) return;
-    const st = HUE_STATIONS.find((x) => x.id === id)!;
+    const st = this.skin.stations.find((x) => x.id === id)!;
     if (!s.me?.tasks.includes(id)) return s.toast({ text: 'Đây không phải nhiệm vụ của bạn.', kind: 'info' });
     if (dist(this.pred, st) > INTERACT_RADIUS) return s.toast({ text: `Lại gần “${st.title}” để làm nhiệm vụ.`, kind: 'info' });
     send('task:open', { taskId: id });
@@ -616,6 +711,7 @@ export class GameScene extends Phaser.Scene {
     if (n.kind === 'task') this.tryTask(n.id);
     else if (n.kind === 'report') send('report', {});
     else if (n.kind === 'emergency') send('emergency', {});
+    else if (n.kind === 'fix') fix(true);
   }
 
   private doKill() {
@@ -643,12 +739,14 @@ export class GameScene extends Phaser.Scene {
     if (alive) {
       const body = s.room.players.find((p) => p.body && dist(this.pred, { x: p.bodyX, y: p.bodyY }) <= GAME.reportRange);
       if (body) return { kind: 'report', title: `Báo cáo thi thể của ${body.name}` };
+      const r = s.room;
+      if (r.sabotage === 'ward' && dist(this.pred, { x: r.sabotageX, y: r.sabotageY }) <= SABOTAGE.fixRange) return { kind: 'fix', title: this.skin.sabotage.ward.fix.vi };
     }
     let best: Nearby = null;
     let bestD = INTERACT_RADIUS;
     const done = new Set(s.me?.completedTasks ?? []);
     const mine = new Set(s.me?.tasks ?? []);
-    for (const st of HUE_STATIONS) {
+    for (const st of this.skin.stations) {
       if (!mine.has(st.id)) continue;
       const d = dist(this.pred, st);
       if (d < bestD) {
@@ -657,7 +755,7 @@ export class GameScene extends Phaser.Scene {
       }
     }
     if (alive && dist(this.pred, MEETING_POINT) < INTERACT_RADIUS + 50 && bestD >= INTERACT_RADIUS) {
-      best = { kind: 'emergency', title: 'Đánh chuông Ngũ Phụng (họp khẩn)', used: !!me?.emergencyUsed };
+      best = { kind: 'emergency', title: `${this.skin.emergency.vi} (họp khẩn)`, used: !!me?.emergencyUsed };
     }
     return best;
   }
@@ -749,9 +847,15 @@ export class GameScene extends Phaser.Scene {
     const iAmGhost = mine ? !mine.alive : false;
     const lobby = useStore.getState().room?.phase !== 'explore';
     const limited = !iAmGhost && !lobby && !!mine;
+    // blind sabotage: crew vision closes in fast and opens back slowly; killers keep their sight
+    const st = useStore.getState();
+    const blind = st.room?.sabotage === 'blind' && st.me?.faction !== 'killer';
+    const goal = blind ? SABOTAGE.blindVision : 1;
+    this.vis += (goal - this.vis) * Math.min(1, (dtMs / 1000) * (blind ? 10 : 1.6));
+    if (Math.abs(goal - this.vis) < 0.002) this.vis = goal;
     const eye = { x: this.pred.x, y: this.pred.y - 30 };
     const canSee = (x: number, y: number) =>
-      !limited || (Math.hypot(x - this.pred.x, y - this.pred.y) <= GAME.visionRadius && hasLineOfSight(this.grid, eye, { x, y: y - 30 }));
+      !limited || (Math.hypot(x - this.pred.x, y - this.pred.y) <= GAME.visionRadius * this.vis && hasLineOfSight(this.grid, eye, { x, y: y - 30 }));
     for (const [id, av] of this.avatars) {
       av.c.setDepth(av.c.y);
       if (id === r.sessionId) av.c.setVisible(true).setAlpha(av.alive ? 1 : 0.5);
@@ -759,6 +863,12 @@ export class GameScene extends Phaser.Scene {
       else av.c.setVisible(canSee(av.c.x, av.c.y)).setAlpha(1);
     }
     for (const b of this.bodies.values()) b.setVisible(canSee(b.x, b.y));
+    const now = performance.now();
+    for (const [id, av] of this.avatars) {
+      const mineAv = id === r.sessionId;
+      const moving = mineAv ? this.myMoving : now - av.lastMoveAt < 120;
+      this.updateLamp(av, mineAv ? this.myDir : av.dir, moving, !lobby, now);
+    }
     this.updateFog(limited ? this.pred : null, limited);
 
     // UI bridge (only on change)
@@ -769,6 +879,7 @@ export class GameScene extends Phaser.Scene {
       useStore.getState().set({ nearby });
       this.updateTapBadge(nearby);
     }
+    if (nearby?.kind !== 'fix' && useStore.getState().fixing) fix(false);
     const kt = this.computeKillTarget();
     if (kt !== useStore.getState().killTarget) useStore.getState().set({ killTarget: kt });
     const px = Math.round((this.pred.x / TILE) * 2) / 2;

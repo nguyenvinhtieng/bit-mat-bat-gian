@@ -1,0 +1,1325 @@
+{
+ "mapSlug": "thang-long",
+ "mapVersion": 1,
+ "layoutVersion": 1,
+ "tileSize": 48,
+ "skin": "thang-long",
+ "generatedBy": "tools/paint/tl_*.py + tools/sfx/draw-thang-long.mjs (procedural, offline)",
+ "atlases": [
+  {
+   "name": "tl-decor-0",
+   "file": "maps/thang-long/atlas/tl-decor-0",
+   "size": [
+    2048,
+    484
+   ],
+   "generatedBy": "tools/paint/tl_props.py (procedural raster painting)"
+  },
+  {
+   "name": "tl-stations-0",
+   "file": "maps/thang-long/atlas/tl-stations-0",
+   "size": [
+    1364,
+    128
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py (procedural raster painting)"
+  }
+ ],
+ "textures": {
+  "player": {
+   "atlas": "common/characters/player-atlas",
+   "tint": "common/characters/player-tint-atlas",
+   "frame": [
+    48,
+    64
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tileset": {
+   "file": "maps/co-do-hue/tileset/hue-interior-48.webp",
+   "tile": 48,
+   "order": [
+    "wood",
+    "carpet",
+    "cream",
+    "terracotta",
+    "stone",
+    "jade",
+    "wall-face",
+    "wall-top"
+   ],
+   "layout": "2x2 tiles per texture, columns",
+   "note": "fallback (shared with co-do-hue); floors come from floor-bake"
+  },
+  "tl-map-icon": {
+   "file": "maps/thang-long/meta/tl-map-icon.webp",
+   "size": [
+    128,
+    128
+   ]
+  },
+  "floor-bake": {
+   "file": "maps/thang-long/tileset/tl-floor-bake",
+   "size": [
+    2016,
+    1536
+   ],
+   "generatedBy": "tools/paint/tl_floor.py",
+   "note": "floors + 3/4 walls + lake + lantern lighting baked for the common layout"
+  },
+  "map-preview": {
+   "file": "maps/thang-long/meta/tl-map-preview",
+   "size": [
+    1008,
+    768
+   ],
+   "generatedBy": "tools/paint/tl_meta.py"
+  }
+ },
+ "areas": [
+  "courtyard_checkin",
+  "exhibition",
+  "corridor",
+  "coordination",
+  "editing",
+  "archive",
+  "artifact_storage"
+ ],
+ "props": {
+  "tl-prop-cay-neu": {
+   "atlas": "tl-decor-0",
+   "size": [
+    112,
+    288
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-prop-thap-but": {
+   "atlas": "tl-decor-0",
+   "size": [
+    112,
+    224
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-decor-cay-dao": {
+   "atlas": "tl-decor-0",
+   "size": [
+    192,
+    208
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tl-decor-thap-rua": {
+   "atlas": "tl-decor-0",
+   "size": [
+    192,
+    192
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tl-decor-co-hoi": {
+   "atlas": "tl-decor-0",
+   "size": [
+    48,
+    176
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tl-decor-cot-cau-doi": {
+   "atlas": "tl-decor-0",
+   "size": [
+    64,
+    176
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tl-decor-cot-do": {
+   "atlas": "tl-decor-0",
+   "size": [
+    48,
+    176
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tl-prop-thuy-dinh": {
+   "atlas": "tl-decor-0",
+   "size": [
+    176,
+    176
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-prop-neu-nho": {
+   "atlas": "tl-decor-0",
+   "size": [
+    64,
+    160
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-prop-ban-tho-ngoc-son": {
+   "atlas": "tl-decor-0",
+   "size": [
+    160,
+    144
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-prop-gia-tranh": {
+   "atlas": "tl-decor-0",
+   "size": [
+    192,
+    144
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-decor-chau-dao": {
+   "atlas": "tl-decor-0",
+   "size": [
+    64,
+    128
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tl-decor-den-long-cot": {
+   "atlas": "tl-decor-0",
+   "size": [
+    48,
+    128
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tl-decor-gia-cau-doi": {
+   "atlas": "tl-decor-0",
+   "size": [
+    96,
+    128
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tl-decor-hac-rua": {
+   "atlas": "tl-decor-0",
+   "size": [
+    64,
+    128
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tl-prop-ban-tho-giao-thua": {
+   "atlas": "tl-decor-0",
+   "size": [
+    192,
+    128
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-prop-den-long": {
+   "atlas": "tl-decor-0",
+   "size": [
+    64,
+    128
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-prop-noi-banh-chung": {
+   "atlas": "tl-decor-0",
+   "size": [
+    128,
+    128
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-prop-xe-hoa": {
+   "atlas": "tl-decor-0",
+   "size": [
+    144,
+    128
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-decor-binh-dao": {
+   "atlas": "tl-decor-0",
+   "size": [
+    48,
+    112
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tl-decor-chau-quat": {
+   "atlas": "tl-decor-0",
+   "size": [
+    64,
+    112
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tl-prop-ban-cau-doi": {
+   "atlas": "tl-decor-0",
+   "size": [
+    112,
+    112
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-prop-ban-ngu-qua": {
+   "atlas": "tl-decor-0",
+   "size": [
+    112,
+    112
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-prop-hoanh-phi": {
+   "atlas": "tl-decor-0",
+   "size": [
+    192,
+    112
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-decor-gia-roi": {
+   "atlas": "tl-decor-0",
+   "size": [
+    96,
+    96
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tl-prop-ca-tru": {
+   "atlas": "tl-decor-0",
+   "size": [
+    128,
+    96
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-prop-chong-ong-do": {
+   "atlas": "tl-decor-0",
+   "size": [
+    112,
+    96
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-prop-mam-la-dong": {
+   "atlas": "tl-decor-0",
+   "size": [
+    112,
+    96
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-prop-tranh-treo": {
+   "atlas": "tl-decor-0",
+   "size": [
+    192,
+    96
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-prop-ao-roi": {
+   "atlas": "tl-decor-0",
+   "size": [
+    96,
+    80
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-prop-ban-in-tranh": {
+   "atlas": "tl-decor-0",
+   "size": [
+    112,
+    80
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-prop-dong-cui": {
+   "atlas": "tl-decor-0",
+   "size": [
+    96,
+    80
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "footprint": [
+    48,
+    48
+   ]
+  },
+  "tl-decor-chong-giay": {
+   "atlas": "tl-decor-0",
+   "size": [
+    96,
+    72
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tl-decor-chum-mau": {
+   "atlas": "tl-decor-0",
+   "size": [
+    56,
+    72
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tl-decor-chum-nuoc": {
+   "atlas": "tl-decor-0",
+   "size": [
+    56,
+    72
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  },
+  "tl-decor-ghe-tre": {
+   "atlas": "tl-decor-0",
+   "size": [
+    112,
+    64
+   ],
+   "anchor": [
+    0.5,
+    1
+   ]
+  }
+ },
+ "stations": [
+  {
+   "key": "tl-station-banh-chung",
+   "atlas": "tl-stations-0",
+   "size": [
+    128,
+    128
+   ],
+   "display": [
+    52,
+    52
+   ],
+   "hitbox": [
+    96,
+    96
+   ]
+  },
+  {
+   "key": "tl-station-ca-tru",
+   "atlas": "tl-stations-0",
+   "size": [
+    128,
+    128
+   ],
+   "display": [
+    52,
+    52
+   ],
+   "hitbox": [
+    96,
+    96
+   ]
+  },
+  {
+   "key": "tl-station-cau-doi",
+   "atlas": "tl-stations-0",
+   "size": [
+    128,
+    128
+   ],
+   "display": [
+    52,
+    52
+   ],
+   "hitbox": [
+    96,
+    96
+   ]
+  },
+  {
+   "key": "tl-station-cay-neu",
+   "atlas": "tl-stations-0",
+   "size": [
+    128,
+    128
+   ],
+   "display": [
+    52,
+    52
+   ],
+   "hitbox": [
+    96,
+    96
+   ]
+  },
+  {
+   "key": "tl-station-cho-chu",
+   "atlas": "tl-stations-0",
+   "size": [
+    128,
+    128
+   ],
+   "display": [
+    52,
+    52
+   ],
+   "hitbox": [
+    96,
+    96
+   ]
+  },
+  {
+   "key": "tl-station-dong-ho",
+   "atlas": "tl-stations-0",
+   "size": [
+    128,
+    128
+   ],
+   "display": [
+    52,
+    52
+   ],
+   "hitbox": [
+    96,
+    96
+   ]
+  },
+  {
+   "key": "tl-station-ngu-qua",
+   "atlas": "tl-stations-0",
+   "size": [
+    128,
+    128
+   ],
+   "display": [
+    52,
+    52
+   ],
+   "hitbox": [
+    96,
+    96
+   ]
+  },
+  {
+   "key": "tl-station-phao",
+   "atlas": "tl-stations-0",
+   "size": [
+    128,
+    128
+   ],
+   "display": [
+    52,
+    52
+   ],
+   "hitbox": [
+    96,
+    96
+   ]
+  },
+  {
+   "key": "tl-station-roi-nuoc",
+   "atlas": "tl-stations-0",
+   "size": [
+    128,
+    128
+   ],
+   "display": [
+    52,
+    52
+   ],
+   "hitbox": [
+    96,
+    96
+   ]
+  },
+  {
+   "key": "tl-station-voi",
+   "atlas": "tl-stations-0",
+   "size": [
+    128,
+    128
+   ],
+   "display": [
+    52,
+    52
+   ],
+   "hitbox": [
+    96,
+    96
+   ]
+  }
+ ],
+ "ui": {
+  "task-marker": {
+   "size": 64,
+   "atlas": "tl-stations-0"
+  },
+  "meeting-bell": {
+   "file": "common/ui/meeting-bell.webp",
+   "size": 48
+  },
+  "clue": {
+   "file": "common/ui/clue.webp",
+   "size": 48
+  },
+  "timer": {
+   "file": "common/ui/timer.webp",
+   "size": 32
+  },
+  "notebook": {
+   "file": "common/ui/notebook.webp",
+   "size": 48
+  },
+  "meeting-bg": {
+   "file": "common/ui/meeting/meeting-bg",
+   "generatedBy": "tools/paint/ui.py"
+  },
+  "seal-eject": {
+   "file": "common/ui/meeting/seal-eject",
+   "generatedBy": "tools/paint/ui.py"
+  },
+  "seal-skip": {
+   "file": "common/ui/meeting/seal-skip",
+   "generatedBy": "tools/paint/ui.py"
+  },
+  "stamp-voted": {
+   "file": "common/ui/meeting/stamp-voted",
+   "generatedBy": "tools/paint/ui.py"
+  },
+  "den-cung-dinh": {
+   "file": "common/ui/meeting/den-cung-dinh",
+   "generatedBy": "tools/paint/ui.py"
+  },
+  "chuong-ngu-phung": {
+   "file": "common/ui/meeting/chuong-ngu-phung",
+   "generatedBy": "tools/paint/ui.py"
+  },
+  "fx-kill-slash": {
+   "file": "common/ui/fx/fx-kill-slash",
+   "generatedBy": "tools/paint/fx.py",
+   "frames": 8,
+   "frameSize": [
+    256,
+    256
+   ]
+  },
+  "fx-shield-block": {
+   "file": "common/ui/fx/fx-shield-block",
+   "generatedBy": "tools/paint/fx.py",
+   "frames": 8,
+   "frameSize": [
+    256,
+    256
+   ]
+  },
+  "fx-report-burst": {
+   "file": "common/ui/fx/fx-report-burst",
+   "generatedBy": "tools/paint/fx.py",
+   "frames": 8,
+   "frameSize": [
+    256,
+    256
+   ]
+  },
+  "fx-witness": {
+   "file": "common/ui/fx/fx-witness",
+   "generatedBy": "tools/paint/fx.py",
+   "frames": 8,
+   "frameSize": [
+    256,
+    256
+   ]
+  },
+  "spark": {
+   "file": "common/ui/fx/spark",
+   "generatedBy": "tools/paint/fx.py"
+  },
+  "ink-drop": {
+   "file": "common/ui/fx/ink-drop",
+   "generatedBy": "tools/paint/fx.py"
+  },
+  "ink-splat": {
+   "file": "common/ui/fx/ink-splat",
+   "generatedBy": "tools/paint/fx.py"
+  },
+  "brush-stroke": {
+   "file": "common/ui/fx/brush-stroke",
+   "generatedBy": "tools/paint/fx.py"
+  },
+  "tl-ui-dong-ho": {
+   "file": "maps/thang-long/minigames/tl-ui-dong-ho.webp",
+   "size": 64
+  },
+  "tl-ui-guom": {
+   "file": "maps/thang-long/minigames/tl-ui-guom.webp",
+   "size": 64
+  },
+  "tl-ui-phao": {
+   "file": "maps/thang-long/minigames/tl-ui-phao.webp",
+   "size": 64
+  },
+  "tl-ui-quy": {
+   "file": "maps/thang-long/minigames/tl-ui-quy.webp",
+   "size": 256
+  },
+  "tl-ui-rua-vang": {
+   "file": "maps/thang-long/minigames/tl-ui-rua-vang.webp",
+   "size": 64
+  },
+  "tl-ui-voi": {
+   "file": "maps/thang-long/minigames/tl-ui-voi.webp",
+   "size": 64
+  }
+ },
+ "roles": {
+  "conservator": {
+   "icon": "common/ui/roles/conservator.webp"
+  },
+  "local_guide": {
+   "icon": "common/ui/roles/local_guide.webp"
+  },
+  "forger": {
+   "icon": "common/ui/roles/forger.webp"
+  }
+ },
+ "story": "dem-giao-thua",
+ "minigames": {
+  "tl-mg-banh-chung": {
+   "file": "maps/thang-long/minigames/tl-mg-banh-chung.webp",
+   "size": [
+    220,
+    220
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-but-long": {
+   "file": "maps/thang-long/minigames/tl-mg-but-long.webp",
+   "size": [
+    64,
+    320
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-cau-doi": {
+   "file": "maps/thang-long/minigames/tl-mg-cau-doi.webp",
+   "size": [
+    120,
+    480
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-cay-neu": {
+   "file": "maps/thang-long/minigames/tl-mg-cay-neu.webp",
+   "size": [
+    200,
+    200
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-chu-teu": {
+   "file": "maps/thang-long/minigames/tl-mg-chu-teu.webp",
+   "size": [
+    140,
+    220
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-dan-day": {
+   "file": "maps/thang-long/minigames/tl-mg-dan-day.webp",
+   "size": [
+    120,
+    380
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-dao-nuong": {
+   "file": "maps/thang-long/minigames/tl-mg-dao-nuong.webp",
+   "size": [
+    240,
+    320
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-dat-san": {
+   "file": "maps/thang-long/minigames/tl-mg-dat-san.webp",
+   "size": [
+    480,
+    480
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-do": {
+   "file": "maps/thang-long/minigames/tl-mg-do.webp",
+   "size": [
+    128,
+    128
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-gao": {
+   "file": "maps/thang-long/minigames/tl-mg-gao.webp",
+   "size": [
+    128,
+    128
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-giay-diep": {
+   "file": "maps/thang-long/minigames/tl-mg-giay-diep.webp",
+   "size": [
+    320,
+    400
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-giay-do": {
+   "file": "maps/thang-long/minigames/tl-mg-giay-do.webp",
+   "size": [
+    300,
+    400
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-khuon": {
+   "file": "maps/thang-long/minigames/tl-mg-khuon.webp",
+   "size": [
+    220,
+    220
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-la-dong": {
+   "file": "maps/thang-long/minigames/tl-mg-la-dong.webp",
+   "size": [
+    160,
+    160
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-lat": {
+   "file": "maps/thang-long/minigames/tl-mg-lat.webp",
+   "size": [
+    280,
+    32
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-mam": {
+   "file": "maps/thang-long/minigames/tl-mg-mam.webp",
+   "size": [
+    360,
+    200
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-mat-nuoc": {
+   "file": "maps/thang-long/minigames/tl-mg-mat-nuoc.webp",
+   "size": [
+    720,
+    140
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-nghien-muc": {
+   "file": "maps/thang-long/minigames/tl-mg-nghien-muc.webp",
+   "size": [
+    180,
+    130
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-ong-do": {
+   "file": "maps/thang-long/minigames/tl-mg-ong-do.webp",
+   "size": [
+    260,
+    320
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-phach": {
+   "file": "maps/thang-long/minigames/tl-mg-phach.webp",
+   "size": [
+    200,
+    130
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-qua-buoi": {
+   "file": "maps/thang-long/minigames/tl-mg-qua-buoi.webp",
+   "size": [
+    112,
+    112
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-qua-chuoi": {
+   "file": "maps/thang-long/minigames/tl-mg-qua-chuoi.webp",
+   "size": [
+    112,
+    112
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-qua-du-du": {
+   "file": "maps/thang-long/minigames/tl-mg-qua-du-du.webp",
+   "size": [
+    112,
+    112
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-qua-dua": {
+   "file": "maps/thang-long/minigames/tl-mg-qua-dua.webp",
+   "size": [
+    112,
+    112
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-qua-hong": {
+   "file": "maps/thang-long/minigames/tl-mg-qua-hong.webp",
+   "size": [
+    112,
+    112
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-qua-mang-cau": {
+   "file": "maps/thang-long/minigames/tl-mg-qua-mang-cau.webp",
+   "size": [
+    112,
+    112
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-qua-phat-thu": {
+   "file": "maps/thang-long/minigames/tl-mg-qua-phat-thu.webp",
+   "size": [
+    112,
+    112
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-qua-quyt": {
+   "file": "maps/thang-long/minigames/tl-mg-qua-quyt.webp",
+   "size": [
+    112,
+    112
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-qua-sung": {
+   "file": "maps/thang-long/minigames/tl-mg-qua-sung.webp",
+   "size": [
+    112,
+    112
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-qua-xoai": {
+   "file": "maps/thang-long/minigames/tl-mg-qua-xoai.webp",
+   "size": [
+    112,
+    112
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-quy": {
+   "file": "maps/thang-long/minigames/tl-mg-quy.webp",
+   "size": [
+    160,
+    200
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-sao": {
+   "file": "maps/thang-long/minigames/tl-mg-sao.webp",
+   "size": [
+    360,
+    48
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-thit": {
+   "file": "maps/thang-long/minigames/tl-mg-thit.webp",
+   "size": [
+    128,
+    128
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-thuy-dinh": {
+   "file": "maps/thang-long/minigames/tl-mg-thuy-dinh.webp",
+   "size": [
+    720,
+    320
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-tranh-den": {
+   "file": "maps/thang-long/minigames/tl-mg-tranh-den.webp",
+   "size": [
+    320,
+    400
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-tranh-do": {
+   "file": "maps/thang-long/minigames/tl-mg-tranh-do.webp",
+   "size": [
+    320,
+    400
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-tranh-full": {
+   "file": "maps/thang-long/minigames/tl-mg-tranh-full.webp",
+   "size": [
+    320,
+    400
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-tranh-vang": {
+   "file": "maps/thang-long/minigames/tl-mg-tranh-vang.webp",
+   "size": [
+    320,
+    400
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-tranh-xanh": {
+   "file": "maps/thang-long/minigames/tl-mg-tranh-xanh.webp",
+   "size": [
+    320,
+    400
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-trong-chau": {
+   "file": "maps/thang-long/minigames/tl-mg-trong-chau.webp",
+   "size": [
+    220,
+    220
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-van-den": {
+   "file": "maps/thang-long/minigames/tl-mg-van-den.webp",
+   "size": [
+    160,
+    160
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-van-do": {
+   "file": "maps/thang-long/minigames/tl-mg-van-do.webp",
+   "size": [
+    160,
+    160
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-van-vang": {
+   "file": "maps/thang-long/minigames/tl-mg-van-vang.webp",
+   "size": [
+    160,
+    160
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-van-xanh": {
+   "file": "maps/thang-long/minigames/tl-mg-van-xanh.webp",
+   "size": [
+    160,
+    160
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  },
+  "tl-mg-voi-dot": {
+   "file": "maps/thang-long/minigames/tl-mg-voi-dot.webp",
+   "size": [
+    64,
+    64
+   ],
+   "generatedBy": "tools/paint/tl_minigames.py"
+  }
+ },
+ "cards": {
+  "tl-card-task_banh_chung": {
+   "file": "maps/thang-long/cards/tl-card-task_banh_chung",
+   "size": [
+    640,
+    400
+   ],
+   "generatedBy": "tools/paint/tl_meta.py"
+  },
+  "tl-card-task_dong_ho": {
+   "file": "maps/thang-long/cards/tl-card-task_dong_ho",
+   "size": [
+    640,
+    400
+   ],
+   "generatedBy": "tools/paint/tl_meta.py"
+  },
+  "tl-card-task_cho_chu": {
+   "file": "maps/thang-long/cards/tl-card-task_cho_chu",
+   "size": [
+    640,
+    400
+   ],
+   "generatedBy": "tools/paint/tl_meta.py"
+  },
+  "tl-card-task_cay_neu": {
+   "file": "maps/thang-long/cards/tl-card-task_cay_neu",
+   "size": [
+    640,
+    400
+   ],
+   "generatedBy": "tools/paint/tl_meta.py"
+  },
+  "tl-card-task_cau_doi": {
+   "file": "maps/thang-long/cards/tl-card-task_cau_doi",
+   "size": [
+    640,
+    400
+   ],
+   "generatedBy": "tools/paint/tl_meta.py"
+  },
+  "tl-card-task_ngu_qua": {
+   "file": "maps/thang-long/cards/tl-card-task_ngu_qua",
+   "size": [
+    640,
+    400
+   ],
+   "generatedBy": "tools/paint/tl_meta.py"
+  },
+  "tl-card-task_ca_tru": {
+   "file": "maps/thang-long/cards/tl-card-task_ca_tru",
+   "size": [
+    640,
+    400
+   ],
+   "generatedBy": "tools/paint/tl_meta.py"
+  },
+  "tl-card-task_roi_nuoc": {
+   "file": "maps/thang-long/cards/tl-card-task_roi_nuoc",
+   "size": [
+    640,
+    400
+   ],
+   "generatedBy": "tools/paint/tl_meta.py"
+  }
+ },
+ "meta": {
+  "home-bg": {
+   "file": "maps/thang-long/meta/home-bg.webp",
+   "size": [
+    1920,
+    1080
+   ],
+   "generatedBy": "tools/paint/tl_meta.py"
+  },
+  "thumb": {
+   "file": "maps/thang-long/meta/thumb.webp",
+   "size": [
+    640,
+    360
+   ],
+   "generatedBy": "tools/paint/tl_meta.py"
+  }
+ },
+ "sfx": {
+  "phao": {
+   "file": "maps/thang-long/sfx/phao.wav",
+   "generatedBy": "tools/sfx/draw-thang-long.mjs"
+  },
+  "trong-chau-tom": {
+   "file": "maps/thang-long/sfx/trong-chau-tom.wav",
+   "generatedBy": "tools/sfx/draw-thang-long.mjs"
+  },
+  "trong-chau-chat": {
+   "file": "maps/thang-long/sfx/trong-chau-chat.wav",
+   "generatedBy": "tools/sfx/draw-thang-long.mjs"
+  }
+ }
+}

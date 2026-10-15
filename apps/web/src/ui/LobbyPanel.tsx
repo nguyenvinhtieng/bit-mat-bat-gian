@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { GAME, MIN_RECOMMENDED_PLAYERS, TASK_IDS, autoNightMin, killersFor, mapArt } from '@hidden-truth/shared';
+import { createPortal } from 'react-dom';
+import { GAME, MAP_CATALOG, MIN_PLAYERS, autoNightMin, clampKillers, killersFor, maxKillersFor, mapArt, mapMeta } from '@hidden-truth/shared';
 import { leaveRoom, send } from '../net';
 import { colorHex, useStore } from '../store';
-import { asset } from './common';
+import { Modal, asset, useSkin } from './common';
 import { Chat } from './Chat';
-import { useT } from '../i18n';
+import { useLang, useT } from '../i18n';
 import { Guide, GuideButton } from './Guide';
 
 export function LobbyPanel() {
@@ -20,9 +21,9 @@ export function LobbyPanel() {
   const total = room.players.length;
   const [showGuide, setShowGuide] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const maxKillers = Math.max(1, Math.floor(total / 2));
-  const autoKillers = total >= 8 ? 2 : 1;
-  const killers = Math.min(room.killers || autoKillers, maxKillers);
+  const maxKillers = maxKillersFor(total);
+  const killers = room.killers ? clampKillers(room.killers, total) : killersFor(total);
+  const canStart = total >= MIN_PLAYERS;
   // always open on entering the lobby so players see it exists; the tab folds it away
   const [panelOpen, setPanelOpen] = useState(true);
   const [chatOpen, setChatOpen] = usePersisted('tht:lobbyChat', !isTouch());
@@ -58,6 +59,7 @@ export function LobbyPanel() {
               </svg>
             </button>
           </div>
+          <MapSwitch slug={room.mapSlug} isHost={isHost} />
 
           <h4 className="lobby-players-title">
             {t('players')} ({total}/10)
@@ -85,7 +87,7 @@ export function LobbyPanel() {
               </li>
             ))}
           </ul>
-          {total < MIN_RECOMMENDED_PLAYERS && <p className="muted small lobby-hint">{t('hint')}</p>}
+          {!canStart && <p className="muted small lobby-hint">{t('hint')}</p>}
 
           <div className="lobby-footer">
             <div className="ready-status">
@@ -103,7 +105,7 @@ export function LobbyPanel() {
               {me?.ready ? t('unready') : t('readyBtn')}
             </button>
             {isHost && (
-              <button className="btn big wide primary start" onClick={() => send('start', {})}>
+              <button className="btn big wide primary start" disabled={!canStart} title={canStart ? undefined : t('hint')} onClick={() => send('start', {})}>
                 ▶ {t('start')} ({readyCount}/{total})
               </button>
             )}
@@ -129,7 +131,7 @@ export function LobbyPanel() {
         <div className="all-ready-bar" role="status">
           <span>✓ {isHost ? t('allReady') : t('allReadyWait')}</span>
           {isHost && (
-            <button className="btn primary start" onClick={() => send('start', {})}>
+            <button className="btn primary start" disabled={!canStart} title={canStart ? undefined : t('hint')} onClick={() => send('start', {})}>
               ▶ {t('start')}
             </button>
           )}
@@ -193,6 +195,7 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
   const room = useStore((s) => s.room)!;
   const t = useT();
   const { isHost, total, maxKillers, onClose } = props;
+  const skin = useSkin();
   const [draft, setDraft] = useState({ tasks: room.tasksPerPlayer, killers: props.killers, nightAuto: room.nightAuto, nightMin: room.nightMin });
   // guests just watch the live values; only the host edits a draft
   const { tasks, killers, nightAuto, nightMin } = isHost
@@ -232,7 +235,7 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
             label={t('tasksPer')}
             hint={t('tasksPerHint')}
             min={1}
-            max={TASK_IDS.length}
+            max={skin.taskIds.length}
             value={tasks}
             disabled={!isHost}
             onChange={(v) => edit({ tasks: v })}
@@ -248,7 +251,7 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
             onChange={(v) => edit({ killers: v })}
           />
           <SliderRow
-            icon="maps/co-do-hue/minigames/hue-mg-moon-4.webp"
+            icon={`${skin.art.nightMarker}.webp`}
             label={t('nightLen')}
             hint={nightAuto ? t('nightAutoHint') : t('nightManualHint')}
             min={GAME.nightMinMin}
@@ -330,5 +333,77 @@ function SliderRow(props: {
         ))}
       </div>
     </div>
+  );
+}
+
+/** Current map card; the host opens a picker popup to switch it (server re-validates). */
+function MapSwitch({ slug, isHost }: { slug: string; isHost: boolean }) {
+  const lang = useLang((s) => s.lang);
+  const t = useT();
+  const toast = useStore((s) => s.toast);
+  const [open, setOpen] = useState(false);
+  const [pick, setPick] = useState(slug);
+  const cur = mapMeta(slug);
+  const sel = mapMeta(pick);
+  const choose = (m: (typeof MAP_CATALOG)[number]) => (m.available ? setPick(m.slug) : toast({ text: t('comingSoonToast'), kind: 'warn' }));
+  const apply = () => {
+    if (pick !== slug) send('host:map', { map: pick });
+    setOpen(false);
+  };
+
+  return (
+    <>
+      <div className="lobby-map">
+        <span className="lobby-map-name">
+          <b>{cur.name[lang]}</b>
+          <small>{cur.subtitle[lang]}</small>
+        </span>
+        {isHost && (
+          <button className="btn small" onClick={() => (setPick(slug), setOpen(true))}>
+            {t('changeMap')}
+          </button>
+        )}
+      </div>
+      {open &&
+        createPortal(
+          <Modal title={t('chooseMap')} onClose={() => setOpen(false)} className="map-switch-modal">
+            <div className="map-grid" role="radiogroup" aria-label={t('chooseMap')}>
+              {MAP_CATALOG.map((m) => (
+                <button
+                  key={m.slug}
+                  role="radio"
+                  aria-checked={m.slug === pick}
+                  aria-disabled={!m.available}
+                  className={`map-tile ${m.slug === pick ? 'active' : ''} ${m.available ? '' : 'locked'}`}
+                  onClick={() => choose(m)}
+                >
+                  <span className="map-thumb" style={{ backgroundImage: `url(${asset(mapArt(m.slug, 'thumb'))})` }}>
+                    {!m.available && <em className="map-soon"><span>{t('comingSoon')}</span></em>}
+                  </span>
+                  <b>{m.name[lang]}</b>
+                </button>
+              ))}
+            </div>
+            <div className="map-desc" key={sel.slug}>
+              <strong>
+                {sel.name[lang]} <small>· {sel.subtitle[lang]}</small>
+              </strong>
+              <span>{sel.hook[lang]}</span>
+              <i>
+                {sel.players} {t('playersShort')}
+              </i>
+            </div>
+            <div className="map-switch-actions">
+              <button className="btn" onClick={() => setOpen(false)}>
+                {lang === 'en' ? 'Cancel' : 'Huỷ'}
+              </button>
+              <button className="btn primary" disabled={pick === slug} onClick={apply}>
+                {t('changeMap')}
+              </button>
+            </div>
+          </Modal>,
+          document.body,
+        )}
+    </>
   );
 }

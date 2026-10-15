@@ -1,7 +1,7 @@
-import { AREA_RECTS, HUE_AREAS, HUE_MAP_PREVIEW, HUE_STATIONS, LAYOUT_H, LAYOUT_W, MEETING_POINT, TILE, type AreaId } from '@hidden-truth/shared';
+import { AREA_RECTS, LAYOUT_H, LAYOUT_W, MEETING_POINT, TILE, type AreaId } from '@hidden-truth/shared';
 import { useLang } from '../i18n';
 import { useStore } from '../store';
-import { EscHint, asset, useEscape } from './common';
+import { EscHint, asset, useEscape, useSkin, useWardSpot } from './common';
 
 /** Label anchor per room (tile units) — kept off the furniture. */
 const LABEL_AT: Partial<Record<AreaId, [number, number]>> = {
@@ -15,16 +15,18 @@ const LABEL_AT: Partial<Record<AreaId, [number, number]>> = {
 
 /**
  * Full-screen map: the painted overview of the palace with room plaques, my pending tasks
- * (numbered, pulsing), finished ones, the Ngũ Phụng bell and my live position.
+ * (numbered, pulsing), finished ones, the emergency point and my live position.
  */
 export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: { x: number; y: number } | null; onClose: () => void }) {
   useEscape(onClose);
   const me = useStore((s) => s.me);
   const lang = useLang((s) => s.lang);
   const en = lang === 'en';
-  const tasks = (me?.tasks ?? []).map((id, i) => ({ st: HUE_STATIONS.find((x) => x.id === id)!, n: i + 1, done: !!me?.completedTasks.includes(id) }));
-  const name = (id: AreaId) => (en ? HUE_AREAS[id].nameEn : HUE_AREAS[id].name);
+  const skin = useSkin();
+  const tasks = (me?.tasks ?? []).map((id, i) => ({ st: skin.stations.find((x) => x.id === id)!, n: i + 1, done: !!me?.completedTasks.includes(id) }));
+  const name = (id: AreaId) => (en ? skin.areas[id].nameEn : skin.areas[id].name);
   const tx = (v: number) => v / TILE;
+  const ward = useWardSpot();
 
   return (
     <div className="mapview" onClick={onClose}>
@@ -32,8 +34,8 @@ export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: 
         <header className="mapview-head">
           <span className="mapview-orn" aria-hidden />
           <div>
-            <h2>{en ? 'Imperial City of Huế' : 'Hoàng Thành Huế'}</h2>
-            <small>{en ? 'The night of the Calendar Ceremony' : 'Đêm Ban Sóc · bản đồ Kinh thành'}</small>
+            <h2>{en ? skin.labels.mapTitle.en : skin.labels.mapTitle.vi}</h2>
+            <small>{en ? skin.labels.mapSubtitle.en : skin.labels.mapSubtitle.vi}</small>
           </div>
           <span className="mapview-orn r" aria-hidden />
           <button className="mapview-close" onClick={onClose} aria-label="Close">
@@ -43,7 +45,7 @@ export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: 
 
         <div className="mapview-body">
           <div className="mapview-stage">
-            <img className="mapview-img" src={asset(`${HUE_MAP_PREVIEW}.webp`)} alt="" draggable={false} />
+            <img className="mapview-img" src={asset(`${skin.art.preview}.webp`)} alt="" draggable={false} />
             <svg className="mapview-svg" viewBox={`0 0 ${LAYOUT_W} ${LAYOUT_H}`} preserveAspectRatio="none">
               <defs>
                 <radialGradient id="mv-glow">
@@ -70,6 +72,15 @@ export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: 
                   </text>
                 </g>
               ))}
+              {ward && (
+                <g className="mv-ward" transform={`translate(${tx(ward.x)} ${tx(ward.y)})`}>
+                  <circle className="mv-ward-pulse" r={1.8} />
+                  <circle className="mv-ward-dot" r={0.7} />
+                  <text className="mv-me-label" y={-1.2}>
+                    {en ? skin.sabotage.ward.fix.en : skin.sabotage.ward.fix.vi}
+                  </text>
+                </g>
+              )}
               {pos && (
                 <g className="mv-me" transform={`translate(${pos.x} ${pos.y})`}>
                   <circle className="mv-me-pulse" r={1.4} />
@@ -114,7 +125,7 @@ export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: 
                 <i className="k-todo" /> {en ? 'Task to do' : 'Nhiệm vụ cần làm'}
               </span>
               <span>
-                <i className="k-bell" /> {en ? 'Ngũ Phụng bell (emergency)' : 'Chuông Ngũ Phụng (họp khẩn)'}
+                <i className="k-bell" /> {en ? `${skin.emergency.en} (emergency)` : `${skin.emergency.vi} (họp khẩn)`}
               </span>
             </div>
             <p className="mv-hint">

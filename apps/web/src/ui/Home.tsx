@@ -170,7 +170,7 @@ export function Home() {
         <div className="home-foot">
           <GuideButton onClick={() => setShowGuide(true)} />
         </div>
-        {showGuide && <Guide onClose={() => setShowGuide(false)} />}
+        {showGuide && <Guide slug={mapSlug} onClose={() => setShowGuide(false)} />}
         {connecting && <p className="muted">{t('connecting')}</p>}
         {error && <p className="error">{error}</p>}
         <p className="muted small home-controls">{t('controls')}</p>

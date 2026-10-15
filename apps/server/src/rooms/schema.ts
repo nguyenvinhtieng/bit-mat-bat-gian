@@ -14,6 +14,8 @@ export class Player extends Schema {
   @type('boolean') connected = true;
   @type('uint8') tasksDone = 0;
   @type('boolean') voted = false;
+  /** public ballot while a meeting runs: target id, 'skip', or '' (not voted) */
+  @type('string') voteFor = '';
   @type('boolean') emergencyUsed = false;
   /** false = ghost (killed or voted out) */
   @type('boolean') alive = true;
@@ -46,5 +48,11 @@ export class GameState extends Schema {
   /** living players per faction — counts only, never who */
   @type('uint8') crewAlive = 0;
   @type('uint8') killersAlive = 0;
+  /** running sabotage ('' | 'blind' | 'ward'), when it ends, and the ward's area + spot */
+  @type('string') sabotage = '';
+  @type('float64') sabotageEndsAt = 0;
+  @type('string') sabotageArea = '';
+  @type('float64') sabotageX = 0;
+  @type('float64') sabotageY = 0;
   @type({ map: Player }) players = new MapSchema<Player>();
 }

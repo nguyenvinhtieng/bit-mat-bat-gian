@@ -1,4 +1,4 @@
-import { PLAYER_COLORS, ROLE_INFO } from '@hidden-truth/shared';
+import { PLAYER_COLORS, mapSkin } from '@hidden-truth/shared';
 import { leaveRoom, send } from '../net';
 import { colorHex, useStore } from '../store';
 import { RoleBadge, asset } from './common';
@@ -8,6 +8,7 @@ export function EndScreen() {
   const room = useStore((s) => s.room);
   const sessionId = useStore((s) => s.sessionId);
   if (!end || !room) return null;
+  const skin = mapSkin(room.mapSlug);
   const isHost = room.hostId === sessionId;
   return (
     // the world dims first, then the winning faction's emblem + ribbon rise, then the details
@@ -17,9 +18,12 @@ export function EndScreen() {
           <div className="end-rays" aria-hidden />
           <img className="end-emblem" src={asset(`common/ui/end/victory-${end.winner}.webp`)} alt="" draggable={false} />
           <div className="end-ribbon">
-            <h1 className={end.winner}>{end.winner === 'crew' ? 'Người Dân thắng!' : 'Âm Binh thắng!'}</h1>
+            <h1 className={end.winner}>{end.winner === 'crew' ? 'Người Dân thắng!' : `${skin.killerName.vi} thắng!`}</h1>
           </div>
-          <p className="end-reason">{end.reason}</p>
+          <p className={`end-reason ${end.reason === skin.story.endings.sabotage ? 'sabotage' : ''}`}>
+            {end.reason === skin.story.endings.sabotage && skin.sabotage.ward.icon && <img src={asset(`${skin.sabotage.ward.icon}.webp`)} alt="" draggable={false} />}
+            {end.reason}
+          </p>
         </div>
 
         <section>
@@ -32,7 +36,7 @@ export function EndScreen() {
                 <div className="role-row-main">
                   <b style={{ color: colorHex(PLAYER_COLORS[r.color] ?? 0xffffff) }}>{r.name}</b>
                   <span className="role-row-role">
-                    {ROLE_INFO[r.role].name}
+                    {skin.roles[r.role].name}
                     {!r.alive && ' ☠'}
                   </span>
                 </div>
@@ -43,7 +47,7 @@ export function EndScreen() {
         </section>
 
         <section className="learned">
-          <h3>Bạn có biết về Huế?</h3>
+          <h3>Bạn có biết về {skin.labels.mapTitle.vi}?</h3>
           <p>{end.fact}</p>
         </section>
 

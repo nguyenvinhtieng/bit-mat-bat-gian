@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { sfx } from './minigames/kit';
-import { AREA_RECTS, GAME, HUE_AREAS, canhMs as canhMsFor, HUE_NIGHT_START_HOUR, HUE_STATIONS, LAYOUT_H, LAYOUT_W, ROLE_INFO, type AreaId } from '@hidden-truth/shared';
+import { sfx } from './minigames/common/kit';
+import { AREA_RECTS, GAME, SABOTAGE, TILE, canhMs as canhMsFor, LAYOUT_H, LAYOUT_W, type AreaId, type SabotageKind } from '@hidden-truth/shared';
 
 function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''; pending: Set<AreaId>; pos: { x: number; y: number } | null; big?: boolean; onClick?: () => void }) {
+  const skin = useSkin();
+  const ward = useWardSpot();
   const ids = Object.keys(AREA_RECTS) as AreaId[];
   return (
     <svg className={`minimap ${big ? 'big' : 'mini'}`} onClick={onClick} viewBox={`0 0 ${LAYOUT_W} ${LAYOUT_H}`}>
@@ -19,10 +21,16 @@ function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''
           const [x, y, w, h] = AREA_RECTS[id][0];
           return (
             <text key={id} className="mm-label" x={x + w / 2} y={y + h / 2} textAnchor="middle" dominantBaseline="middle">
-              {HUE_AREAS[id].name}
+              {skin.areas[id].name}
             </text>
           );
         })}
+      {ward && (
+        <g className="mm-ward">
+          <circle cx={ward.x / TILE} cy={ward.y / TILE} r={2.6} className="mm-ward-pulse" />
+          <circle cx={ward.x / TILE} cy={ward.y / TILE} r={1.2} className="mm-ward-dot" />
+        </g>
+      )}
       {pos && (
         <g className="mm-me">
           <circle cx={pos.x} cy={pos.y} r={big ? 1.6 : 2.2} className="mm-pulse" />
@@ -32,10 +40,10 @@ function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''
     </svg>
   );
 }
-import { send } from '../net';
+import { fix, send } from '../net';
 import { KILLER_NAME_COLOR, useStore } from '../store';
-import { useT } from '../i18n';
-import { Digits, Icon, RoleBadge, asset, fmt, useCountdown } from './common';
+import { useLang, useT } from '../i18n';
+import { Digits, Icon, RoleBadge, asset, fmt, useCountdown, useSkin, useWardSpot } from './common';
 import { MapView } from './MapView';
 import { isTouchDevice } from './Joystick';
 
@@ -62,9 +70,137 @@ function CooldownRing({ readyAt }: { readyAt: number }) {
   );
 }
 
+/** Sabotage icon from the map skin, or a common glyph. */
+function SabIcon({ kind, size = 28 }: { kind: SabotageKind; size?: number }) {
+  const skin = useSkin();
+  const icon = skin.sabotage[kind].icon;
+  return icon ? <img src={asset(`${icon}.webp`)} alt="" width={size} height={size} draggable={false} /> : <span className="sab-glyph">{kind === 'blind' ? '💥' : '⛩'}</span>;
+}
+
+/** Alert while a sabotage runs: a short burst for `blind`, a countdown + where to go for `ward`. */
+function SabotageAlert() {
+  const skin = useSkin();
+  const room = useStore((s) => s.room)!;
+  const t = useT();
+  const en = useLang((s) => s.lang) === 'en';
+  const left = useCountdown(room.sabotage ? room.sabotageEndsAt : 0);
+  const kind = room.sabotage;
+  useEffect(() => {
+    if (kind === 'blind') (sfx.drum(), setTimeout(() => sfx.senh(), 90), setTimeout(() => sfx.senh(), 260));
+    else if (kind === 'ward') sfx.bad();
+  }, [kind, room.sabotageEndsAt]);
+  useEffect(() => {
+    if (kind === 'ward' && left != null && left > 0 && left <= 10) sfx.scrape();
+  }, [kind, left]);
+  if (!kind || room.phase !== 'explore') return null;
+  const sk = skin.sabotage[kind];
+  const area = room.sabotageArea ? skin.areas[room.sabotageArea as AreaId] : null;
+  const text = (en ? sk.alert.en : sk.alert.vi).replace('{area}', area ? (en ? area.nameEn : area.name) : '');
+  return (
+    <div className={`sab-alert ${kind} ${kind === 'ward' && (left ?? 99) <= 10 ? 'urgent' : ''}`} role="alert" key={room.sabotageEndsAt}>
+      <SabIcon kind={kind} size={36} />
+      <div>
+        <b>{en ? sk.name.en : sk.name.vi}</b>
+        <span>{text}</span>
+      </div>
+      {kind === 'ward' && left != null && <Digits text={fmt(left)} />}
+    </div>
+  );
+}
+
+/** Killer button: opens a two-item menu (blind / ward). Shares one cooldown; one sabotage at a time. */
+function SabotageButton() {
+  const skin = useSkin();
+  const room = useStore((s) => s.room)!;
+  const me = useStore((s) => s.me)!;
+  const t = useT();
+  const en = useLang((s) => s.lang) === 'en';
+  const [open, setOpen] = useState(false);
+  const cd = useCountdown(me.sabotageReadyAt ?? 0);
+  const busy = !!room.sabotage;
+  const ready = !cd && !busy;
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      const ae = document.activeElement;
+      if (e.repeat || (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA'))) return;
+      if (useStore.getState().task) return;
+      if (e.code === 'KeyQ') setOpen((v) => !v);
+      else if (open && (e.code === 'Digit1' || e.code === 'Digit2')) go(e.code === 'Digit1' ? 'blind' : 'ward');
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  });
+  useEffect(() => {
+    if (!ready) setOpen(false);
+  }, [ready]);
+  const go = (kind: SabotageKind) => {
+    setOpen(false);
+    send('sabotage', { kind });
+  };
+  const label = en ? 'Sabotage' : 'Phá';
+  return (
+    <div className="sab-wrap">
+      {open && ready && (
+        <div className="sab-menu" role="menu">
+          {(['blind', 'ward'] as const).map((k, i) => (
+            <button key={k} role="menuitem" onClick={() => go(k)}>
+              <SabIcon kind={k} />
+              <span>
+                <b>{en ? skin.sabotage[k].name.en : skin.sabotage[k].name.vi}</b>
+                <small>{k === 'blind' ? (en ? `Blinds the crew ${SABOTAGE.blindSec}s` : `Làm mù phe dân ${SABOTAGE.blindSec}s`) : en ? `Fix within ${SABOTAGE.wardSec}s or you win` : `Không sửa kịp ${SABOTAGE.wardSec}s là thắng`}</small>
+              </span>
+              <kbd>{i + 1}</kbd>
+            </button>
+          ))}
+        </div>
+      )}
+      <button
+        className={`round-btn sab ${ready ? 'ready' : 'idle'} ${cd ? 'cooling' : ''}`}
+        disabled={!ready}
+        onClick={() => setOpen((v) => !v)}
+        title={`${label} (Q)`}
+        aria-label={label}
+        aria-expanded={open}
+      >
+        <SabIcon kind="ward" size={44} />
+        {cd ? <CooldownRing readyAt={me.sabotageReadyAt ?? 0} /> : null}
+        {cd ? <span className="cd"><Digits text={cd} /></span> : null}
+        <kbd>Q</kbd>
+        <em>{label}</em>
+      </button>
+    </div>
+  );
+}
+
+/** Hold-to-fix pill at the ward spot (pointer or E/Space); the server times the hold. */
+function FixButton({ title }: { title: string }) {
+  const skin = useSkin();
+  const fixing = useStore((s) => s.fixing);
+  const t = useT();
+  const en = useLang((s) => s.lang) === 'en';
+  useEffect(() => () => fix(false), []);
+  return (
+    <button
+      className={`interact fix ${fixing ? 'holding' : ''}`}
+      style={{ '--hold': `${SABOTAGE.fixHoldSec}s` } as React.CSSProperties}
+      onPointerDown={(e) => ((e.target as HTMLElement).setPointerCapture?.(e.pointerId), fix(true))}
+      onPointerUp={() => fix(false)}
+      onPointerCancel={() => fix(false)}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <i className="fix-fill" aria-hidden />
+      <kbd>E</kbd>
+      <SabIcon kind="ward" size={22} />
+      {en ? skin.sabotage.ward.fix.en : title}
+      <small>{en ? '(hold)' : '(giữ)'}</small>
+    </button>
+  );
+}
+
 /** Night-watch drum banner: shown (with the drum) each time a new canh begins. */
 function CanhBanner() {
-  const canh = useStore((s) => s.canh);
+    const skin = useSkin();
+const canh = useStore((s) => s.canh);
   const [show, setShow] = useState(false);
   useEffect(() => sfx.preloadDrum(), []);
   useEffect(() => {
@@ -77,7 +213,7 @@ function CanhBanner() {
   if (!canh || !show) return null;
   return (
     <div className={`canh-banner ${canh.n > GAME.canhCount ? 'dawn' : ''}`} key={canh.id}>
-      <img src={asset('maps/co-do-hue/minigames/hue-ui-trong-canh.webp')} alt="" />
+      <img src={asset(`${skin.art.clockIcon}.webp`)} alt="" />
       <div>
         <b>
           {Array.from({ length: GAME.canhCount }, (_, i) => (
@@ -90,12 +226,11 @@ function CanhBanner() {
   );
 }
 
-const CANH_NAMES = ['một', 'hai', 'ba', 'tư', 'năm'];
-const CANH_NAMES_EN = ['I', 'II', 'III', 'IV', 'V'];
 
 /** Night clock: 5 canh that run on time (paused during meetings). Elapsed is derived from synced timestamps. */
 function useNight() {
-  const room = useStore((s) => s.room)!;
+    const skin = useSkin();
+const room = useStore((s) => s.room)!;
   const offset = useStore((s) => s.timeOffset);
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -106,9 +241,10 @@ function useNight() {
   const canhMs = canhMsFor(room.nightMin);
   const total = canhMs * GAME.canhCount;
   const elapsed = Math.min(total, Math.max(0, (room.nightPausedAt || now + offset) - room.nightStartAt));
-  // in-game hour: canh một starts 19:00, each canh is 2 hours
-  const mins = Math.floor((elapsed / canhMs) * 120);
-  const h = (HUE_NIGHT_START_HOUR + Math.floor(mins / 60)) % 24;
+  // in-game clock from the map skin (Huế: canh một starts 19:00, each canh is 2 hours)
+  const { startMin, segmentMin } = skin.story.clock;
+  const mins = startMin + Math.floor((elapsed / canhMs) * segmentMin);
+  const h = Math.floor(mins / 60) % 24;
   return {
     frac: elapsed / total,
     canh: Math.min(GAME.canhCount, Math.floor(elapsed / canhMs) + 1),
@@ -120,18 +256,19 @@ function useNight() {
 }
 
 function NightBar({ pct, progress, target }: { pct: number; progress: number; target: number }) {
-  const night = useNight();
+    const skin = useSkin();
+const night = useNight();
   const t = useT();
-  const en = t('canh') !== 'Canh';
+  const en = useLang((s) => s.lang) === 'en';
   if (!night) return null;
   const last = night.canh === GAME.canhCount;
   return (
     <div className={`night-wrap ${last ? 'last' : ''} ${night.paused ? 'paused' : ''}`}>
       <div className="nw-row">
       <div className="night-clock" title={t('nightTitle')}>
-        <img src={asset('maps/co-do-hue/minigames/hue-ui-trong-canh.webp')} width={26} height={26} alt="" />
+        <img src={asset(`${skin.art.clockIcon}.webp`)} width={26} height={26} alt="" />
         <span className="nc-canh">
-          {t('canh')} {en ? CANH_NAMES_EN[night.canh - 1] : CANH_NAMES[night.canh - 1]}
+          {t('canh')} {en ? skin.story.segments[night.canh - 1].en : skin.story.segments[night.canh - 1].vi}
         </span>
         <i className="nc-sep" aria-hidden />
         {night.paused ? (
@@ -148,11 +285,11 @@ function NightBar({ pct, progress, target }: { pct: number; progress: number; ta
           return (
             <div key={i} className={`nb-seg ${f >= 1 ? 'done' : f > 0 ? 'cur' : ''}`}>
               <i style={{ width: `${f * 100}%` }} />
-              <span>{en ? CANH_NAMES_EN[i] : CANH_NAMES[i]}</span>
+              <span>{en ? skin.story.segments[i].en : skin.story.segments[i].vi}</span>
             </div>
           );
         })}
-        <img className="nb-moon" src={asset('maps/co-do-hue/minigames/hue-mg-moon-4.webp')} alt="" style={{ left: `${night.frac * 100}%` }} />
+        <img className="nb-moon" src={asset(`${skin.art.nightMarker}.webp`)} alt="" style={{ left: `${night.frac * 100}%` }} />
       </div>
       </div>
       <div className="progress" title={t('progress')}>
@@ -167,7 +304,8 @@ function NightBar({ pct, progress, target }: { pct: number; progress: number; ta
 
 /** After dying: tell the player (once) that ghosts keep doing tasks — the crew still needs them before canh năm ends. */
 function GhostNotice({ dead, crew }: { dead: boolean; crew: boolean }) {
-  const phase = useStore((s) => s.room?.phase);
+    const skin = useSkin();
+const phase = useStore((s) => s.room?.phase);
   const cinematic = useStore((s) => s.cinematic);
   const t = useT();
   const [state, setState] = useState<'none' | 'open' | 'seen'>('none');
@@ -180,7 +318,7 @@ function GhostNotice({ dead, crew }: { dead: boolean; crew: boolean }) {
   return (
     <div className="modal-backdrop ghost-backdrop">
       <div className="ghost-notice">
-        <img src={asset('maps/co-do-hue/minigames/hue-ui-hon-ma.webp')} width={120} height={120} alt="" />
+        <img src={asset(`${skin.art.ghostIcon}.webp`)} width={120} height={120} alt="" />
         <div className="ghost-body">
         <h2>{t('ghostTitle')}</h2>
         {crew ? (
@@ -205,14 +343,15 @@ function GhostNotice({ dead, crew }: { dead: boolean; crew: boolean }) {
 }
 
 export function Hud() {
-  const room = useStore((s) => s.room)!;
+    const skin = useSkin();
+const room = useStore((s) => s.room)!;
   const me = useStore((s) => s.me);
   const nearby = useStore((s) => s.nearby);
   const killTarget = useStore((s) => s.killTarget);
   const area = useStore((s) => s.area) as AreaId | '';
   const set = useStore((s) => s.set);
   const t = useT();
-  const en = t('canh') !== 'Canh';
+  const en = useLang((s) => s.lang) === 'en';
   const sessionId = useStore((s) => s.sessionId);
   const left = useCountdown(room.phaseEndsAt);
   const cdLeft = useCountdown(me?.killReadyAt ?? 0);
@@ -247,14 +386,14 @@ export function Hud() {
   const pendingAreas = new Set<AreaId>(
     (me?.tasks ?? [])
       .filter((id) => !me!.completedTasks.includes(id))
-      .map((id) => HUE_STATIONS.find((x) => x.id === id)!.area),
+      .map((id) => skin.stations.find((x) => x.id === id)!.area),
   );
 
   const touch = isTouchDevice();
   const taskItems = me && (
           <ul>
             {me.tasks.map((id) => {
-              const st = HUE_STATIONS.find((x) => x.id === id)!;
+              const st = skin.stations.find((x) => x.id === id)!;
               const done = me.completedTasks.includes(id);
               const here = st.area === area && !done;
               return (
@@ -262,7 +401,7 @@ export function Hud() {
                   <i className="tick">{done ? '✔' : ''}</i>
                   <span>
                     {en ? st.titleEn : st.title}
-                    <small className="task-where">📍 {en ? HUE_AREAS[st.area].nameEn : HUE_AREAS[st.area].name}</small>
+                    <small className="task-where">📍 {en ? skin.areas[st.area].nameEn : skin.areas[st.area].name}</small>
                   </span>
                 </li>
               );
@@ -273,11 +412,12 @@ export function Hud() {
   return (
     <>
       {inGame && <CanhBanner />}
+      {inGame && <SabotageAlert />}
       {/* top centre: the (small) location plate on top, night clock + progress under it */}
       <div className="hud-top">
         {area && (
           <div className="area-name" key={area}>
-            <span>{HUE_AREAS[area].name}</span>
+            <span>{skin.areas[area].name}</span>
           </div>
         )}
         {inGame && room.phase !== 'ended' && <NightBar pct={pct} progress={room.progress} target={room.progressTarget} />}
@@ -312,7 +452,7 @@ export function Hud() {
         <button className={`role-card ${me.faction}`} onClick={() => set({ introOpen: true, introQuick: true })} title={t('roleGoal')}>
           <RoleBadge role={me.role} size={48} />
           <div>
-            <strong>{ROLE_INFO[me.role].name}</strong>
+            <strong>{skin.roles[me.role].name}</strong>
             <span className="faction">{killer ? t('killerFaction') : t('crewFaction')}</span>
             <span className="ability">
               {!alive ? (
@@ -323,7 +463,7 @@ export function Hud() {
                   {me.shield ? t('shieldOn') : t('shieldOff')}
                 </>
               ) : (
-                ROLE_INFO[me.role].short
+                skin.roles[me.role].short
               )}
             </span>
             {killer && me.mates && me.mates.length > 0 && <span className="ability">{t('mates')}: <b style={{ color: KILLER_NAME_COLOR }}>{me.mates.join(', ')}</b></span>}
@@ -401,9 +541,10 @@ export function Hud() {
         </div>
       )}
 
-      {room.phase === 'explore' && alive && (
+      {room.phase === 'explore' && (alive || killer) && (
         <div className="action-bar">
-          {killer && (
+          {killer && <SabotageButton />}
+          {killer && alive && (
             <button
               className={`round-btn kill ${killReady ? 'ready' : 'idle'} ${cdLeft ? 'cooling' : ''}`}
               disabled={!killReady}
@@ -418,7 +559,7 @@ export function Hud() {
               <em>{t('kill')}</em>
             </button>
           )}
-          <button
+          {alive && <button
             className={`round-btn report ${canReport ? 'ready' : 'idle'}`}
             disabled={!canReport}
             onClick={() => send('report', {})}
@@ -428,12 +569,13 @@ export function Hud() {
             <img src={asset('common/ui/btn-report.webp')} alt="" draggable={false} />
             <kbd>R</kbd>
             <em>{t('report')}</em>
-          </button>
+          </button>}
         </div>
       )}
 
       {/* tasks get an in-world "tap" badge over the station (GameScene) — the pill is for report / bell only */}
-      {nearby && nearby.kind !== 'task' && room.phase === 'explore' && (
+      {nearby?.kind === 'fix' && room.phase === 'explore' && <FixButton title={nearby.title} />}
+      {nearby && nearby.kind !== 'task' && nearby.kind !== 'fix' && room.phase === 'explore' && (
         <button
           className={`interact ${nearby.kind}`}
           onClick={() => {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { GAME, HUE_PRELUDE, ROLE_INFO } from '@hidden-truth/shared';
+import { GAME, mapSkin } from '@hidden-truth/shared';
 import { KILLER_NAME_COLOR, useStore } from '../store';
 import { RoleBadge, useEscape } from './common';
 
@@ -86,14 +86,15 @@ export function IntroModal() {
   });
 
   if (!open || !me) return null;
-  const info = ROLE_INFO[me.role];
+  const skin = mapSkin(useStore.getState().room?.mapSlug);
+  const info = skin.roles[me.role];
   const killer = me.faction === 'killer';
 
   return (
     <div className={`opening ${leaving ? 'leaving' : ''} ${flying ? 'to-card' : ''} ${quick ? 'quick' : ''}`} onClick={quick ? close : undefined}>
       {stage === 'prelude' && (
         <div className="opening-prelude" key="prelude" style={{ animationDelay: `${PRELUDE_MS - 600}ms` }}>
-          {HUE_PRELUDE.map((l, i) => (
+          {skin.story.prelude.map((l, i) => (
             <p key={i} style={{ animationDelay: `${0.4 + i * 1}s` }}>
               {l}
             </p>
@@ -106,7 +107,7 @@ export function IntroModal() {
           <div className="opening-badge">
             <RoleBadge role={me.role} size={140} />
           </div>
-          <span className="faction">{killer ? 'Phe Âm Binh' : 'Phe Người Dân'}</span>
+          <span className="faction">{killer ? `Phe ${skin.killerName.vi}` : 'Phe Người Dân'}</span>
           <h2>{info.name}</h2>
           <p className="opening-desc">{info.desc}</p>
           {killer && me.mates && me.mates.length > 0 && (

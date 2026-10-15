@@ -15,6 +15,7 @@ import { useT } from './i18n';
 export function App() {
   const screen = useStore((s) => s.screen);
   const phase = useStore((s) => s.room?.phase);
+  const mapSlug = useStore((s) => s.room?.mapSlug);
   const end = useStore((s) => s.end);
 
   if (screen === 'home' || !phase)
@@ -28,7 +29,7 @@ export function App() {
 
   return (
     <div className="game-root">
-      <PhaserGame />
+      <PhaserGame key={mapSlug} />
       <div className="ui-layer">
         {/* first, so every other control sits above the touch-stick zone */}
         {(phase === 'lobby' || phase === 'explore') && <Joystick />}

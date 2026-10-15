@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { ROLE_INFO, type RoleId } from '@hidden-truth/shared';
+import { ROLE_INFO, mapSkin, type RoleId } from '@hidden-truth/shared';
 import { useStore } from '../store';
 
 export const asset = (p: string) => `/assets/${p}`;
+
+/** Public skin of the current room's map (rooms, stations, story, art paths). */
+export const useSkin = () => mapSkin(useStore((s) => s.room?.mapSlug));
 
 /**
  * ESC closes the top-most popup only. Every open popup pushes its close handler on a stack;
@@ -41,6 +44,14 @@ export function useEscape(onEsc: (() => void) | undefined, active = true) {
 }
 /** Small "Esc" hint shown next to close buttons. */
 export const EscHint = () => <kbd className="esc-hint">Esc</kbd>;
+
+/** Ward spot (px) while a ward sabotage runs. Primitive selectors: an object selector would re-render forever. */
+export function useWardSpot() {
+  const on = useStore((s) => s.room?.sabotage === 'ward');
+  const x = useStore((s) => s.room?.sabotageX ?? 0);
+  const y = useStore((s) => s.room?.sabotageY ?? 0);
+  return on ? { x, y } : null;
+}
 
 export function useCountdown(endsAt: number) {
   const offset = useStore((s) => s.timeOffset);

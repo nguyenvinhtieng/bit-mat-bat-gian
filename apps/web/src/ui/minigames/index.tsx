@@ -1,29 +1,20 @@
-import type { TaskData } from '@hidden-truth/shared';
-import { MoonPhase, RoyalSeal, WoodblockPrint } from './calendar';
-import { CourtRanks, NgoMonGates, NhaNhac } from './ceremony';
-import { BanhBeo, CuuDinh, PoemWall } from './heritage';
-import type { Submit } from './kit';
+import { MAP_SKINS, type TaskData } from '@hidden-truth/shared';
+import type { ComponentType } from 'react';
+import { HueMinigame } from './co-do-hue';
+import type { Submit } from './common/kit';
+import { TlMinigame } from './thang-long';
 
-/** One mini-game per task station (map co-do-hue, "Năm Canh Trước Bình Minh"). */
+type MinigameUI = ComponentType<{ task: TaskData; submit: Submit }>;
+
+/** Mini-game UI per map slug. New map: add ui/minigames/<slug>/index.tsx and register it here. */
+const BY_MAP: Record<string, MinigameUI> = {
+  'co-do-hue': HueMinigame,
+  'thang-long': TlMinigame,
+};
+
+/** Task ids are unique across maps, so the task alone tells which map's UI to render. */
 export function Minigame({ task, submit }: { task: TaskData; submit: Submit }) {
-  switch (task.taskId) {
-    case 'task_moon_phase':
-      return <MoonPhase task={task} submit={submit} />;
-    case 'task_woodblock_print':
-      return <WoodblockPrint task={task} submit={submit} />;
-    case 'task_ngo_mon_gates':
-      return <NgoMonGates task={task} submit={submit} />;
-    case 'task_court_ranks':
-      return <CourtRanks task={task} submit={submit} />;
-    case 'task_nha_nhac':
-      return <NhaNhac task={task} submit={submit} />;
-    case 'task_cuu_dinh':
-      return <CuuDinh task={task} submit={submit} />;
-    case 'task_poem_wall':
-      return <PoemWall task={task} submit={submit} />;
-    case 'task_royal_seal':
-      return <RoyalSeal task={task} submit={submit} />;
-    case 'task_banh_beo':
-      return <BanhBeo task={task} submit={submit} />;
-  }
+  const slug = Object.values(MAP_SKINS).find((s) => s.taskIds.includes(task.taskId))?.slug;
+  const UI = slug ? BY_MAP[slug] : undefined;
+  return UI ? <UI task={task} submit={submit} /> : null;
 }

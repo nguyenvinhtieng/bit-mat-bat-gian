@@ -2,5 +2,8 @@ export * from './constants';
 export * from './layout';
 export * from './movement';
 export * from './protocol';
+export * from './maps/common/skin';
 export * from './maps/co-do-hue';
+export * from './maps/thang-long';
 export * from './maps/catalog';
+export * from './maps/registry';

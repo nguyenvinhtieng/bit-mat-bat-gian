@@ -91,6 +91,15 @@ export const SPAWNS: Point[] = [
   px(24, 5.8), px(24, 4.2), px(24, 2.6), px(16.4, 4.2), px(25.6, 4.2),
 ];
 
+/** Where a `ward` sabotage can strike: one open spot per room (feet position, px), well clear of every task station. The meeting courtyard is safe. */
+export const WARD_SPOTS: { area: AreaId; x: number; y: number }[] = [
+  { area: 'exhibition', ...px(9.5, 16.5) },
+  { area: 'coordination', ...px(34.5, 13.5) },
+  { area: 'editing', ...px(21.5, 20.5) },
+  { area: 'archive', ...px(17.5, 27.5) },
+  { area: 'artifact_storage', ...px(30.5, 28.5) },
+];
+
 export type LayoutGrid = {
   w: number;
   h: number;

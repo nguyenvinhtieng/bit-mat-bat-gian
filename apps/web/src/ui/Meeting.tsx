@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PLAYER_COLORS } from '@hidden-truth/shared';
+import { PLAYER_COLORS, mapSkin } from '@hidden-truth/shared';
 import { send } from '../net';
 import { colorHex, KILLER_NAME_COLOR, useKillerIds, useStore, type PlayerView } from '../store';
 import { Chat } from './Chat';
@@ -24,15 +24,31 @@ function TimerRing({ left, total }: { left: number | null; total: number }) {
   );
 }
 
+/** Small portraits of who cast a ballot, so everyone can see who voted for whom. */
+function Voters({ list }: { list: PlayerView[] }) {
+  // always rendered (fixed-height row) so a new ballot never changes the card height
+  return (
+    <span className="voters">
+      {list.map((v) => (
+        <span key={v.id} className="voter" title={v.name} style={{ '--pc': colorHex(v.color) } as React.CSSProperties}>
+          <Sprite color={colorIndex(v.color)} dir="down" scale={0.6} />
+        </span>
+      ))}
+    </span>
+  );
+}
+
 function VoteCard({
   p,
   me,
   canVote,
+  voters,
   onVote,
 }: {
   p: PlayerView;
   me: boolean;
   canVote: boolean;
+  voters: PlayerView[];
   onVote: () => void;
 }) {
   const votable = canVote && p.alive && !me;
@@ -51,6 +67,7 @@ function VoteCard({
             {me && <em className="vcard-you">Bạn</em>}
           </span>
           <span className="vcard-sub">{!p.alive ? 'Đã bị hạ gục' : !p.connected ? 'Mất kết nối' : me ? 'Không thể tự bỏ phiếu' : votable ? 'Chạm để loại' : ' '}</span>
+          <Voters list={voters} />
         </span>
         {p.alive && p.voted && <img className="vcard-stamp" src={mt('stamp-voted')} alt="đã bỏ phiếu" title="Đã bỏ phiếu" />}
       </button>
@@ -75,6 +92,8 @@ export function Meeting() {
   }, [left]); // eslint-disable-line react-hooks/exhaustive-deps
   const alive = room.players.filter((p) => p.alive && p.connected);
   const votedN = alive.filter((p) => p.voted).length;
+  const votersOf = (target: string) => room.players.filter((v) => v.alive && v.voteFor === target);
+  const skippers = votersOf('skip');
   const emergency = /chuông|khẩn/i.test(room.meetingReason);
 
   return (
@@ -84,8 +103,8 @@ export function Meeting() {
       <header className="meet-head">
         <img className="meet-bell" src={mt('chuong-ngu-phung')} alt="" />
         <div className="meet-title">
-          <span className="meet-eyebrow">{reveal ? 'Phán quyết của đoàn' : emergency ? 'Chuông Ngũ Phụng vang lên' : 'Phát hiện thi thể'}</span>
-          <h2>{reveal ? 'Kết quả bỏ phiếu' : 'Họp khẩn trước Điện Thái Hòa'}</h2>
+          <span className="meet-eyebrow">{reveal ? 'Phán quyết của đoàn' : emergency ? `${mapSkin(room.mapSlug).emergency.vi} vang lên` : 'Phát hiện thi thể'}</span>
+          <h2>{reveal ? 'Kết quả bỏ phiếu' : mapSkin(room.mapSlug).labels.meetingPlace.vi}</h2>
           <span className="meet-reason">{room.meetingReason}</span>
         </div>
         <TimerRing left={left} total={reveal ? 6 : total} />
@@ -111,7 +130,7 @@ export function Meeting() {
               <h1 className="eject-line">
                 <span style={{ color: colorHex(PLAYER_COLORS[result.ejectedColor ?? 0] ?? 0xffffff) }}>{result.ejected}</span> bị trục xuất khỏi Kinh thành.
               </h1>
-              <p className={`eject-verdict ${result.wasKiller ? 'good' : 'bad'}`}>{result.ejected} {result.wasKiller ? 'CHÍNH LÀ Âm Binh!' : 'KHÔNG phải là Âm Binh…'}</p>
+              <p className={`eject-verdict ${result.wasKiller ? 'good' : 'bad'}`}>{result.ejected} {result.wasKiller ? `CHÍNH LÀ ${mapSkin(room.mapSlug).killerName.vi}!` : `KHÔNG phải là ${mapSkin(room.mapSlug).killerName.vi}…`}</p>
             </>
           ) : (
             <>
@@ -119,7 +138,7 @@ export function Meeting() {
               <h1 className="eject-line">Không ai bị loại.</h1>
             </>
           )}
-          <p className="muted">{result.killersLeft > 0 ? `Vẫn còn ${result.killersLeft} Âm Binh trong đoàn.` : 'Không còn Âm Binh nào!'}</p>
+          <p className="muted">{result.killersLeft > 0 ? `Vẫn còn ${result.killersLeft} ${mapSkin(room.mapSlug).killerName.vi} trong đoàn.` : `Không còn ${mapSkin(room.mapSlug).killerName.vi} nào!`}</p>
           <ul className="tally v2">
             {result.tally.map((t) => (
               <li key={t.name}>
@@ -154,17 +173,26 @@ export function Meeting() {
             </div>
             <ul className="vcards">
               {room.players.map((p) => (
-                <VoteCard key={p.id} p={p} me={p.id === sessionId} canVote={canVote} onVote={() => send('vote', { target: p.id })} />
+                <VoteCard key={p.id} p={p} me={p.id === sessionId} canVote={canVote} voters={votersOf(p.id)} onVote={() => send('vote', { target: p.id })} />
               ))}
             </ul>
             <div className="meet-actions">
-              {canVote && (
-                <button className="skip-vote" onClick={() => send('vote', { target: 'skip' })}>
-                  <img src={mt('seal-skip')} alt="" /> Bỏ qua — không loại ai
-                </button>
-              )}
-              {mine?.alive && mine.voted && <p className="muted">Phiếu của bạn đã được niêm phong. Chờ những người khác…</p>}
-              {!mine?.alive && <p className="muted">Bạn là hồn ma — chỉ xem, không thể nói hoặc bỏ phiếu.</p>}
+              <div className="meet-cta">
+                {canVote ? (
+                  <button className="skip-vote" onClick={() => send('vote', { target: 'skip' })}>
+                    <img src={mt('seal-skip')} alt="" /> Bỏ qua — không loại ai
+                  </button>
+                ) : mine?.alive ? (
+                  <p className="muted">Đã niêm phong phiếu — chờ người khác…</p>
+                ) : (
+                  <p className="muted">Bạn là hồn ma — chỉ xem, không thể nói hoặc bỏ phiếu.</p>
+                )}
+              </div>
+              <div className="skip-voters">
+                <img src={mt('seal-skip')} alt="" />
+                <span>Bỏ qua ({skippers.length})</span>
+                <Voters list={skippers} />
+              </div>
             </div>
           </section>
 

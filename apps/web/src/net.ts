@@ -21,6 +21,13 @@ export function onRoom(cb: Listener) {
   return () => roomListeners.delete(cb);
 }
 
+/** press / release the sabotage fix button (the server times the hold) */
+export function fix(on: boolean) {
+  if (useStore.getState().fixing === on) return;
+  useStore.getState().set({ fixing: on });
+  send('sabotage:fix', { on });
+}
+
 export function send<K extends keyof ClientMessages>(type: K, payload: ClientMessages[K]) {
   room?.send(type, payload);
 }
@@ -39,6 +46,7 @@ function snapshot(state: any): RoomView {
       connected: p.connected,
       tasksDone: p.tasksDone,
       voted: p.voted,
+      voteFor: p.voteFor ?? '',
       emergencyUsed: p.emergencyUsed,
       alive: p.alive,
       body: p.body,
@@ -57,6 +65,11 @@ function snapshot(state: any): RoomView {
     nightStartAt: state.nightStartAt ?? 0,
     nightPausedAt: state.nightPausedAt ?? 0,
     meetingReason: state.meetingReason,
+    sabotage: state.sabotage ?? '',
+    sabotageEndsAt: state.sabotageEndsAt ?? 0,
+    sabotageArea: state.sabotageArea ?? '',
+    sabotageX: state.sabotageX ?? 0,
+    sabotageY: state.sabotageY ?? 0,
     killers: state.killers,
     tasksPerPlayer: state.tasksPerPlayer,
     nightMin: state.nightMin ?? 5,

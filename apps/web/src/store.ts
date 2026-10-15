@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Cinematic, ChatMsg, EndReveal, Phase, PrivateInfo, TaskData, TaskId, ToastMsg, VoteResult } from '@hidden-truth/shared';
+import type { Cinematic, ChatMsg, EndReveal, Phase, PrivateInfo, SabotageKind, TaskData, TaskId, ToastMsg, VoteResult } from '@hidden-truth/shared';
 
 export type PlayerView = {
   id: string;
@@ -9,6 +9,8 @@ export type PlayerView = {
   connected: boolean;
   tasksDone: number;
   voted: boolean;
+  /** target id, 'skip', or '' */
+  voteFor: string;
   emergencyUsed: boolean;
   alive: boolean;
   body: boolean;
@@ -28,6 +30,12 @@ export type RoomView = {
   nightStartAt: number;
   nightPausedAt: number;
   meetingReason: string;
+  /** running sabotage ('' = none); ward spot/area only while a ward runs */
+  sabotage: '' | SabotageKind;
+  sabotageEndsAt: number;
+  sabotageArea: string;
+  sabotageX: number;
+  sabotageY: number;
   killers: number;
   tasksPerPlayer: number;
   /** whole-night length (min); nightAuto = follows lobby size until the host sets it */
@@ -42,6 +50,7 @@ export type Nearby =
   | { kind: 'task'; id: TaskId; title: string; done: boolean }
   | { kind: 'report'; title: string }
   | { kind: 'emergency'; title: string; used: boolean }
+  | { kind: 'fix'; title: string }
   | null;
 
 type TaskResult = { ok: boolean; text: string; fact?: string; headline?: string };
@@ -67,6 +76,8 @@ type Store = {
   area: string;
   /** my position in tile units */
   pos: { x: number; y: number } | null;
+  /** holding the sabotage fix button (pointer or E/Space) */
+  fixing: boolean;
   introOpen: boolean;
   /** reopened from the HUD: show only the role card, no story / long animation */
   introQuick: boolean;
@@ -97,6 +108,7 @@ export const useStore = create<Store>((set, get) => ({
   killTarget: false,
   area: '',
   pos: null,
+  fixing: false,
   introOpen: false,
   introQuick: false,
   voteResult: null,

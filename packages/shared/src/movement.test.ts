@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { getGrid, areaAt, SPAWNS, isSolidTile } from './layout';
 import { stepMovement } from './movement';
 import { PLAYER_SPEED, SIM_DT, TILE } from './constants';
-import { HUE_STATIONS } from './maps/co-do-hue';
+import { HUE_STATIONS } from './maps/co-do-hue/index';
 
 test('spawns are walkable and inside the courtyard', () => {
   const g = getGrid();

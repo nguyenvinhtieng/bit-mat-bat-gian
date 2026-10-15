@@ -12,7 +12,8 @@ export const BODY_HH = 7;
 export const INTERACT_RADIUS = 72;
 
 export const MAX_PLAYERS = 10;
-export const MIN_RECOMMENDED_PLAYERS = 4;
+/** a game cannot start with fewer players */
+export const MIN_PLAYERS = 4;
 export const ROOM_NAME = 'investigation';
 
 export const AREA_IDS = [
@@ -31,9 +32,10 @@ export const ROLE_IDS = ['villager', 'guardian', 'killer'] as const;
 export type RoleId = (typeof ROLE_IDS)[number];
 export type Faction = 'crew' | 'killer';
 
-export const ROLE_INFO: Record<RoleId, { name: string; faction: Faction; icon: string; short: string; desc: string }> = {
+export const ROLE_INFO: Record<RoleId, { name: string; nameEn: string; faction: Faction; icon: string; short: string; desc: string }> = {
   villager: {
     name: 'Nghệ Nhân Cố Đô',
+    nameEn: 'Heritage Artisan',
     faction: 'crew',
     icon: 'local_guide',
     short: 'Làm nhiệm vụ, tránh Âm Binh',
@@ -41,6 +43,7 @@ export const ROLE_INFO: Record<RoleId, { name: string; faction: Faction; icon: s
   },
   guardian: {
     name: 'Lính Ngự Lâm',
+    nameEn: 'Royal Guard',
     faction: 'crew',
     icon: 'conservator',
     short: 'Có một lá chắn chống bị hạ gục',
@@ -48,6 +51,7 @@ export const ROLE_INFO: Record<RoleId, { name: string; faction: Faction; icon: s
   },
   killer: {
     name: 'Âm Binh',
+    nameEn: 'Shadow',
     faction: 'killer',
     icon: 'forger',
     short: 'Hạ gục mọi người để thắng',
@@ -61,6 +65,7 @@ export const PLAYER_COLORS = [
   0xe8524a, 0x3f7fd9, 0x3fae5a, 0xf2c230, 0xa05bd6, 0xf08a2c, 0x35c0c0, 0xef6fb0, 0x8d6e4a, 0x6b7a8f, 0xb8d94a, 0xf4f0e6,
 ];
 
+/** Union of every map's task ids (ids are globally unique; each map plays its own subset, see MapSkin.taskIds). */
 export const TASK_IDS = [
   'task_moon_phase',
   'task_woodblock_print',
@@ -71,6 +76,15 @@ export const TASK_IDS = [
   'task_poem_wall',
   'task_royal_seal',
   'task_banh_beo',
+  // thang-long
+  'task_banh_chung',
+  'task_dong_ho',
+  'task_cho_chu',
+  'task_cay_neu',
+  'task_cau_doi',
+  'task_ngu_qua',
+  'task_ca_tru',
+  'task_roi_nuoc',
 ] as const;
 export type TaskId = (typeof TASK_IDS)[number];
 
@@ -97,8 +111,32 @@ export const GAME = {
   emergencyPerPlayer: 1,
 };
 
-/** Number of killers for a given player count. */
-export const killersFor = (n: number) => (n >= 8 ? 2 : n >= 2 ? 1 : 0);
+/** Killer sabotages (common engine; names/art come from `skin.sabotage`). One runs at a time; killers share the cooldown. */
+export const SABOTAGE = {
+  cooldownSec: 40,
+  /** after the role reveal */
+  firstCooldownSec: 20,
+  /** after a meeting ends */
+  postMeetingCooldownSec: 20,
+  /** `blind`: living players' vision shrinks to `blindVision` of normal (killers keep theirs) */
+  blindSec: 6,
+  blindVision: 0.25,
+  /** `ward`: fix it at its spot before this runs out or the killers win */
+  wardSec: 45,
+  /** hold time at the spot to fix a ward (server-timed) */
+  fixHoldSec: 2.5,
+  fixRange: INTERACT_RADIUS + 24,
+};
+
+/**
+ * Most killers a room of `n` may have: the crew must stay at least twice the killers
+ * (4–6 → 1, 7–9 → 2, 10 → 3), otherwise a couple of quick kills end the game. Always at least 1.
+ */
+export const maxKillersFor = (n: number) => Math.max(1, Math.floor((n - 1) / 3));
+/** A requested killer count clamped to 1..maxKillersFor(n). */
+export const clampKillers = (k: number, n: number) => Math.max(1, Math.min(maxKillersFor(n), Math.floor(k)));
+/** Default number of killers for a given player count. */
+export const killersFor = (n: number) => clampKillers(n >= 8 ? 2 : 1, n);
 
 /**
  * Auto night length (minutes) so the crew can just finish in time:

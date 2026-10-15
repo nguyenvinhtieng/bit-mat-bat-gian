@@ -1,11 +1,10 @@
 import { useEffect } from 'react';
-import { HUE_AREAS, HUE_STATIONS } from '@hidden-truth/shared';
 import { useLang } from '../i18n';
 import { send } from '../net';
 import { useStore } from '../store';
-import { Modal, asset } from './common';
+import { Modal, asset, useSkin } from './common';
 import { Minigame } from './minigames';
-import { QUOTES } from './minigames/quotes';
+import { QUOTES } from './minigames/registry';
 
 export function TaskModal() {
   const task = useStore((s) => s.task);
@@ -14,6 +13,7 @@ export function TaskModal() {
   const me = useStore((s) => s.me);
   const set = useStore((s) => s.set);
   const lang = useLang((s) => s.lang);
+  const skin = useSkin();
   const en = lang === 'en';
   const close = () => set({ task: null, taskResult: null });
   useEffect(() => {
@@ -23,7 +23,7 @@ export function TaskModal() {
     return () => window.removeEventListener('keydown', h);
   }, [!!result]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!task) return null;
-  const st = HUE_STATIONS.find((x) => x.id === task.taskId)!;
+  const st = skin.stations.find((x) => x.id === task.taskId)!;
   const submit = (answer: unknown) => send('task:submit', { taskId: task.taskId, answer });
   const title = en ? st.titleEn : st.title;
 
@@ -35,8 +35,8 @@ export function TaskModal() {
       <Modal title={en ? 'Task complete' : 'Hoàn thành nhiệm vụ'} onClose={close} wide>
         <div className="hcard">
           <figure className="hcard-art">
-            <img src={asset(`maps/co-do-hue/cards/hue-card-${task.taskId}.webp`)} alt="" draggable={false} />
-            <figcaption>{en ? HUE_AREAS[st.area].nameEn : HUE_AREAS[st.area].name}</figcaption>
+            <img src={asset(`${skin.art.cards}/${skin.prefix}-card-${task.taskId}.webp`)} alt="" draggable={false} />
+            <figcaption>{en ? skin.areas[st.area].nameEn : skin.areas[st.area].name}</figcaption>
             <span className="hcard-stamp" aria-hidden>
               <b>{en ? 'DONE' : 'ĐÃ XONG'}</b>
             </span>

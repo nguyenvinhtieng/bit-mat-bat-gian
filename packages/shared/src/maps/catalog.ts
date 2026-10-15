@@ -34,6 +34,18 @@ export const MAP_CATALOG: MapMeta[] = [
     charPrefix: 'hue', // áo dài + khăn đóng
   },
   {
+    slug: 'thang-long',
+    available: true,
+    name: { vi: 'Thăng Long – Hồ Gươm', en: 'Thăng Long – Sword Lake' },
+    subtitle: { vi: 'Đêm Giao Thừa Hồ Gươm', en: 'Sword Lake on New Year’s Eve' },
+    hook: {
+      vi: 'Đêm ba mươi bên Hồ Gươm, Quỷ đội lốt người lẻn vào xoá vòng vôi — làm xong lễ Trừ tịch trước giao thừa, kẻo Quỷ ở lại trần gian suốt năm mới.',
+      en: 'New Year’s Eve by Sword Lake: demons in human form slip in to wipe the lime ring — finish the Year-End rite before midnight, or they stay for the whole new year.',
+    },
+    players: '4–10',
+    charPrefix: 'tl', // áo the + khăn xếp
+  },
+  {
     slug: 'hoi-an',
     available: false,
     name: { vi: 'Phố cổ Hội An', en: 'Hội An Ancient Town' },
@@ -44,18 +56,6 @@ export const MAP_CATALOG: MapMeta[] = [
     },
     players: '4–10',
     charPrefix: 'hoian', // áo bà ba + nón lá
-  },
-  {
-    slug: 'thang-long',
-    available: false,
-    name: { vi: 'Thăng Long – Hồ Gươm', en: 'Thăng Long – Sword Lake' },
-    subtitle: { vi: 'Đêm Trăng Hồ Gươm', en: 'Moonlit Sword Lake' },
-    hook: {
-      vi: 'Cầu Thê Húc đỏ rực dưới trăng, Tháp Rùa lặng im giữa hồ — bí mật nghìn năm đang chờ lời giải.',
-      en: 'The red Thê Húc bridge under the moon, Turtle Tower silent in the lake — a thousand-year secret awaits.',
-    },
-    players: '4–10',
-    charPrefix: 'tl', // áo the + khăn xếp
   },
 ];
 
