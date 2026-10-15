@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: bit-mat-bat-gian
+    runtime: node
+    plan: free
+    region: singapore
+    # Do not set NODE_ENV=production here: pnpm would skip devDependencies (tsx, vite, typescript) needed to build/run.
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"

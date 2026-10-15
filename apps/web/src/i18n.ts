@@ -91,6 +91,8 @@ const dict = {
     allReadyWait: 'Tất cả đã sẵn sàng — chờ chủ phòng bắt đầu',
     rotateTitle: 'Hãy xoay ngang màn hình',
     rotateBody: 'Trò chơi chỉ hỗ trợ màn hình ngang trên điện thoại.',
+    loadingAssets: 'Đang tải tài nguyên trò chơi…',
+    loadingHint: 'Chỉ tải một lần — những lần sau vào game sẽ mượt ngay.',
   },
   en: {
     slogan: 'Every Eye Blindfolded, Every Hand Hiding Something',
@@ -177,6 +179,8 @@ const dict = {
     allReadyWait: 'Everyone is ready — waiting for the host to start',
     rotateTitle: 'Please rotate your device',
     rotateBody: 'On phones the game is played in landscape only.',
+    loadingAssets: 'Loading game assets…',
+    loadingHint: 'One-time download — next visits start instantly.',
   },
 } as const;
 

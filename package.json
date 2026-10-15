@@ -19,6 +19,7 @@
     "dev:server": "pnpm --filter @hidden-truth/server dev",
     "dev:web": "pnpm --filter @hidden-truth/web dev",
     "build": "pnpm prepare:data && pnpm -r build",
+    "start": "NODE_ENV=production pnpm --filter @hidden-truth/server start",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm --filter @hidden-truth/shared --filter @hidden-truth/server test",
     "smoke": "tsx tools/smoke/bots.ts",

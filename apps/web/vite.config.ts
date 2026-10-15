@@ -4,11 +4,12 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { GAME_URL } from '../../packages/shared/src/constants';
 
 /**
  * SEO: absolute URLs (canonical, og:image, JSON-LD) need the public origin.
- * Set SITE_URL (e.g. SITE_URL=https://example.com pnpm build); robots.txt and
- * sitemap.xml are emitted at build time from the same value.
+ * Builds default to GAME_URL (shared constants); override with SITE_URL. robots.txt
+ * and sitemap.xml are emitted at build time from the same value.
  */
 function seo(siteUrl: string): Plugin {
   return {
@@ -62,8 +63,7 @@ function assetList(): Plugin {
 
 export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const siteUrl = (env.SITE_URL || 'http://localhost:5173').replace(/\/+$/, '');
-  if (command === 'build' && !env.SITE_URL) console.warn('[seo] SITE_URL is not set — canonical/og URLs will point at localhost');
+  const siteUrl = (env.SITE_URL || (command === 'build' ? GAME_URL : 'http://localhost:5173')).replace(/\/+$/, '');
   return {
     plugins: [react(), seo(siteUrl), assetList()],
     server: { port: 5173 },
