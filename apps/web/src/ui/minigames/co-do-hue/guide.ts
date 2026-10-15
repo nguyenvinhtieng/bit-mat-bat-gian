@@ -28,8 +28,8 @@ export const GUIDE: Record<HueTaskId, { vi: G; en: G }> = {
     en: { goal: 'Find the 3 relief images listed on the scroll.', steps: ['Hold and rub off the ash', 'Tap an uncovered image', 'Only pick listed images'] },
   },
   task_poem_wall: {
-    vi: { goal: 'Lắp 4 ô trống: thơ, tranh xen kẽ cùng đề tài.', steps: ['Kéo một ô trong khay vào chỗ trống', 'Thơ đặt cạnh tranh cùng đề tài', 'Khay có 2 ô thừa'] },
-    en: { goal: 'Fill the 4 gaps so poems and paintings alternate by theme.', steps: ['Drag a panel from the tray into a gap', 'Poem next to same-theme painting', 'Two panels are decoys'] },
+    vi: { goal: 'Lắp 4 ô trống: thơ ở trên, tranh cùng đề tài ngay bên dưới.', steps: ['Kéo một ô trong khay vào chỗ trống', 'Hàng trên là thơ, hàng dưới là tranh cùng đề tài', 'Khay có 2 ô thừa'] },
+    en: { goal: 'Fill the 4 gaps: each poem sits right above its same-theme painting.', steps: ['Drag a panel from the tray into a gap', 'Top row poems, bottom row paintings of the same theme', 'Two panels are decoys'] },
   },
   task_royal_seal: {
     vi: { goal: 'Đóng ấn son vào khung đỏ trên lịch.', steps: ['Rê ấn vào khung đỏ', 'Giữ đến khi vòng đầy', 'Ấn rung — giữ trong khung'] },

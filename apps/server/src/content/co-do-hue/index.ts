@@ -225,16 +225,11 @@ function build(taskId: HueTaskId): Built {
     }
     case 'task_poem_wall': {
       const themes = sample(Object.keys(THEMES), 4);
-      // 2 rows x 4 columns; each row = two (poem, painting) pairs, the second row starts with a painting.
+      // 2 rows x 4 columns: poems on the top row, each one's painting right below it (slot c / c + 4).
       const full: { slot: number; kind: PoemKind; theme: string }[] = [];
-      themes.forEach((theme, pair) => {
-        const row = pair >> 1;
-        const base = row * 4 + (pair & 1) * 2;
-        const kinds: PoemKind[] = row === 0 ? ['tho', 'hoa'] : ['hoa', 'tho'];
-        full.push({ slot: base, kind: kinds[0], theme }, { slot: base + 1, kind: kinds[1], theme });
-      });
-      // one missing panel per pair
-      const missing = new Set(themes.map((_, pair) => full[pair * 2 + (Math.random() < 0.5 ? 0 : 1)].slot));
+      themes.forEach((theme, col) => full.push({ slot: col, kind: 'tho', theme }, { slot: col + 4, kind: 'hoa', theme }));
+      // one missing panel per column
+      const missing = new Set(themes.map((_, col) => col + (Math.random() < 0.5 ? 0 : 4)));
       const needed = full.filter((p) => missing.has(p.slot));
       const decoyTheme = Object.keys(THEMES).find((k) => !themes.includes(k))!;
       const decoys = [

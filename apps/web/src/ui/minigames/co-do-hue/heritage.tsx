@@ -193,11 +193,10 @@ export function PoemWall({ task, submit }: { task: T<'task_poem_wall'>; submit: 
   const tray = Object.fromEntries(task.tray.map((t) => [t.id, t]));
   const missing = task.panels.filter((p) => !p.kind).map((p) => p.slot);
   const used = new Set(Object.values(fill));
-  /** what a slot must hold: alternate poem/painting, same theme as its pair partner */
+  /** what a slot must hold: poems on the top row, paintings below — same theme as the panel above / below it */
   const want = (slot: number): Tile => {
-    const row = slot >> 2, col = slot & 3;
-    const kind: PoemKind = (row + col) % 2 === 0 ? 'tho' : 'hoa';
-    const partner = task.panels.find((p) => p.slot === (slot ^ 1))!;
+    const kind: PoemKind = slot < 4 ? 'tho' : 'hoa';
+    const partner = task.panels.find((p) => p.slot === (slot ^ 4))!;
     return { kind, theme: partner.theme! };
   };
   const drop = (slot: number, id = sel) => {
@@ -207,13 +206,13 @@ export function PoemWall({ task, submit }: { task: T<'task_poem_wall'>; submit: 
     if (t.kind !== w.kind) {
       sfx.bad();
       doShake();
-      setMsg(w.kind === 'tho' ? 'Chỗ này cần một ô THƠ — thơ và tranh luôn đặt xen kẽ.' : 'Chỗ này cần một ô TRANH — thơ và tranh luôn đặt xen kẽ.');
+      setMsg(w.kind === 'tho' ? 'Hàng trên là hàng THƠ — đặt ô thơ vào đây.' : 'Hàng dưới là hàng TRANH — đặt ô tranh vào đây.');
       return;
     }
     if (t.theme !== w.theme) {
       sfx.bad();
       doShake();
-      setMsg(`Chưa hợp đề tài — ô bên cạnh nói về “${task.themes[w.theme].name}”.`);
+      setMsg(`Chưa hợp đề tài — ô ${w.kind === 'tho' ? 'tranh bên dưới vẽ' : 'thơ bên trên nói về'} “${task.themes[w.theme].name}”.`);
       return;
     }
     sfx.ok();

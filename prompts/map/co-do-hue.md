@@ -32,7 +32,7 @@ Kinh thành Huế, đêm cuối tháng Mười Một âm lịch. Rạng sáng ma
 | `task_court_ranks` | Điện Thái Hòa | Đặt 6 quan lên bia phẩm sơn: bổ tử chim = văn (Đông), thú = võ (Tây), phẩm cao gần điện | slot → id |
 | `task_nha_nhac` | Duyệt Thị Đường | Nghe chuỗi 5 nhạc cụ (trống, sênh tiền, đàn nguyệt, sáo) rồi gõ lại | chuỗi |
 | `task_cuu_dinh` | Sân Thế Miếu | Chà bụi trên mặt đỉnh, tìm 3 hình đúc nổi được yêu cầu (25s) | id các ô |
-| `task_poem_wall` | Nội Các | Lắp 4 ô thiếu trên tường "nhất thi nhất họa" (xen kẽ thơ/tranh, cùng đề tài), khay có 2 ô thừa | loại + đề tài từng ô |
+| `task_poem_wall` | Nội Các | Lắp 4 ô thiếu trên tường "nhất thi nhất họa" (hàng trên thơ, hàng dưới tranh cùng đề tài theo cột), khay có 2 ô thừa | loại + đề tài từng ô |
 | `task_royal_seal` | Nội Các | Ấn hơi rung; giữ ấn trong khung son đủ 1.2s | khoảng cách tới khung |
 | `task_banh_beo` | Sân Thế Miếu (góc đông nam) | 3 chén: đổ bột → hấp → tôm chấy + tóp mỡ → nước mắm (25s) | số chén |
 

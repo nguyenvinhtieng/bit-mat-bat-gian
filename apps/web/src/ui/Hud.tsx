@@ -489,9 +489,6 @@ const room = useStore((s) => s.room)!;
         <div className="hud-left">
           <button className="minimap-btn" onClick={() => setMapOpen(true)} title={`${t('map')} (M)`}>
             <MiniMap current={area} pending={pendingAreas} pos={pos} />
-            <span className="minimap-cap">
-              {t('map')} <kbd>M</kbd>
-            </span>
           </button>
           {/* desktop when folded: just the notebook chip, so a closed list never blocks the view (phones: top right, below) */}
           {touch ? null : !tasksOpen ? (
@@ -594,14 +591,8 @@ const room = useStore((s) => s.room)!;
         </div>
       )}
 
-      {/* tasks get an in-world "tap" badge over the station (GameScene) — the pill is for report / bell only */}
+      {/* tasks get an in-world "tap" badge over the station (GameScene) — the lit report button covers bodies; the bell gets its own art button */}
       {nearby?.kind === 'fix' && room.phase === 'explore' && <FixButton title={nearby.title} />}
-      {nearby?.kind === 'report' && room.phase === 'explore' && (
-        <button className="interact report" {...tapProps(() => send('report', {}))}>
-          <kbd>J</kbd>
-          {nearby.title}
-        </button>
-      )}
       {nearby?.kind === 'emergency' && room.phase === 'explore' && (
         <button
           className={`round-btn bell ${nearby.used ? 'idle' : 'ready'}`}
