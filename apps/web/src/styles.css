@@ -1322,7 +1322,6 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 .vcard-skull { position: absolute; inset: 10px; width: 36px; height: 36px; opacity: 0.9; }
 .vcard-info { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .vcard-name { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.vcard-you { font-style: normal; font-size: 0.7em; margin-left: 6px; padding: 1px 6px; border-radius: 99px; background: #e0a93b; color: #2a1a10; vertical-align: 2px; }
 .vcard-sub { font-size: 0.74em; color: var(--muted); line-height: 1.35; min-height: 1.35em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vcard-stamp { position: absolute; right: 6px; top: 50%; width: 44px; height: 44px; transform: translateY(-50%) rotate(-12deg); animation: stampIn 0.35s cubic-bezier(0.3, 1.6, 0.5, 1); opacity: 0.92; }
 @keyframes stampIn { from { opacity: 0; transform: translateY(-50%) rotate(-12deg) scale(2.2); } }
@@ -2454,3 +2453,62 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
 @media (pointer: coarse) { .action-bar.cluster { --main: 96px; --sm: 60px; --gap: 10px; } }
 @media (max-height: 560px) { .action-bar.cluster { --main: 84px; --sm: 52px; --gap: 8px; bottom: max(14px, env(safe-area-inset-bottom)); } }
 @media (max-height: 400px) { .action-bar.cluster { --main: 74px; --sm: 46px; } }
+
+/* ---------- popups: never wider than the padded backdrop.
+   `max-width: 100%` doesn't resolve inside the auto grid track, so wide popups (96vw) overflowed the
+   notch padding and spilled off to the right; a definite 1fr track + explicit vw cap keeps them centred. */
+.modal-backdrop { grid-template-columns: minmax(0, 1fr); }
+.modal-backdrop > .modal { max-width: calc(100vw - 2 * var(--pad-x)); max-width: calc(100dvw - 2 * var(--pad-x)); justify-self: center; }
+.opening { padding-left: max(16px, env(safe-area-inset-left), env(safe-area-inset-right)); padding-right: max(16px, env(safe-area-inset-left), env(safe-area-inset-right)); }
+
+/* ---------- phones: task chip under the role card (top right); its list drops down beneath it */
+.task-chip-dock { position: absolute; right: max(10px, env(safe-area-inset-right)); top: 72px; z-index: 2; }
+@media (pointer: coarse) {
+  .task-chip-dock .task-chip { padding: 2px 10px 2px 3px; }
+  .task-chip-dock .task-chip img { width: 24px; height: 24px; }
+  .toasts { top: 112px; }
+  /* the role card sits right under the counter: keep it one row even on ≤640px phones */
+  .alive-count { flex-direction: row; border-radius: 999px; }
+  .alive-count .ac-sep { width: 1px; height: 14px; }
+  /* the list opens as a full, centred popup — the old corner drop-down was too small to read */
+  .task-pop-backdrop.modal-backdrop { place-items: center; background: rgba(10, 6, 3, 0.7); }
+  .task-pop-backdrop > .task-list.task-pop {
+    width: min(560px, calc(100vw - 2 * var(--pad-x))); height: auto; max-height: calc(100vh - 2 * var(--pad-y)); max-height: calc(100dvh - 2 * var(--pad-y));
+    padding: 14px 18px; font-size: 16px; border-radius: 14px; transform-origin: center;
+  }
+  .task-pop-backdrop .task-list.task-pop ul { font-size: 1em; gap: 6px; }
+  .task-pop-backdrop .task-list.task-pop li { padding: 6px 8px; }
+  .task-pop-backdrop .task-list.task-pop li .tick { width: 18px; height: 18px; font-size: 11px; }
+  .task-pop-backdrop .task-pop-head .task-head-title { font-size: 1.1em; }
+}
+
+/* ---------- phones (short landscape): task mini-game fills the screen, nothing scrolls */
+@media (max-height: 560px) and (min-width: 600px) and (orientation: landscape) {
+  .modal-backdrop:has(> .task-modal) {
+    --pad-x: max(0px, env(safe-area-inset-left), env(safe-area-inset-right));
+    --pad-y: max(0px, env(safe-area-inset-top), env(safe-area-inset-bottom));
+  }
+  .modal.task-modal { --b: 10px; width: 100%; height: calc(100vh - 2 * var(--pad-y)); height: calc(100dvh - 2 * var(--pad-y)); max-height: none; filter: none; position: relative; }
+  /* no title row: the goal line already names the task; the close button sits in the top-right corner */
+  .task-modal > header { position: absolute; z-index: 3; top: 0; right: 0; padding: 0; border: 0; }
+  .task-modal > header h3 { display: none; }
+  .task-modal > header .x-btn { width: 30px; height: 30px; }
+  .task-modal .modal-content { padding: 0; overflow: hidden; }
+  .task-modal .minigame[class*='mg-task_'] { padding: 0; border-radius: 6px; }
+  .task-modal .minigame[class*='mg-task_'] .minigame-inner { padding: 6px 40px 6px 10px; border-radius: 6px; }
+  .task-modal .mg-head { padding-bottom: 2px; }
+}
+
+/* ---------- meeting: mostly talk — chat gets the bigger column, the vote board is 1–2 compact columns */
+.meet-grid { grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.2fr); }
+/* 45% floor: never three cards per row; a board narrower than ~300px falls back to one column */
+.vcards { grid-template-columns: repeat(auto-fill, minmax(max(140px, 45%), 1fr)); }
+@media (max-width: 900px) { .meet-grid { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); } }
+@media (max-width: 640px) { .meet-grid { grid-template-columns: 1fr; grid-template-rows: minmax(0, 0.8fr) minmax(0, 1.2fr); } }
+
+/* ---------- emergency bell: an art button (like report / kill), centred above the bottom edge */
+.round-btn.bell { position: absolute; left: 50%; bottom: 96px; width: 92px; height: 92px; translate: -50% 0; z-index: 2; }
+.round-btn.bell em { border-color: var(--crimson); }
+.round-btn.bell.ready { animation: readyBob 0.9s ease-in-out infinite alternate; }
+.round-btn.bell.ready img { filter: brightness(1.1) saturate(1.1) drop-shadow(0 0 14px rgba(255, 80, 60, 0.85)) drop-shadow(0 5px 6px rgba(0, 0, 0, 0.55)); }
+@media (max-width: 700px), (max-height: 560px) { .round-btn.bell { width: 72px; height: 72px; bottom: 24px; } }

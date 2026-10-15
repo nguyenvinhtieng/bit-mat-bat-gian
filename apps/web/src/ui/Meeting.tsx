@@ -64,7 +64,6 @@ function VoteCard({
         <span className="vcard-info">
           <span className="vcard-name" style={killer ? { color: KILLER_NAME_COLOR } : undefined}>
             {p.name}
-            {me && <em className="vcard-you">Bạn</em>}
           </span>
           <span className="vcard-sub">{!p.alive ? 'Đã bị hạ gục' : !p.connected ? 'Mất kết nối' : me ? 'Không thể tự bỏ phiếu' : votable ? 'Chạm để loại' : ' '}</span>
           <Voters list={voters} />

@@ -381,20 +381,21 @@ export class GameScene extends Phaser.Scene {
   private buildTapBadge() {
     const touch = this.sys.game.device.input.touch;
     const label = this.add
-      .text(0, 0, touch ? '👆 Chạm để làm' : 'E · Làm nhiệm vụ', {
+      // a quiet hint, not a button: the real action is the task button / J key
+      .text(0, 0, touch ? 'Làm nhiệm vụ' : 'J · Làm nhiệm vụ', {
         fontFamily: 'Be Vietnam Pro, system-ui, sans-serif',
-        fontSize: '14px',
+        fontSize: '10px',
         fontStyle: 'bold',
-        color: '#2a1a10',
-        backgroundColor: '#ffe08a',
-        padding: { x: 10, y: 5 },
+        color: '#ffe08a',
+        backgroundColor: 'rgba(27, 18, 13, 0.72)',
+        padding: { x: 6, y: 2 },
       })
       .setOrigin(0.5, 1);
-    const tip = this.add.triangle(0, 0, 0, 0, 14, 0, 7, 7, 0xffe08a).setOrigin(0.5, 0);
+    const tip = this.add.triangle(0, 0, 0, 0, 8, 0, 4, 4, 0x1b120d, 0.72).setOrigin(0.5, 0);
     const inner = this.add.container(0, 0, [tip, label]);
     this.tapBadge = this.add.container(0, 0, [inner]).setDepth(100001).setVisible(false);
     label.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.tapBadgeFor && this.tryTask(this.tapBadgeFor));
-    this.tweens.add({ targets: inner, y: -8, yoyo: true, repeat: -1, duration: 520, ease: 'Sine.inOut' });
+    this.tweens.add({ targets: inner, y: -4, yoyo: true, repeat: -1, duration: 700, ease: 'Sine.inOut' });
   }
 
   /** Show the tap badge over the task station in reach (not done yet); hide it otherwise. */

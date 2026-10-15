@@ -8,7 +8,7 @@
  *   apps/web/public/assets/common/ui/<name>.webp (runtime)
  *
  * Assets:
- *   btn-kill / btn-report / btn-task  round lacquer action buttons (256px)
+ *   btn-kill / btn-report / btn-task / btn-bell  round lacquer action buttons (256px)
  *   frame-task-panel       9-slice, 384px, slice 72  (dark wood + gold, jade gem corners)
  *   frame-modal            9-slice, 512px, slice 96  (red-brown lacquer + gold scroll corners)
  *   frame-chat             9-slice, 384px, slice 60, edges repeat "round" (bamboo + brass lotus studs)
@@ -108,6 +108,25 @@ const MEGAPHONE = `
     <circle cx="182" cy="74" r="17" fill="#d8261c"/>
     <path d="M182 63 L182 77" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
     <circle cx="182" cy="84" r="2.6" fill="#fff" stroke="none"/>
+  </g>`;
+
+/** bronze temple bell swinging on its lacquered beam, with ring-out arcs — "call a meeting" */
+const BELL = `
+  <g stroke="${INK}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" paint-order="stroke">
+    <rect x="70" y="52" width="116" height="14" rx="6" fill="#8a4b16"/>
+    <path d="M128 66 L128 78" stroke="${INK}" stroke-width="9" fill="none"/>
+    <g transform="rotate(-10 128 70)">
+      <path d="M112 78 Q128 66 144 78 L144 86 L112 86 Z" fill="url(#gold)"/>
+      <path d="M100 92 Q100 84 112 84 L144 84 Q156 84 156 92 L162 158 Q168 166 176 170 L176 180 L80 180 L80 170 Q88 166 94 158 Z" fill="url(#gold)"/>
+      <path d="M98 112 H158 M96 136 H160" stroke="#7d4f12" stroke-width="4" fill="none"/>
+      <path d="M110 92 L108 154" stroke="#fff2bf" stroke-width="5" fill="none" opacity=".75"/>
+      <circle cx="128" cy="124" r="9" fill="#c4241b"/>
+      <circle cx="128" cy="192" r="11" fill="#7d4f12"/>
+    </g>
+  </g>
+  <g fill="none" stroke="#fff4d8" stroke-width="7" stroke-linecap="round">
+    <path d="M64 108 Q54 128 64 148"/><path d="M48 98 Q34 128 48 158"/>
+    <path d="M192 108 Q202 128 192 148"/><path d="M208 98 Q222 128 208 158"/>
   </g>`;
 
 /* ------------------------------------------------------------------ 9-slice frames */
@@ -280,6 +299,7 @@ const JOBS = [
   ['btn-kill', roundButton({ disc: ['#ef5a45', '#a8231d', '#540d0a'], icon: DAGGER }), 256, 256],
   ['btn-report', roundButton({ disc: ['#ffc25c', '#e07a12', '#7e3505'], icon: MEGAPHONE }), 256, 256],
   ['btn-task', roundButton({ disc: ['#6fe0a8', '#1f8a5c', '#0b3d27'], icon: SCROLL_TICK }), 256, 256],
+  ['btn-bell', roundButton({ disc: ['#e0574a', '#9c1f17', '#4a0906'], icon: BELL }), 256, 256],
   ['frame-task-panel', frameTaskPanel(), 384, 384],
   ['frame-modal', frameModal(), 512, 512],
   ['frame-chat', frameChat(), 384, 384],

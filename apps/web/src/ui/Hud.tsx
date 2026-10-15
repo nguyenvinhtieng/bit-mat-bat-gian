@@ -411,6 +411,16 @@ const room = useStore((s) => s.room)!;
           </ul>
   );
 
+  const taskChip = me && (
+    <button className="task-chip" onClick={() => setTasksOpen(true)} title={touch ? t('myTasks') : `${t('myTasks')} (T)`}>
+      <img src={asset('common/ui/notebook.webp')} alt="" draggable={false} />
+      <b>
+        {me.completedTasks.length}/{me.tasks.length}
+      </b>
+      {!touch && <kbd className="task-chip-key">T</kbd>}
+    </button>
+  );
+
   return (
     <>
       {inGame && <CanhBanner />}
@@ -483,15 +493,9 @@ const room = useStore((s) => s.room)!;
               {t('map')} <kbd>M</kbd>
             </span>
           </button>
-          {/* phones always, desktop when folded: just the notebook chip, so a closed list never blocks the view */}
-          {touch || !tasksOpen ? (
-            <button className="task-chip" onClick={() => setTasksOpen(true)} title={touch ? t('myTasks') : `${t('myTasks')} (T)`}>
-              <img src={asset('common/ui/notebook.webp')} alt="" draggable={false} />
-              <b>
-                {me.completedTasks.length}/{me.tasks.length}
-              </b>
-              {!touch && <kbd className="task-chip-key">T</kbd>}
-            </button>
+          {/* desktop when folded: just the notebook chip, so a closed list never blocks the view (phones: top right, below) */}
+          {touch ? null : !tasksOpen ? (
+            taskChip
           ) : (
           <div className={`task-list ${tasksOpen ? 'open' : 'closed'}`}>
             <button className="task-head" onClick={() => setTasksOpen(!tasksOpen)} aria-expanded={tasksOpen} title={`${tasksOpen ? t('hide') : t('show')} (T)`}>
@@ -513,6 +517,8 @@ const room = useStore((s) => s.room)!;
           )}
         </div>
       )}
+      {/* phones: the chip sits under the role card, keeping the left thumb area free for the joystick */}
+      {me && inGame && room.phase === 'explore' && touch && <div className="task-chip-dock">{taskChip}</div>}
       {me && inGame && room.phase === 'explore' && touch && tasksOpen && !taskOpen && (
         <div className="modal-backdrop task-pop-backdrop" onClick={() => setTasksOpen(false)}>
           <div className="task-list task-pop open" onClick={(e) => e.stopPropagation()}>
@@ -590,18 +596,23 @@ const room = useStore((s) => s.room)!;
 
       {/* tasks get an in-world "tap" badge over the station (GameScene) — the pill is for report / bell only */}
       {nearby?.kind === 'fix' && room.phase === 'explore' && <FixButton title={nearby.title} />}
-      {nearby && nearby.kind !== 'task' && nearby.kind !== 'fix' && room.phase === 'explore' && (
-        <button
-          className={`interact ${nearby.kind}`}
-          {...tapProps(() => {
-            if (nearby.kind === 'report') send('report', {});
-            else send('emergency', {});
-          })}
-        >
+      {nearby?.kind === 'report' && room.phase === 'explore' && (
+        <button className="interact report" {...tapProps(() => send('report', {}))}>
           <kbd>J</kbd>
-          {nearby.kind === 'emergency' && <Icon name="meeting-bell" size={22} />}
           {nearby.title}
-          {nearby.kind === 'emergency' && nearby.used && t('used')}
+        </button>
+      )}
+      {nearby?.kind === 'emergency' && room.phase === 'explore' && (
+        <button
+          className={`round-btn bell ${nearby.used ? 'idle' : 'ready'}`}
+          disabled={nearby.used}
+          {...tapProps(() => send('emergency', {}))}
+          title={`${nearby.title} (J)`}
+          aria-label={nearby.title}
+        >
+          <img src={asset('common/ui/btn-bell.webp')} alt="" draggable={false} />
+          <kbd>J</kbd>
+          <em>{nearby.used ? t('used') : nearby.title}</em>
         </button>
       )}
     </>
