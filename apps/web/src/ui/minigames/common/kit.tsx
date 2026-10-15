@@ -94,11 +94,13 @@ export function MgShell({ taskId, lore, status, children, hint, tone = 'info', v
   const lang = useLang((s) => s.lang);
   const g = GUIDE[taskId]?.[lang === 'en' ? 'en' : 'vi'] ?? { goal: '', steps: [] };
   const fill = (t: string) => t.replace(/\{(\w+)\}/g, (_, k) => vars?.[k] ?? '');
+  // phones: only the goal line shows; tapping the header unfolds lore + tips
+  const [more, setMore] = useState(false);
   return (
     <div className="mg-col">
-      {/* guide / play wrappers are display: contents, except on short landscape screens (side by side) */}
-      <div className="mg-guide">
-        <header className="mg-head">
+      {/* guide / play wrappers are display: contents, except on short landscape screens (compact goal bar on top) */}
+      <div className={`mg-guide ${more ? 'more' : ''}`}>
+        <header className="mg-head" onClick={() => setMore((v) => !v)}>
           <div className="mg-head-text">
             <p className="mg-lore">{lore}</p>
             <p className="mg-goal">

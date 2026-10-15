@@ -631,6 +631,7 @@ export class GameRoom extends Room<GameState> {
       const sh = { kind: 'shield', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, at: { x: target.x, y: target.y } };
       client.send('cinematic', { ...sh, youAre: 'actor' });
       this.clients.getById(target.id)?.send('cinematic', { ...sh, youAre: 'victim' });
+      for (const w of this.bystanders(me, target)) this.clients.getById(w.id)?.send('cinematic', { ...sh, youAre: 'witness' });
       client.send('toast', { text: `Đòn đánh bị chặn bởi lá chắn của ${this.skin.roles.guardian.name}!`, kind: 'warn' });
       this.clients.getById(target.id)?.send('toast', { text: '🛡️ Lá chắn của bạn đã cứu bạn khỏi một đòn hạ gục!', kind: 'success' });
       this.sendPrivate(target.id);
@@ -640,11 +641,8 @@ export class GameRoom extends Room<GameState> {
     const at = { x: target.x, y: target.y };
     this.clients.getById(me.id)?.send('cinematic', { kind: 'kill', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, youAre: 'actor', at });
     this.clients.getById(target.id)?.send('cinematic', { kind: 'kill', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, youAre: 'victim', at });
-    for (const w of this.state.players.values()) {
-      if (w.id === me.id || w.id === target.id || !w.alive) continue;
-      if (dist(w, target) > this.visionRadius() || !hasLineOfSight(grid, { x: w.x, y: w.y - 30 }, { x: target.x, y: target.y - 30 })) continue;
+    for (const w of this.bystanders(me, target))
       this.clients.getById(w.id)?.send('cinematic', { kind: 'witness', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, at });
-    }
     target.alive = false;
     target.body = true;
     target.bodyX = target.x;
@@ -759,6 +757,13 @@ export class GameRoom extends Room<GameState> {
   /** living crew see less while a `blind` sabotage runs (also bounds who witnesses a kill) */
   private visionRadius() {
     return GAME.visionRadius * (this.sab.kind === 'blind' ? SABOTAGE.blindVision : 1);
+  }
+
+  /** living players (other than the two involved) who can see the target right now */
+  private bystanders(actor: Player, target: Player) {
+    return [...this.state.players.values()].filter(
+      (w) => w.id !== actor.id && w.id !== target.id && w.alive && dist(w, target) <= this.visionRadius() && hasLineOfSight(grid, { x: w.x, y: w.y - 30 }, { x: target.x, y: target.y - 30 }),
+    );
   }
 
   // ---------------------------------------------------------------- tasks

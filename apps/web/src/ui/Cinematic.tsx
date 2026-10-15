@@ -197,26 +197,14 @@ export function Cinematic() {
   } else if (c.kind === 'report') {
     title = 'BÁO CÁO THI THỂ';
     sub = <>{nm(c.actor.name, actorCol)} phát hiện thi thể của {nm(c.victim!.name, victimCol)}</>;
-  } else if (c.kind === 'witness') {
-    title = 'BẠN VỪA CHỨNG KIẾN!';
-    sub = <>{nm(c.actor.name, actorCol)} vừa hạ gục {nm(c.victim!.name, victimCol)}</>;
   } else {
     title = 'HỌP KHẨN';
     sub = <>{nm(c.actor.name, actorCol)} đã gọi họp khẩn ({mapSkin(useStore.getState().room?.mapSlug).emergency.vi})</>;
   }
 
-  if (c.kind === 'witness')
-    return (
-      <div className="witness" key={c.id}>
-        <div className="witness-vignette" />
-        <Fx name="fx-kill-slash" className="witness-slash" ms={420} />
-        <Fx name="fx-witness" className="witness-fx" ms={600} delay={80} />
-        <div className="witness-text">
-          <strong>{title}</strong>
-          <span>{sub}</span>
-        </div>
-      </div>
-    );
+  // witnesses get no overlay: only the in-world strike + fall, so nobody is named or flagged
+  // bystanders of a blocked strike likewise get the public in-world dome/flash only
+  if (c.kind === 'witness' || c.youAre === 'witness') return null;
 
   // attacker always enters from the left; action sheets face left, so the attacker is mirrored
   const attacker = (track: PoseTrack, cls: string) => (

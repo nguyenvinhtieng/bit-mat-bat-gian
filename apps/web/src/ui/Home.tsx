@@ -7,6 +7,7 @@ import { useLang, useT } from '../i18n';
 import { Guide, GuideButton } from './Guide';
 import { LangSwitch } from './LangSwitch';
 import { randomDevName } from '../devNames';
+import { isTouchDevice } from './Joystick';
 
 const NAME_KEY = 'tht:name';
 /** dev: every tab gets a fresh themed name so multi-tab testing needs no typing */
@@ -188,7 +189,7 @@ export function Home() {
           <GuideButton onClick={() => setShowGuide(true)} />
         </div>
         {showGuide && <Guide slug={mapSlug} onClose={() => setShowGuide(false)} />}
-        <p className="muted small home-controls">{t('controls')}</p>
+        {!isTouchDevice() && <p className="muted small home-controls">{t('controls')}</p>}
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { GAME, MEETING_POINT, ROLE_IDS, ROLE_INFO, areaAt, getGrid, mapSkin, typ
 import { useLang } from '../i18n';
 import { RoleBadge, asset, useEscape, useSkin } from './common';
 import { mapGuide } from './guides';
+import { isTouchDevice } from './Joystick';
 
 const gui = (n: string) => asset(`common/ui/guide/${n}.webp`);
 
@@ -48,7 +49,7 @@ const MEETING_AREA = areaAt(getGrid(), MEETING_POINT.x, MEETING_POINT.y) ?? 'cou
 const plural = (w: string) => (w.endsWith('s') ? w : `${w}s`);
 
 /** Generic copy built from the map skin (role / killer names, meeting spot, sabotages, clock). */
-function skinText(skin: MapSkin, m: number) {
+function skinText(skin: MapSkin, m: number, touch: boolean) {
   const r = skin.roles;
   const k = skin.killerName;
   const ks = plural(k.en);
@@ -60,10 +61,10 @@ function skinText(skin: MapSkin, m: number) {
     vi: {
       steps: [
         ['1. Nhận vai', `Mỗi người nhận một vai bí mật: ${r.villager.name}, ${r.guardian.name} hoặc ${k.vi} (1–2 người tuỳ số người chơi).`],
-        ['2. Chạy & làm nhiệm vụ', `Đi bằng WASD / phím mũi tên / joystick. Tới vòng sáng vàng và bấm E / Space để làm mini-game. Thanh thời gian chia 5 ${seg.vi} tự chạy (dừng khi họp); thanh xanh bên dưới là tiến độ nhiệm vụ cả đoàn — phải đầy trước ${dl.vi}. Bị hạ gục vẫn phải làm tiếp nhiệm vụ.`],
-        [`3. ${k.vi} ra tay`, `${k.vi} lại gần và bấm K để hạ gục (hồi ${GAME.killCooldownSec}s). Nạn nhân thành hồn ma, để lại thi thể.`],
+        ['2. Chạy & làm nhiệm vụ', `${touch ? 'Đi bằng joystick (giữ bên trái màn hình). Tới vòng sáng vàng và bấm nút Làm nhiệm vụ' : 'Đi bằng WASD / phím mũi tên / joystick. Tới vòng sáng vàng và bấm J / Space'} để làm mini-game. Thanh thời gian chia 5 ${seg.vi} tự chạy (dừng khi họp); thanh xanh bên dưới là tiến độ nhiệm vụ cả đoàn — phải đầy trước ${dl.vi}. Bị hạ gục vẫn phải làm tiếp nhiệm vụ.`],
+        [`3. ${k.vi} ra tay`, `${k.vi} lại gần và bấm ${touch ? 'nút Hạ gục' : 'K'} để hạ gục (hồi ${GAME.killCooldownSec}s). Nạn nhân thành hồn ma, để lại thi thể.`],
         ['4. Phá hoại', `${k.vi} còn có thể phá: ${blind.name.vi} (mọi người gần như mù vài giây) hoặc ${ward.name.vi} — phải có người tới đúng chỗ giữ nút ${ward.fix.vi} trước khi hết giờ, nếu không ${k.vi} thắng.`],
-        ['5. Báo cáo / họp khẩn', `Thấy thi thể thì bấm R. Hoặc tới bàn họp ở ${area.name} đánh ${skin.emergency.vi} (mỗi người 1 lần).`],
+        ['5. Báo cáo / họp khẩn', `Thấy thi thể thì bấm ${touch ? 'nút Báo cáo' : 'L'}. Hoặc tới bàn họp ở ${area.name} đánh ${skin.emergency.vi} (mỗi người 1 lần).`],
         ['6. Bỏ phiếu', `Họp tối đa ~${m}s: chat và bỏ phiếu loại một người (hoặc bỏ qua). Nhiều phiếu nhất bị loại; hoà phiếu thì không ai bị loại.`],
         ['7. Kết thúc', `Người Dân thắng khi loại hết ${k.vi} hoặc xong mọi nhiệm vụ. ${k.vi} thắng khi số ${k.vi} ≥ số Người Dân còn sống.`],
       ],
@@ -78,10 +79,10 @@ function skinText(skin: MapSkin, m: number) {
     en: {
       steps: [
         ['1. Get a role', `Everyone secretly gets a role: ${r.villager.nameEn}, ${r.guardian.nameEn} or ${k.en} (1–2 ${ks} depending on player count).`],
-        ['2. Run & do tasks', `Move with WASD / arrows / joystick. Go to a golden ring and press E / Space to play a mini-game. The time bar runs through 5 ${seg.en}s (paused in meetings); the green bar below is the crew’s task progress — fill it before ${dl.en}. Ghosts keep doing tasks too.`],
-        [`3. The ${k.en} strikes`, `The ${k.en} gets close and presses K to kill (${GAME.killCooldownSec}s cooldown). The victim becomes a ghost and leaves a body.`],
+        ['2. Run & do tasks', `${touch ? 'Move with the joystick (hold the left side of the screen). Go to a golden ring and tap the Task button' : 'Move with WASD / arrows / joystick. Go to a golden ring and press J / Space'} to play a mini-game. The time bar runs through 5 ${seg.en}s (paused in meetings); the green bar below is the crew’s task progress — fill it before ${dl.en}. Ghosts keep doing tasks too.`],
+        [`3. The ${k.en} strikes`, `The ${k.en} gets close and presses ${touch ? 'the Kill button' : 'K'} to kill (${GAME.killCooldownSec}s cooldown). The victim becomes a ghost and leaves a body.`],
         ['4. Sabotage', `${ks} can also sabotage: ${blind.name.en} (everyone is nearly blind for a few seconds) or ${ward.name.en} — someone must hold ${ward.fix.en} at the right spot before time runs out, or the ${ks} win.`],
-        ['5. Report / emergency', `Found a body? Press R. Or sound the ${skin.emergency.en} at the meeting table in ${area.nameEn} (once per player).`],
+        ['5. Report / emergency', `Found a body? Press ${touch ? 'the Report button' : 'L'}. Or sound the ${skin.emergency.en} at the meeting table in ${area.nameEn} (once per player).`],
         ['6. Vote', `Meeting lasts up to ~${m}s: chat and vote to eject one player (or skip). Most votes is ejected; a tie ejects nobody.`],
         ['7. The end', `Villagers win by ejecting every ${k.en} or finishing all tasks. ${ks} win when ${ks} ≥ living villagers.`],
       ],
@@ -105,7 +106,7 @@ export function Guide({ onClose, slug }: { onClose: () => void; slug?: string })
   const roomSkin = useSkin();
   const skin = slug ? mapSkin(slug) : roomSkin;
   const guide = mapGuide(skin.slug);
-  const tx = { ...TXT[lang], ...skinText(skin, GAME.meetingSec)[lang] };
+  const tx = { ...TXT[lang], ...skinText(skin, GAME.meetingSec, isTouchDevice())[lang] };
   const [tab, setTab] = useState<Tab>('story');
 
   // portal to <body>: ancestors with `filter`/`transform` (e.g. the framed home card) would otherwise

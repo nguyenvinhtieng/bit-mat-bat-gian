@@ -8,7 +8,7 @@ export const HUE_GUIDE: MapGuide = {
       what: l('Một người trong đoàn chuẩn bị Lễ Ban Sóc. Bạn không có siêu năng lực — chỉ có đôi chân, đôi mắt và lá phiếu.', 'A member of the crew preparing the Calendar Ceremony. No powers — just your legs, your eyes and your vote.'),
       todo: [
         l('Chạy tới các vòng sáng vàng, hoàn thành nhiệm vụ văn hoá Huế của bạn.', 'Run to the golden rings and finish your Huế culture tasks.'),
-        l('Tránh ở một mình với người đáng ngờ. Thấy thi thể thì bấm R để báo cáo.', 'Avoid being alone with a suspect. Press R when you find a body.'),
+        l('Tránh ở một mình với người đáng ngờ. Thấy thi thể thì bấm nút Báo cáo.', 'Avoid being alone with a suspect. Press the Report button when you find a body.'),
         l('Trong họp: nói bạn đã ở đâu, thấy ai, rồi bỏ phiếu.', 'In meetings: say where you were and who you saw, then vote.'),
       ],
       note: l('Nhiệm vụ của hồn ma vẫn được tính — kể cả khi bạn đã bị hạ gục.', 'Ghost tasks still count — even after you are killed.'),
@@ -24,7 +24,7 @@ export const HUE_GUIDE: MapGuide = {
     killer: {
       what: l('Kẻ sát nhân trà trộn trong đoàn. Hạ gục người khác để thắng.', 'The killer hiding in the crew. Take people down to win.'),
       todo: [
-        l('Lại gần một người rồi bấm K / nút Hạ gục (có thời gian hồi).', 'Get close to someone and press K / the Kill button (it has a cooldown).'),
+        l('Lại gần một người rồi bấm nút Hạ gục (có thời gian hồi).', 'Get close to someone and press the Kill button (it has a cooldown).'),
         l('Giả vờ làm nhiệm vụ để ngụy trang — nhiệm vụ của bạn không tính vào tiến độ. Câu giờ cho tới hết canh năm cũng là thắng.', 'Pretend to do tasks to blend in — yours do not count. Stalling until the fifth watch ends is also a win.'),
         l('Trong họp: nói dối khéo, đổ nghi ngờ sang người khác.', 'In meetings: lie smoothly and shift suspicion.'),
       ],

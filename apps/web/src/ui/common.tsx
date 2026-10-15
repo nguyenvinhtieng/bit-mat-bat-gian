@@ -42,6 +42,25 @@ export function useEscape(onEsc: (() => void) | undefined, active = true) {
     };
   }, [active, !!onEsc]);
 }
+/**
+ * Button handlers that fire on touch-down: browsers only synthesize `click` for a lone finger, so a
+ * second finger (thumb still on the joystick) would never trigger it. Mouse / keyboard keep onClick.
+ */
+export const tapProps = (fn: () => void) => ({
+  onPointerDown: (e: React.PointerEvent<HTMLElement>) => {
+    if (e.pointerType === 'mouse') return;
+    (e.currentTarget as HTMLElement & { tapAt?: number }).tapAt = Date.now();
+    fn();
+  },
+  onClick: (e: React.MouseEvent<HTMLElement>) => {
+    // the click that trails a touch was already handled on pointerdown
+    const el = e.currentTarget as HTMLElement & { tapAt?: number };
+    const at = el.tapAt ?? 0;
+    el.tapAt = 0;
+    if (Date.now() - at > 3000) fn();
+  },
+});
+
 /** Small "Esc" hint shown next to close buttons. */
 export const EscHint = () => <kbd className="esc-hint">Esc</kbd>;
 

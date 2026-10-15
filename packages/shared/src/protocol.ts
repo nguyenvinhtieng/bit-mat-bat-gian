@@ -138,7 +138,7 @@ export type Cinematic = {
   actor: { name: string; color: number };
   victim?: { name: string; color: number };
   /** which side of the screen the viewer is (victim sees themselves as victim) */
-  youAre?: 'actor' | 'victim';
+  youAre?: 'actor' | 'victim' | 'witness';
   /** world position (px, feet point) of the victim — used to play in-world FX */
   at?: { x: number; y: number };
 };

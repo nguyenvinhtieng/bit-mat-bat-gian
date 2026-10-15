@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { GAME, mapSkin } from '@hidden-truth/shared';
 import { KILLER_NAME_COLOR, useStore } from '../store';
 import { RoleBadge, useEscape } from './common';
+import { isTouchDevice } from './Joystick';
 
 const FLY_MS = 850; // role reveal shrinking into the HUD role card
 const PRELUDE_MS = 3400; // dark "night falls" lines before the role, so players settle in first
@@ -120,9 +121,11 @@ export function IntroModal() {
           </p>
           <p className="opening-tip">
             {killer ? (
-              <>Lại gần mục tiêu và bấm <kbd>K</kbd>. Nhiệm vụ của bạn chỉ là giả.</>
+              isTouchDevice() ? <>Lại gần mục tiêu và bấm nút Hạ gục. Nhiệm vụ của bạn chỉ là giả.</> : <>Lại gần mục tiêu và bấm <kbd>K</kbd>. Nhiệm vụ của bạn chỉ là giả.</>
+            ) : isTouchDevice() ? (
+              <>Làm nhiệm vụ ở các vòng sáng vàng. Thấy thi thể thì bấm nút Báo cáo.</>
             ) : (
-              <>Làm nhiệm vụ ở các vòng sáng vàng. Thấy thi thể thì bấm <kbd>R</kbd>.</>
+              <>Làm nhiệm vụ ở các vòng sáng vàng. Thấy thi thể thì bấm <kbd>L</kbd>.</>
             )}
           </p>
           {quick && (

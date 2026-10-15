@@ -43,7 +43,7 @@ function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''
 import { fix, send } from '../net';
 import { KILLER_NAME_COLOR, uiBlocksMovement, useStore } from '../store';
 import { useLang, useT } from '../i18n';
-import { CloseButton, Digits, Icon, RoleBadge, asset, fmt, useCountdown, useSkin, useWardSpot } from './common';
+import { CloseButton, Digits, Icon, RoleBadge, asset, fmt, tapProps, useCountdown, useSkin, useWardSpot } from './common';
 import { MapView } from './MapView';
 import { isTouchDevice } from './Joystick';
 
@@ -109,7 +109,7 @@ function SabotageAlert() {
 }
 
 /** Killer button: opens a two-item menu (blind / ward). Shares one cooldown; one sabotage at a time. */
-function SabotageButton() {
+function SabotageButton({ slot = '' }: { slot?: string }) {
   const skin = useSkin();
   const room = useStore((s) => s.room)!;
   const me = useStore((s) => s.me)!;
@@ -124,7 +124,7 @@ function SabotageButton() {
       const ae = document.activeElement;
       if (e.repeat || (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA'))) return;
       if (useStore.getState().task) return;
-      if (e.code === 'KeyQ') setOpen((v) => !v);
+      if (e.code === 'KeyI' || e.code === 'KeyQ') setOpen((v) => !v);
       else if (open && (e.code === 'Digit1' || e.code === 'Digit2')) go(e.code === 'Digit1' ? 'blind' : 'ward');
     };
     window.addEventListener('keydown', h);
@@ -139,11 +139,11 @@ function SabotageButton() {
   };
   const label = en ? 'Sabotage' : 'Phá';
   return (
-    <div className="sab-wrap">
+    <div className={`sab-wrap ${slot}`}>
       {open && ready && (
         <div className="sab-menu" role="menu">
           {(['blind', 'ward'] as const).map((k, i) => (
-            <button key={k} role="menuitem" onClick={() => go(k)}>
+            <button key={k} role="menuitem" {...tapProps(() => go(k))}>
               <SabIcon kind={k} />
               <span>
                 <b>{en ? skin.sabotage[k].name.en : skin.sabotage[k].name.vi}</b>
@@ -157,22 +157,22 @@ function SabotageButton() {
       <button
         className={`round-btn sab ${ready ? 'ready' : 'idle'} ${cd ? 'cooling' : ''}`}
         disabled={!ready}
-        onClick={() => setOpen((v) => !v)}
-        title={`${label} (Q)`}
+        {...tapProps(() => setOpen((v) => !v))}
+        title={`${label} (I)`}
         aria-label={label}
         aria-expanded={open}
       >
         <SabIcon kind="ward" size={44} />
         {cd ? <CooldownRing readyAt={me.sabotageReadyAt ?? 0} /> : null}
         {cd ? <span className="cd"><Digits text={cd} /></span> : null}
-        <kbd>Q</kbd>
+        <kbd>I</kbd>
         <em>{label}</em>
       </button>
     </div>
   );
 }
 
-/** Hold-to-fix pill at the ward spot (pointer or E/Space); the server times the hold. */
+/** Hold-to-fix pill at the ward spot (pointer or J/Space); the server times the hold. */
 function FixButton({ title }: { title: string }) {
   const skin = useSkin();
   const fixing = useStore((s) => s.fixing);
@@ -189,7 +189,7 @@ function FixButton({ title }: { title: string }) {
       onContextMenu={(e) => e.preventDefault()}
     >
       <i className="fix-fill" aria-hidden />
-      <kbd>E</kbd>
+      <kbd>J</kbd>
       <SabIcon kind="ward" size={22} />
       {en ? skin.sabotage.ward.fix.en : title}
       <small>{en ? '(hold)' : '(giữ)'}</small>
@@ -542,13 +542,13 @@ const room = useStore((s) => s.room)!;
       )}
 
       {room.phase === 'explore' && (alive || killer) && (
-        <div className="action-bar">
-          {killer && <SabotageButton />}
+        <div className="action-bar cluster">
+          {killer && <SabotageButton slot={alive ? 'slot-left' : 'slot-main'} />}
           {killer && alive && (
             <button
-              className={`round-btn kill ${killReady ? 'ready' : 'idle'} ${cdLeft ? 'cooling' : ''}`}
+              className={`round-btn kill slot-main ${killReady ? 'ready' : 'idle'} ${cdLeft ? 'cooling' : ''}`}
               disabled={!killReady}
-              onClick={() => send('kill', {})}
+              {...tapProps(() => send('kill', {}))}
               title={`${t('kill')} (K)`}
               aria-label={t('kill')}
             >
@@ -560,25 +560,28 @@ const room = useStore((s) => s.room)!;
             </button>
           )}
           {alive && <button
-            className={`round-btn report ${canReport ? 'ready' : 'idle'}`}
+            className={`round-btn report slot-top ${canReport ? 'ready' : 'idle'}`}
             disabled={!canReport}
-            onClick={() => send('report', {})}
-            title={`${t('report')} (R)`}
+            {...tapProps(() => send('report', {}))}
+            title={`${t('report')} (L)`}
             aria-label={t('report')}
           >
             <img src={asset('common/ui/btn-report.webp')} alt="" draggable={false} />
-            <kbd>R</kbd>
+            <kbd>L</kbd>
             <em>{t('report')}</em>
           </button>}
-          {alive && touch && taskHere && (
+          {/* crew: the main button, always there and lit at an unfinished station; killers: a small one that only pops in there */}
+          {alive && (!killer || taskHere) && (
             <button
-              key={taskHere.id}
-              className="round-btn task ready"
-              onClick={() => !uiBlocksMovement() && send('task:open', { taskId: taskHere.id })}
-              title={taskHere.title}
-              aria-label={`${t('doTask')}: ${taskHere.title}`}
+              key={killer ? taskHere?.id : 'task'}
+              className={`round-btn task ${killer ? 'slot-diag' : 'slot-main'} ${taskHere ? 'ready' : 'idle'}`}
+              disabled={!taskHere}
+              {...tapProps(() => taskHere && !uiBlocksMovement() && send('task:open', { taskId: taskHere.id }))}
+              title={taskHere ? `${taskHere.title} (J)` : t('doTask')}
+              aria-label={taskHere ? `${t('doTask')}: ${taskHere.title}` : t('doTask')}
             >
               <img src={asset('common/ui/btn-task.webp')} alt="" draggable={false} />
+              <kbd>J</kbd>
               <em>{t('doTask')}</em>
             </button>
           )}
@@ -590,12 +593,12 @@ const room = useStore((s) => s.room)!;
       {nearby && nearby.kind !== 'task' && nearby.kind !== 'fix' && room.phase === 'explore' && (
         <button
           className={`interact ${nearby.kind}`}
-          onClick={() => {
+          {...tapProps(() => {
             if (nearby.kind === 'report') send('report', {});
             else send('emergency', {});
-          }}
+          })}
         >
-          <kbd>E</kbd>
+          <kbd>J</kbd>
           {nearby.kind === 'emergency' && <Icon name="meeting-bell" size={22} />}
           {nearby.title}
           {nearby.kind === 'emergency' && nearby.used && t('used')}

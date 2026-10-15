@@ -8,7 +8,7 @@ export const TL_GUIDE: MapGuide = {
       what: l('Một người Thăng Long đang sửa soạn đón giao thừa bên Hồ Gươm. Bạn không có siêu năng lực — chỉ có đôi chân, đôi mắt và lá phiếu.', 'A Thăng Long local getting ready for New Year’s Eve by Sword Lake. No powers — just your legs, your eyes and your vote.'),
       todo: [
         l('Chạy tới các vòng sáng vàng: gói bánh chưng, xin chữ, dựng cây nêu… cho kịp giao thừa.', 'Run to the golden rings: wrap bánh chưng, ask for calligraphy, raise the Tết pole… before midnight.'),
-        l('Tránh ở một mình với người đáng ngờ. Thấy thi thể thì bấm R để báo cáo.', 'Avoid being alone with a suspect. Press R when you find a body.'),
+        l('Tránh ở một mình với người đáng ngờ. Thấy thi thể thì bấm nút Báo cáo.', 'Avoid being alone with a suspect. Press the Report button when you find a body.'),
         l('Khi Quỷ xoá vòng vôi, cả bọn chạy tới rắc lại ngay — chậm là thua.', 'When a Demon erases the lime ring, rush over and sprinkle it back — too slow and you lose.'),
       ],
       note: l('Nhiệm vụ của hồn ma vẫn được tính — kể cả khi bạn đã bị hạ gục.', 'Ghost tasks still count — even after you are killed.'),
@@ -24,7 +24,7 @@ export const TL_GUIDE: MapGuide = {
     killer: {
       what: l('Quỷ lẻn vào đất Thăng Long đêm ba mươi, giả làm người đi chợ Tết. Hạ gục người khác để thắng.', 'A Demon sneaking into Thăng Long on New Year’s Eve, posing as a Tết shopper. Take people down to win.'),
       todo: [
-        l('Lại gần một người rồi bấm K / nút Hạ gục (có thời gian hồi).', 'Get close to someone and press K / the Kill button (it has a cooldown).'),
+        l('Lại gần một người rồi bấm nút Hạ gục (có thời gian hồi).', 'Get close to someone and press the Kill button (it has a cooldown).'),
         l('Đốt pháo cho mọi người loá mắt, hoặc xoá vòng vôi để kéo cả đám chạy đi — không ai rắc lại kịp là bạn thắng.', 'Set off firecrackers to dazzle everyone, or erase the lime ring to drag the crowd away — if nobody sprinkles it back in time, you win.'),
         l('Giả vờ làm nhiệm vụ để ngụy trang. Câu giờ tới giao thừa cũng là thắng.', 'Pretend to do tasks to blend in. Stalling until midnight is also a win.'),
       ],

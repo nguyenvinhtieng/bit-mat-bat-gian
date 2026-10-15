@@ -81,7 +81,7 @@ type Store = {
   area: string;
   /** my position in tile units */
   pos: { x: number; y: number } | null;
-  /** holding the sabotage fix button (pointer or E/Space) */
+  /** holding the sabotage fix button (pointer or J/Space) */
   fixing: boolean;
   introOpen: boolean;
   /** reopened from the HUD: show only the role card, no story / long animation */

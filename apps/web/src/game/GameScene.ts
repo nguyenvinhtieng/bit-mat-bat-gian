@@ -157,17 +157,21 @@ export class GameScene extends Phaser.Scene {
     for (const [k, v] of Object.entries(FX)) this.anims.create({ key: k, frames: this.anims.generateFrameNumbers(k, { start: 0, end: FX_FRAMES - 1 }), frameRate: v.rate });
 
     const kb = this.input.keyboard!;
-    this.keys = kb.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,E,SPACE', false) as Record<string, Phaser.Input.Keyboard.Key>;
+    this.keys = kb.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,E,J,SPACE', false) as Record<string, Phaser.Input.Keyboard.Key>;
     // Clicking the map releases focus from any HTML input (e.g. chat) so movement keys work again.
     this.input.on('pointerdown', () => {
       const ae = document.activeElement as HTMLElement | null;
       if (ae && ae !== document.body && ['INPUT', 'TEXTAREA', 'SELECT'].includes(ae.tagName)) ae.blur();
     });
+    // action keys sit under the right hand (J/K/L/I) while the left one is on WASD; E/R/Q stay as aliases
+    kb.on('keydown-J', (e: KeyboardEvent) => !e.repeat && this.interact());
     kb.on('keydown-E', (e: KeyboardEvent) => !e.repeat && this.interact());
     kb.on('keydown-SPACE', (e: KeyboardEvent) => !e.repeat && this.interact());
+    kb.on('keyup-J', () => fix(false));
     kb.on('keyup-E', () => fix(false));
     kb.on('keyup-SPACE', () => fix(false));
     kb.on('keydown-K', () => this.doKill());
+    kb.on('keydown-L', () => this.doReport());
     kb.on('keydown-R', () => this.doReport());
 
     this.buildFog();
@@ -545,13 +549,7 @@ export class GameScene extends Phaser.Scene {
     splat.setScale(0.05);
     this.tweens.add({ targets: splat, scaleX: 96 / 256, scaleY: 56 / 256, delay: 260, duration: 520, ease: 'Cubic.easeOut' });
     this.burst('ink-drop', x, y - 30, { count: 26, speed: [90, 260], life: 650, scale: [0.35, 0.1], gravity: 520, tint: 0xffffff, add: false, delay: 160 });
-    this.burst('spark', x, y - 34, { count: 14, speed: [120, 300], life: 380, scale: [0.6, 0], gravity: 0, tint: 0xff6a40, add: true, delay: 120 });
-    this.shockRing(x, y - 20, 0xff3b2a, 90, 520);
-    const cam = this.cameras.main;
-    cam.flash(140, 255, 70, 50);
-    cam.shake(260, 0.007);
-    this.zoomPunch(1.1, 380);
-    this.hitStop(110);
+    // no red flash / shake / zoom: bystanders must only see the act itself, so a kill in a crowd can go unnoticed
   }
 
   /** Particle explosion that cleans itself up. */
@@ -624,6 +622,11 @@ export class GameScene extends Phaser.Scene {
     const target = byName(c.victim?.name);
     const tx = target?.c.x ?? c.at?.x;
     if ((c.kind === 'kill' || c.kind === 'witness' || c.kind === 'shield') && attacker && tx !== undefined) this.pose(attacker, 'strike', tx > attacker.c.x, 520);
+    // the attacker dashes in for the blow (sprite offset only; the container follows the server)
+    if ((c.kind === 'kill' || c.kind === 'witness') && attacker && tx !== undefined) {
+      const toward = tx > attacker.c.x ? 1 : -1;
+      this.tweens.add({ targets: [attacker.base, attacker.tint], x: 18 * toward, duration: 110, yoyo: true, hold: 160, ease: 'Cubic.easeOut' });
+    }
     if (c.kind === 'shield' && c.at) {
       const { x, y } = c.at;
       if (target && attacker) {
@@ -639,9 +642,6 @@ export class GameScene extends Phaser.Scene {
       this.cameras.main.flash(160, 255, 220, 120);
       this.cameras.main.shake(180, 0.005);
       this.zoomPunch(1.06, 320);
-    } else if (c.kind === 'witness' && me) {
-      this.playFx('fx-witness', me.c.x, me.c.y - 84, me.c);
-      this.cameras.main.shake(140, 0.004);
     } else if (c.kind === 'report') {
       // burst over the reported body (or over me when the body is out of view)
       const at = c.at && this.canSee(c.at.x, c.at.y) ? c.at : me ? { x: me.c.x, y: me.c.y } : null;

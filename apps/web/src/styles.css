@@ -14,6 +14,8 @@
 }
 * { box-sizing: border-box; }
 html, body, #root { margin: 0; height: 100%; overflow: hidden; }
+/* iOS Safari inflates text after rotating to landscape unless this is pinned */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 button { font: inherit; }
 h1, h2, h3, h4 { margin: 0 0 0.4em; }
 .muted { color: var(--muted); }
@@ -1784,14 +1786,20 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
   .task-modal .modal-content { padding: 4px 0 0; }
   .task-modal .minigame[class*='mg-task_'] { padding: 4px; }
   .task-modal .minigame[class*='mg-task_'] .minigame-inner { width: 100%; padding: 8px 10px; }
-  .task-modal .mg-col { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(170px, 26%) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 6px 12px; align-items: stretch; }
-  .task-modal .mg-guide { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: 6px; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
-  .task-modal .mg-play { grid-column: 2; grid-row: 1 / span 2; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: 6px; min-width: 0; }
-  .task-modal .mg-hint { grid-column: 1; grid-row: 2; min-height: 0; padding: 4px 6px; font-size: 0.8em; }
-  .task-modal .mg-head { flex-direction: column; gap: 6px; padding-bottom: 6px; }
-  .task-modal .mg-head-text { width: 100%; }
-  .task-modal .mg-lore { font-size: 0.78em; }
-  .task-modal .mg-goal { font-size: 0.86em; }
+  /* one column: a single goal line on top (tap for lore + tips), the play area gets everything else */
+  .task-modal .mg-col { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px; align-items: stretch; }
+  .task-modal .mg-guide { flex: none; display: flex; flex-direction: column; gap: 4px; max-height: 40%; overflow-y: auto; scrollbar-width: thin; }
+  .task-modal .mg-play { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: 6px; min-width: 0; }
+  .task-modal .mg-hint { flex: none; min-height: 0; padding: 2px 6px; font-size: 0.78em; }
+  .task-modal .mg-head { align-items: center; gap: 8px; padding-bottom: 4px; cursor: pointer; }
+  .task-modal .mg-lore, .task-modal .mg-tip { display: none; }
+  .task-modal .mg-goal { font-size: 0.86em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .task-modal .mg-goal::after { content: ' ⓘ'; color: #a0783c; }
+  .task-modal .mg-status { padding: 1px 10px; font-size: 0.8em; }
+  .task-modal .mg-guide.more .mg-lore, .task-modal .mg-guide.more .mg-tip { display: block; }
+  .task-modal .mg-guide.more .mg-goal { white-space: normal; }
+  .task-modal .mg-guide.more .mg-goal::after { content: ' ✕'; }
+  .task-modal .mg-guide.more .mg-lore { font-size: 0.78em; }
 }
 @media (max-height: 560px) and (min-width: 600px) and (orientation: landscape) {
   /* definite height down the chain so the guide / play columns scroll inside instead of the whole modal */
@@ -2309,23 +2317,28 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 @keyframes installIn { from { transform: translate(-50%, 24px); opacity: 0; } }
 
 /* ---------- task action button (phones): pops in only while standing at an unfinished station */
-.round-btn.task { animation: taskBtnIn 0.32s cubic-bezier(0.2, 1.5, 0.4, 1), taskBtnPulse 1.1s 0.32s infinite alternate; }
-.round-btn.task img { filter: brightness(1.08) drop-shadow(0 0 12px rgba(110, 230, 170, 0.85)) drop-shadow(0 5px 6px rgba(0, 0, 0, 0.55)); }
+.round-btn.task.ready { animation: taskBtnIn 0.32s cubic-bezier(0.2, 1.5, 0.4, 1), taskBtnPulse 1.1s 0.32s infinite alternate; }
+.round-btn.task.ready img { filter: brightness(1.08) drop-shadow(0 0 12px rgba(110, 230, 170, 0.85)) drop-shadow(0 5px 6px rgba(0, 0, 0, 0.55)); }
 .round-btn.task em { border-color: #2f9e6a; }
 @keyframes taskBtnIn { from { opacity: 0; transform: scale(0.4) rotate(-20deg); } }
 @keyframes taskBtnPulse { to { transform: scale(1.06); } }
 
-/* ---------- popups keep clear of the notch / rounded corners: inset = safe area, else a slim 12px */
+/* ---------- popups keep clear of the notch / rounded corners: inset = safe area, else a slim 12px.
+   Symmetric on each axis (the larger side wins) so a one-sided notch doesn't push popups off-centre. */
 .modal-backdrop {
-  box-sizing: border-box;
-  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  --pad-x: max(12px, env(safe-area-inset-left), env(safe-area-inset-right));
+  --pad-y: max(12px, env(safe-area-inset-top), env(safe-area-inset-bottom));
+  box-sizing: border-box; padding: var(--pad-y) var(--pad-x);
 }
-.modal-backdrop > .modal { max-width: 100%; max-height: 100%; box-sizing: border-box; }
+/* explicit viewport heights: `max-height: 100%` doesn't resolve inside the auto grid track, so popups grew past the screen */
+.modal-backdrop > .modal { max-width: 100%; max-height: calc(100vh - 2 * var(--pad-y)); max-height: calc(100dvh - 2 * var(--pad-y)); box-sizing: border-box; }
+.modal-backdrop > .modal > .modal-content { min-height: 0; flex: 1 1 auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+.modal-backdrop > .guide-modal { max-height: calc(100vh - 2 * var(--pad-y) - 32px); max-height: calc(100dvh - 2 * var(--pad-y) - 32px); }
 .opening { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
 
 /* ---------- phones: smaller reading text in the guide, story and role popup */
 @media (max-height: 560px), (max-width: 560px) {
-  .guide-modal { font-size: 0.84em; }
+  .guide-modal { font-size: 0.8em; }
   .guide-modal .guide-title { font-size: 1rem; }
   .guide h4 { margin: 8px 0 4px; font-size: 1.05em; }
   .guide p { margin: 4px 0; line-height: 1.38; }
@@ -2400,3 +2413,44 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
   /* narrow + short (rare: small tablets split-screen) — fall back to one column */
   .home-card { display: block; }
 }
+
+/* ---------- touch devices: no text selection / callouts anywhere except text fields */
+html, body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-select: text; }
+
+@media (pointer: coarse) {
+  /* no keyboard on phones: hide every key hint */
+  kbd, .mv-hint { display: none !important; }
+  /* role reveal: smaller copy so it fits a landscape phone */
+  .opening { padding: 10px 16px; }
+  .opening-role { gap: 4px; }
+  .opening-eyebrow { font-size: 0.7em; }
+  .opening-role .faction { font-size: 0.72em; }
+  .opening-role h2 { font-size: clamp(1.15rem, 5.5vh, 1.9rem); }
+  .opening-role p { font-size: 0.76em; line-height: 1.4; }
+  .opening-badge .role-icon, .opening-role > .opening-badge .role-icon { width: clamp(56px, 18vh, 100px) !important; height: auto; }
+  .opening-role .btn.big { padding: 6px 16px; font-size: 0.85em; }
+  .opening-prelude { font-size: clamp(0.85rem, 3.8vh, 1.2rem); }
+}
+
+/* ---------- touch action cluster: big main button in the corner, small ones around it
+   (report above, sabotage bottom-left, task on the diagonal between them) */
+.action-bar.cluster {
+  --main: 104px; --sm: 64px; --gap: 12px;
+  display: block; width: var(--main); height: var(--main); gap: 0;
+  right: max(18px, env(safe-area-inset-right)); bottom: max(22px, env(safe-area-inset-bottom));
+  touch-action: none;
+}
+.action-bar.cluster > * { position: absolute; }
+.action-bar.cluster .round-btn { width: var(--sm); height: var(--sm); touch-action: none; }
+.action-bar.cluster .slot-main, .action-bar.cluster .slot-main .round-btn { width: var(--main); height: var(--main); }
+.action-bar.cluster .slot-main { right: 0; bottom: 0; }
+.action-bar.cluster .slot-top { right: 0; bottom: calc(var(--main) + var(--gap) + 8px); }
+.action-bar.cluster .slot-left { right: calc(var(--main) + var(--gap)); bottom: 0; }
+.action-bar.cluster .slot-diag { right: calc(var(--main) * 0.5 + (var(--main) * 0.5 + var(--sm) * 0.5 + var(--gap)) * 0.707 - var(--sm) * 0.5); bottom: calc(var(--main) * 0.5 + (var(--main) * 0.5 + var(--sm) * 0.5 + var(--gap)) * 0.707 - var(--sm) * 0.5); }
+.action-bar.cluster :is(.slot-top, .slot-left, .slot-diag) em, .action-bar.cluster .slot-left .round-btn em { font-size: 0.6em; padding: 0 6px; bottom: -8px; border-width: 1.5px; }
+.action-bar.cluster :is(.slot-top, .slot-left, .slot-diag) .cd, .action-bar.cluster .slot-left .round-btn .cd { font-size: 1.3em; }
+.action-bar.cluster .slot-left .round-btn.sab { border-width: 2px; }
+@media (pointer: coarse) { .action-bar.cluster { --main: 96px; --sm: 60px; --gap: 10px; } }
+@media (max-height: 560px) { .action-bar.cluster { --main: 84px; --sm: 52px; --gap: 8px; bottom: max(14px, env(safe-area-inset-bottom)); } }
+@media (max-height: 400px) { .action-bar.cluster { --main: 74px; --sm: 46px; } }
