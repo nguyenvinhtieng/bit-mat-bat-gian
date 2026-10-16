@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build and reload the app on the VPS (run as deploy user from APP_DIR or any cwd).
 #
-#   cd /var/www/the-hidden-truth && ./deployment/deploy.sh
+#   cd /var/www/the-hidden-truth && bash deployment/deploy.sh
 #
 set -euo pipefail
 

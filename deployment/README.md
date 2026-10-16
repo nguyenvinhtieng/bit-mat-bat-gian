@@ -17,7 +17,7 @@ VPS **Ubuntu 22.04 / 24.04**, quyền `sudo`.
 | Cloudflare DNS | A `bitmat.vinhtieng.com` → IP VPS, **Proxied** (orange cloud) |
 | Cloudflare SSL | **Flexible** (CF HTTPS ↔ user, CF HTTP ↔ VPS:80) |
 | Bootstrap | `sudo bash deployment/vps-bootstrap.sh` |
-| Deploy | `./deployment/deploy.sh` |
+| Deploy | `bash deployment/deploy.sh` |
 
 ## 1. Cloudflare
 
@@ -43,7 +43,7 @@ Script: Node 22, pnpm, PM2, Nginx + snippet IP Cloudflare (`CF-Connecting-IP`), 
 ## 3. Deploy
 
 ```bash
-sudo -u deploy bash -lc 'cd /var/www/the-hidden-truth && cp -n deployment/env.example .env && ./deployment/deploy.sh'
+sudo -u deploy bash -lc 'cd /var/www/the-hidden-truth && test -f .env || cp deployment/env.example .env; bash deployment/deploy.sh'
 ```
 
 ```bash
@@ -57,7 +57,7 @@ Production: `NODE_ENV=production`. CORS/WebSocket origin: `https://bitmat.vinhti
 ## 4. Cập nhật
 
 ```bash
-cd /var/www/the-hidden-truth && git pull && ./deployment/deploy.sh
+cd /var/www/the-hidden-truth && git pull && bash deployment/deploy.sh
 ```
 
 ## 5. Nginx thủ công
@@ -96,5 +96,5 @@ deployment/
 
 ```bash
 cd /var/www/the-hidden-truth && sudo bash deployment/vps-bootstrap.sh
-sudo -u deploy bash -lc 'cd /var/www/the-hidden-truth && ./deployment/deploy.sh'
+sudo -u deploy bash -lc 'cd /var/www/the-hidden-truth && bash deployment/deploy.sh'
 ```
