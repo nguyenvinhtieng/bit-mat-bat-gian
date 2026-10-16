@@ -45,6 +45,7 @@ import { KILLER_NAME_COLOR, uiBlocksMovement, useStore } from '../store';
 import { useLang, useT } from '../i18n';
 import { CloseButton, Digits, Icon, RoleBadge, asset, fmt, tapProps, useCountdown, useSkin, useWardSpot } from './common';
 import { MapView } from './MapView';
+import { GameSettings } from './GameSettings';
 import { isTouchDevice } from './Joystick';
 
 /** Sweeping ring over a round button: fills clockwise from 0 to 100% while the cooldown runs (pure CSS animation, no re-render). */
@@ -255,30 +256,52 @@ const room = useStore((s) => s.room)!;
   };
 }
 
+/** "Canh … · còn lại mm:ss" pill; on touch screens it sits in the right column under the role card. */
+function NightClock({ night }: { night: NonNullable<ReturnType<typeof useNight>> }) {
+  const skin = useSkin();
+  const t = useT();
+  const en = useLang((s) => s.lang) === 'en';
+  return (
+    <div className="night-clock" title={t('nightTitle')}>
+      <img src={asset(`${skin.art.clockIcon}.webp`)} width={26} height={26} alt="" />
+      <span className="nc-canh">
+        {t('canh')} {en ? skin.story.segments[night.canh - 1].en : skin.story.segments[night.canh - 1].vi}
+      </span>
+      <i className="nc-sep" aria-hidden />
+      {night.paused ? (
+        <span className="nc-left">{t('nightPaused')}</span>
+      ) : (
+        <span className="nc-left" title={t('nightLeftTitle')}>
+          {t('nightLeft')} <b className="nc-time"><Digits text={fmt(night.left)} /></b>
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Touch screens: the night clock on its own, with the same last-canh / paused styling as the top strip. */
+function NightClockDock() {
+  const night = useNight();
+  if (!night) return null;
+  return (
+    <div className={`night-wrap ${night.canh === GAME.canhCount ? 'last' : ''} ${night.paused ? 'paused' : ''}`}>
+      <NightClock night={night} />
+    </div>
+  );
+}
+
 function NightBar({ pct, progress, target }: { pct: number; progress: number; target: number }) {
     const skin = useSkin();
 const night = useNight();
   const t = useT();
   const en = useLang((s) => s.lang) === 'en';
+  const touch = isTouchDevice();
   if (!night) return null;
   const last = night.canh === GAME.canhCount;
   return (
     <div className={`night-wrap ${last ? 'last' : ''} ${night.paused ? 'paused' : ''}`}>
       <div className="nw-row">
-      <div className="night-clock" title={t('nightTitle')}>
-        <img src={asset(`${skin.art.clockIcon}.webp`)} width={26} height={26} alt="" />
-        <span className="nc-canh">
-          {t('canh')} {en ? skin.story.segments[night.canh - 1].en : skin.story.segments[night.canh - 1].vi}
-        </span>
-        <i className="nc-sep" aria-hidden />
-        {night.paused ? (
-          <span className="nc-left">{t('nightPaused')}</span>
-        ) : (
-          <span className="nc-left" title={t('nightLeftTitle')}>
-            {t('nightLeft')} <b className="nc-time"><Digits text={fmt(night.left)} /></b>
-          </span>
-        )}
-      </div>
+      {!touch && <NightClock night={night} />}
       <div className="night-bar" title={`${t('canhLeft')}: ${fmt(night.canhLeft)}`}>
         {Array.from({ length: GAME.canhCount }, (_, i) => {
           const f = Math.min(1, Math.max(0, night.frac * GAME.canhCount - i));
@@ -450,6 +473,7 @@ const room = useStore((s) => s.room)!;
           </div>
         )}
       </div>
+      {inGame && room.phase !== 'ended' && <GameSettings />}
       {/* top right: who is still standing */}
       {inGame && room.phase !== 'ended' && room.crewAlive + room.killersAlive > 0 && (
         <div className="alive-count" title={t('aliveTitle')}>
@@ -524,7 +548,13 @@ const room = useStore((s) => s.room)!;
         </div>
       )}
       {/* phones: the chip sits under the role card, keeping the left thumb area free for the joystick */}
-      {me && inGame && room.phase === 'explore' && touch && <div className="task-chip-dock">{taskChip}</div>}
+      {/* touch: right column under the role card — night clock, then the task chip */}
+      {inGame && touch && room.phase !== 'ended' && (
+        <div className="task-chip-dock">
+          <NightClockDock />
+          {me && room.phase === 'explore' && taskChip}
+        </div>
+      )}
       {me && inGame && room.phase === 'explore' && touch && tasksOpen && !taskOpen && (
         <div className="modal-backdrop task-pop-backdrop" onClick={() => setTasksOpen(false)}>
           <div className="task-list task-pop open" onClick={(e) => e.stopPropagation()}>

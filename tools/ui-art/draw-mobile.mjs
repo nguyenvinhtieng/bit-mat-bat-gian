@@ -11,6 +11,9 @@
  *   joy-knob        160x160 gold joystick knob with lotus boss
  *   rotate-phone    512x320 "rotate to landscape" illustration (phone + curved arrow)
  *   tab-slide       96x192  lacquer pull-tab for the slide-away lobby panel (arrow drawn in CSS)
+ *   btn-settings    256x256 round lacquer button with a gold cog (in-game settings: volume + leave)
+ *   ico-sound       128x128 gold speaker medallion (volume row)
+ *   ico-exit        128x128 open-door medallion (leave-game row)
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -128,6 +131,59 @@ function tabSlide() {
   <circle cx="24" cy="20" r="3" fill="#f3c75a"/><circle cx="24" cy="76" r="3" fill="#f3c75a"/>`);
 }
 
+/* ------------------------------------------------------------------ in-game settings button */
+/** cog outline: n teeth, root radius r1, tip radius r2 (flat-topped teeth) */
+function gearPath(c, r1, r2, n) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 - Math.PI / 2, s = Math.PI / n;
+    for (const [r, da] of [[r1, -s * 0.62], [r2, -s * 0.38], [r2, s * 0.38], [r1, s * 0.62]])
+      pts.push(`${(c + Math.cos(a + da) * r).toFixed(1)},${(c + Math.sin(a + da) * r).toFixed(1)}`);
+  }
+  return `M${pts.join(' L')} Z`;
+}
+function btnSettings() {
+  return svg(256, 256, `
+  <defs>${gold('gold', 1, 1)}${gold('cog', 0, 1)}${gloss}
+    <radialGradient id="disc" cx=".42" cy=".34" r=".72"><stop offset="0" stop-color="#d8523c"/><stop offset=".55" stop-color="#8a1f15"/><stop offset="1" stop-color="#3e0b06"/></radialGradient>
+  </defs>
+  <circle cx="128" cy="128" r="126" fill="${INK}"/>
+  <circle cx="128" cy="128" r="122" fill="url(#gold)"/>
+  <circle cx="128" cy="128" r="119" fill="none" stroke="#fff6cf" stroke-width="2" opacity=".55"/>
+  ${studRing(128, 110, 12)}
+  <circle cx="128" cy="128" r="101" fill="${INK}"/>
+  <circle cx="128" cy="128" r="97" fill="url(#disc)"/>
+  <circle cx="128" cy="128" r="89" fill="none" stroke="url(#gold)" stroke-width="3" opacity=".9"/>
+  <path d="${gearPath(128, 52, 72, 8)}" fill="url(#cog)" stroke="${INK}" stroke-width="6" stroke-linejoin="round" paint-order="stroke"/>
+  <circle cx="128" cy="128" r="44" fill="none" stroke="#fff2bf" stroke-width="2.5" opacity=".7"/>
+  <circle cx="128" cy="128" r="24" fill="#8a1f15" stroke="${INK}" stroke-width="5"/>
+  <circle cx="128" cy="128" r="10" fill="url(#gold)" stroke="${INK}" stroke-width="2"/>
+  <ellipse cx="128" cy="80" rx="66" ry="38" fill="url(#gloss)"/>`);
+}
+/** small gold-on-ink medallion icons for the settings rows */
+const medal = (inner) => svg(128, 128, `
+  <defs>${gold('gold', 1, 1)}
+    <radialGradient id="well" cx=".45" cy=".35" r=".75"><stop offset="0" stop-color="#5a3a26"/><stop offset="1" stop-color="#1f140c"/></radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="62" fill="${INK}"/>
+  <circle cx="64" cy="64" r="58" fill="url(#gold)"/>
+  <circle cx="64" cy="64" r="51" fill="url(#well)" stroke="${INK}" stroke-width="3"/>
+  ${inner}`);
+function icoSound() {
+  return medal(`
+  <path d="M34 54 H48 L66 38 V90 L48 74 H34 Z" fill="url(#gold)" stroke="${INK}" stroke-width="4" stroke-linejoin="round" paint-order="stroke"/>
+  <g fill="none" stroke="url(#gold)" stroke-width="6" stroke-linecap="round">
+    <path d="M76 52 Q84 64 76 76"/><path d="M86 42 Q100 64 86 86"/>
+  </g>`);
+}
+function icoExit() {
+  return medal(`
+  <path d="M40 32 H74 V96 H40 Z" fill="#8a1f15" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M40 32 L62 40 V104 L40 96 Z" fill="url(#gold)" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+  <circle cx="56" cy="70" r="3.5" fill="${INK}"/>
+  <path d="M78 64 H100 M90 54 L100 64 L90 74" fill="none" stroke="url(#gold)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>`);
+}
+
 /* ------------------------------------------------------------------ render */
 const JOBS = [
   ['btn-chat', btnChat(), 256, 256],
@@ -135,6 +191,9 @@ const JOBS = [
   ['joy-knob', joyKnob(), 160, 160],
   ['rotate-phone', rotatePhone(), 512, 320],
   ['tab-slide', tabSlide(), 96, 192],
+  ['btn-settings', btnSettings(), 256, 256],
+  ['ico-sound', icoSound(), 128, 128],
+  ['ico-exit', icoExit(), 128, 128],
 ];
 
 for (const dir of [SRC, OUT, PUB]) fs.mkdirSync(dir, { recursive: true });

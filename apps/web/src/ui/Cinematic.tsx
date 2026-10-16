@@ -7,6 +7,7 @@ const ROW = { down: 0, left: 1, right: 2, up: 3 } as const;
 const DURATION: Record<string, number> = { kill: 3200, shield: 2600, report: 3600, emergency: 3300, witness: 1300 };
 /** The stage is authored on a fixed SET_W x SET_H board and scaled to whatever room the bars + caption leave. */
 const SET_W = 1000, SET_H = 420;
+const KICKER: Record<string, string> = { kill: '✦ Án mạng ✦', shield: '✦ Hộ thân ✦', report: '✦ Phát hiện ✦', emergency: '✦ Hồi chuông ✦' };
 
 // Pose timelines (ms). Impact lands at 900: dash 300-750 → wind-up → slash.
 const ACTOR_STRIKE: PoseTrack = [[0, 'strike-1'], [750, 'strike-0'], [900, 'strike-2'], [1050, 'strike-3']];
@@ -302,7 +303,8 @@ export function Cinematic() {
       </div>
       <div className="cine-text">
         <img className="cine-brush" src={asset('common/ui/fx/brush-stroke.webp')} alt="" draggable={false} />
-        <h1>{title}</h1>
+        <span className="cine-kicker">{KICKER[c.kind]}</span>
+        <h1 data-text={title}>{title}</h1>
         <p>{sub}</p>
       </div>
       <div className="cine-bar bottom" />

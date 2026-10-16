@@ -32,7 +32,7 @@ export function TaskModal() {
     const done = me?.completedTasks.length ?? 0;
     const total = me?.tasks.length ?? 0;
     return (
-      <Modal title={en ? 'Task complete' : 'Hoàn thành nhiệm vụ'} onClose={close} wide>
+      <Modal title={en ? 'Task complete' : 'Hoàn thành nhiệm vụ'} onClose={close} wide className="hcard-modal">
         <div className="hcard">
           <figure className="hcard-art">
             <img src={asset(`${skin.art.cards}/${skin.prefix}-card-${task.taskId}.webp`)} alt="" draggable={false} />

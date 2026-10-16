@@ -130,6 +130,33 @@ const ac = () => {
     return null;
   }
 };
+
+/** Master volume (0..1) for every cue, set from the in-game settings and remembered per device. */
+const VOL_KEY = 'ht-volume';
+let volume = (() => {
+  try {
+    const v = Number(localStorage.getItem(VOL_KEY));
+    return localStorage.getItem(VOL_KEY) == null || Number.isNaN(v) ? 1 : Math.min(1, Math.max(0, v));
+  } catch {
+    return 1;
+  }
+})();
+let master: GainNode | null = null;
+const out = (a: AudioContext) => {
+  if (!master || master.context !== a) (master = a.createGain()).connect(a.destination);
+  master.gain.value = volume;
+  return master;
+};
+export const getVolume = () => volume;
+export function setVolume(v: number) {
+  volume = Math.min(1, Math.max(0, v));
+  if (master) master.gain.value = volume;
+  try {
+    localStorage.setItem(VOL_KEY, String(volume));
+  } catch {
+    /* ignore */
+  }
+}
 function tone(freq: number, dur: number, type: OscillatorType = 'sine', vol = 0.2, bend = 1) {
   const a = ac();
   if (!a) return;
@@ -140,7 +167,7 @@ function tone(freq: number, dur: number, type: OscillatorType = 'sine', vol = 0.
   if (bend !== 1) o.frequency.exponentialRampToValueAtTime(freq * bend, a.currentTime + dur);
   g.gain.setValueAtTime(vol, a.currentTime);
   g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur);
-  o.connect(g).connect(a.destination);
+  o.connect(g).connect(out(a));
   o.start();
   o.stop(a.currentTime + dur + 0.02);
 }
@@ -157,7 +184,7 @@ function noise(dur: number, vol = 0.25, hp = 2000) {
   f.frequency.value = hp;
   const g = a.createGain();
   g.gain.value = vol;
-  src.connect(f).connect(g).connect(a.destination);
+  src.connect(f).connect(g).connect(out(a));
   src.start();
 }
 
@@ -186,7 +213,7 @@ function drumHit(at: number, vol: number) {
   src.buffer = drumBuf;
   const g = a.createGain();
   g.gain.value = vol;
-  src.connect(g).connect(a.destination);
+  src.connect(g).connect(out(a));
   src.start(at);
 }
 /** Night-watch pattern: canh n = a slow roll then n strikes; n > 5 = the long dawn roll. */

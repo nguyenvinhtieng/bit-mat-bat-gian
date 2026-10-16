@@ -629,7 +629,8 @@ export class GameRoom extends Room<GameState> {
     if (ts.shield) {
       ts.shield = false;
       const sh = { kind: 'shield', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, at: { x: target.x, y: target.y } };
-      client.send('cinematic', { ...sh, youAre: 'actor' });
+      // The killer sees the block like a witness does (in-world shield FX, no full-screen overlay).
+      client.send('cinematic', { ...sh, youAre: 'witness' });
       this.clients.getById(target.id)?.send('cinematic', { ...sh, youAre: 'victim' });
       for (const w of this.bystanders(me, target)) this.clients.getById(w.id)?.send('cinematic', { ...sh, youAre: 'witness' });
       client.send('toast', { text: `Đòn đánh bị chặn bởi lá chắn của ${this.skin.roles.guardian.name}!`, kind: 'warn' });
@@ -639,7 +640,7 @@ export class GameRoom extends Room<GameState> {
       return;
     }
     const at = { x: target.x, y: target.y };
-    this.clients.getById(me.id)?.send('cinematic', { kind: 'kill', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, youAre: 'actor', at });
+    // The killer gets no cinematic/FX of their own kill — only the victim (and witnesses) see it.
     this.clients.getById(target.id)?.send('cinematic', { kind: 'kill', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, youAre: 'victim', at });
     for (const w of this.bystanders(me, target))
       this.clients.getById(w.id)?.send('cinematic', { kind: 'witness', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, at });

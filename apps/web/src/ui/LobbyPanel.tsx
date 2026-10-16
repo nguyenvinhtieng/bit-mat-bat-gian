@@ -41,6 +41,15 @@ export function LobbyPanel() {
   const [chatOpen, setChatOpen] = usePersisted('tht:lobbyChat', !isTouch());
   const chat = useStore((s) => s.chat);
   const [seen, setSeen] = useState(chat.length);
+  const [chatClosing, setChatClosing] = useState(false);
+  const closeChat = () => {
+    if (chatClosing) return;
+    setChatClosing(true);
+    setTimeout(() => {
+      setChatOpen(false);
+      setChatClosing(false);
+    }, 140);
+  };
   useEffect(() => {
     if (chatOpen) setSeen(chat.length);
   }, [chatOpen, chat.length]);
@@ -166,8 +175,8 @@ export function LobbyPanel() {
         </button>
       </div>
       {chatOpen ? (
-        <aside className="lobby-chat">
-          <button className="chat-min" onClick={() => setChatOpen(false)} title={t('chatClose')} aria-label={t('chatClose')}>
+        <aside className={`lobby-chat ${chatClosing ? 'closing' : ''}`}>
+          <button className="chat-min" onClick={closeChat} title={t('chatClose')} aria-label={t('chatClose')}>
             –
           </button>
           <Chat compact />
