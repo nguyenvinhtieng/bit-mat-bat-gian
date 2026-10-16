@@ -30,6 +30,8 @@ export type ClientMessages = {
   'host:kick': { target: string };
   /** lobby only: switch the room's map (falls back to the default when not playable) */
   'host:map': { map: string };
+  /** lobby only: public = listed for quick-match, private = invite code only */
+  'host:visibility': { public: boolean };
 };
 
 /** Server -> client (private, only to the owner) */

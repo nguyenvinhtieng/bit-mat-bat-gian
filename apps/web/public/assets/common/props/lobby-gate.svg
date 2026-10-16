@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="208" height="108" viewBox="0 0 208 108">
+  <!-- Lobby gate: closed lacquered double doors under a glazed-tile roof; shuts the courtyard exit until the night starts. Feet line = y 104. -->
+  <defs>
+    <linearGradient id="lac" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b8321f"/>
+      <stop offset="0.55" stop-color="#8e2214"/>
+      <stop offset="1" stop-color="#5c140b"/>
+    </linearGradient>
+    <linearGradient id="post" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5a150c"/>
+      <stop offset="0.45" stop-color="#a82c1a"/>
+      <stop offset="1" stop-color="#4a1009"/>
+    </linearGradient>
+    <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe08a"/>
+      <stop offset="0.6" stop-color="#e3a93a"/>
+      <stop offset="1" stop-color="#9c6418"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff0b0"/>
+      <stop offset="0.5" stop-color="#f3c75a"/>
+      <stop offset="1" stop-color="#a8721e"/>
+    </linearGradient>
+    <pattern id="studs" width="14" height="13" patternUnits="userSpaceOnUse" x="3" y="2">
+      <circle cx="7" cy="6.5" r="2.2" fill="url(#gold)" stroke="#6b3a10" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+
+  <!-- ground shadow -->
+  <ellipse cx="104" cy="104" rx="100" ry="4" fill="#000" opacity="0.35"/>
+
+  <!-- stone plinths -->
+  <rect x="2" y="94" width="26" height="10" rx="2" fill="#8b8172" stroke="#3e352b" stroke-width="2"/>
+  <rect x="180" y="94" width="26" height="10" rx="2" fill="#8b8172" stroke="#3e352b" stroke-width="2"/>
+
+  <!-- posts -->
+  <rect x="7" y="30" width="16" height="66" fill="url(#post)" stroke="#2e0905" stroke-width="2"/>
+  <rect x="185" y="30" width="16" height="66" fill="url(#post)" stroke="#2e0905" stroke-width="2"/>
+  <rect x="7" y="40" width="16" height="3" fill="url(#gold)"/>
+  <rect x="185" y="40" width="16" height="3" fill="url(#gold)"/>
+
+  <!-- doors -->
+  <rect x="23" y="38" width="81" height="62" fill="url(#lac)" stroke="#2e0905" stroke-width="2"/>
+  <rect x="104" y="38" width="81" height="62" fill="url(#lac)" stroke="#2e0905" stroke-width="2"/>
+  <rect x="28" y="43" width="71" height="52" fill="url(#studs)"/>
+  <rect x="109" y="43" width="71" height="52" fill="url(#studs)"/>
+  <rect x="28" y="43" width="71" height="52" fill="none" stroke="#f3c75a" stroke-width="1.5" opacity="0.7"/>
+  <rect x="109" y="43" width="71" height="52" fill="none" stroke="#f3c75a" stroke-width="1.5" opacity="0.7"/>
+  <line x1="104" y1="38" x2="104" y2="100" stroke="#1d0503" stroke-width="3"/>
+
+  <!-- crossbar + lock -->
+  <rect x="32" y="63" width="144" height="8" rx="3" fill="url(#gold)" stroke="#6b3a10" stroke-width="1.5"/>
+  <circle cx="92" cy="67" r="6" fill="url(#gold)" stroke="#6b3a10" stroke-width="1.5"/>
+  <circle cx="116" cy="67" r="6" fill="url(#gold)" stroke="#6b3a10" stroke-width="1.5"/>
+  <circle cx="92" cy="67" r="2.5" fill="#6b3a10"/>
+  <circle cx="116" cy="67" r="2.5" fill="#6b3a10"/>
+  <rect x="97" y="70" width="14" height="14" rx="3" fill="url(#gold)" stroke="#6b3a10" stroke-width="1.5"/>
+  <path d="M100 70 v-4 a4 4 0 0 1 8 0 v4" fill="none" stroke="#a8721e" stroke-width="2.4"/>
+  <circle cx="104" cy="76" r="1.8" fill="#4a2508"/>
+  <rect x="103.2" y="76" width="1.6" height="4.5" fill="#4a2508"/>
+
+  <!-- lintel -->
+  <rect x="0" y="28" width="208" height="11" fill="#7a1f17" stroke="#2e0905" stroke-width="2"/>
+  <rect x="4" y="31.5" width="200" height="2.5" fill="url(#gold)" opacity="0.85"/>
+
+  <!-- glazed-tile roof with upturned eaves -->
+  <path d="M-2 30 Q18 26 26 15 L182 15 Q190 26 210 30 Z" fill="url(#roof)" stroke="#6b3a10" stroke-width="2" stroke-linejoin="round"/>
+  <g stroke="#b07a24" stroke-width="1.6" opacity="0.8">
+    <line x1="40" y1="17" x2="37" y2="28"/><line x1="58" y1="17" x2="56" y2="28"/><line x1="76" y1="17" x2="75" y2="28"/>
+    <line x1="94" y1="17" x2="93" y2="28"/><line x1="114" y1="17" x2="115" y2="28"/><line x1="132" y1="17" x2="133" y2="28"/>
+    <line x1="150" y1="17" x2="152" y2="28"/><line x1="168" y1="17" x2="171" y2="28"/>
+  </g>
+  <path d="M22 15 L186 15 L181 9 L27 9 Z" fill="#c8862a" stroke="#6b3a10" stroke-width="2" stroke-linejoin="round"/>
+  <!-- ridge + dragon-curl ends -->
+  <rect x="30" y="5" width="148" height="5" rx="2.5" fill="url(#gold)" stroke="#6b3a10" stroke-width="1.5"/>
+  <path d="M30 7.5 q-10 -2 -12 -7 q6 0 12 3.5" fill="url(#gold)" stroke="#6b3a10" stroke-width="1.5"/>
+  <path d="M178 7.5 q10 -2 12 -7 q-6 0 -12 3.5" fill="url(#gold)" stroke="#6b3a10" stroke-width="1.5"/>
+  <circle cx="104" cy="5" r="4" fill="#d93a22" stroke="#6b3a10" stroke-width="1.5"/>
+</svg>

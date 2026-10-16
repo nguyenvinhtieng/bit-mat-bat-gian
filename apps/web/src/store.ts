@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Cinematic, ChatMsg, EndReveal, Phase, PrivateInfo, SabotageKind, TaskData, TaskId, ToastMsg, VoteResult } from '@hidden-truth/shared';
 
 /** which matchmaking call is in flight (false = idle) */
-export type Connecting = false | 'create' | 'join' | 'reconnect';
+export type Connecting = false | 'create' | 'join' | 'find' | 'reconnect';
 
 export type PlayerView = {
   id: string;
@@ -25,6 +25,8 @@ export type RoomView = {
   code: string;
   mapSlug: string;
   hostId: string;
+  /** public = findable via quick-match; private = invite code only */
+  isPublic: boolean;
   phase: Phase;
   phaseEndsAt: number;
   progress: number;

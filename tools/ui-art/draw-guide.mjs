@@ -9,11 +9,10 @@
  *   frame-guide            512x512 9-slice, slice 112   (teak + double gold + jade gems + cloud corners)
  *   guide-title            760x150 ribbon plaque for the title (text is HTML on top)
  *   tab / tab-active       320x96, horizontal 3-slice, slice 48 (fill)
- *   tab-story/flow/roles   96x96 tab icons (scroll, footsteps, mask)
+ *   tab-story/roles        96x96 tab icons (scroll, mask)
  *   btn-close              128x128 round lacquer close button
  *   card / card-crew / card-killer   256x256 9-slice, slice 56 (inset panels)
- *   step-badge             96x96 medallion (number is HTML on top)
- *   btn-guide              256x256 round jade button with an open book (lobby / home)
+ *   btn-guide              256x256 round jade button with an open book (settings popup)
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -124,16 +123,6 @@ const iconScroll = () => svg(48, 48, `<defs>${ICON_DEFS}</defs>
     <rect x="3" y="37.5" width="5" height="4" rx="1.5" fill="url(#gold)"/><rect x="40" y="37.5" width="5" height="4" rx="1.5" fill="url(#gold)"/>
     <circle cx="33" cy="32" r="4" fill="#c4241b" stroke-width="1.5"/>
   </g>`);
-const foot = (x, y, rot, fill) => `<g transform="translate(${x} ${y}) rotate(${rot})" stroke="${INK}" stroke-width="1.8">
-    <ellipse cx="0" cy="0" rx="4.6" ry="7" fill="${fill}"/><ellipse cx="0" cy="10.5" rx="3.4" ry="3.2" fill="${fill}"/></g>`;
-const iconFlow = () => svg(48, 48, `<defs>${ICON_DEFS}</defs>
-  <g stroke="${INK}" stroke-width="2.2" stroke-linejoin="round">
-    <rect x="8" y="7" width="32" height="37" rx="3" fill="#7a4a2a"/>
-    <rect x="11" y="11" width="26" height="30" rx="1.5" fill="url(#paper)" stroke-width="1.6"/>
-    <rect x="18" y="4" width="12" height="7" rx="2" fill="url(#gold)"/>
-  </g>
-  ${[17, 25, 33].map((y, i) => `<path d="M14 ${y} l2.6 2.6 l4.6 -5" fill="none" stroke="${i < 2 ? '#c4241b' : '#a08a6a'}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M24 ${y} H33" stroke="#8a5a2a" stroke-width="2" stroke-linecap="round"/>`).join('')}`);
 const iconRoles = () => svg(48, 48, `<defs>${ICON_DEFS}</defs>
   <g stroke="${INK}" stroke-width="2.2" stroke-linejoin="round">
     <path d="M6 12 Q24 4 42 12 Q42 34 24 44 Q6 34 6 12 Z" fill="url(#paper)"/>
@@ -181,16 +170,6 @@ function card(accent, glow) {
   ${corners(S, bracket)}`);
 }
 
-/* ------------------------------------------------------------------ step badge */
-const stepBadge = () => svg(48, 48, `
-  <defs>${gold('gold', 1, 1)}
-    <radialGradient id="jade" cx=".4" cy=".32" r=".75"><stop offset="0" stop-color="#5fd0a6"/><stop offset=".6" stop-color="#1f8a6a"/><stop offset="1" stop-color="#0c3d31"/></radialGradient>
-  </defs>
-  <path d="M24 1 L30 6 L38 5 L40 13 L47 17 L44 24 L47 31 L40 35 L38 43 L30 42 L24 47 L18 42 L10 43 L8 35 L1 31 L4 24 L1 17 L8 13 L10 5 L18 6 Z" fill="url(#gold)" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>
-  <circle cx="24" cy="24" r="14.5" fill="${INK}"/>
-  <circle cx="24" cy="24" r="13" fill="url(#jade)"/>
-  <ellipse cx="24" cy="17" rx="8" ry="4" fill="#fff" opacity=".2"/>`);
-
 /* ------------------------------------------------------------------ round guide button (matches btn-kill/report) */
 function btnGuide() {
   const studs = Array.from({ length: 12 }, (_, i) => {
@@ -234,13 +213,11 @@ const JOBS = [
   ['tab', tab(false), 320, 96],
   ['tab-active', tab(true), 320, 96],
   ['tab-story', iconScroll(), 96, 96],
-  ['tab-flow', iconFlow(), 96, 96],
   ['tab-roles', iconRoles(), 96, 96],
   ['btn-close', btnClose(), 128, 128],
   ['card', card('#c58b26', '#f3c75a'), 256, 256],
   ['card-crew', card('#3f8fb0', '#8fd3f0'), 256, 256],
   ['card-killer', card('#a8322d', '#ff7a5a'), 256, 256],
-  ['step-badge', stepBadge(), 96, 96],
   ['btn-guide', btnGuide(), 256, 256],
 ];
 

@@ -58,6 +58,7 @@ function snapshot(state: any): RoomView {
     code: state.code,
     mapSlug: state.mapSlug,
     hostId: state.hostId,
+    isPublic: state.isPublic ?? true,
     phase: state.phase,
     phaseEndsAt: state.phaseEndsAt,
     progress: state.progress,
@@ -165,9 +166,12 @@ function bind(r: Room) {
 /** server-side rejections (room not found, full, token expired…) — retrying won't help */
 const rejected = (e: unknown) => typeof (e as { code?: unknown })?.code === 'number' && (e as { code: number }).code >= 4000;
 
+const NO_ROOMS = 'no-open-rooms';
+
 function friendly(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e ?? '');
   if (!navigator.onLine) return 'Thiết bị đang mất mạng. Kiểm tra Wi-Fi/4G rồi thử lại.';
+  if (msg === NO_ROOMS) return 'Hiện chưa có phòng công khai nào đang chờ người chơi. Hãy tạo phòng mới hoặc thử lại sau.';
   if (/timeout/i.test(msg)) return 'Máy chủ phản hồi quá lâu. Thử lại sau giây lát.';
   if (/not found|invalid|expired/i.test(msg)) return 'Không tìm thấy phòng với mã này.';
   if (/locked|full/i.test(msg)) return 'Phòng đã đầy hoặc đang chơi.';
@@ -227,14 +231,35 @@ export const createRoom = (name: string, map?: string) => connect('create', () =
 /** false only when the server says the room is gone; network errors resolve true so we never drop a valid invite */
 export async function roomExists(code: string): Promise<boolean> {
   try {
-    const base = endpoint().replace(/^ws/, 'http').replace(/\/$/, '');
-    const res = await fetch(`${base}/rooms/${encodeURIComponent(code.trim().toUpperCase())}`);
+    const res = await fetch(`${httpBase()}/rooms/${encodeURIComponent(code.trim().toUpperCase())}`);
     if (!res.ok) return true;
     return (await res.json())?.exists !== false;
   } catch {
     return true;
   }
 }
+
+export const httpBase = () => endpoint().replace(/^ws/, 'http').replace(/\/$/, '');
+
+/**
+ * Quick-match into a public lobby with free seats. A room can fill up or start between the lookup and the join,
+ * so a refused room is excluded and we ask again (a few times).
+ */
+export const findRoom = (name: string) =>
+  connect('find', async () => {
+    const tried: string[] = [];
+    for (;;) {
+      const res = await fetch(`${httpBase()}/rooms/find?exclude=${encodeURIComponent(tried.join(','))}`);
+      const id = res.ok ? ((await res.json())?.roomId as string | null) : null;
+      if (!id) throw new Error(NO_ROOMS);
+      try {
+        return await client.joinById(id, { name });
+      } catch (e) {
+        if (!rejected(e) || tried.length >= 4) throw e;
+        tried.push(id);
+      }
+    }
+  });
 
 export const joinRoom = (code: string, name: string) => connect('join', () => client.joinById(code.trim().toUpperCase(), { name }));
 

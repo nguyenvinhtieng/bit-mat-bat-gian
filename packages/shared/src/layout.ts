@@ -136,6 +136,20 @@ export function getGrid(): LayoutGrid {
   return (cached ??= buildGrid());
 }
 
+/** Lobby only: the courtyard's one exit (top of the central hall) is gated so everyone waits in the courtyard. */
+export const LOBBY_GATE: Rect = [19, 7, 4, 1];
+
+let lobbyCached: LayoutGrid | null = null;
+/** The normal grid with LOBBY_GATE made solid — server and client prediction both use it while phase is 'lobby'. */
+export function getLobbyGrid(): LayoutGrid {
+  if (lobbyCached) return lobbyCached;
+  const g = getGrid();
+  const solid = g.solid.slice();
+  const [x, y, rw, rh] = LOBBY_GATE;
+  for (let j = y; j < y + rh; j++) for (let i = x; i < x + rw; i++) solid[j * g.w + i] = 1;
+  return (lobbyCached = { ...g, solid });
+}
+
 export function isSolidTile(g: LayoutGrid, tx: number, ty: number): boolean {
   if (tx < 0 || ty < 0 || tx >= g.w || ty >= g.h) return true;
   return g.solid[ty * g.w + tx] === 1;

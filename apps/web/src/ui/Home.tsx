@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
 import { DEFAULT_MAP_SLUG, MAP_CATALOG, mapArt, mapMeta, playableMap } from '@hidden-truth/shared';
-import { createRoom, joinRoom, reconnect, roomExists } from '../net';
+import { createRoom, findRoom, joinRoom, reconnect, roomExists } from '../net';
 import { useStore } from '../store';
 import { asset } from './common';
 import { useLang, useT } from '../i18n';
-import { Guide, GuideButton } from './Guide';
-import { LangSwitch } from './LangSwitch';
+import { GameSettings } from './GameSetting';
 import { randomDevName } from '../devNames';
-import { isTouchDevice } from './Joystick';
 
 const NAME_KEY = 'tht:name';
 /** dev: every tab gets a fresh themed name so multi-tab testing needs no typing */
@@ -29,14 +27,12 @@ export function Home() {
   const busy = !!connecting && connecting !== 'reconnect';
   const t = useT();
   const lang = useLang((s) => s.lang);
-  const [showGuide, setShowGuide] = useState(false);
-  const [name, setName] = useState(() => (DEV ? randomDevName(readMap()) : localStorage.getItem(NAME_KEY) ?? ''));
+  const [name, setName] = useState(() => (DEV ? randomDevName(readMap()) : (localStorage.getItem(NAME_KEY) ?? '')));
   const [autoName, setAutoName] = useState(DEV);
   const joinMatch = /^\/join\/([A-Za-z0-9]{4,8})/.exec(location.pathname);
   const [invited, setInvited] = useState(!!joinMatch);
   const [code, setCode] = useState(joinMatch?.[1]?.toUpperCase() ?? '');
   const [mapSlug, setMapSlug] = useState(readMap);
-  const map = mapMeta(mapSlug);
   const toast = useStore((s) => s.toast);
   const pickMap = (slug: string) => {
     if (!mapMeta(slug).available) return toast({ text: t('comingSoonToast'), kind: 'info' });
@@ -71,15 +67,15 @@ export function Home() {
       {MAP_CATALOG.map((m) => (
         <div key={m.slug} className={`home-bg ${m.slug === mapSlug ? 'on' : ''}`} style={{ backgroundImage: `url(${asset(mapArt(m.slug, 'home-bg'))})` }} />
       ))}
-      <LangSwitch className="home-lang" />
+      <div className="home-lang home-corner">
+        <GameSettings className="corner-settings" slug={mapSlug} />
+      </div>
       <div className="home-card">
         <div className="home-brand">
           <img className="home-crest" src={home('home-crest')} alt="" draggable={false} />
           <h1>
             <img className="home-logo" src="/brand/logo.webp" alt="Bịt Mắt Bắt Gian" width={1200} height={392} draggable={false} />
-            <small>{t('slogan')}</small>
           </h1>
-          <p className="tagline">{t('tagline')}</p>
         </div>
 
         <div className="home-form">
@@ -127,20 +123,15 @@ export function Home() {
                   >
                     <span className="map-thumb" style={{ backgroundImage: `url(${asset(mapArt(m.slug, 'thumb'))})` }}>
                       {!m.available && <img className="map-lock" src={home('lock')} alt="" draggable={false} />}
-                      {!m.available && <em className="map-soon"><span>{t('comingSoon')}</span></em>}
+                      {!m.available && (
+                        <em className="map-soon">
+                          <span>{t('comingSoon')}</span>
+                        </em>
+                      )}
                     </span>
                     <b>{m.name[lang]}</b>
                   </button>
                 ))}
-              </div>
-              <div className="map-desc" key={map.slug}>
-                <strong>
-                  {map.name[lang]} <small>· {map.subtitle[lang]}</small>
-                </strong>
-                <span>{map.hook[lang]}</span>
-                <i>
-                  {map.players} {t('playersShort')}
-                </i>
               </div>
             </div>
           )}
@@ -163,6 +154,9 @@ export function Home() {
                 <button className="btn primary big wide" disabled={busy} onClick={() => createRoom(saveName(), mapSlug)}>
                   {connecting === 'create' ? t('creatingRoom') : t('createRoom')}
                 </button>
+                <button className="btn big wide home-alt" disabled={busy} onClick={() => findRoom(saveName())}>
+                  {connecting === 'find' ? t('findingRoom') : t('findRoom')}
+                </button>
                 <div className="or-sep">
                   <span>{lang === 'vi' ? 'hoặc nhập mã để vào phòng' : 'or join with a code'}</span>
                 </div>
@@ -175,7 +169,7 @@ export function Home() {
                     onChange={(e) => setCode(e.target.value.toUpperCase())}
                     onKeyDown={(e) => e.key === 'Enter' && !busy && code.length >= 4 && joinRoom(code, saveName())}
                   />
-                  <button className="btn" disabled={busy || code.length < 4} onClick={() => joinRoom(code, saveName())}>
+                  <button className="btn home-alt" disabled={busy || code.length < 4} onClick={() => joinRoom(code, saveName())}>
                     {connecting === 'join' ? t('joiningRoom') : t('joinRoom')}
                   </button>
                 </div>
@@ -195,11 +189,6 @@ export function Home() {
             </p>
           )}
         </div>
-        <div className="home-foot">
-          <GuideButton onClick={() => setShowGuide(true)} />
-        </div>
-        {showGuide && <Guide slug={mapSlug} onClose={() => setShowGuide(false)} />}
-        {!isTouchDevice() && <p className="muted small home-controls">{t('controls')}</p>}
       </div>
     </div>
   );

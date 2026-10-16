@@ -3,8 +3,10 @@ import { send } from '../net';
 import { colorHex, KILLER_NAME_COLOR, useKillerIds, useStore } from '../store';
 import { PLAYER_COLORS } from '@hidden-truth/shared';
 import { isTouchDevice } from './Joystick';
+import { CloseButton } from './common';
 
-export function Chat({ compact }: { compact?: boolean }) {
+/** `title` + `onClose` add a header row with the shared X (lobby chat). */
+export function Chat({ compact, title, onClose, closeLabel }: { compact?: boolean; title?: string; onClose?: () => void; closeLabel?: string }) {
   const chat = useStore((s) => s.chat);
   const killerIds = useKillerIds();
   const [text, setText] = useState('');
@@ -20,6 +22,12 @@ export function Chat({ compact }: { compact?: boolean }) {
   };
   return (
     <div className={`chat ${compact ? 'compact' : ''}`}>
+      {onClose && (
+        <header className="chat-head">
+          <strong>{title}</strong>
+          <CloseButton onClick={onClose} label={closeLabel} className="chat-x" />
+        </header>
+      )}
       <div className="chat-list" ref={list}>
         {chat.map((m, i) => (
           <div key={i} className={`chat-msg ${m.system ? 'system' : ''}`}>

@@ -21,6 +21,7 @@ import {
   dirFromInput,
   dist,
   getGrid,
+  getLobbyGrid,
   hasLineOfSight,
   clampKillers,
   killersFor,
@@ -57,6 +58,7 @@ const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const AFK_LOBBY_MS = 3 * 60_000;
 const activeCodes = new Set<string>();
 const grid = getGrid();
+const lobbyGrid = getLobbyGrid();
 
 const shuffle = <T>(arr: readonly T[]): T[] => {
   const a = [...arr];
@@ -89,7 +91,7 @@ export class GameRoom extends Room<GameState> {
     return this.skin.stations.find((x) => x.id === taskId);
   }
 
-  onCreate(options: { name?: string; map?: string }) {
+  onCreate(options: { name?: string; map?: string; public?: boolean }) {
     this.setState(new GameState());
     this.state.mapSlug = playableMap(options?.map);
     let code = '';
@@ -100,7 +102,11 @@ export class GameRoom extends Room<GameState> {
     this.state.code = code;
     this.setPatchRate(PATCH_MS);
     this.setSimulationInterval((dt) => this.update(dt), 1000 / SIM_HZ);
-    this.setMetadata({ map: this.state.mapSlug, creator: options?.name ?? '' });
+    // public unless the creator explicitly asks for a private room
+    this.state.isPublic = options?.public !== false;
+    this.setPrivate(!this.state.isPublic);
+    this.setMetadata({ map: this.state.mapSlug, creator: options?.name ?? '', createdAt: Date.now() });
+    this.syncMeta();
     this.registerMessages();
   }
 
@@ -219,6 +225,8 @@ export class GameRoom extends Room<GameState> {
       if (client.sessionId !== this.state.hostId || this.state.phase !== 'lobby') return;
       const n = this.state.players.size;
       if (n < MIN_PLAYERS) return client.send('toast', { text: `Cần ít nhất ${MIN_PLAYERS} người để bắt đầu (hiện có ${n}).`, kind: 'warn' });
+      const waiting = [...this.state.players.values()].filter((p) => !p.ready).length;
+      if (waiting) return client.send('toast', { text: `Còn ${waiting} người chưa sẵn sàng.`, kind: 'warn' });
       this.startGame();
     });
 
@@ -287,9 +295,20 @@ export class GameRoom extends Room<GameState> {
       if (slug === this.state.mapSlug) return;
       this.state.mapSlug = slug;
       this.state.tasksPerPlayer = Math.max(1, Math.min(this.skin.taskIds.length, this.state.tasksPerPlayer));
-      this.setMetadata({ ...this.metadata, map: slug });
+      this.syncMeta();
       this.refreshNight();
       this.system(`Chủ phòng đã đổi bản đồ: ${mapMeta(slug).name.vi}.`);
+    });
+
+    this.onMessage('host:visibility', (client, msg: { public: boolean }) => {
+      if (client.sessionId !== this.state.hostId || this.state.phase !== 'lobby') return;
+      const pub = !!msg?.public;
+      if (pub === this.state.isPublic) return;
+      this.state.isPublic = pub;
+      // private rooms drop out of the matchmaker entirely; the room code still works as the invite
+      this.setPrivate(!pub);
+      this.syncMeta();
+      this.system(pub ? 'Chủ phòng đã mở phòng công khai — người chơi khác có thể tìm thấy phòng.' : 'Chủ phòng đã chuyển phòng sang riêng tư — chỉ vào được bằng mã mời.');
     });
 
     this.onMessage('host:kick', (client, msg: { target: string }) => {
@@ -333,7 +352,7 @@ export class GameRoom extends Room<GameState> {
         const inp = m.queue.shift()!;
         m.budget -= 1;
         if (canMove) {
-          const next = stepMovement(grid, p, inp, SIM_DT);
+          const next = stepMovement(this.state.phase === 'lobby' ? lobbyGrid : grid, p, inp, SIM_DT);
           if (next.x !== p.x || next.y !== p.y) moved = true;
           p.x = next.x;
           p.y = next.y;
@@ -414,6 +433,12 @@ export class GameRoom extends Room<GameState> {
   private setPhase(phase: GameState['phase'], durationMs: number) {
     this.state.phase = phase;
     this.state.phaseEndsAt = durationMs > 0 ? Date.now() + durationMs : 0;
+    this.syncMeta();
+  }
+
+  /** listing info read by quick-match (/rooms/find) */
+  private syncMeta() {
+    this.setMetadata({ ...this.metadata, map: this.state.mapSlug, phase: this.state.phase, public: this.state.isPublic });
   }
 
   private advancePhase() {

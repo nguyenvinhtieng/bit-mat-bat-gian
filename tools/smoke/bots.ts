@@ -152,6 +152,7 @@ async function main() {
   await until(() => host.room.state.players.size === N, 3000, 'players joined');
 
   host.room.send('configure', { tasksPerPlayer: 3 });
+  for (const b of bots) b.room.send('ready', { ready: true });
   await sleep(200);
   host.room.send('start', {});
   await until(() => host.room.state.phase === 'explore' && bots.every((b) => b.me), 4000, 'explore + private');

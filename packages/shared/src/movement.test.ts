@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { getGrid, areaAt, SPAWNS, isSolidTile } from './layout';
+import { getGrid, getLobbyGrid, areaAt, SPAWNS, isSolidTile } from './layout';
 import { stepMovement } from './movement';
 import { PLAYER_SPEED, SIM_DT, TILE } from './constants';
 import { HUE_STATIONS } from './maps/co-do-hue/index';
@@ -78,4 +78,16 @@ test('decor never seals off floor: every walkable cell is reachable from spawn',
   }
   for (let y = 0; y < g.h; y++)
     for (let x = 0; x < g.w; x++) if (!isSolidTile(g, x, y)) assert.ok(seen.has(y * g.w + x), `pocket at ${x},${y}`);
+});
+
+test('lobby gate keeps players in the courtyard; the normal grid lets them through', () => {
+  const walkSouth = (g: ReturnType<typeof getGrid>) => {
+    let p = { x: 21 * TILE, y: 6.5 * TILE }; // courtyard, right above the central hall
+    for (let i = 0; i < 200; i++) p = stepMovement(g, p, { dx: 0, dy: 1 });
+    return p;
+  };
+  assert.equal(areaAt(getGrid(), walkSouth(getLobbyGrid()).x, walkSouth(getLobbyGrid()).y), 'courtyard_checkin');
+  assert.ok(walkSouth(getGrid()).y > 8 * TILE);
+  // every lobby spawn is still walkable
+  for (const s of SPAWNS) assert.equal(isSolidTile(getLobbyGrid(), Math.floor(s.x / TILE), Math.floor(s.y / TILE)), false);
 });

@@ -4,32 +4,9 @@ const GIAO_THUA = 'https://vi.wikipedia.org/wiki/Giao_th%E1%BB%ABa';
 
 export const TL_GUIDE: MapGuide = {
   roles: {
-    villager: {
-      what: l('Một người Thăng Long đang sửa soạn đón giao thừa bên Hồ Gươm. Bạn không có siêu năng lực — chỉ có đôi chân, đôi mắt và lá phiếu.', 'A Thăng Long local getting ready for New Year’s Eve by Sword Lake. No powers — just your legs, your eyes and your vote.'),
-      todo: [
-        l('Chạy tới các vòng sáng vàng: gói bánh chưng, xin chữ, dựng cây nêu… cho kịp giao thừa.', 'Run to the golden rings: wrap bánh chưng, ask for calligraphy, raise the Tết pole… before midnight.'),
-        l('Tránh ở một mình với người đáng ngờ. Thấy thi thể thì bấm nút Báo cáo.', 'Avoid being alone with a suspect. Press the Report button when you find a body.'),
-        l('Khi Quỷ xoá vòng vôi, cả bọn chạy tới rắc lại ngay — chậm là thua.', 'When a Demon erases the lime ring, rush over and sprinkle it back — too slow and you lose.'),
-      ],
-      note: l('Nhiệm vụ của hồn ma vẫn được tính — kể cả khi bạn đã bị hạ gục.', 'Ghost tasks still count — even after you are killed.'),
-    },
-    guardian: {
-      what: l('Thủ Từ giữ Đền Ngọc Sơn, mang MỘT lá bùa hộ mệnh: lần đầu Quỷ ra tay với bạn sẽ bị chặn.', 'Keeper of Ngọc Sơn Temple, carrying ONE protective charm: the first attack on you is blocked.'),
-      todo: [
-        l('Làm nhiệm vụ như bình thường, đi tuần quanh Bờ Hồ.', 'Do tasks as usual and patrol the lakeside.'),
-        l('Khi lá chắn cứu bạn, Quỷ cũng biết — hãy báo cho mọi người ngay trong cuộc họp.', 'When the shield saves you, the Demon knows too — tell everyone at the next meeting.'),
-      ],
-      note: l('Lá bùa chỉ dùng được một lần, sau đó bạn như người thường.', 'The charm works once, afterwards you are a normal townsperson.'),
-    },
-    killer: {
-      what: l('Quỷ lẻn vào đất Thăng Long đêm ba mươi, giả làm người đi chợ Tết. Hạ gục người khác để thắng.', 'A Demon sneaking into Thăng Long on New Year’s Eve, posing as a Tết shopper. Take people down to win.'),
-      todo: [
-        l('Lại gần một người rồi bấm nút Hạ gục (có thời gian hồi).', 'Get close to someone and press the Kill button (it has a cooldown).'),
-        l('Đốt pháo cho mọi người loá mắt, hoặc xoá vòng vôi để kéo cả đám chạy đi — không ai rắc lại kịp là bạn thắng.', 'Set off firecrackers to dazzle everyone, or erase the lime ring to drag the crowd away — if nobody sprinkles it back in time, you win.'),
-        l('Giả vờ làm nhiệm vụ để ngụy trang. Câu giờ tới giao thừa cũng là thắng.', 'Pretend to do tasks to blend in. Stalling until midnight is also a win.'),
-      ],
-      note: l('Không thể hạ gục đồng bọn. Thắng khi số Quỷ ≥ số người còn sống.', 'You cannot kill partners. Win when Demons ≥ living townsfolk.'),
-    },
+    villager: l('Người Thăng Long đón giao thừa bên Hồ Gươm. Không có năng lực đặc biệt.', 'A Thăng Long local by Sword Lake on New Year’s Eve. No special powers.'),
+    guardian: l('Thủ Từ Đền Ngọc Sơn, có MỘT lá bùa — chặn được lần ra tay đầu tiên của Quỷ.', 'Keeper of Ngọc Sơn Temple with ONE charm — blocks the first Demon attack.'),
+    killer: l('Quỷ giả làm người đi chợ Tết, lén tiêu diệt người dân. Thắng khi số Quỷ ≥ số người còn sống.', 'A Demon posing as a Tết shopper, secretly taking out townsfolk. Wins when Demons ≥ living townsfolk.'),
   },
   storyH: l('Đêm Giao Thừa Hồ Gươm', 'New Year’s Eve by Sword Lake'),
   story: {
@@ -49,7 +26,15 @@ export const TL_GUIDE: MapGuide = {
     ],
   },
   storyLink: {
-    vi: { term: 'Giao thừa', title: 'Xem giới thiệu về Giao thừa', url: GIAO_THUA },
-    en: { term: 'New Year', title: 'About Giao thừa (Vietnamese Wikipedia)', url: GIAO_THUA },
+    vi: {
+      term: 'Giao thừa',
+      title: 'Xem giới thiệu về Giao thừa',
+      url: GIAO_THUA,
+    },
+    en: {
+      term: 'New Year',
+      title: 'About Giao thừa (Vietnamese Wikipedia)',
+      url: GIAO_THUA,
+    },
   },
 };

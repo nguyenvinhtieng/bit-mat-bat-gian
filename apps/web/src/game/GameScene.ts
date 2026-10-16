@@ -14,7 +14,9 @@ import {
   areaAt,
   dirFromInput,
   dist,
+  LOBBY_GATE,
   getGrid,
+  getLobbyGrid,
   hasLineOfSight,
   mapSkin,
   playerArt,
@@ -25,6 +27,8 @@ import { fix, onRoom, room, send } from '../net';
 import { KILLER_NAME_COLOR, uiBlocksMovement, useStore, type Nearby } from '../store';
 
 const NAME_COLOR = '#fff8e8';
+/** lobby: a ready player's nameplate turns jade */
+const READY_NAME_COLOR = '#8dffb4';
 
 const A = '/assets';
 const DIRS = ['down', 'left', 'right', 'up'] as const;
@@ -60,6 +64,8 @@ type Avatar = {
   base: Phaser.GameObjects.Sprite;
   tint: Phaser.GameObjects.Sprite;
   label: Phaser.GameObjects.Text;
+  /** rounded backing behind the name, redrawn whenever the text or its colour changes */
+  plate: Phaser.GameObjects.Graphics;
   lamp: Phaser.GameObjects.Image;
   /** warm pool on the floor under the lamp; lives outside the container so it sits below every sprite */
   glow: Phaser.GameObjects.Image;
@@ -77,6 +83,10 @@ type Avatar = {
 
 export class GameScene extends Phaser.Scene {
   private grid = getGrid();
+  private lobbyGrid = getLobbyGrid();
+  private lobbyGate?: Phaser.GameObjects.Image;
+  /** phase + ready ids last painted onto the nameplates/gate */
+  private lobbyKey = '';
   private avatars = new Map<string, Avatar>();
   private stationSprites = new Map<TaskId, { icon: Phaser.GameObjects.Image; ring: Phaser.GameObjects.Image; top: number; fx: Phaser.GameObjects.GameObject[]; marker: Phaser.GameObjects.Container }>();
   /** Props as placed, so a station can adopt the object standing on it. */
@@ -131,6 +141,8 @@ export class GameScene extends Phaser.Scene {
     this.load.image('shadow', `${A}/common/characters/shadow.webp`);
     this.load.image('lantern', `${A}/common/characters/lantern.webp`);
     this.load.image('lantern-glow', `${A}/common/characters/lantern-glow.webp`);
+    // 2x raster of a 208x108 SVG, shown at 1x so it stays crisp on hi-dpi
+    this.load.svg('lobby-gate', `${A}/common/props/lobby-gate.svg`, { width: 416, height: 216 });
     this.load.image('body-marker', `${A}/common/ui/body-marker.webp`);
     for (const k of Object.keys(FX)) this.load.spritesheet(k, `${A}/common/ui/fx/${k}.webp`, { frameWidth: 256, frameHeight: 256 });
     for (const k of ['spark', 'ink-drop', 'ink-splat']) this.load.image(k, `${A}/common/ui/fx/${k}.webp`);
@@ -140,6 +152,7 @@ export class GameScene extends Phaser.Scene {
     this.buildMap();
     this.buildProps();
     this.buildStations();
+    this.buildLobbyGate();
     for (const tex of ['player', 'player-tint'])
       DIRS.forEach((d) =>
         this.anims.create({
@@ -163,7 +176,7 @@ export class GameScene extends Phaser.Scene {
       const ae = document.activeElement as HTMLElement | null;
       if (ae && ae !== document.body && ['INPUT', 'TEXTAREA', 'SELECT'].includes(ae.tagName)) ae.blur();
     });
-    // action keys sit under the right hand (J/K/L/I) while the left one is on WASD; E/R/Q stay as aliases
+    // one key per action, under the right hand while the left one is on WASD: J task/fix, K kill, L report, I sabotage, B bell; E/Space/R/Q stay as aliases
     kb.on('keydown-J', (e: KeyboardEvent) => !e.repeat && this.interact());
     kb.on('keydown-E', (e: KeyboardEvent) => !e.repeat && this.interact());
     kb.on('keydown-SPACE', (e: KeyboardEvent) => !e.repeat && this.interact());
@@ -173,6 +186,7 @@ export class GameScene extends Phaser.Scene {
     kb.on('keydown-K', () => this.doKill());
     kb.on('keydown-L', () => this.doReport());
     kb.on('keydown-R', () => this.doReport());
+    kb.on('keydown-B', (e: KeyboardEvent) => !e.repeat && this.ringBell());
 
     this.buildFog();
     const cam = this.cameras.main;
@@ -185,6 +199,7 @@ export class GameScene extends Phaser.Scene {
     this.unbind.push(onRoom((r) => this.bindRoom(r)));
     this.unbind.push(useStore.subscribe((s, prev) => s.cinematic && s.cinematic !== prev.cinematic && this.onCinematic(s.cinematic)));
     this.unbind.push(useStore.subscribe((s, prev) => s.me?.killerIds !== prev.me?.killerIds && this.refreshNameColors()));
+    this.unbind.push(useStore.subscribe((s) => this.lobbyKeyOf(s.room) !== this.lobbyKey && this.refreshNameColors()));
     this.unbind.push(useStore.subscribe((s, prev) => (s.room?.sabotage ?? '') !== (prev.room?.sabotage ?? '') && this.onSabotage(s.room?.sabotage ?? '')));
     this.unbind.push(useStore.subscribe((s, prev) => (s.me?.completedTasks !== prev.me?.completedTasks || s.me?.tasks !== prev.me?.tasks) && this.refreshStations()));
     this.events.once('shutdown', () => this.unbind.forEach((u) => u()));
@@ -461,7 +476,10 @@ export class GameScene extends Phaser.Scene {
       }
       this.syncBody(id, p, false);
       $(p).onChange(() => {
-        av.label.setText(p.name);
+        if (av.name !== p.name) {
+          av.label.setText(p.name);
+          this.drawPlate(av);
+        }
         av.name = p.name;
         av.alive = p.alive;
         this.syncBody(id, p, true);
@@ -484,10 +502,48 @@ export class GameScene extends Phaser.Scene {
     this.refreshStations();
   }
 
-  /** Âm Binh see every Âm Binh's nameplate in red; everyone else only ever gets the default colour. */
+  private lobbyKeyOf(r: ReturnType<typeof useStore.getState>['room']) {
+    if (r?.phase !== 'lobby') return r?.phase ?? '';
+    return 'lobby:' + r.players.filter((p) => p.ready).map((p) => p.id).join(',');
+  }
+
+  /** Âm Binh see every Âm Binh's nameplate in red; in the lobby ready players go jade; otherwise the default colour. */
   private refreshNameColors() {
-    const killers = useStore.getState().me?.killerIds ?? [];
-    for (const [id, av] of this.avatars) av.label.setColor(killers.includes(id) ? KILLER_NAME_COLOR : NAME_COLOR);
+    const s = useStore.getState();
+    this.lobbyKey = this.lobbyKeyOf(s.room);
+    const lobby = s.room?.phase === 'lobby';
+    this.lobbyGate?.setVisible(lobby);
+    const killers = s.me?.killerIds ?? [];
+    const ready = new Set(lobby ? s.room!.players.filter((p) => p.ready).map((p) => p.id) : []);
+    for (const [id, av] of this.avatars) {
+      av.label.setColor(killers.includes(id) ? KILLER_NAME_COLOR : ready.has(id) ? READY_NAME_COLOR : NAME_COLOR);
+      this.drawPlate(av, ready.has(id));
+    }
+  }
+
+  private drawPlate(av: Avatar, ready = av.label.style.color === READY_NAME_COLOR) {
+    const { label: l, plate: g } = av;
+    const w = l.width + 16;
+    const h = l.height + 4;
+    g.clear();
+    g.fillStyle(ready ? 0x12301f : 0x1a0f08, 0.78);
+    g.fillRoundedRect(-w / 2, l.y - h + 2, w, h, h / 2);
+    g.lineStyle(1.5, ready ? 0x6fe3a0 : 0xc89a4a, ready ? 0.95 : 0.55);
+    g.strokeRoundedRect(-w / 2, l.y - h + 2, w, h, h / 2);
+  }
+
+  /** Closed gate on the courtyard's only exit while the lobby waits (LOBBY_GATE is solid in the lobby grid). */
+  private buildLobbyGate() {
+    const [gx, gy, gw] = LOBBY_GATE;
+    const feet = (gy + 1) * TILE - 8;
+    this.lobbyGate = this.add
+      .image((gx + gw / 2) * TILE, feet, 'lobby-gate')
+      .setOrigin(0.5, 104 / 108)
+      .setDisplaySize(196, 102)
+      .setDepth(feet)
+      .setVisible(useStore.getState().room?.phase === 'lobby');
+    // whoever waits right behind it stays visible
+    this.tallProps.push(this.lobbyGate);
   }
 
   private makeAvatar(name: string, color: number): Avatar {
@@ -495,13 +551,17 @@ export class GameScene extends Phaser.Scene {
     const base = this.add.sprite(0, 0, 'player', 'walk-down-0').setOrigin(0.5, 1);
     const tint = this.add.sprite(0, 0, 'player-tint', 'walk-down-0').setOrigin(0.5, 1).setTint(color);
     const label = this.add
-      .text(0, -68, name, { fontFamily: 'Be Vietnam Pro, system-ui, sans-serif', fontSize: '13px', color: NAME_COLOR, stroke: '#2a1a10', strokeThickness: 4 })
+      .text(0, -70, name, { fontFamily: '"Be Vietnam Pro", system-ui, sans-serif', fontSize: '13px', fontStyle: '600', color: NAME_COLOR })
       .setOrigin(0.5, 1)
+      .setShadow(0, 1, 'rgba(0,0,0,0.6)', 2)
       .setResolution(2);
+    const plate = this.add.graphics();
     const lamp = this.add.image(0, 0, 'lantern').setOrigin(0.5, 0.05).setScale(LAMP_SCALE).setVisible(false);
     const glow = this.add.image(0, 0, 'lantern-glow').setDisplaySize(GLOW_SIZE, GLOW_SIZE * 0.8).setBlendMode(Phaser.BlendModes.ADD).setDepth(-5).setVisible(false);
-    const c = this.add.container(0, 0, [shadow, base, tint, lamp, label]);
-    return { c, base, tint, label, lamp, glow, seed: Math.random() * 100, buf: [], dir: 0, moving: false, lastMoveAt: 0, name, alive: true, posedUntil: 0 };
+    const c = this.add.container(0, 0, [shadow, base, tint, lamp, plate, label]);
+    const av: Avatar = { c, base, tint, label, plate, lamp, glow, seed: Math.random() * 100, buf: [], dir: 0, moving: false, lastMoveAt: 0, name, alive: true, posedUntil: 0 };
+    this.drawPlate(av, false);
+    return av;
   }
 
   private dropAvatar(av: Avatar) {
@@ -678,11 +738,16 @@ export class GameScene extends Phaser.Scene {
     return Math.hypot(x - this.pred.x, y - this.pred.y) <= GAME.visionRadius * this.vis && hasLineOfSight(this.grid, eye, { x, y: y - 30 });
   }
 
+  /** must match the server: the lobby gate is solid only while phase is 'lobby' */
+  private moveGrid() {
+    return useStore.getState().room?.phase === 'lobby' ? this.lobbyGrid : this.grid;
+  }
+
   private reconcile(sx: number, sy: number, lastSeq: number) {
     const before = { ...this.pred };
     this.pending = this.pending.filter((i) => i.seq > lastSeq);
     let p = { x: sx, y: sy };
-    for (const i of this.pending) p = stepMovement(this.grid, p, i, SIM_DT);
+    for (const i of this.pending) p = stepMovement(this.moveGrid(), p, i, SIM_DT);
     this.pred = p;
     const ex = before.x - p.x, ey = before.y - p.y;
     if (!this.hasServerPos || Math.hypot(ex, ey) > 96) this.renderOffset = { x: 0, y: 0 };
@@ -721,9 +786,12 @@ export class GameScene extends Phaser.Scene {
     const n = s.nearby;
     if (!n || uiBlocksMovement()) return;
     if (n.kind === 'task') this.tryTask(n.id);
-    else if (n.kind === 'report') send('report', {});
-    else if (n.kind === 'emergency') send('emergency', {});
     else if (n.kind === 'fix') fix(true);
+  }
+
+  private ringBell() {
+    const n = useStore.getState().nearby;
+    if (n?.kind === 'emergency' && !uiBlocksMovement()) send('emergency', {});
   }
 
   private doKill() {
@@ -804,7 +872,7 @@ export class GameScene extends Phaser.Scene {
       const cmd = { seq: ++this.seq, dx: input.dx, dy: input.dy };
       this.pending.push(cmd);
       this.outbox.push(cmd);
-      const next = stepMovement(this.grid, this.pred, cmd, SIM_DT);
+      const next = stepMovement(this.moveGrid(), this.pred, cmd, SIM_DT);
       this.myMoving = next.x !== this.pred.x || next.y !== this.pred.y;
       this.pred = next;
       this.myDir = dirFromInput(input, this.myDir);

@@ -1,98 +1,32 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { GAME, MEETING_POINT, ROLE_IDS, ROLE_INFO, areaAt, getGrid, mapSkin, type MapSkin } from '@hidden-truth/shared';
+import { ROLE_IDS, ROLE_INFO, mapSkin } from '@hidden-truth/shared';
 import { useLang } from '../i18n';
 import { RoleBadge, asset, useEscape, useSkin } from './common';
-import { GuideHud } from './GuideHud';
 import { mapGuide } from './guides';
-import { isTouchDevice } from './Joystick';
 
 const gui = (n: string) => asset(`common/ui/guide/${n}.webp`);
 
 const TXT = {
   vi: {
     title: 'Hướng dẫn chơi',
-    open: 'Hướng dẫn · Vai trò',
-    openShort: 'Hướng dẫn',
-    lobbyBtn: 'Hướng dẫn chơi',
+    btn: 'Hướng dẫn chơi',
     close: 'Đóng',
-    tabs: { story: 'Câu chuyện', flow: 'Cách chơi', roles: 'Vai trò' },
-    flowH: 'Một ván diễn ra thế nào?',
-    tasksH: 'Nhiệm vụ trong map',
-    tasksNote: 'Mỗi người được giao ngẫu nhiên vài nhiệm vụ. Hồn ma vẫn làm được nhiệm vụ.',
-    area: 'Khu',
-    tipsH: 'Mẹo',
+    tabs: { story: 'Câu chuyện', roles: 'Vai trò' },
     rolesH: '3 vai trò',
     crew: 'Phe Người Dân',
-    what: 'Bạn là ai',
-    todo: 'Nên làm gì',
-    noteL: 'Lưu ý',
   },
   en: {
     title: 'How to play',
-    open: 'Guide · Roles',
-    openShort: 'Guide',
-    lobbyBtn: 'How to play',
+    btn: 'How to play',
     close: 'Close',
-    tabs: { story: 'Story', flow: 'How to play', roles: 'Roles' },
-    flowH: 'How does a game go?',
-    tasksH: 'Tasks on the map',
-    tasksNote: 'Everyone gets a few random tasks. Ghosts can still do tasks.',
-    area: 'Area',
-    tipsH: 'Tips',
+    tabs: { story: 'Story', roles: 'Roles' },
     rolesH: '3 roles',
     crew: 'Villager faction',
-    what: 'Who you are',
-    todo: 'What to do',
-    noteL: 'Note',
   },
 } as const;
 
-const MEETING_AREA = areaAt(getGrid(), MEETING_POINT.x, MEETING_POINT.y) ?? 'courtyard_checkin';
-const plural = (w: string) => (w.endsWith('s') ? w : `${w}s`);
-
-/** Generic copy built from the map skin (role / killer names, meeting spot, sabotages, clock). */
-function skinText(skin: MapSkin, m: number, touch: boolean) {
-  const r = skin.roles;
-  const k = skin.killerName;
-  const ks = plural(k.en);
-  const area = skin.areas[MEETING_AREA];
-  const { blind, ward } = skin.sabotage;
-  const seg = skin.labels.segment;
-  const dl = skin.labels.deadline;
-  return {
-    vi: {
-      steps: [
-        ['1. Nhận vai', `Mỗi người nhận một vai bí mật: ${r.villager.name}, ${r.guardian.name} hoặc ${k.vi} (1–2 người tuỳ số người chơi).`],
-        ['2. Họp & bỏ phiếu', `Sau mỗi lần báo cáo / họp khẩn: họp tối đa ~${m}s, chat và bỏ phiếu loại một người (hoặc bỏ qua). Nhiều phiếu nhất bị loại; hoà phiếu thì không ai bị loại.`],
-        ['3. Kết thúc', `Người Dân thắng khi loại hết ${k.vi} hoặc xong mọi nhiệm vụ. ${k.vi} thắng khi số ${k.vi} ≥ số Người Dân còn sống.`],
-      ],
-      tips: [
-        `Đi theo nhóm — ${k.vi} khó ra tay khi có người nhìn.`,
-        'Trong họp, hãy nói rõ: “Mình ở đâu, thấy ai”. Mâu thuẫn lời khai là manh mối tốt nhất.',
-        `Nếu bạn là ${k.vi}: cũng đi “làm nhiệm vụ” để không bị nghi.`,
-      ],
-      rolesIntro: `Người Dân (${r.villager.name}, ${r.guardian.name}) đấu với ${k.vi}.`,
-      killer: `Phe ${k.vi}`,
-    },
-    en: {
-      steps: [
-        ['1. Get a role', `Everyone secretly gets a role: ${r.villager.nameEn}, ${r.guardian.nameEn} or ${k.en} (1–2 ${ks} depending on player count).`],
-        ['2. Meeting & vote', `After a report or emergency the meeting lasts up to ~${m}s: chat and vote to eject one player (or skip). Most votes is ejected; a tie ejects nobody.`],
-        ['3. The end', `Villagers win by ejecting every ${k.en} or finishing all tasks. ${ks} win when ${ks} ≥ living villagers.`],
-      ],
-      tips: [
-        `Stick together — the ${k.en} can’t strike when someone is watching.`,
-        'In meetings say “where I was, who I saw”. Contradicting alibis are the best clue.',
-        `If you are the ${k.en}: pretend to do tasks too.`,
-      ],
-      rolesIntro: `Villagers (${r.villager.nameEn}, ${r.guardian.nameEn}) vs. the ${ks}.`,
-      killer: `${k.en} faction`,
-    },
-  };
-}
-
-type Tab = 'story' | 'flow' | 'roles';
+type Tab = 'story' | 'roles';
 
 /** `slug` picks the map when there is no room yet (home screen). */
 export function Guide({ onClose, slug }: { onClose: () => void; slug?: string }) {
@@ -101,7 +35,8 @@ export function Guide({ onClose, slug }: { onClose: () => void; slug?: string })
   const roomSkin = useSkin();
   const skin = slug ? mapSkin(slug) : roomSkin;
   const guide = mapGuide(skin.slug);
-  const tx = { ...TXT[lang], ...skinText(skin, GAME.meetingSec, isTouchDevice())[lang] };
+  const tx = TXT[lang];
+  const killerFaction = lang === 'vi' ? `Phe ${skin.killerName.vi}` : `${skin.killerName.en} faction`;
   const [tab, setTab] = useState<Tab>('story');
 
   // portal to <body>: ancestors with `filter`/`transform` (e.g. the framed home card) would otherwise
@@ -116,7 +51,7 @@ export function Guide({ onClose, slug }: { onClose: () => void; slug?: string })
           </button>
         </header>
         <div className="guide-tabs" role="tablist">
-          {(['story', 'roles', 'flow'] as Tab[]).map((k) => (
+          {(['story', 'roles'] as Tab[]).map((k) => (
             <button key={k} role="tab" aria-selected={tab === k} className={`guide-tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>
               <img src={gui(`tab-${k}`)} alt="" draggable={false} />
               <span>{tx.tabs[k]}</span>
@@ -145,44 +80,12 @@ export function Guide({ onClose, slug }: { onClose: () => void; slug?: string })
             </>
           )}
 
-          {tab === 'flow' && (
-            <>
-              <GuideHud skin={skin} lang={lang} touch={isTouchDevice()} />
-              <h4>{tx.flowH}</h4>
-              <ol className="guide-steps">
-                {tx.steps.map(([h, b], i) => (
-                  <li key={h}>
-                    <i className="step-no">{i + 1}</i>
-                    <strong>{h}</strong>
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ol>
-              <h4>{tx.tasksH}</h4>
-              <p className="muted small">{tx.tasksNote}</p>
-              <ul>
-                {skin.stations.map((s) => (
-                  <li key={s.id}>
-                    <b>{lang === 'vi' ? s.title : s.titleEn}</b> — {tx.area}: {lang === 'vi' ? skin.areas[s.area].name : skin.areas[s.area].nameEn}
-                  </li>
-                ))}
-              </ul>
-              <h4>{tx.tipsH}</h4>
-              <ul>
-                {tx.tips.map((w) => (
-                  <li key={w}>{w}</li>
-                ))}
-              </ul>
-            </>
-          )}
-
           {tab === 'roles' && (
             <>
               <h4>{tx.rolesH}</h4>
-              <p>{tx.rolesIntro}</p>
               <div className="guide-roles">
                 {ROLE_IDS.map((id) => {
-                  const g = guide.roles[id];
+                  const what = guide.roles[id][lang];
                   const killer = ROLE_INFO[id].faction === 'killer';
                   return (
                     <div key={id} className={`guide-role ${killer ? 'secret' : 'invest'}`}>
@@ -190,19 +93,10 @@ export function Guide({ onClose, slug }: { onClose: () => void; slug?: string })
                         <RoleBadge role={id} size={48} />
                         <div>
                           <strong>{lang === 'vi' ? skin.roles[id].name : skin.roles[id].nameEn}</strong>
-                          <span className="guide-faction">{killer ? tx.killer : tx.crew}</span>
+                          <span className="guide-faction">{killer ? killerFaction : tx.crew}</span>
                         </div>
                       </div>
-                      <p>
-                        <b>{tx.what}:</b> {g.what[lang]}
-                      </p>
-                      <b>{tx.todo}:</b>
-                      <ul>
-                        {g.todo.map((s) => (
-                          <li key={s.vi}>{s[lang]}</li>
-                        ))}
-                      </ul>
-                      <p className="muted small">⚠ {g.note[lang]}</p>
+                      <p>{what}</p>
                     </div>
                   );
                 })}
@@ -216,20 +110,16 @@ export function Guide({ onClose, slug }: { onClose: () => void; slug?: string })
   );
 }
 
-/** variant "link": small text button (home) · "icon": round icon-only corner button (lobby) */
-export function GuideButton({ onClick, variant = 'link' }: { onClick: () => void; variant?: 'link' | 'icon' }) {
+/** Row button inside the settings popup (same painted icon as before). */
+export function GuideButton({ onClick }: { onClick: () => void }) {
   const lang = useLang((s) => s.lang);
-  if (variant === 'icon')
-    return (
-      <button className="icon-tool" onClick={onClick} title={TXT[lang].lobbyBtn} aria-label={TXT[lang].lobbyBtn}>
-        <img src={gui('btn-guide')} alt="" draggable={false} />
-      </button>
-    );
   return (
-    <button className="btn small ghost guide-link" onClick={onClick}>
+    <button type="button" className="settings-guide" onClick={onClick}>
       <img src={gui('btn-guide')} alt="" draggable={false} />
-      <span className="full">{TXT[lang].open}</span>
-      <span className="short">{TXT[lang].openShort}</span>
+      <strong>{TXT[lang].btn}</strong>
+      <span className="settings-guide-arrow" aria-hidden>
+        ›
+      </span>
     </button>
   );
 }

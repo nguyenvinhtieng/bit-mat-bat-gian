@@ -473,7 +473,7 @@ const room = useStore((s) => s.room)!;
           </div>
         )}
       </div>
-      {inGame && room.phase !== 'ended' && <GameSettings />}
+      <GameSettings />
       {/* top right: who is still standing */}
       {inGame && room.phase !== 'ended' && room.crewAlive + room.killersAlive > 0 && (
         <div className="alive-count" title={t('aliveTitle')}>
@@ -623,7 +623,8 @@ const room = useStore((s) => s.room)!;
               aria-label={taskHere ? `${t('doTask')}: ${taskHere.title}` : t('doTask')}
             >
               <img src={asset('common/ui/btn-task.webp')} alt="" draggable={false} />
-              <kbd>J</kbd>
+              {/* at the ward spot J holds the fix pill instead */}
+              {nearby?.kind !== 'fix' && <kbd>J</kbd>}
               <em>{t('doTask')}</em>
             </button>
           )}
@@ -637,11 +638,11 @@ const room = useStore((s) => s.room)!;
           className={`round-btn bell ${nearby.used ? 'idle' : 'ready'}`}
           disabled={nearby.used}
           {...tapProps(() => send('emergency', {}))}
-          title={`${nearby.title} (J)`}
+          title={`${nearby.title} (B)`}
           aria-label={nearby.title}
         >
           <img src={asset('common/ui/btn-bell.webp')} alt="" draggable={false} />
-          <kbd>J</kbd>
+          <kbd>B</kbd>
           <em>{nearby.used ? t('used') : nearby.title}</em>
         </button>
       )}

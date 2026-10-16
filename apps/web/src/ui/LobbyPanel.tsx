@@ -1,26 +1,24 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { GAME, MAP_CATALOG, MIN_PLAYERS, autoNightMin, clampKillers, killersFor, maxKillersFor, mapArt, mapMeta } from '@hidden-truth/shared';
-import { leaveRoom, send } from '../net';
+import { GAME, MAP_CATALOG, MAX_PLAYERS, MIN_PLAYERS, PLAYER_COLORS, autoNightMin, clampKillers, killersFor, maxKillersFor, mapArt, mapSkin } from '@hidden-truth/shared';
+import { send } from '../net';
 import { colorHex, useStore } from '../store';
-import { CloseButton, Modal, asset, useSkin } from './common';
+import { CloseButton, Modal, asset } from './common';
 import { Chat } from './Chat';
 import { useLang, useT } from '../i18n';
-import { Guide, GuideButton } from './Guide';
 
 export function LobbyPanel() {
   const room = useStore((s) => s.room)!;
   const sessionId = useStore((s) => s.sessionId);
   const toast = useStore((s) => s.toast);
   const t = useT();
-  const ping = useStore((s) => s.ping);
   const isHost = room.hostId === sessionId;
   const me = room.players.find((p) => p.id === sessionId);
   const link = `${location.origin}/join/${room.code}`;
   const readyCount = room.players.filter((p) => p.ready).length;
   const total = room.players.length;
-  const [showGuide, setShowGuide] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showPlayers, setShowPlayers] = useState(false);
   const maxKillers = maxKillersFor(total);
   const killers = room.killers ? clampKillers(room.killers, total) : killersFor(total);
   const canStart = total >= MIN_PLAYERS;
@@ -36,7 +34,6 @@ export function LobbyPanel() {
     setStarting(true);
     send('start', {});
   };
-  const [renaming, setRenaming] = useState(false);
   // always open on entering the lobby so players see it exists; the tab folds it away
   const [panelOpen, setPanelOpen] = useState(true);
   const [chatOpen, setChatOpen] = usePersisted('tht:lobbyChat', !isTouch());
@@ -81,71 +78,22 @@ export function LobbyPanel() {
               </svg>
             </button>
           </div>
-          <MapSwitch slug={room.mapSlug} isHost={isHost} />
-
-          <h4 className="lobby-players-title">
-            {t('players')} ({total}/10)
-            {ping > 0 && <small className="muted"> · {t('ping')} {ping}ms</small>}
-          </h4>
-          <ul className="player-list">
-            {room.players.map((p) => (
-              <li key={p.id} className={p.ready ? 'is-ready' : ''}>
-                <i className="dot" style={{ background: colorHex(p.color) }} />
-                <span className="pname">{p.name}</span>
-                {p.id === sessionId && (
-                  <button className="rename-btn" title={t('rename')} aria-label={t('rename')} onClick={() => setRenaming(true)}>
-                    ✎
-                  </button>
-                )}
-                {p.id === room.hostId && <em className="tag">host</em>}
-                {p.ready && <em className="tag ok">✓ {t('ready')}</em>}
-                {isHost && p.id !== sessionId && (
-                  <button
-                    className="kick-btn"
-                    title={t('kick')}
-                    aria-label={`${t('kick')} ${p.name}`}
-                    onClick={() => {
-                      if (confirm(t('kickConfirm').replace('{name}', p.name))) send('host:kick', { target: p.id });
-                    }}
-                  >
-                    ✕
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-          {renaming && me && createPortal(<RenameModal current={me.name} onClose={() => setRenaming(false)} />, document.body)}
-
-          <div className="lobby-footer">
-            <div className="ready-status">
-              <div className="ready-bar">
-                <div style={{ width: `${total ? (readyCount / total) * 100 : 0}%` }} />
-              </div>
-              <span>
-                {readyCount}/{total} {t('readyOf')}
-              </span>
-            </div>
-            <button
-              className={`btn big wide ${me?.ready ? '' : 'primary pulse'} ${canStart ? '' : 'has-need'}`}
-              title={canStart ? undefined : t('hint')}
-              onClick={() => send('ready', { ready: !me?.ready })}
-            >
-              {me?.ready ? t('unready') : t('readyBtn')}
-              {!canStart && (
-                <small className="need-players" aria-hidden>
-                  👥 {total}/{MIN_PLAYERS}
-                </small>
-              )}
-            </button>
-            {isHost && (
-              <button className="btn big wide primary start" disabled={!canStart || starting} title={canStart ? undefined : t('hint')} onClick={start}>
-                {starting ? t('starting') : <>▶ {t('start')} ({canStart ? `${readyCount}/${total}` : `${total}/${MIN_PLAYERS} ${t('playersShort')}`})</>}
-              </button>
-            )}
-            <button className="btn ghost small wide" onClick={leaveRoom}>
-              {t('leave')}
-            </button>
-          </div>
+          <button className="btn wide settings-btn players-btn" onClick={() => setShowPlayers(true)}>
+            <span className="players-btn-icon" aria-hidden>
+              👥
+            </span>
+            <span>{t('players')}</span>
+            <small>
+              {total}/{MAX_PLAYERS}
+            </small>
+          </button>
+          <button className="btn wide settings-btn" onClick={() => setShowSettings(true)}>
+            <img src={asset('common/ui/settings.webp')} alt="" draggable={false} />
+            <span>{t('settings')}</span>
+            <small>
+              {room.tasksPerPlayer} · {killers} · {room.nightMin}′
+            </small>
+          </button>
         </aside>
         <button
           className={`lobby-tab ${allReady ? 'all-ready' : ''}`}
@@ -160,33 +108,48 @@ export function LobbyPanel() {
           </b>
         </button>
       </div>
-      {!panelOpen && allReady && (
-        <div className="all-ready-bar" role="status">
-          <span>✓ {isHost ? t('allReady') : t('allReadyWait')}</span>
+      <div className={`ready-dock ${allReady ? 'all-ready' : ''} ${chatOpen ? 'with-chat' : ''}`}>
+        <div className="ready-dock-status" role="status">
+          <div className="ready-bar">
+            <div style={{ width: `${total ? (readyCount / total) * 100 : 0}%` }} />
+          </div>
+          <span>{allReady ? `✓ ${t('allReady')}` : `${readyCount}/${total} ${t('readyOf')}`}</span>
+        </div>
+        <div className="ready-dock-actions">
+          <button
+            className={`ready-cta ${me?.ready ? 'is-ready' : ''} ${canStart ? '' : 'has-need'}`}
+            title={canStart ? undefined : t('hint')}
+            aria-pressed={!!me?.ready}
+            onClick={() => send('ready', { ready: !me?.ready })}
+          >
+            <span className="ready-cta-icon" aria-hidden>
+              {me?.ready ? '✓' : '✋'}
+            </span>
+            <span>{me?.ready ? t('unready') : t('readyBtn')}</span>
+            {!canStart && (
+              <small className="need-players" aria-hidden>
+                👥 {total}/{MIN_PLAYERS}
+              </small>
+            )}
+          </button>
           {isHost && (
-            <button className="btn primary start" disabled={!canStart || starting} title={canStart ? undefined : t('hint')} onClick={start}>
-              {starting ? t('starting') : <>▶ {t('start')}</>}
+            <button
+              className="ready-cta start-cta"
+              disabled={!canStart || !allReady || starting}
+              title={!canStart ? t('hint') : allReady ? undefined : t('waitReady')}
+              onClick={start}
+            >
+              <span className="ready-cta-icon" aria-hidden>
+                ▶
+              </span>
+              <span>{starting ? t('starting') : t('start')}</span>
             </button>
           )}
         </div>
-      )}
-      <div className={`corner-tools ${chatOpen ? 'above-chat' : ''}`}>
-        <GuideButton variant="icon" onClick={() => setShowGuide(true)} />
-        <button
-          className="icon-tool"
-          onClick={() => setShowSettings(true)}
-          title={`${t('settings')} · ${room.tasksPerPlayer} · ${killers} · ${room.nightMin}′`}
-          aria-label={t('settings')}
-        >
-          <img src={asset('common/ui/settings.webp')} alt="" draggable={false} />
-        </button>
       </div>
       {chatOpen ? (
         <aside className={`lobby-chat ${chatClosing ? 'closing' : ''}`}>
-          <button className="chat-min" onClick={closeChat} title={t('chatClose')} aria-label={t('chatClose')}>
-            –
-          </button>
-          <Chat compact />
+          <Chat compact title={t('chat')} onClose={closeChat} closeLabel={t('chatClose')} />
         </aside>
       ) : (
         <button className="chat-fab" onClick={() => setChatOpen(true)} title={t('chat')} aria-label={t('chat')}>
@@ -195,7 +158,61 @@ export function LobbyPanel() {
         </button>
       )}
       {showSettings && <SettingsModal isHost={isHost} total={total} killers={killers} maxKillers={maxKillers} onClose={() => setShowSettings(false)} />}
-      {showGuide && <Guide onClose={() => setShowGuide(false)} />}
+      {showPlayers && createPortal(<PlayersModal isHost={isHost} onClose={() => setShowPlayers(false)} />, document.body)}
+    </>
+  );
+}
+
+/** Everyone in the lobby; the host can kick from here (server re-checks host + lobby phase). */
+function PlayersModal({ isHost, onClose }: { isHost: boolean; onClose: () => void }) {
+  const room = useStore((s) => s.room)!;
+  const sessionId = useStore((s) => s.sessionId);
+  const t = useT();
+  const [kickTarget, setKickTarget] = useState<{ id: string; name: string } | null>(null);
+  const kick = () => {
+    if (kickTarget) send('host:kick', { target: kickTarget.id });
+    setKickTarget(null);
+  };
+  return (
+    <>
+      <Modal title={`${t('players')} · ${room.players.length}/${MAX_PLAYERS}`} onClose={onClose} className="players-modal">
+        <ul className="player-list players-modal-list">
+          {room.players.map((p) => (
+            <li key={p.id} className={`${p.ready ? 'is-ready' : ''} ${p.connected ? '' : 'off'}`}>
+              <i className="pdot" style={{ background: colorHex(PLAYER_COLORS[p.color] ?? 0xffffff) }} aria-hidden />
+              <span className="pname">
+                {p.name}
+                {p.id === sessionId && <em className="pme"> ({t('you')})</em>}
+              </span>
+              {p.id === room.hostId && (
+                <span className="ptag host" title={t('host')}>
+                  👑
+                </span>
+              )}
+              <span className={`ptag ${p.ready ? 'ready' : 'wait'}`}>{p.ready ? `✓ ${t('ready')}` : '…'}</span>
+              {isHost && p.id !== sessionId && (
+                <button className="kick-btn" onClick={() => setKickTarget({ id: p.id, name: p.name })}>
+                  {t('kick')}
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      </Modal>
+      {/* sibling, not child: the players modal's backdrop would otherwise sit under this one */}
+      {kickTarget && (
+        <Modal title={t('kick')} onClose={() => setKickTarget(null)} className="kick-modal">
+          <p className="kick-warn">{t('kickConfirm').replace('{name}', kickTarget.name)}</p>
+          <div className="exit-actions">
+            <button type="button" className="btn ghost" onClick={() => setKickTarget(null)}>
+              {t('cancel')}
+            </button>
+            <button type="button" className="btn danger" onClick={kick} autoFocus>
+              {t('kick')}
+            </button>
+          </div>
+        </Modal>
+      )}
     </>
   );
 }
@@ -228,24 +245,51 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
   const room = useStore((s) => s.room)!;
   const t = useT();
   const { isHost, total, maxKillers, onClose } = props;
-  const skin = useSkin();
-  const [draft, setDraft] = useState({ tasks: room.tasksPerPlayer, killers: props.killers, nightAuto: room.nightAuto, nightMin: room.nightMin });
+  const lang = useLang((s) => s.lang);
+  const toast = useStore((s) => s.toast);
+  const [draft, setDraft] = useState({
+    map: room.mapSlug,
+    tasks: room.tasksPerPlayer,
+    killers: props.killers,
+    nightAuto: room.nightAuto,
+    nightMin: room.nightMin,
+    isPublic: room.isPublic,
+  });
   // guests just watch the live values; only the host edits a draft
-  const { tasks, killers, nightAuto, nightMin } = isHost
+  const { map, tasks, killers, nightAuto, nightMin, isPublic } = isHost
     ? draft
-    : { tasks: room.tasksPerPlayer, killers: props.killers, nightAuto: room.nightAuto, nightMin: room.nightMin };
+    : {
+        map: room.mapSlug,
+        tasks: room.tasksPerPlayer,
+        killers: props.killers,
+        nightAuto: room.nightAuto,
+        nightMin: room.nightMin,
+        isPublic: room.isPublic,
+      };
   const edit = (patch: Partial<typeof draft>) => setDraft((d) => ({ ...d, ...patch }));
+  // the task slider follows the picked map (server clamps the same way on host:map)
+  const maxTasks = mapSkin(map).taskIds.length;
+  const pickMap = (m: (typeof MAP_CATALOG)[number]) =>
+    m.available ? edit({ map: m.slug, tasks: Math.min(tasks, mapSkin(m.slug).taskIds.length), nightAuto: true }) : toast({ text: t('comingSoonToast'), kind: 'warn' });
   // auto preview mirrors the server: an untouched auto killer count follows the room size
   const previewKillers = !room.killers && killers === props.killers ? killersFor(total) : killers;
   const shownNight = nightAuto && isHost ? autoNightMin(total, previewKillers, tasks) : nightMin;
 
   const save = () => {
-    const msg: { tasksPerPlayer?: number; killers?: number; nightMin?: number; nightAuto?: boolean } = {};
+    const msg: {
+      tasksPerPlayer?: number;
+      killers?: number;
+      nightMin?: number;
+      nightAuto?: boolean;
+    } = {};
+    // map first: the server clamps tasks to the new map before the configure lands
+    if (map !== room.mapSlug) send('host:map', { map });
     if (tasks !== room.tasksPerPlayer) msg.tasksPerPlayer = tasks;
     if (killers !== props.killers) msg.killers = killers;
     if (nightAuto && !room.nightAuto) msg.nightAuto = true;
     if (!nightAuto && (room.nightAuto || nightMin !== room.nightMin)) msg.nightMin = nightMin;
     if (Object.keys(msg).length) send('configure', msg);
+    if (isPublic !== room.isPublic) send('host:visibility', { public: isPublic });
     onClose();
   };
 
@@ -256,20 +300,43 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
           <img className="settings-crest" src={asset('common/ui/settings.webp')} alt="" draggable={false} />
           <div>
             <h3>{t('settings')}</h3>
-            <small>{t('settingsSub')}</small>
           </div>
           <CloseButton onClick={onClose} label={t('close')} />
         </header>
         <div className="modal-content">
+          <div className={`settings-map ${isHost ? '' : 'is-disabled'}`}>
+            <div className="map-grid" role="radiogroup" aria-label={t('chooseMap')}>
+              {MAP_CATALOG.map((m) => (
+                <button
+                  key={m.slug}
+                  type="button"
+                  role="radio"
+                  aria-checked={m.slug === map}
+                  aria-disabled={!m.available}
+                  disabled={!isHost}
+                  className={`map-tile ${m.slug === map ? 'active' : ''} ${m.available ? '' : 'locked'}`}
+                  onClick={() => pickMap(m)}
+                >
+                  <span className="map-thumb" style={{ backgroundImage: `url(${asset(mapArt(m.slug, 'thumb'))})` }}>
+                    {!m.available && (
+                      <em className="map-soon">
+                        <span>{t('comingSoon')}</span>
+                      </em>
+                    )}
+                  </span>
+                  <b>{m.name[lang]}</b>
+                </button>
+              ))}
+            </div>
+          </div>
           <SliderRow
             icon="common/ui/clue.webp"
             label={t('tasksPer')}
-            hint={t('tasksPerHint')}
             min={1}
-            max={skin.taskIds.length}
+            max={maxTasks}
             value={tasks}
             disabled={!isHost}
-            onChange={(v) => edit({ tasks: v })}
+            onChange={(v) => edit({ tasks: v, nightAuto: true })}
           />
           <SliderRow
             icon="common/ui/count-killer.webp"
@@ -279,28 +346,41 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
             max={maxKillers}
             value={killers}
             disabled={!isHost}
-            onChange={(v) => edit({ killers: v })}
+            onChange={(v) => edit({ killers: v, nightAuto: true })}
           />
           <SliderRow
-            icon={`${skin.art.nightMarker}.webp`}
+            icon={`${mapSkin(map).art.nightMarker}.webp`}
             label={t('nightLen')}
-            hint={nightAuto ? t('nightAutoHint') : t('nightManualHint')}
             min={GAME.nightMinMin}
             max={GAME.nightMinMax}
             value={shownNight}
             unit={t('minutesShort')}
             disabled={!isHost}
             onChange={(v) => edit({ nightAuto: false, nightMin: v })}
-            extra={
-              nightAuto ? (
-                <em className="slider-badge auto">{t('auto')}</em>
-              ) : (
-                <button className="slider-badge reset" disabled={!isHost} onClick={() => edit({ nightAuto: true })}>
-                  ↺ {t('auto')}
-                </button>
-              )
-            }
           />
+          <div className={`slider-row ${isHost ? '' : 'is-disabled'}`}>
+            <div className="slider-head">
+              <img src={asset('common/ui/home/globe.webp')} alt="" draggable={false} />
+              <div className="slider-text">
+                <strong>{t('roomVisibility')}</strong>
+              </div>
+            </div>
+            <div className="vis-toggle" role="radiogroup" aria-label={t('roomVisibility')}>
+              {[false, true].map((pub) => (
+                <button
+                  key={String(pub)}
+                  type="button"
+                  role="radio"
+                  aria-checked={isPublic === pub}
+                  className={`btn small ${isPublic === pub ? 'primary' : 'ghost'}`}
+                  disabled={!isHost}
+                  onClick={() => edit({ isPublic: pub })}
+                >
+                  {pub ? `🌐 ${t('roomPublic')}` : `🔒 ${t('roomPrivate')}`}
+                </button>
+              ))}
+            </div>
+          </div>
           {isHost ? (
             <button className="btn primary wide" onClick={save}>
               {t('save')}
@@ -317,14 +397,12 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
 function SliderRow(props: {
   icon: string;
   label: string;
-  hint?: string;
   min: number;
   max: number;
   value: number;
   disabled?: boolean;
   tone?: 'killer';
   unit?: string;
-  extra?: React.ReactNode;
   onChange: (v: number) => void;
 }) {
   const { min, max, value } = props;
@@ -336,9 +414,7 @@ function SliderRow(props: {
         <img src={asset(props.icon)} alt="" draggable={false} />
         <div className="slider-text">
           <strong>{props.label}</strong>
-          {props.hint && <small>{props.hint}</small>}
         </div>
-        {props.extra}
         <b className="slider-value" key={value}>
           {value}
           {props.unit && <small>{props.unit}</small>}
@@ -364,125 +440,5 @@ function SliderRow(props: {
         ))}
       </div>
     </div>
-  );
-}
-
-/** Current map card; the host opens a picker popup to switch it (server re-validates). */
-function MapSwitch({ slug, isHost }: { slug: string; isHost: boolean }) {
-  const lang = useLang((s) => s.lang);
-  const t = useT();
-  const toast = useStore((s) => s.toast);
-  const [open, setOpen] = useState(false);
-  const [pick, setPick] = useState(slug);
-  const cur = mapMeta(slug);
-  const sel = mapMeta(pick);
-  const choose = (m: (typeof MAP_CATALOG)[number]) => (m.available ? setPick(m.slug) : toast({ text: t('comingSoonToast'), kind: 'warn' }));
-  const apply = () => {
-    if (pick !== slug) send('host:map', { map: pick });
-    setOpen(false);
-  };
-
-  return (
-    <>
-      <div className="lobby-map">
-        <span className="lobby-map-name">
-          <b>{cur.name[lang]}</b>
-          <small>{cur.subtitle[lang]}</small>
-        </span>
-        {isHost && (
-          <button className="btn small" onClick={() => (setPick(slug), setOpen(true))}>
-            {t('changeMap')}
-          </button>
-        )}
-      </div>
-      {open &&
-        createPortal(
-          <Modal title={t('chooseMap')} onClose={() => setOpen(false)} className="map-switch-modal">
-            <div className="map-grid" role="radiogroup" aria-label={t('chooseMap')}>
-              {MAP_CATALOG.map((m) => (
-                <button
-                  key={m.slug}
-                  role="radio"
-                  aria-checked={m.slug === pick}
-                  aria-disabled={!m.available}
-                  className={`map-tile ${m.slug === pick ? 'active' : ''} ${m.available ? '' : 'locked'}`}
-                  onClick={() => choose(m)}
-                >
-                  <span className="map-thumb" style={{ backgroundImage: `url(${asset(mapArt(m.slug, 'thumb'))})` }}>
-                    {!m.available && <em className="map-soon"><span>{t('comingSoon')}</span></em>}
-                  </span>
-                  <b>{m.name[lang]}</b>
-                </button>
-              ))}
-            </div>
-            <div className="map-desc" key={sel.slug}>
-              <strong>
-                {sel.name[lang]} <small>· {sel.subtitle[lang]}</small>
-              </strong>
-              <span>{sel.hook[lang]}</span>
-              <i>
-                {sel.players} {t('playersShort')}
-              </i>
-            </div>
-            <div className="map-switch-actions">
-              <button className="btn" onClick={() => setOpen(false)}>
-                {lang === 'en' ? 'Cancel' : 'Huỷ'}
-              </button>
-              <button className="btn primary" disabled={pick === slug} onClick={apply}>
-                {t('changeMap')}
-              </button>
-            </div>
-          </Modal>,
-          document.body,
-        )}
-    </>
-  );
-}
-
-function RenameModal({ current, onClose }: { current: string; onClose: () => void }) {
-  const t = useT();
-  const [draft, setDraft] = useState(current);
-  const name = draft.replace(/[<>]/g, '').trim().slice(0, 16);
-  const save = () => {
-    if (!name) return;
-    if (name !== current) {
-      send('rename', { name });
-      try {
-        localStorage.setItem('tht:name', name);
-      } catch {}
-    }
-    onClose();
-  };
-  return (
-    <Modal title={t('rename')} onClose={onClose} className="rename-modal">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          save();
-        }}
-      >
-        <label className="field">
-          {t('displayName')}
-          <input
-            autoFocus
-            onFocus={(e) => e.currentTarget.select()}
-            value={draft}
-            maxLength={16}
-            placeholder={t('namePlaceholder')}
-            enterKeyHint="done"
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => e.stopPropagation()}
-          />
-        </label>
-        <div className="map-switch-actions">
-          <button type="button" className="btn" onClick={onClose}>
-            {t('cancel')}
-          </button>
-          <button type="submit" className="btn primary" disabled={!name || name === current}>
-            {t('save')}
-          </button>
-        </div>
-      </form>
-    </Modal>
   );
 }
