@@ -45,7 +45,7 @@ import { KILLER_NAME_COLOR, uiBlocksMovement, useStore } from '../store';
 import { useLang, useT } from '../i18n';
 import { CloseButton, Digits, Icon, RoleBadge, asset, fmt, tapProps, useCountdown, useSkin, useWardSpot } from './common';
 import { MapView } from './MapView';
-import { GameSettings } from './GameSettings';
+import { GameSettings } from './GameSetting';
 import { isTouchDevice } from './Joystick';
 
 /** Sweeping ring over a round button: fills clockwise from 0 to 100% while the cooldown runs (pure CSS animation, no re-render). */
