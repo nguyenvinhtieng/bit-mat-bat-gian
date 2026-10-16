@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { leaveRoom } from '../net';
 import { useStore } from '../store';
 import { useT } from '../i18n';
@@ -19,7 +20,8 @@ export function GameSettings({ className = '', slug }: { className?: string; slu
       <button className={`hud-settings ${className}`} onClick={() => setOpen(true)} title={t('gameSettings')} aria-label={t('gameSettings')}>
         <img src={mui('btn-settings')} alt="" draggable={false} />
       </button>
-      {open && <GameSettingsModal slug={slug} onClose={() => setOpen(false)} />}
+      {/* portal: the home corner is scaled on phones, and a transformed ancestor would trap the fixed backdrop inside it */}
+      {open && createPortal(<GameSettingsModal slug={slug} onClose={() => setOpen(false)} />, document.body)}
     </>
   );
 }

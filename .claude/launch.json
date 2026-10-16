@@ -29,6 +29,20 @@
         "--strictPort"
       ],
       "port": 4173
+    },
+    {
+      "name": "dev-alt",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@hidden-truth/web",
+        "exec",
+        "vite",
+        "--port",
+        "5180",
+        "--strictPort"
+      ],
+      "port": 5180
     }
   ]
 }

@@ -22,9 +22,12 @@ module.exports = {
     {
       name: 'hidden-truth',
       cwd: appDir,
-      script: 'pnpm',
-      args: 'start',
-      interpreter: 'none',
+      // run node directly (not pnpm → tsx → node): PM2 then owns the real server process, so a reload
+      // actually stops the old one instead of leaving it holding the port and serving stale code
+      script: 'apps/server/src/index.ts',
+      interpreter: 'node',
+      node_args: '--import tsx',
+      kill_timeout: 5000,
       env: loadEnvFile(path.join(appDir, '.env')),
       instances: 1,
       exec_mode: 'fork',

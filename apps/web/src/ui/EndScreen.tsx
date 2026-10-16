@@ -31,24 +31,23 @@ export function EndScreen() {
           <div className="role-list">
             {/* Âm Binh first so the reveal is the first thing everyone reads */}
             {[...end.roles].sort((a, b) => Number(b.faction === 'killer') - Number(a.faction === 'killer')).map((r, i) => (
-              <div key={i} className={`role-row ${r.faction} ${r.alive ? '' : 'dead'}`}>
-                <RoleBadge role={r.role} size={40} />
-                <div className="role-row-main">
-                  <b style={{ color: colorHex(PLAYER_COLORS[r.color] ?? 0xffffff) }}>{r.name}</b>
-                  <span className="role-row-role">
-                    {skin.roles[r.role].name}
-                    {!r.alive && ' ☠'}
-                  </span>
+              <div
+                key={i}
+                className={`role-row ${r.faction} ${r.alive ? '' : 'dead'}`}
+                style={{ '--pc': colorHex(PLAYER_COLORS[r.color] ?? 0xffffff) } as React.CSSProperties}
+              >
+                <div className="role-row-avatar">
+                  <RoleBadge role={r.role} size={44} />
+                  {!r.alive && <span className="role-row-skull" aria-label="Đã chết">☠</span>}
                 </div>
-                {r.faction === 'killer' ? <em className="tag killer-tag">Kẻ gian</em> : <em className="tag">{r.tasksDone} nhiệm vụ</em>}
+                <div className="role-row-main">
+                  <b>{r.name}</b>
+                  <span className="role-row-role">{skin.roles[r.role].name}</span>
+                </div>
+                {r.faction === 'killer' ? <em className="tag killer-tag">Kẻ gian</em> : <em className="tag crew-tag">{r.tasksDone} nhiệm vụ</em>}
               </div>
             ))}
           </div>
-        </section>
-
-        <section className="learned">
-          <h3>Bạn có biết về {skin.labels.mapTitle.vi}?</h3>
-          <p>{end.fact}</p>
         </section>
 
         <div className="end-actions">

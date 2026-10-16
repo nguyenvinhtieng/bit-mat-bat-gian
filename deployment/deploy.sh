@@ -42,5 +42,12 @@ curl -fsS "http://127.0.0.1:${PORT:-2567}/health" || {
   echo "Health check failed — try: pm2 logs hidden-truth"
   exit 1
 }
+# /health also answers from a stale process left on the port; a current route proves the new code is live
+curl -fsS -o /dev/null "http://127.0.0.1:${PORT:-2567}/admin/stats" || {
+  echo
+  echo "Server is running OLD code (/admin/stats missing) — an old process still holds the port."
+  echo "Fix: pm2 delete hidden-truth; kill the process on :${PORT:-2567} (sudo lsof -i :${PORT:-2567}); bash deployment/deploy.sh"
+  exit 1
+}
 
 echo "Deploy OK — https://bitmat.vinhtieng.com (${APP_DIR})"
