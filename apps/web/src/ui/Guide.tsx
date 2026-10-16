@@ -13,6 +13,7 @@ const TXT = {
   vi: {
     title: 'Hướng dẫn chơi',
     open: 'Hướng dẫn · Vai trò',
+    openShort: 'Hướng dẫn',
     lobbyBtn: 'Hướng dẫn chơi',
     close: 'Đóng',
     tabs: { story: 'Câu chuyện', flow: 'Cách chơi', roles: 'Vai trò' },
@@ -30,6 +31,7 @@ const TXT = {
   en: {
     title: 'How to play',
     open: 'Guide · Roles',
+    openShort: 'Guide',
     lobbyBtn: 'How to play',
     close: 'Close',
     tabs: { story: 'Story', flow: 'How to play', roles: 'Roles' },
@@ -226,7 +228,8 @@ export function GuideButton({ onClick, variant = 'link' }: { onClick: () => void
   return (
     <button className="btn small ghost guide-link" onClick={onClick}>
       <img src={gui('btn-guide')} alt="" draggable={false} />
-      {TXT[lang].open}
+      <span className="full">{TXT[lang].open}</span>
+      <span className="short">{TXT[lang].openShort}</span>
     </button>
   );
 }

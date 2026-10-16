@@ -68,6 +68,8 @@ const shuffle = <T>(arr: readonly T[]): T[] => {
 };
 const pick = <T>(arr: readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
+const cleanName = (raw: unknown) => (raw ?? '').toString().replace(/[<>]/g, '').trim().slice(0, 16);
+
 export class GameRoom extends Room<GameState> {
   maxClients = MAX_PLAYERS;
   private secrets = new Map<string, Secret>();
@@ -110,7 +112,7 @@ export class GameRoom extends Room<GameState> {
     if (this.state.phase !== 'lobby') throw new Error('Ván đang diễn ra — không thể vào giữa chừng.');
     const p = new Player();
     p.id = client.sessionId;
-    p.name = (options?.name ?? '').toString().replace(/[<>]/g, '').trim().slice(0, 16) || `Khách ${this.state.players.size + 1}`;
+    p.name = cleanName(options?.name) || `Khách ${this.state.players.size + 1}`;
     const used = new Set([...this.state.players.values()].map((x) => x.color));
     p.color = PLAYER_COLORS.findIndex((_, i) => !used.has(i));
     const spawn = SPAWNS[this.state.players.size % SPAWNS.length];
@@ -184,6 +186,17 @@ export class GameRoom extends Room<GameState> {
       this.lastActive.set(client.sessionId, Date.now());
       const p = this.state.players.get(client.sessionId);
       if (p && this.state.phase === 'lobby') p.ready = !!msg?.ready;
+    });
+
+    this.onMessage('rename', (client, msg: { name?: string }) => {
+      const p = this.state.players.get(client.sessionId);
+      if (!p || this.state.phase !== 'lobby') return;
+      const name = cleanName(msg?.name);
+      if (!name || name === p.name) return;
+      this.lastActive.set(client.sessionId, Date.now());
+      const prev = p.name;
+      p.name = name;
+      this.system(`${prev} đã đổi tên thành ${name}.`);
     });
 
     this.onMessage('configure', (client, msg: { killers?: number; tasksPerPlayer?: number; nightMin?: number; nightAuto?: boolean }) => {

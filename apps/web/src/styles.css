@@ -143,6 +143,11 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 .tag.wait { opacity: 0.5; }
 .kick-btn { margin-left: 6px; padding: 0 6px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); font-size: 0.8em; line-height: 1.6; cursor: pointer; }
 .kick-btn:hover { background: #6a2a22; color: #ffd6cc; }
+.rename-btn { margin-left: 4px; padding: 0 6px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); font-size: 0.9em; line-height: 1.6; cursor: pointer; }
+.rename-btn:hover { background: rgba(255, 255, 255, 0.12); color: inherit; }
+@media (pointer: coarse) { .rename-btn { min-width: 34px; min-height: 30px; font-size: 1.05em; } }
+.rename-modal { width: min(380px, 92vw); }
+.rename-modal .field input { font-size: 16px; }
 .lobby-footer .btn.has-need { position: relative; overflow: visible; }
 /* corner pill on the ready button: players in room vs. the minimum needed to start */
 .need-players { position: absolute; top: -9px; right: -6px; padding: 1px 7px; border-radius: 999px; background: #8a1f14; border: 1px solid #ffb38a; color: #ffe8d6; font-size: 0.68rem; font-weight: 800; line-height: 1.4; white-space: nowrap; pointer-events: none; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5); }
@@ -764,6 +769,8 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 .gh-glyph { font-size: 28px; line-height: 1; }
 .guide-link { display: inline-flex; align-items: center; gap: 6px; }
 .guide-link img { width: 22px; height: 22px; }
+.guide-link .short { display: none; }
+@media (max-width: 560px), (pointer: coarse) { .guide-link .full { display: none; } .guide-link .short { display: inline; } }
 .guide-open-btn {
   display: flex; align-items: center; gap: 10px; width: 100%; padding: 4px 10px 4px 4px; cursor: pointer; color: var(--paper); font-weight: 700; text-align: left;
   border: 12px solid transparent; border-image: url(/assets/common/ui/guide/card.webp) 56 / 12px stretch; background: rgba(31, 60, 46, 0.55) padding-box;
@@ -2005,6 +2012,8 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
   .role-card { top: 34px; padding: 2px 10px 2px 2px; gap: 5px; border-width: 1.5px; }
   .role-card .role-icon { width: 24px; height: 24px; }
   .role-card strong { font-size: 0.74em; }
+  /* keep the role chip clear of the settings cog in the top-right corner */
+  .hud-settings ~ .role-card { right: calc(max(8px, env(safe-area-inset-right)) + 48px); }
   /* tasks: icon + count chip, the list opens as a popup */
   .task-pop-backdrop { z-index: 30; background: rgba(10, 6, 3, 0.45); }
   .task-list.task-pop { width: min(360px, 86vw); min-width: 0; max-width: none; max-height: 82vh; overflow: auto; padding: 10px 14px; animation: popIn 0.18s; }

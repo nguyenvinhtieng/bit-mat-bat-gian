@@ -36,6 +36,7 @@ export function LobbyPanel() {
     setStarting(true);
     send('start', {});
   };
+  const [renaming, setRenaming] = useState(false);
   // always open on entering the lobby so players see it exists; the tab folds it away
   const [panelOpen, setPanelOpen] = useState(true);
   const [chatOpen, setChatOpen] = usePersisted('tht:lobbyChat', !isTouch());
@@ -91,6 +92,11 @@ export function LobbyPanel() {
               <li key={p.id} className={p.ready ? 'is-ready' : ''}>
                 <i className="dot" style={{ background: colorHex(p.color) }} />
                 <span className="pname">{p.name}</span>
+                {p.id === sessionId && (
+                  <button className="rename-btn" title={t('rename')} aria-label={t('rename')} onClick={() => setRenaming(true)}>
+                    ✎
+                  </button>
+                )}
                 {p.id === room.hostId && <em className="tag">host</em>}
                 {p.ready && <em className="tag ok">✓ {t('ready')}</em>}
                 {isHost && p.id !== sessionId && (
@@ -108,6 +114,7 @@ export function LobbyPanel() {
               </li>
             ))}
           </ul>
+          {renaming && me && createPortal(<RenameModal current={me.name} onClose={() => setRenaming(false)} />, document.body)}
 
           <div className="lobby-footer">
             <div className="ready-status">
@@ -429,5 +436,53 @@ function MapSwitch({ slug, isHost }: { slug: string; isHost: boolean }) {
           document.body,
         )}
     </>
+  );
+}
+
+function RenameModal({ current, onClose }: { current: string; onClose: () => void }) {
+  const t = useT();
+  const [draft, setDraft] = useState(current);
+  const name = draft.replace(/[<>]/g, '').trim().slice(0, 16);
+  const save = () => {
+    if (!name) return;
+    if (name !== current) {
+      send('rename', { name });
+      try {
+        localStorage.setItem('tht:name', name);
+      } catch {}
+    }
+    onClose();
+  };
+  return (
+    <Modal title={t('rename')} onClose={onClose} className="rename-modal">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          save();
+        }}
+      >
+        <label className="field">
+          {t('displayName')}
+          <input
+            autoFocus
+            onFocus={(e) => e.currentTarget.select()}
+            value={draft}
+            maxLength={16}
+            placeholder={t('namePlaceholder')}
+            enterKeyHint="done"
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => e.stopPropagation()}
+          />
+        </label>
+        <div className="map-switch-actions">
+          <button type="button" className="btn" onClick={onClose}>
+            {t('cancel')}
+          </button>
+          <button type="submit" className="btn primary" disabled={!name || name === current}>
+            {t('save')}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }

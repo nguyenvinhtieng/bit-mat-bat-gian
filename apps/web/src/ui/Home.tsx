@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { DEFAULT_MAP_SLUG, MAP_CATALOG, mapArt, mapMeta, playableMap } from '@hidden-truth/shared';
-import { createRoom, joinRoom, reconnect } from '../net';
+import { createRoom, joinRoom, reconnect, roomExists } from '../net';
 import { useStore } from '../store';
 import { asset } from './common';
 import { useLang, useT } from '../i18n';
@@ -25,14 +25,15 @@ const readMap = () => {
 
 export function Home() {
   const { connecting, error } = useStore();
-  const busy = !!connecting;
+  // a background resume shouldn't lock the buttons — join/create take over from it
+  const busy = !!connecting && connecting !== 'reconnect';
   const t = useT();
   const lang = useLang((s) => s.lang);
   const [showGuide, setShowGuide] = useState(false);
   const [name, setName] = useState(() => (DEV ? randomDevName(readMap()) : localStorage.getItem(NAME_KEY) ?? ''));
   const [autoName, setAutoName] = useState(DEV);
   const joinMatch = /^\/join\/([A-Za-z0-9]{4,8})/.exec(location.pathname);
-  const invited = !!joinMatch;
+  const [invited, setInvited] = useState(!!joinMatch);
   const [code, setCode] = useState(joinMatch?.[1]?.toUpperCase() ?? '');
   const [mapSlug, setMapSlug] = useState(readMap);
   const map = mapMeta(mapSlug);
@@ -48,6 +49,15 @@ export function Home() {
 
   useEffect(() => {
     reconnect();
+    if (!joinMatch) return;
+    // invite link to a room that no longer exists -> fall back to the plain home screen
+    roomExists(joinMatch[1]).then((ok) => {
+      if (ok || useStore.getState().screen !== 'home') return;
+      history.replaceState(null, '', '/');
+      setInvited(false);
+      setCode('');
+      toast({ text: t('roomNotFound'), kind: 'warn' });
+    });
   }, []);
 
   const saveName = () => {
@@ -163,7 +173,7 @@ export function Home() {
                     maxLength={8}
                     placeholder={t('roomCodePh')}
                     onChange={(e) => setCode(e.target.value.toUpperCase())}
-                    onKeyDown={(e) => e.key === 'Enter' && !connecting && code.length >= 4 && joinRoom(code, saveName())}
+                    onKeyDown={(e) => e.key === 'Enter' && !busy && code.length >= 4 && joinRoom(code, saveName())}
                   />
                   <button className="btn" disabled={busy || code.length < 4} onClick={() => joinRoom(code, saveName())}>
                     {connecting === 'join' ? t('joiningRoom') : t('joinRoom')}

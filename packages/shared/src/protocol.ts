@@ -17,6 +17,8 @@ export type ClientMessages = {
   report: Record<string, never>;
   emergency: Record<string, never>;
   chat: { text: string };
+  /** lobby only: change your own display name */
+  rename: { name: string };
   /** target = player id, or 'skip' */
   vote: { target: string };
   /** killers only */

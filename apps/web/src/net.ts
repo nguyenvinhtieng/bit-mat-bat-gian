@@ -196,7 +196,12 @@ async function attempt(fn: () => Promise<Room>, ms = OP_TIMEOUT): Promise<Room> 
 /** single in-flight create/join/reconnect; stale results (superseded or already in a room) are discarded */
 async function connect(kind: Connecting, fn: () => Promise<Room>, quiet = false): Promise<boolean> {
   const st = useStore.getState();
-  if (st.connecting || room) return false;
+  // bound but no state ever arrived (socket died mid-join, e.g. mobile app killed) -> Home is showing; drop the zombie
+  if (room && !st.room?.phase) dropStale();
+  // the user picking join/create overrides a silent resume still waiting on its old seat
+  const override = st.connecting === 'reconnect' && kind !== 'reconnect';
+  if (override) sessionStorage.removeItem(TOKEN_KEY);
+  if ((st.connecting && !override) || room) return false;
   if (!navigator.onLine && !quiet) {
     st.set({ error: friendly(null) });
     return false;
@@ -219,15 +224,57 @@ async function connect(kind: Connecting, fn: () => Promise<Room>, quiet = false)
 
 export const createRoom = (name: string, map?: string) => connect('create', () => client.create(ROOM_NAME, { name, map }));
 
+/** false only when the server says the room is gone; network errors resolve true so we never drop a valid invite */
+export async function roomExists(code: string): Promise<boolean> {
+  try {
+    const base = endpoint().replace(/^ws/, 'http').replace(/\/$/, '');
+    const res = await fetch(`${base}/rooms/${encodeURIComponent(code.trim().toUpperCase())}`);
+    if (!res.ok) return true;
+    return (await res.json())?.exists !== false;
+  } catch {
+    return true;
+  }
+}
+
 export const joinRoom = (code: string, name: string) => connect('join', () => client.joinById(code.trim().toUpperCase(), { name }));
 
-/** resume a saved seat (page reload); silent — a dead token just means we start at home */
+function dropStale() {
+  const r = room;
+  room = null; // onLeave then sees room !== r and stays quiet
+  if (pingTimer) clearInterval(pingTimer);
+  r?.leave(true);
+}
+
+/**
+ * resume a saved seat (page reload); silent — a dead token just means we start at home.
+ * After the app is killed on mobile the server may still think the old socket is alive for a few seconds,
+ * and until it notices, the token reads as expired — so keep retrying briefly. Join/create cancel this.
+ */
 export async function reconnect(): Promise<boolean> {
   const token = sessionStorage.getItem(TOKEN_KEY);
-  if (!token) return false;
-  const ok = await connect('reconnect', () => client.reconnect(token), true);
-  if (!ok && !room) sessionStorage.removeItem(TOKEN_KEY);
-  return ok;
+  if (!token || room || useStore.getState().connecting) return false;
+  const seq = ++opSeq;
+  useStore.getState().set({ connecting: 'reconnect', error: '' });
+  const deadline = Date.now() + 15_000;
+  for (;;) {
+    try {
+      const r = await attempt(() => client.reconnect(token), 8_000);
+      if (seq !== opSeq || room) {
+        r.leave(true);
+        return false;
+      }
+      bind(r);
+      return true;
+    } catch {
+      if (seq !== opSeq) return false;
+      if (Date.now() > deadline || !navigator.onLine) break;
+      await new Promise((res) => setTimeout(res, 1500));
+      if (seq !== opSeq) return false;
+    }
+  }
+  sessionStorage.removeItem(TOKEN_KEY);
+  useStore.getState().set({ connecting: false });
+  return false;
 }
 
 /** after an unexpected drop: retry with backoff while the server keeps the seat (45s in game, 20s in lobby) */
