@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { GAME, MEETING_POINT, ROLE_IDS, ROLE_INFO, areaAt, getGrid, mapSkin, type MapSkin } from '@hidden-truth/shared';
 import { useLang } from '../i18n';
 import { RoleBadge, asset, useEscape, useSkin } from './common';
+import { GuideHud } from './GuideHud';
 import { mapGuide } from './guides';
 import { isTouchDevice } from './Joystick';
 
@@ -61,12 +62,8 @@ function skinText(skin: MapSkin, m: number, touch: boolean) {
     vi: {
       steps: [
         ['1. Nhận vai', `Mỗi người nhận một vai bí mật: ${r.villager.name}, ${r.guardian.name} hoặc ${k.vi} (1–2 người tuỳ số người chơi).`],
-        ['2. Chạy & làm nhiệm vụ', `${touch ? 'Đi bằng joystick (giữ bên trái màn hình). Tới vòng sáng vàng và bấm nút Làm nhiệm vụ' : 'Đi bằng WASD / phím mũi tên / joystick. Tới vòng sáng vàng và bấm J / Space'} để làm mini-game. Thanh thời gian chia 5 ${seg.vi} tự chạy (dừng khi họp); thanh xanh bên dưới là tiến độ nhiệm vụ cả đoàn — phải đầy trước ${dl.vi}. Bị hạ gục vẫn phải làm tiếp nhiệm vụ.`],
-        [`3. ${k.vi} ra tay`, `${k.vi} lại gần và bấm ${touch ? 'nút Hạ gục' : 'K'} để hạ gục (hồi ${GAME.killCooldownSec}s). Nạn nhân thành hồn ma, để lại thi thể.`],
-        ['4. Phá hoại', `${k.vi} còn có thể phá: ${blind.name.vi} (mọi người gần như mù vài giây) hoặc ${ward.name.vi} — phải có người tới đúng chỗ giữ nút ${ward.fix.vi} trước khi hết giờ, nếu không ${k.vi} thắng.`],
-        ['5. Báo cáo / họp khẩn', `Thấy thi thể thì bấm ${touch ? 'nút Báo cáo' : 'L'}. Hoặc tới bàn họp ở ${area.name} đánh ${skin.emergency.vi} (mỗi người 1 lần).`],
-        ['6. Bỏ phiếu', `Họp tối đa ~${m}s: chat và bỏ phiếu loại một người (hoặc bỏ qua). Nhiều phiếu nhất bị loại; hoà phiếu thì không ai bị loại.`],
-        ['7. Kết thúc', `Người Dân thắng khi loại hết ${k.vi} hoặc xong mọi nhiệm vụ. ${k.vi} thắng khi số ${k.vi} ≥ số Người Dân còn sống.`],
+        ['2. Họp & bỏ phiếu', `Sau mỗi lần báo cáo / họp khẩn: họp tối đa ~${m}s, chat và bỏ phiếu loại một người (hoặc bỏ qua). Nhiều phiếu nhất bị loại; hoà phiếu thì không ai bị loại.`],
+        ['3. Kết thúc', `Người Dân thắng khi loại hết ${k.vi} hoặc xong mọi nhiệm vụ. ${k.vi} thắng khi số ${k.vi} ≥ số Người Dân còn sống.`],
       ],
       tips: [
         `Đi theo nhóm — ${k.vi} khó ra tay khi có người nhìn.`,
@@ -79,12 +76,8 @@ function skinText(skin: MapSkin, m: number, touch: boolean) {
     en: {
       steps: [
         ['1. Get a role', `Everyone secretly gets a role: ${r.villager.nameEn}, ${r.guardian.nameEn} or ${k.en} (1–2 ${ks} depending on player count).`],
-        ['2. Run & do tasks', `${touch ? 'Move with the joystick (hold the left side of the screen). Go to a golden ring and tap the Task button' : 'Move with WASD / arrows / joystick. Go to a golden ring and press J / Space'} to play a mini-game. The time bar runs through 5 ${seg.en}s (paused in meetings); the green bar below is the crew’s task progress — fill it before ${dl.en}. Ghosts keep doing tasks too.`],
-        [`3. The ${k.en} strikes`, `The ${k.en} gets close and presses ${touch ? 'the Kill button' : 'K'} to kill (${GAME.killCooldownSec}s cooldown). The victim becomes a ghost and leaves a body.`],
-        ['4. Sabotage', `${ks} can also sabotage: ${blind.name.en} (everyone is nearly blind for a few seconds) or ${ward.name.en} — someone must hold ${ward.fix.en} at the right spot before time runs out, or the ${ks} win.`],
-        ['5. Report / emergency', `Found a body? Press ${touch ? 'the Report button' : 'L'}. Or sound the ${skin.emergency.en} at the meeting table in ${area.nameEn} (once per player).`],
-        ['6. Vote', `Meeting lasts up to ~${m}s: chat and vote to eject one player (or skip). Most votes is ejected; a tie ejects nobody.`],
-        ['7. The end', `Villagers win by ejecting every ${k.en} or finishing all tasks. ${ks} win when ${ks} ≥ living villagers.`],
+        ['2. Meeting & vote', `After a report or emergency the meeting lasts up to ~${m}s: chat and vote to eject one player (or skip). Most votes is ejected; a tie ejects nobody.`],
+        ['3. The end', `Villagers win by ejecting every ${k.en} or finishing all tasks. ${ks} win when ${ks} ≥ living villagers.`],
       ],
       tips: [
         `Stick together — the ${k.en} can’t strike when someone is watching.`,
@@ -121,7 +114,7 @@ export function Guide({ onClose, slug }: { onClose: () => void; slug?: string })
           </button>
         </header>
         <div className="guide-tabs" role="tablist">
-          {(['story', 'flow', 'roles'] as Tab[]).map((k) => (
+          {(['story', 'roles', 'flow'] as Tab[]).map((k) => (
             <button key={k} role="tab" aria-selected={tab === k} className={`guide-tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>
               <img src={gui(`tab-${k}`)} alt="" draggable={false} />
               <span>{tx.tabs[k]}</span>
@@ -152,6 +145,7 @@ export function Guide({ onClose, slug }: { onClose: () => void; slug?: string })
 
           {tab === 'flow' && (
             <>
+              <GuideHud skin={skin} lang={lang} touch={isTouchDevice()} />
               <h4>{tx.flowH}</h4>
               <ol className="guide-steps">
                 {tx.steps.map(([h, b], i) => (

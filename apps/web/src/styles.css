@@ -705,6 +705,30 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 }
 .guide .guide-role { border-radius: 0; border: 18px solid transparent; padding: 2px 4px; background: rgba(24, 15, 9, 0.92) padding-box; border-image: url(/assets/common/ui/guide/card-crew.webp) 56 / 18px stretch; }
 .guide .guide-role.secret { border-image-source: url(/assets/common/ui/guide/card-killer.webp); }
+/* guide "how to play": side switch, HUD screenshot with numbered pins, button legend */
+.gh-sides { display: flex; gap: 8px; justify-content: center; margin: 2px 0 8px; }
+.gh-side { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; border: 2px solid #5a3a20; background: #1d130c; color: var(--muted); font-weight: 800; cursor: pointer; }
+.gh-side img { width: 22px; height: 22px; }
+.gh-side.crew.active { border-color: #6fb3d9; color: #e6f4ff; background: #1b2a36; }
+.gh-side.killer.active { border-color: #d0574b; color: #ffe2dc; background: #3a1712; }
+.gh-goal { text-align: center; margin: 0 0 4px !important; }
+.gh-shot { position: relative; border-radius: 10px; overflow: hidden; border: 2px solid #5a3a20; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); }
+.gh-shot > img { display: block; width: 100%; height: auto; aspect-ratio: 1280 / 591; }
+.gh-pin {
+  display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font-style: normal; font-size: 12px; font-weight: 900; line-height: 1;
+  background: #e8b84a; color: #2a1406; border: 2px solid #fff4d8; box-shadow: 0 0 0 2px rgba(42, 20, 6, 0.6), 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+.gh-shot .gh-pin { position: absolute; transform: translate(-50%, -50%); animation: ghPin 2s ease-in-out infinite; }
+@keyframes ghPin { 50% { box-shadow: 0 0 0 2px rgba(42, 20, 6, 0.6), 0 0 0 7px rgba(232, 184, 74, 0.35); } }
+.gh-legend { list-style: none; padding-left: 0 !important; margin-top: 10px !important; display: grid !important; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px !important; }
+.gh-legend li { display: flex; gap: 10px; align-items: flex-start; background: #1d130c; border-radius: 10px; padding: 8px 10px; font-size: 0.9em; line-height: 1.4; }
+.gh-legend li > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.gh-legend strong { color: var(--ochre); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.gh-legend kbd { font-size: 0.75em; }
+.gh-icon { position: relative; flex: none; width: 44px; height: 44px; display: grid; place-items: center; }
+.gh-icon img { width: 100%; height: 100%; object-fit: contain; }
+.gh-icon .gh-pin { position: absolute; top: -6px; left: -6px; width: 18px; height: 18px; font-size: 10px; }
+.gh-glyph { font-size: 28px; line-height: 1; }
 .guide-link { display: inline-flex; align-items: center; gap: 6px; }
 .guide-link img { width: 22px; height: 22px; }
 .guide-open-btn {

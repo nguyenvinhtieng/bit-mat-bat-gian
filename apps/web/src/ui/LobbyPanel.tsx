@@ -116,7 +116,7 @@ export function LobbyPanel() {
             >
               {me?.ready ? t('unready') : t('readyBtn')}
               {!canStart && (
-                <small className="need-players" aria-label={t('hint')}>
+                <small className="need-players" aria-hidden>
                   👥 {total}/{MIN_PLAYERS}
                 </small>
               )}
