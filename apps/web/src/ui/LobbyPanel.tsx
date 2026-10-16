@@ -118,7 +118,8 @@ export function LobbyPanel() {
         <div className="ready-dock-actions">
           <button
             className={`ready-cta ${me?.ready ? 'is-ready' : ''} ${canStart ? '' : 'has-need'}`}
-            title={canStart ? undefined : t('hint')}
+            title={canStart ? undefined : t('needPlayersToReady')}
+            disabled={!canStart && !me?.ready}
             aria-pressed={!!me?.ready}
             onClick={() => send('ready', { ready: !me?.ready })}
           >

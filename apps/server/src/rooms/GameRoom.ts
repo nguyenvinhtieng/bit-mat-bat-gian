@@ -80,6 +80,10 @@ export class GameRoom extends Room<GameState> {
   private chatLog: ChatMsg[] = [];
   private lastActive = new Map<string, number>();
   private sab = new Sabotage();
+  /** set once the room closes itself (nobody online) so late reconnect timeouts don't touch a dead room */
+  private closing = false;
+  /** sessions the server itself removed (host kick / AFK): their close is never "unexpected", so no seat is held */
+  private kicked = new Set<string>();
 
   private get skin() {
     return mapSkin(this.state.mapSlug);
@@ -110,6 +114,12 @@ export class GameRoom extends Room<GameState> {
     this.registerMessages();
   }
 
+  /** admin panel: drop a room nobody is online in (index.ts checks that before calling) */
+  adminClose() {
+    this.closing = true;
+    this.disconnect();
+  }
+
   onDispose() {
     activeCodes.delete(this.roomId);
   }
@@ -128,6 +138,7 @@ export class GameRoom extends Room<GameState> {
     this.moves.set(client.sessionId, { queue: [], budget: 0, lastQueued: 0 });
     this.lastActive.set(client.sessionId, Date.now());
     if (!this.state.hostId) this.state.hostId = client.sessionId;
+    this.syncMeta();
     this.refreshNight();
     this.system(`${p.name} đã vào phòng.`);
     client.send('time', Date.now());
@@ -137,33 +148,36 @@ export class GameRoom extends Room<GameState> {
   async onLeave(client: Client, consented: boolean) {
     const p = this.state.players.get(client.sessionId);
     if (!p) return;
-    if (!consented) {
+    const kicked = this.kicked.delete(client.sessionId);
+    if (!consented && !kicked) {
       // flaky mobile networks / app switching: hold the seat (shorter in the lobby so a dead player doesn't block the start)
       p.connected = false;
+      // don't leave the room captained by a dead socket; nobody online at all -> close it instead of keeping a ghost room
+      if (!this.keepOnlineHost()) return;
       try {
         const rc = await this.allowReconnection(client, this.state.phase === 'lobby' ? 20 : 45);
         p.connected = true;
+        this.syncMeta();
         rc.send('time', Date.now());
         this.sendPrivate(client.sessionId);
         rc.send('chat:history', this.chatLog.slice(-40));
         return;
       } catch {
-        /* fallthrough */
+        if (this.closing) return;
       }
     }
     if (this.state.phase === 'lobby') {
       this.state.players.delete(client.sessionId);
       this.moves.delete(client.sessionId);
+      // dropped below the minimum: nobody can stay ready for a game that can't start
+      if (this.state.players.size < MIN_PLAYERS) for (const x of this.state.players.values()) x.ready = false;
       this.refreshNight();
     } else {
       p.connected = false;
       p.alive = false; // counter catches up at the next vote — syncing now would reveal the leaver's side
     }
-    this.system(`${p.name} đã rời phòng.`);
-    if (this.state.hostId === client.sessionId) {
-      const next = [...this.state.players.values()].find((x) => x.connected);
-      this.state.hostId = next?.id ?? '';
-    }
+    if (!kicked) this.system(`${p.name} đã rời phòng.`);
+    if (!this.keepOnlineHost()) return;
     if (this.state.phase === 'meeting') this.maybeResolveVotes();
     else if (this.state.phase === 'explore') this.checkWin();
   }
@@ -191,7 +205,10 @@ export class GameRoom extends Room<GameState> {
     this.onMessage('ready', (client, msg: { ready: boolean }) => {
       this.lastActive.set(client.sessionId, Date.now());
       const p = this.state.players.get(client.sessionId);
-      if (p && this.state.phase === 'lobby') p.ready = !!msg?.ready;
+      if (!p || this.state.phase !== 'lobby') return;
+      const n = this.state.players.size;
+      if (msg?.ready && n < MIN_PLAYERS) return client.send('toast', { text: `Cần đủ ${MIN_PLAYERS} người mới sẵn sàng được (hiện có ${n}).`, kind: 'warn' });
+      p.ready = !!msg?.ready;
     });
 
     this.onMessage('rename', (client, msg: { name?: string }) => {
@@ -320,6 +337,7 @@ export class GameRoom extends Room<GameState> {
       const name = this.state.players.get(target)?.name ?? '';
       victim.send('toast', { text: 'Bạn đã bị chủ phòng mời ra khỏi phòng.', kind: 'warn' });
       this.lastActive.delete(target);
+      this.kicked.add(target);
       victim.leave(4001);
       this.system(`Chủ phòng đã mời ${name} ra khỏi phòng.`);
     });
@@ -334,7 +352,9 @@ export class GameRoom extends Room<GameState> {
       if (now - last > AFK_LOBBY_MS) {
         client.send('toast', { text: 'Bạn bị mời ra khỏi phòng vì không hoạt động.', kind: 'warn' });
         this.lastActive.delete(client.sessionId);
+        this.kicked.add(client.sessionId);
         client.leave(4001);
+        this.system(`${this.state.players.get(client.sessionId)?.name ?? ''} bị mời ra vì không hoạt động.`);
       }
     }
   }
@@ -438,7 +458,27 @@ export class GameRoom extends Room<GameState> {
 
   /** listing info read by quick-match (/rooms/find) */
   private syncMeta() {
-    this.setMetadata({ ...this.metadata, map: this.state.mapSlug, phase: this.state.phase, public: this.state.isPublic });
+    const online = [...this.state.players.values()].filter((x) => x.connected).length;
+    this.setMetadata({ ...this.metadata, map: this.state.mapSlug, phase: this.state.phase, public: this.state.isPublic, online });
+  }
+
+  /**
+   * The captain must be someone still online: hand the role to the first connected player if needed.
+   * With nobody online the room is closed right away. Returns false when the room is closing.
+   */
+  private keepOnlineHost(): boolean {
+    const online = [...this.state.players.values()].filter((x) => x.connected);
+    if (!online.length) {
+      this.closing = true;
+      this.disconnect();
+      return false;
+    }
+    if (!online.some((x) => x.id === this.state.hostId)) {
+      this.state.hostId = online[0].id;
+      this.system(`${online[0].name} giờ là trưởng phòng.`);
+    }
+    this.syncMeta();
+    return true;
   }
 
   private advancePhase() {

@@ -5,14 +5,15 @@ export type RoomListing = {
   maxClients: number;
   locked: boolean;
   private: boolean;
-  metadata?: { phase?: string; public?: boolean } | null;
+  metadata?: { phase?: string; public?: boolean; online?: number } | null;
 };
 
 /**
- * Quick-match: a public room still in its lobby with a free seat (and someone in it).
- * The fullest one wins so games fill up and start sooner. `exclude` = ids that just refused us.
+ * Quick-match: a public room still in its lobby with a free seat (and someone online in it).
+ * The fullest one wins so games fill up and start sooner. `exclude` = ids that just refused us (never picked);
+ * `avoid` = rooms the player left earlier — only picked once no other room is open.
  */
-export function pickOpenRoom(rooms: readonly RoomListing[], exclude: readonly string[] = []): string | null {
+export function pickOpenRoom(rooms: readonly RoomListing[], exclude: readonly string[] = [], avoid: readonly string[] = []): string | null {
   const open = rooms.filter(
     (r) =>
       !r.private &&
@@ -20,9 +21,10 @@ export function pickOpenRoom(rooms: readonly RoomListing[], exclude: readonly st
       r.metadata?.public === true &&
       r.metadata?.phase === 'lobby' &&
       r.clients > 0 &&
+      (r.metadata?.online ?? r.clients) > 0 &&
       r.clients < r.maxClients &&
       !exclude.includes(r.roomId),
   );
-  open.sort((a, b) => b.clients - a.clients);
+  open.sort((a, b) => Number(avoid.includes(a.roomId)) - Number(avoid.includes(b.roomId)) || b.clients - a.clients);
   return open[0]?.roomId ?? null;
 }

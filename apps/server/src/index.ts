@@ -8,6 +8,7 @@ import { WebSocketTransport } from '@colyseus/ws-transport';
 import { GAME_URL, ROOM_NAME } from '@hidden-truth/shared';
 import { GameRoom } from './rooms/GameRoom';
 import { pickOpenRoom } from './rooms/matchmaking';
+import { adminAuth, closeBlocker } from './rooms/admin';
 
 const PORT = Number(process.env.PORT || 2567);
 const PROD = process.env.NODE_ENV === 'production';
@@ -25,11 +26,12 @@ app.use(cors({ origin: (origin, cb) => cb(null, originOk(origin)) }));
 app.use(express.json());
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
-// quick-match: a public lobby with free seats; ?exclude=ID1,ID2 skips rooms that just refused the client
+// quick-match: a public lobby with free seats; ?exclude=ID1,ID2 skips rooms that just refused the client,
+// ?avoid=ID3 deprioritises rooms the client left before
 app.get('/rooms/find', async (req, res) => {
-  const exclude = String(req.query.exclude ?? '').split(',').filter(Boolean);
+  const ids = (q: unknown) => String(q ?? '').split(',').filter(Boolean);
   const rooms = await matchMaker.query({ name: ROOM_NAME, private: false });
-  res.json({ roomId: pickOpenRoom(rooms, exclude) });
+  res.json({ roomId: pickOpenRoom(rooms, ids(req.query.exclude), ids(req.query.avoid)) });
 });
 app.get('/rooms/:code', async (req, res) => {
   const rooms = await matchMaker.query({ roomId: req.params.code.toUpperCase() });
@@ -41,11 +43,12 @@ app.get('/rooms/:code', async (req, res) => {
 app.get('/admin/stats', async (_req, res) => {
   const rooms = await matchMaker.query({ name: ROOM_NAME });
   res.json({
-    online: rooms.reduce((n, r) => n + r.clients, 0),
+    online: rooms.reduce((n, r) => n + (r.metadata?.online ?? r.clients), 0),
     roomCount: rooms.length,
     rooms: rooms.map((r) => ({
       code: r.roomId,
       clients: r.clients,
+      online: r.metadata?.online ?? r.clients,
       maxClients: r.maxClients,
       locked: r.locked,
       public: !r.private,
@@ -55,6 +58,25 @@ app.get('/admin/stats', async (_req, res) => {
       createdAt: r.metadata?.createdAt ?? 0,
     })),
   });
+});
+
+// admin: remove a room nobody is online in (stale/ghost rooms that would fail anyone joining).
+// Needs ADMIN_TOKEN (header x-admin-token) in production.
+app.delete('/admin/rooms/:code', async (req, res) => {
+  const auth = adminAuth({ prod: PROD, token: process.env.ADMIN_TOKEN, sent: req.get('x-admin-token') });
+  if (auth === 'unconfigured') return res.status(403).json({ error: 'ADMIN_TOKEN chưa được cấu hình trên server' });
+  if (auth === 'denied') return res.status(401).json({ error: 'Sai mã quản trị' });
+  const code = req.params.code.toUpperCase();
+  const [room] = await matchMaker.query({ name: ROOM_NAME, roomId: code });
+  const blocker = closeBlocker(room);
+  if (blocker === 'missing') return res.status(404).json({ error: 'Phòng không tồn tại' });
+  if (blocker === 'occupied') return res.status(409).json({ error: 'Phòng vẫn còn người chơi online' });
+  try {
+    await matchMaker.remoteRoomCall(code, 'adminClose');
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: String((e as Error).message ?? e) });
+  }
 });
 
 // Production: serve the built web client from the same origin.

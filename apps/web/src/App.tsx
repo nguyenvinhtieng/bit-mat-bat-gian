@@ -41,9 +41,22 @@ export function App() {
         <IntroModal />
         <Cinematic />
       </div>
+      <PingBadge />
       <ReconnectBanner />
       <Toasts />
       <RotateGate />
+    </div>
+  );
+}
+
+/** always-on round-trip time in the bottom corner; tiny and click-through so it never gets in the way */
+function PingBadge() {
+  const ping = useStore((s) => s.ping);
+  const tone = !ping ? '' : ping < 100 ? 'good' : ping < 250 ? 'ok' : 'bad';
+  return (
+    <div className={`ping-badge ${tone}`} aria-hidden>
+      <i />
+      {ping ? `${ping} ms` : '— ms'}
     </div>
   );
 }

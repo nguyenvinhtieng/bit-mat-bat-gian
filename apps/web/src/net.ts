@@ -81,6 +81,21 @@ function snapshot(state: any): RoomView {
   };
 }
 
+/** rooms this tab left, newest first — quick-match tries every other room before coming back to these */
+const LEFT_KEY = 'tht:left';
+const leftRooms = (): string[] => {
+  try {
+    return JSON.parse(sessionStorage.getItem(LEFT_KEY) ?? '[]');
+  } catch {
+    return [];
+  }
+};
+const rememberLeft = (id: string) => {
+  try {
+    sessionStorage.setItem(LEFT_KEY, JSON.stringify([id, ...leftRooms().filter((x) => x !== id)].slice(0, 10)));
+  } catch {}
+};
+
 let pingTimer: ReturnType<typeof setInterval> | undefined;
 /** set by leaveRoom() so onLeave can tell our own exit from the server closing the room */
 let leaving = false;
@@ -154,6 +169,7 @@ function bind(r: Room) {
       recover();
     } else {
       sessionStorage.removeItem(TOKEN_KEY);
+      rememberLeft(r.roomId);
       // 4000 we didn't ask for = the server closed the room (restart/deploy); 4001 = kicked (server toasts why)
       const error = !self && code === 4000 ? 'Phòng đã đóng (máy chủ vừa khởi động lại). Hãy tạo hoặc vào phòng mới.' : '';
       useStore.getState().set({ screen: 'home', room: null, reconnecting: false, error });
@@ -198,7 +214,7 @@ async function attempt(fn: () => Promise<Room>, ms = OP_TIMEOUT): Promise<Room> 
 }
 
 /** single in-flight create/join/reconnect; stale results (superseded or already in a room) are discarded */
-async function connect(kind: Connecting, fn: () => Promise<Room>, quiet = false): Promise<boolean> {
+async function connect(kind: Connecting, fn: () => Promise<Room>, quiet = false, ms = OP_TIMEOUT): Promise<boolean> {
   const st = useStore.getState();
   // bound but no state ever arrived (socket died mid-join, e.g. mobile app killed) -> Home is showing; drop the zombie
   if (room && !st.room?.phase) dropStale();
@@ -213,7 +229,7 @@ async function connect(kind: Connecting, fn: () => Promise<Room>, quiet = false)
   const seq = ++opSeq;
   st.set({ connecting: kind, error: '' });
   try {
-    const r = await attempt(fn);
+    const r = await attempt(fn, ms);
     if (seq !== opSeq || room) {
       r.leave(true);
       return false;
@@ -241,17 +257,30 @@ export async function roomExists(code: string): Promise<boolean> {
 
 export const httpBase = () => endpoint().replace(/^ws/, 'http').replace(/\/$/, '');
 
+const FIND_MS = 25_000;
+const FIND_POLL_MS = 2_000;
+let findSeq = 0;
+
 /**
  * Quick-match into a public lobby with free seats. A room can fill up or start between the lookup and the join,
- * so a refused room is excluded and we ask again (a few times).
+ * so a refused room is excluded and we ask again (a few times). Rooms we left before are only offered as a last resort.
+ * With nothing open we keep polling for a while — the home screen shows a search overlay meanwhile.
  */
-export const findRoom = (name: string) =>
-  connect('find', async () => {
+export const findRoom = (name: string) => {
+  const mine = ++findSeq;
+  const deadline = Date.now() + FIND_MS - 3_000;
+  const search = async () => {
     const tried: string[] = [];
     for (;;) {
-      const res = await fetch(`${httpBase()}/rooms/find?exclude=${encodeURIComponent(tried.join(','))}`);
+      if (mine !== findSeq) throw new Error('cancelled');
+      const q = `exclude=${encodeURIComponent(tried.join(','))}&avoid=${encodeURIComponent(leftRooms().join(','))}`;
+      const res = await fetch(`${httpBase()}/rooms/find?${q}`);
       const id = res.ok ? ((await res.json())?.roomId as string | null) : null;
-      if (!id) throw new Error(NO_ROOMS);
+      if (!id) {
+        if (Date.now() + FIND_POLL_MS > deadline) throw new Error(NO_ROOMS);
+        await new Promise((r) => setTimeout(r, FIND_POLL_MS));
+        continue;
+      }
       try {
         return await client.joinById(id, { name });
       } catch (e) {
@@ -259,7 +288,17 @@ export const findRoom = (name: string) =>
         tried.push(id);
       }
     }
-  });
+  };
+  return connect('find', search, false, FIND_MS);
+};
+
+/** stop a quick-match that is still searching (a room that answers late is left by connect) */
+export function cancelFind() {
+  if (useStore.getState().connecting !== 'find') return;
+  findSeq++;
+  opSeq++;
+  useStore.getState().set({ connecting: false, error: '' });
+}
 
 export const joinRoom = (code: string, name: string) => connect('join', () => client.joinById(code.trim().toUpperCase(), { name }));
 
