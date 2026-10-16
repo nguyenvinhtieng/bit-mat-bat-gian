@@ -180,7 +180,7 @@ export class GameScene extends Phaser.Scene {
     cam.setBackgroundColor('#1b120d');
     cam.setRoundPixels(true);
     this.fitZoom();
-    this.scale.on('resize', () => this.fitZoom());
+    this.scale.on('resize', () => this.onResize());
 
     this.unbind.push(onRoom((r) => this.bindRoom(r)));
     this.unbind.push(useStore.subscribe((s, prev) => s.cinematic && s.cinematic !== prev.cinematic && this.onCinematic(s.cinematic)));
@@ -188,6 +188,17 @@ export class GameScene extends Phaser.Scene {
     this.unbind.push(useStore.subscribe((s, prev) => (s.room?.sabotage ?? '') !== (prev.room?.sabotage ?? '') && this.onSabotage(s.room?.sabotage ?? '')));
     this.unbind.push(useStore.subscribe((s, prev) => (s.me?.completedTasks !== prev.me?.completedTasks || s.me?.tasks !== prev.me?.tasks) && this.refreshStations()));
     this.events.once('shutdown', () => this.unbind.forEach((u) => u()));
+  }
+
+  /** Phaser only resizes a camera that still matched the previous game size; the burst of resizes during a phone
+   *  rotation can break that, leaving a portrait-sized viewport on a landscape canvas (player off-screen). */
+  private onResize() {
+    const { width, height } = this.scale;
+    const cam = this.cameras.main;
+    cam.setViewport(0, 0, width, height);
+    this.fitZoom();
+    const me = room ? this.avatars.get(room.sessionId) : undefined;
+    if (me) cam.centerOn(me.c.x, me.c.y);
   }
 
   private fitZoom() {

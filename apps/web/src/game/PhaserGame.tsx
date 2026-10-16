@@ -19,7 +19,29 @@ export function PhaserGame() {
     });
     // dev-only handle for visual checks (tools/smoke)
     if (import.meta.env.DEV) (window as unknown as { __game?: Phaser.Game }).__game = game;
-    return () => game.destroy(true);
+    // phones report stale sizes mid-rotation: re-measure a few times once it settles (and undo any iOS scroll drift)
+    const timers: number[] = [];
+    const remeasure = () => {
+      timers.splice(0).forEach(clearTimeout);
+      for (const ms of [50, 250, 600])
+        timers.push(
+          window.setTimeout(() => {
+            window.scrollTo(0, 0);
+            game.scale.getParentBounds();
+            game.scale.refresh();
+          }, ms),
+        );
+    };
+    window.addEventListener('orientationchange', remeasure);
+    window.addEventListener('resize', remeasure);
+    window.visualViewport?.addEventListener('resize', remeasure);
+    return () => {
+      timers.forEach(clearTimeout);
+      window.removeEventListener('orientationchange', remeasure);
+      window.removeEventListener('resize', remeasure);
+      window.visualViewport?.removeEventListener('resize', remeasure);
+      game.destroy(true);
+    };
   }, []);
   return <div ref={host} className="phaser-host" />;
 }

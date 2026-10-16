@@ -99,7 +99,6 @@ export function LobbyPanel() {
               </li>
             ))}
           </ul>
-          {!canStart && <p className="muted small lobby-hint">{t('hint')}</p>}
 
           <div className="lobby-footer">
             <div className="ready-status">
@@ -111,14 +110,20 @@ export function LobbyPanel() {
               </span>
             </div>
             <button
-              className={`btn big wide ${me?.ready ? '' : 'primary pulse'}`}
+              className={`btn big wide ${me?.ready ? '' : 'primary pulse'} ${canStart ? '' : 'has-need'}`}
+              title={canStart ? undefined : t('hint')}
               onClick={() => send('ready', { ready: !me?.ready })}
             >
               {me?.ready ? t('unready') : t('readyBtn')}
+              {!canStart && (
+                <small className="need-players" aria-label={t('hint')}>
+                  👥 {total}/{MIN_PLAYERS}
+                </small>
+              )}
             </button>
             {isHost && (
               <button className="btn big wide primary start" disabled={!canStart || starting} title={canStart ? undefined : t('hint')} onClick={start}>
-                {starting ? t('starting') : <>▶ {t('start')} ({readyCount}/{total})</>}
+                {starting ? t('starting') : <>▶ {t('start')} ({canStart ? `${readyCount}/${total}` : `${total}/${MIN_PLAYERS} ${t('playersShort')}`})</>}
               </button>
             )}
             <button className="btn ghost small wide" onClick={leaveRoom}>

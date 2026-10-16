@@ -308,13 +308,22 @@ function GhostNotice({ dead, crew }: { dead: boolean; crew: boolean }) {
 const phase = useStore((s) => s.room?.phase);
   const cinematic = useStore((s) => s.cinematic);
   const t = useT();
-  const [state, setState] = useState<'none' | 'open' | 'seen'>('none');
+  const [state, setState] = useState<'none' | 'open' | 'seen' | 'hidden'>('none');
   useEffect(() => {
     if (!dead) setState('none');
     else if (state === 'none' && phase === 'explore' && !cinematic) setState('open');
   }, [dead, phase, cinematic, state]);
   if (!dead || phase !== 'explore') return null;
-  if (state !== 'open') return <div className="ghost-strip">{crew ? t('ghostStrip') : t('ghostStripKiller')}</div>;
+  if (state === 'hidden') return null;
+  if (state !== 'open')
+    return (
+      <div className="ghost-strip">
+        <span>{crew ? t('ghostStrip') : t('ghostStripKiller')}</span>
+        <button className="ghost-strip-x" onClick={() => setState('hidden')} aria-label={t('close')} title={t('close')}>
+          ✕
+        </button>
+      </div>
+    );
   return (
     <div className="modal-backdrop ghost-backdrop">
       <div className="ghost-notice">

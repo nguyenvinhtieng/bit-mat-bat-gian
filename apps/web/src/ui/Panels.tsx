@@ -110,24 +110,29 @@ export function IntroModal() {
           </div>
           <span className="faction">{killer ? `Phe ${skin.killerName.vi}` : 'Phe Người Dân'}</span>
           <h2>{info.name}</h2>
-          <p className="opening-desc">{info.desc}</p>
+          {/* the opening only shows the gist (it is on screen briefly); full details on re-open from the HUD role card */}
+          <p className="opening-desc">{quick ? info.desc : info.short}</p>
           {killer && me.mates && me.mates.length > 0 && (
             <p className="opening-mates">
               <b>Đồng bọn:</b> <span style={{ color: KILLER_NAME_COLOR }}>{me.mates.join(', ')}</span>
             </p>
           )}
-          <p className="objective">
-            <b>Mục tiêu:</b> {me.objective}
-          </p>
-          <p className="opening-tip">
-            {killer ? (
-              isTouchDevice() ? <>Lại gần mục tiêu và bấm nút Hạ gục. Nhiệm vụ của bạn chỉ là giả.</> : <>Lại gần mục tiêu và bấm <kbd>K</kbd>. Nhiệm vụ của bạn chỉ là giả.</>
-            ) : isTouchDevice() ? (
-              <>Làm nhiệm vụ ở các vòng sáng vàng. Thấy thi thể thì bấm nút Báo cáo.</>
-            ) : (
-              <>Làm nhiệm vụ ở các vòng sáng vàng. Thấy thi thể thì bấm <kbd>L</kbd>.</>
-            )}
-          </p>
+          {quick && (
+            <>
+              <p className="objective">
+                <b>Mục tiêu:</b> {me.objective}
+              </p>
+              <p className="opening-tip">
+                {killer ? (
+                  isTouchDevice() ? <>Lại gần mục tiêu và bấm nút Hạ gục. Nhiệm vụ của bạn chỉ là giả.</> : <>Lại gần mục tiêu và bấm <kbd>K</kbd>. Nhiệm vụ của bạn chỉ là giả.</>
+                ) : isTouchDevice() ? (
+                  <>Làm nhiệm vụ ở các vòng sáng vàng. Thấy thi thể thì bấm nút Báo cáo.</>
+                ) : (
+                  <>Làm nhiệm vụ ở các vòng sáng vàng. Thấy thi thể thì bấm <kbd>L</kbd>.</>
+                )}
+              </p>
+            </>
+          )}
           {quick && (
             <button
               className="btn primary big"
