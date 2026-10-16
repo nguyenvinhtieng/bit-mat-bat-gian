@@ -473,7 +473,8 @@ const room = useStore((s) => s.room)!;
           </div>
         )}
       </div>
-      <GameSettings />
+      {/* the end screen has its own leave button; the cog would sit on top of its corner */}
+      {room.phase !== 'ended' && <GameSettings />}
       {/* top right: who is still standing */}
       {inGame && room.phase !== 'ended' && room.crewAlive + room.killersAlive > 0 && (
         <div className="alive-count" title={t('aliveTitle')}>
