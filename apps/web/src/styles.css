@@ -1117,7 +1117,6 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 .nb-moon { position: absolute; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; z-index: 2; filter: drop-shadow(0 0 5px #ffe9b0); transition: left 0.25s linear; pointer-events: none; }
 .night-wrap .progress { width: 100%; height: 14px; border-width: 1px; border-radius: 7px; }
 .night-wrap .progress span { line-height: 12px; font-size: 0.64em; }
-.canh-banner.dawn { background: linear-gradient(#7a1a1088, #2a0c0870); border-color: #e2584aaa; }
 .ghost-strip { position: fixed; top: calc(var(--hud-top-h) + 10px); left: 50%; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 8px; padding: 5px 6px 5px 14px; border-radius: 999px; background: #1f2a44dd; border: 1px solid #9fb6e6; color: #e8efff; font-weight: 700; font-size: 0.85em; white-space: nowrap; pointer-events: none; animation: ghostPulse 2.4s ease-in-out infinite; max-width: 94vw; }
 .ghost-strip > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .ghost-strip-x { pointer-events: auto; flex: none; width: 24px; height: 24px; border-radius: 50%; border: 1px solid #9fb6e6aa; background: #ffffff1a; color: inherit; font-size: 0.8em; line-height: 1; cursor: pointer; }
@@ -1148,19 +1147,8 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 }
 @media (max-width: 640px) {
   /* narrow: counter stacks in the corner, minimap/tasks start under the top HUD */
-  .alive-count { flex-direction: column; gap: 2px; padding: 4px 6px; border-radius: 12px; }
-  .alive-count .ac-sep { width: 20px; height: 1px; }
   .hud-left { top: calc(var(--hud-top-h) + 6px); }
 }
-.canh-banner { position: fixed; top: calc(var(--hud-top-h) + 8px); left: 50%; transform: translateX(-50%); z-index: 40; display: flex; gap: 8px; align-items: center; padding: 6px 12px; font-size: 0.82em; line-height: 1.3; background: linear-gradient(#5a161080, #2a0c0866); border: 2px solid #c58b26aa; border-radius: 10px; box-shadow: 0 4px 12px #0004; color: #ffe9b0; text-shadow: 0 1px 2px #000, 0 0 6px #000; animation: canhIn 4.2s ease forwards; pointer-events: none; max-width: min(400px, 92vw); }
-.canh-banner img { width: 28px; height: 28px; flex: none; animation: canhDrum 0.38s 2; }
-.canh-banner div { display: flex; flex-direction: column; gap: 2px; }
-.canh-banner b { display: flex; gap: 4px; }
-.canh-banner b i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #c58b26; }
-.canh-banner b i.on { background: #ffe28a; box-shadow: 0 0 6px #ffe28a; }
-.canh-banner span { font-weight: 600; }
-@keyframes canhIn { 0% { opacity: 0; transform: translate(-50%, -16px); } 8%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -8px); } }
-@keyframes canhDrum { 50% { transform: scale(1.18) rotate(-6deg); } }
 .opening-subtitle { display: block; text-align: center; color: var(--ochre); letter-spacing: 0.3em; text-transform: uppercase; font-weight: 700; margin-top: -6px; }
 
 @media (max-width: 640px) {
@@ -1580,20 +1568,6 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 .slider-ticks span.on { color: var(--ochre); font-weight: 800; }
 .slider-row.killer .slider-ticks span.on { color: #c79bec; }
 
-/* ---------- in-game alive counter */
-.alive-count {
-  position: absolute; top: 8px; right: 10px; z-index: 5; font-size: 0.9em;
-  display: flex; align-items: center; gap: 10px; background: rgba(34, 22, 14, 0.88); border: 2px solid var(--ochre-d);
-  border-radius: 999px; padding: 3px 14px 3px 6px; font-weight: 700;
-}
-.alive-count .ac { display: inline-flex; align-items: center; gap: 4px; animation: bump 0.35s ease; }
-.alive-count img { width: 22px; height: 22px; }
-.alive-count b { font-size: 1.15em; font-variant-numeric: tabular-nums; }
-.alive-count small { font-size: 0.72em; color: var(--muted); font-weight: 600; }
-.alive-count .crew b { color: #8fe0b8; }
-.alive-count .killer b { color: #d3a6f5; }
-.ac-sep { width: 1px; height: 20px; background: #5a3e2a; }
-@media (max-width: 640px) { .alive-count small { display: none; } }
 
 @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
 @keyframes settingsPop { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -1979,12 +1953,8 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
   .role-card strong { font-size: 0.9em; }
   .action-bar { right: max(16px, env(safe-area-inset-right)); }
   .chat-fab { right: max(14px, env(safe-area-inset-right)); }
-  /* smaller faction count + role chip */
-  .alive-count { top: 6px; font-size: 0.72em; gap: 6px; padding: 2px 10px 2px 4px; border-width: 1.5px; }
-  .alive-count img { width: 16px; height: 16px; }
-  .alive-count small { font-size: 0.8em; }
-  .ac-sep { height: 14px; }
-  .role-card { top: 34px; padding: 2px 10px 2px 2px; gap: 5px; border-width: 1.5px; }
+  /* smaller role chip, level with the settings cog (no faction counter above it any more) */
+  .role-card { top: max(12px, env(safe-area-inset-top)); padding: 2px 10px 2px 2px; gap: 5px; border-width: 1.5px; }
   .role-card .role-icon { width: 24px; height: 24px; }
   .role-card strong { font-size: 0.74em; }
   /* keep the role chip clear of the settings cog in the top-right corner */
@@ -2003,7 +1973,6 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
   .nb-moon { width: 14px; height: 14px; margin: -7px 0 0 -7px; }
   .night-wrap .progress { width: 190px; height: 12px; }
   .night-wrap .progress span { font-size: 0.56em; line-height: 10px; }
-  .canh-banner { font-size: 0.72em; padding: 4px 10px; }
 }
 
 /* lobby: icon-only copy-link + corner tools (guide / settings) beside the chat button */
@@ -2241,29 +2210,69 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 }
 
 /* ================= sabotage (common; names + icons from skin.sabotage) */
-.sab-alert { position: fixed; top: calc(var(--hud-top-h, 70px) + 52px); left: 50%; transform: translateX(-50%); z-index: 41; display: flex; gap: 10px; align-items: center; padding: 6px 14px 6px 8px; max-width: min(460px, 92vw); border-radius: 12px; border: 2px solid #ff7a52; background: linear-gradient(#6a1410e6, #2a0806e6); color: #fff0d8; text-shadow: 0 1px 2px #000; box-shadow: 0 0 0 0 #ff5a3c88, 0 6px 16px #0007; animation: sabIn 0.35s ease-out, sabGlow 1.4s ease-in-out infinite; pointer-events: none; }
-.sab-alert img, .sab-alert .sab-glyph { width: 36px; height: 36px; flex: none; font-size: 28px; line-height: 36px; text-align: center; }
-.sab-alert div { display: flex; flex-direction: column; font-size: 0.82em; line-height: 1.3; }
-.sab-alert b { color: #ffd27a; font-size: 1.05em; letter-spacing: 0.02em; }
-.sab-alert > span:last-child, .sab-alert .digits { font-size: 1.6em; font-weight: 900; font-variant-numeric: tabular-nums; color: #fff; }
-.sab-alert.blind { border-color: #ffe7a8; background: linear-gradient(#8a5a10e6, #3a2206e6); animation: sabIn 0.35s ease-out; }
-.sab-alert.urgent { animation: sabIn 0.35s ease-out, sabGlow 0.5s ease-in-out infinite; }
-@keyframes sabIn { from { opacity: 0; transform: translate(-50%, -12px) scale(0.92); } }
-@keyframes sabGlow { 50% { box-shadow: 0 0 0 6px #ff5a3c33, 0 6px 16px #0007; } }
-/* narrow screens: center in the space right of the tasks panel instead of over it */
-@keyframes sabInFlat { from { opacity: 0; transform: translateY(-12px) scale(0.92); } }
-@media (max-width: 1100px) {
-  .sab-alert { left: 244px; right: 12px; width: max-content; margin: 0 auto; transform: none; animation-name: sabInFlat, sabGlow; }
-  .sab-alert.blind { animation-name: sabInFlat; }
-  .sab-alert.urgent { animation-name: sabInFlat, sabGlow; }
+/* ---------- HUD notices (drum of the night watch, sabotage): one centred column under the top HUD.
+   Lacquer plaque with a gilt hairline, a round medallion for the icon, an optional timer on the right. */
+.hud-notices { position: fixed; top: calc(var(--hud-top-h, 70px) + 8px); left: 12px; right: 12px; z-index: 41; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+.notice {
+  --accent: #d9a441; --glow: #ffd27a;
+  position: relative; display: flex; align-items: center; gap: 10px; max-width: min(460px, 100%); padding: 6px 16px 6px 6px;
+  border-radius: 999px; border: 1.5px solid color-mix(in srgb, var(--accent) 80%, transparent);
+  background: linear-gradient(180deg, #2c1a10f2, #160c07f2);
+  box-shadow: inset 0 0 0 1px #00000080, inset 0 1px 0 #ffe9b026, 0 8px 20px #0009;
+  color: #fff3dc; text-shadow: 0 1px 2px #000;
 }
+/* gilt hairline along the top edge */
+.notice::before { content: ''; position: absolute; left: 22px; right: 22px; top: -1px; height: 1px; background: linear-gradient(90deg, transparent, var(--glow), transparent); opacity: 0.8; }
+.notice-ico {
+  flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--accent) 45%, #2a0c08), #1a0a06 75%);
+  border: 1.5px solid var(--accent); box-shadow: 0 0 10px color-mix(in srgb, var(--glow) 45%, transparent), inset 0 0 6px #000a;
+}
+.notice-ico img { width: 72%; height: 72%; object-fit: contain; }
+.notice-ico .sab-glyph { font-size: 22px; line-height: 1; }
+.notice-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; font-size: 0.8em; line-height: 1.3; }
+.notice-body > b { color: var(--glow); font-size: 0.92em; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.notice-body > span { font-weight: 600; text-wrap: balance; }
+.notice-timer { flex: none; align-self: stretch; display: grid; place-items: center; margin-left: 4px; padding-left: 12px; border-left: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); font-size: 1.5em; font-weight: 900; font-variant-numeric: tabular-nums; color: #fff; }
+
+/* drum banner: canh pips as the eyebrow, fades out on its own */
+.canh-banner { animation: noticeIn 0.4s cubic-bezier(0.2, 1.3, 0.4, 1), noticeOut 0.6s 4.6s ease-in forwards; }
+.canh-banner .notice-ico img { animation: canhDrum 0.38s 2; }
+.canh-pips { display: flex; gap: 5px; padding: 2px 0; }
+.canh-pips i { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--accent); }
+.canh-pips i.on { background: var(--glow); border-color: var(--glow); box-shadow: 0 0 6px var(--glow); }
+.canh-banner.dawn { --accent: #e2584a; --glow: #ffb08a; }
+@keyframes canhDrum { 50% { transform: scale(1.18) rotate(-6deg); } }
+
+/* sabotage: crimson for the broken seal (with countdown), amber flash for blind */
+.sab-alert { --accent: #ff7a52; --glow: #ffc27a; animation: noticeIn 0.35s cubic-bezier(0.2, 1.3, 0.4, 1), sabGlow 1.4s ease-in-out infinite; }
+.sab-alert.ward { background: linear-gradient(180deg, #4a120cf2, #1e0705f2); }
+.sab-alert.blind { --accent: #f1c75a; --glow: #ffe7a8; animation: noticeIn 0.35s cubic-bezier(0.2, 1.3, 0.4, 1); }
+.sab-alert.urgent { animation: noticeIn 0.35s ease-out, sabGlow 0.5s ease-in-out infinite; }
+.sab-alert.urgent .notice-timer { color: #ffb4a0; }
+@keyframes noticeIn { from { opacity: 0; transform: translateY(-10px) scale(0.94); } }
+@keyframes noticeOut { to { opacity: 0; transform: translateY(-6px); } }
+@keyframes sabGlow { 50% { box-shadow: inset 0 0 0 1px #00000080, 0 0 0 4px #ff5a3c33, 0 0 18px #ff5a3c66, 0 8px 20px #0009; } }
+@media (prefers-reduced-motion: reduce) { .notice, .notice-ico img { animation-duration: 0.01s !important; animation-iteration-count: 1 !important; } }
+/* phones: same margin both sides (clears the minimap on the left, the role / clock column on the right) so it stays centred */
+@media (max-width: 760px), (max-height: 560px) {
+  .hud-notices { left: 170px; right: 170px; gap: 4px; }
+  .notice { gap: 7px; padding: 3px 12px 3px 3px; }
+  .notice::before { left: 16px; right: 16px; }
+  .notice-ico { width: 28px; height: 28px; }
+  .notice-ico .sab-glyph { font-size: 16px; }
+  .notice-body { font-size: 0.66em; line-height: 1.25; }
+  .canh-pips { gap: 4px; padding: 1px 0; }
+  .canh-pips i { width: 5px; height: 5px; border-width: 1px; }
+  .notice-timer { font-size: 1.15em; padding-left: 8px; margin-left: 2px; }
+}
+@media (max-height: 560px) { .hud-notices { top: calc(var(--hud-top-h, 70px) + 4px); } }
 .sab-wrap { position: relative; }
-.round-btn.sab { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #6a1d14, #26100b 70%); border: 3px solid #c58b26; box-shadow: 0 5px 8px #0008; }
+.round-btn.sab { --rim: 3px; --rim-c: #c58b26; width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #6a1d14, #26100b 70%); border: 0; box-shadow: inset 0 0 0 var(--rim) var(--rim-c), 0 5px 8px #0008; }
 .round-btn.sab img, .round-btn.sab .sab-glyph { width: 62%; height: 62%; font-size: 36px; line-height: 1; display: grid; place-items: center; }
 .round-btn.sab em { border-color: #c58b26; }
-.round-btn.sab.ready { animation: killReadyRound 1.2s infinite alternate; border-color: #ffb347; }
+.round-btn.sab.ready { animation: killReadyRound 1.2s infinite alternate; --rim-c: #ffb347; }
 .round-btn.sab:disabled { filter: grayscale(0.7) brightness(0.7); }
-.round-btn.sab .cd-ring { position: absolute; inset: -3px; }
 .sab-menu { position: absolute; right: 0; bottom: calc(100% + 14px); display: flex; flex-direction: column; gap: 6px; min-width: 250px; padding: 8px; border-radius: 12px; background: rgba(27, 18, 13, 0.96); border: 2px solid #c58b26; box-shadow: 0 8px 20px #000a; animation: pop 0.15s ease-out; z-index: 5; }
 .sab-menu button { display: flex; gap: 10px; align-items: center; text-align: left; padding: 6px 10px 6px 6px; border-radius: 8px; border: 1px solid #5a3e2a; background: #3a2416; color: var(--paper); cursor: pointer; }
 .sab-menu button:hover { background: #5a2a18; border-color: #ff7a52; }
@@ -2284,9 +2293,6 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 .mv-ward-dot { fill: #f3efe0; stroke: #d23a2a; stroke-width: 0.18; }
 .end-reason.sabotage img { width: 40px; height: 40px; vertical-align: middle; margin-right: 6px; }
 @media (max-height: 560px) {
-  .sab-alert { top: 54px; left: 300px; padding: 4px 10px 4px 6px; max-width: min(380px, calc(100vw - 312px)); }
-  .sab-alert img, .sab-alert .sab-glyph { width: 26px; height: 26px; font-size: 20px; line-height: 26px; }
-  .sab-alert div { font-size: 0.7em; }
   .round-btn.sab { width: 64px; height: 64px; }
   .sab-menu { min-width: 220px; font-size: 0.85em; }
 }
@@ -2513,11 +2519,12 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
 .action-bar.cluster .slot-main, .action-bar.cluster .slot-main .round-btn { width: var(--main); height: var(--main); }
 .action-bar.cluster .slot-main { right: 0; bottom: 0; }
 .action-bar.cluster .slot-top { right: 0; bottom: calc(var(--main) + var(--gap) + 8px); }
-.action-bar.cluster .slot-left { right: calc(var(--main) + var(--gap)); bottom: 0; }
+/* sabotage: vertically centred on the main button */
+.action-bar.cluster .slot-left { right: calc(var(--main) + var(--gap)); bottom: calc((var(--main) - var(--sm)) / 2); }
 .action-bar.cluster .slot-diag { right: calc(var(--main) * 0.5 + (var(--main) * 0.5 + var(--sm) * 0.5 + var(--gap)) * 0.707 - var(--sm) * 0.5); bottom: calc(var(--main) * 0.5 + (var(--main) * 0.5 + var(--sm) * 0.5 + var(--gap)) * 0.707 - var(--sm) * 0.5); }
 .action-bar.cluster :is(.slot-top, .slot-left, .slot-diag) em, .action-bar.cluster .slot-left .round-btn em { font-size: 0.6em; padding: 0 6px; bottom: -8px; border-width: 1.5px; }
 .action-bar.cluster :is(.slot-top, .slot-left, .slot-diag) .cd, .action-bar.cluster .slot-left .round-btn .cd { font-size: 1.3em; }
-.action-bar.cluster .slot-left .round-btn.sab { border-width: 2px; }
+.action-bar.cluster .slot-left .round-btn.sab { --rim: 2px; }
 @media (pointer: coarse) { .action-bar.cluster { --main: 96px; --sm: 60px; --gap: 10px; } }
 @media (max-height: 560px) { .action-bar.cluster { --main: 84px; --sm: 52px; --gap: 8px; bottom: max(14px, env(safe-area-inset-bottom)); } }
 @media (max-height: 400px) { .action-bar.cluster { --main: 74px; --sm: 46px; } }
@@ -2535,9 +2542,6 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
   .task-chip-dock .task-chip { padding: 2px 10px 2px 3px; }
   .task-chip-dock .task-chip img { width: 24px; height: 24px; }
   .toasts { top: 112px; }
-  /* the role card sits right under the counter: keep it one row even on ≤640px phones */
-  .alive-count { flex-direction: row; border-radius: 999px; }
-  .alive-count .ac-sep { width: 1px; height: 14px; }
   /* the list opens as a full, centred popup — the old corner drop-down was too small to read */
   .task-pop-backdrop.modal-backdrop { place-items: center; background: rgba(10, 6, 3, 0.7); }
   .task-pop-backdrop > .task-list.task-pop {
@@ -2618,11 +2622,11 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
 /* ---------- phones: night clock (canh · time left) moved from the top strip into the right column, under the role card */
 @media (pointer: coarse) {
   :root { --hud-top-h: calc(36px + var(--plate-w) * 0.172); }
-  .task-chip-dock { top: 72px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .task-chip-dock { top: 50px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
   .task-chip-dock .night-wrap { align-items: flex-end; }
   .task-chip-dock .night-clock { font-size: 0.7em; padding: 1px 8px 1px 3px; gap: 5px; }
   .task-chip-dock .night-clock img { width: 16px; height: 16px; }
-  .toasts { top: 140px; }
+  .toasts { top: 118px; }
 }
 
 /* ---------- Cửu Đỉnh (dust wiping) on phones: urn as tall as the play area, target scroll beside it */
@@ -2714,9 +2718,8 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
 .hud-settings img { width: 100%; height: 100%; display: block; transition: transform 0.4s ease; }
 .hud-settings:hover img { transform: rotate(45deg); }
 .hud-settings:active { transform: scale(0.92); }
-.hud-settings ~ .alive-count { right: calc(max(8px, env(safe-area-inset-right)) + 52px); }
-@media (pointer: coarse) { .hud-settings { width: 40px; height: 40px; } .hud-settings ~ .alive-count { right: calc(max(8px, env(safe-area-inset-right)) + 48px); } }
-/* the cog stays reachable over the meeting, but task popups / the end screen cover it (their close buttons sit in the same corner) */
+@media (pointer: coarse) { .hud-settings { width: 40px; height: 40px; } }
+/* desktop: the cog stays reachable over the meeting (phones hide it there — Hud), but task popups / the end screen cover it (their close buttons sit in the same corner) */
 .hud-settings { z-index: 15; }
 .settings-backdrop:has(.game-settings) { z-index: 40; }
 .home-corner { display: flex; align-items: center; gap: 8px; }
@@ -3061,7 +3064,8 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
 
 /* ---------- always-on ping readout (bottom-left, click-through) */
 .ping-badge {
-  position: absolute; left: calc(6px + env(safe-area-inset-left)); bottom: calc(3px + env(safe-area-inset-bottom)); z-index: 60;
+  /* tucked into the very corner: ignore the bottom safe-area (home bar) — it is click-through text, not a control */
+  position: absolute; left: max(4px, env(safe-area-inset-left)); bottom: 1px; z-index: 60;
   display: inline-flex; align-items: center; gap: 4px; pointer-events: none; user-select: none;
   font: 600 10px/1 ui-monospace, monospace; font-variant-numeric: tabular-nums; color: rgba(240, 228, 205, 0.6);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);

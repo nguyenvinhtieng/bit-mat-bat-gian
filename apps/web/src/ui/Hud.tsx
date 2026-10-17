@@ -98,13 +98,19 @@ function SabotageAlert() {
   const area = room.sabotageArea ? skin.areas[room.sabotageArea as AreaId] : null;
   const text = (en ? sk.alert.en : sk.alert.vi).replace('{area}', area ? (en ? area.nameEn : area.name) : '');
   return (
-    <div className={`sab-alert ${kind} ${kind === 'ward' && (left ?? 99) <= 10 ? 'urgent' : ''}`} role="alert" key={room.sabotageEndsAt}>
-      <SabIcon kind={kind} size={36} />
-      <div>
+    <div className={`notice sab-alert ${kind} ${kind === 'ward' && (left ?? 99) <= 10 ? 'urgent' : ''}`} role="alert" key={room.sabotageEndsAt}>
+      <span className="notice-ico">
+        <SabIcon kind={kind} size={36} />
+      </span>
+      <div className="notice-body">
         <b>{en ? sk.name.en : sk.name.vi}</b>
         <span>{text}</span>
       </div>
-      {kind === 'ward' && left != null && <Digits text={fmt(left)} />}
+      {kind === 'ward' && left != null && (
+        <span className="notice-timer">
+          <Digits text={fmt(left)} />
+        </span>
+      )}
     </div>
   );
 }
@@ -213,10 +219,12 @@ const canh = useStore((s) => s.canh);
   }, [canh?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!canh || !show) return null;
   return (
-    <div className={`canh-banner ${canh.n > GAME.canhCount ? 'dawn' : ''}`} key={canh.id}>
-      <img src={asset(`${skin.art.clockIcon}.webp`)} alt="" />
-      <div>
-        <b>
+    <div className={`notice canh-banner ${canh.n > GAME.canhCount ? 'dawn' : ''}`} key={canh.id}>
+      <span className="notice-ico">
+        <img src={asset(`${skin.art.clockIcon}.webp`)} alt="" />
+      </span>
+      <div className="notice-body">
+        <b className="canh-pips">
           {Array.from({ length: GAME.canhCount }, (_, i) => (
             <i key={i} className={i < canh.n ? 'on' : ''} />
           ))}
@@ -455,8 +463,13 @@ const room = useStore((s) => s.room)!;
 
   return (
     <>
-      {inGame && <CanhBanner />}
-      {inGame && <SabotageAlert />}
+      {/* drum / sabotage notices share one centred column under the top HUD so they never overlap */}
+      {inGame && (
+        <div className="hud-notices">
+          <CanhBanner />
+          <SabotageAlert />
+        </div>
+      )}
       {/* top centre: the (small) location plate on top, night clock + progress under it */}
       <div className="hud-top">
         {area && (
@@ -474,24 +487,8 @@ const room = useStore((s) => s.room)!;
         )}
       </div>
       {/* the end screen has its own leave button; the cog would sit on top of its corner */}
-      {room.phase !== 'ended' && <GameSettings />}
-      {/* top right: who is still standing */}
-      {inGame && room.phase !== 'ended' && room.crewAlive + room.killersAlive > 0 && (
-        <div className="alive-count" title={t('aliveTitle')}>
-          <span className="ac crew" key={`c${room.crewAlive}`}>
-            <img src={asset('common/ui/count-crew.webp')} alt="" draggable={false} />
-            <b>{room.crewAlive}</b>
-            <small>{t('crewAlive')}</small>
-          </span>
-          <i className="ac-sep" aria-hidden />
-          <span className="ac killer" key={`k${room.killersAlive}`}>
-            <img src={asset('common/ui/count-killer.webp')} alt="" draggable={false} />
-            <b>{room.killersAlive}</b>
-            <small>{t('killersAlive')}</small>
-          </span>
-        </div>
-      )}
-
+      {/* phones: hidden over the meeting, where the corner cog covered the vote timer */}
+      {room.phase !== 'ended' && !(touch && (room.phase === 'meeting' || room.phase === 'reveal')) && <GameSettings />}
       {me && inGame && <GhostNotice dead={!alive} crew={me.faction === 'crew'} />}
 
       {me && inGame && (
