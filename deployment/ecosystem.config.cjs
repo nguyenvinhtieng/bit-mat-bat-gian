@@ -21,10 +21,12 @@ module.exports = {
   apps: [
     {
       name: 'hidden-truth',
-      cwd: appDir,
+      // cwd must be apps/server: tsx reads tsconfig.json from the cwd, and only the server's enables
+      // experimentalDecorators (without it @colyseus/schema's @type crashes on startup)
+      cwd: path.join(appDir, 'apps/server'),
       // run node directly (not pnpm → tsx → node): PM2 then owns the real server process, so a reload
       // actually stops the old one instead of leaving it holding the port and serving stale code
-      script: 'apps/server/src/index.ts',
+      script: 'src/index.ts',
       interpreter: 'node',
       node_args: '--import tsx',
       kill_timeout: 5000,
