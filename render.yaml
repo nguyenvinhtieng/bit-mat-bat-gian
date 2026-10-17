@@ -11,3 +11,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "22"
+      # Cloudflare TURN for voice — secrets, set in the Render dashboard (sync: false = never in git)
+      - key: CF_TURN_KEY_ID
+        sync: false
+      - key: CF_TURN_API_TOKEN
+        sync: false

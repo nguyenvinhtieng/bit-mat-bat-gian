@@ -52,7 +52,7 @@ if [[ -z "${SECRET}" ]]; then
   echo "TURN_SECRET=${SECRET}" >>"${ENV_FILE}"
 fi
 sed -i '/^TURN_HOST=/d;/^TURN_TLS_HOST=/d' "${ENV_FILE}"
-echo "TURN_HOST=${PUBLIC_IP}" >>"${ENV_FILE}"
+echo "TURN_HOST=${TURN_DOMAIN:-${PUBLIC_IP}}" >>"${ENV_FILE}"
 [[ -n "${TURN_DOMAIN}" ]] && echo "TURN_TLS_HOST=${TURN_DOMAIN}" >>"${ENV_FILE}"
 chown --reference="${APP_DIR}" "${ENV_FILE}"
 chmod 600 "${ENV_FILE}"
@@ -103,7 +103,8 @@ denied-peer-ip=127.0.0.0-127.255.255.255
 denied-peer-ip=169.254.0.0-169.254.255.255
 denied-peer-ip=172.16.0.0-172.31.255.255
 denied-peer-ip=192.168.0.0-192.168.255.255
-total-quota=200
+# one allocation per relayed peer connection (mesh: up to 9 per player); the 16k relay ports cap it anyway
+total-quota=4000
 bps-capacity=0
 stale-nonce=600
 log-file=syslog

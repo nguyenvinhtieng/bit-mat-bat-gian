@@ -34,7 +34,8 @@ module.exports = {
       instances: 1,
       exec_mode: 'fork',
       autorestart: true,
-      max_memory_restart: '512M',
+      // a restart drops every live room, so keep this well above normal use (~2-5 MB per room)
+      max_memory_restart: '1536M',
       merge_logs: true,
       time: true,
     },

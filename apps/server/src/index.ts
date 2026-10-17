@@ -41,15 +41,48 @@ function iceServers(): RTCIceServerJson[] {
   return [STUN, { urls, username, credential }];
 }
 
+/**
+ * Cloudflare Realtime TURN (anycast, offers turns:443) takes precedence when CF_TURN_KEY_ID +
+ * CF_TURN_API_TOKEN are set. Credentials are minted per TTL and cached; on API failure we fall back
+ * to coturn/STUN above. Port-53 URLs are dropped since browsers block or stall on them.
+ */
+let cfCache: { servers: RTCIceServerJson[]; until: number } | null = null;
+async function cloudflareIce(): Promise<RTCIceServerJson[] | null> {
+  const keyId = process.env.CF_TURN_KEY_ID;
+  const token = process.env.CF_TURN_API_TOKEN;
+  if (!keyId || !token) return null;
+  if (cfCache && Date.now() < cfCache.until) return cfCache.servers;
+  try {
+    const r = await fetch(`https://rtc.live.cloudflare.com/v1/turn/keys/${keyId}/credentials/generate-ice-servers`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ttl: TURN_TTL_S }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!r.ok) throw new Error(`cloudflare turn ${r.status}`);
+    const j = (await r.json()) as { iceServers: RTCIceServerJson | RTCIceServerJson[] };
+    const servers = [j.iceServers]
+      .flat()
+      .map((s) => ({ ...s, urls: [s.urls].flat().filter((u) => !/:53(\?|$)/.test(u)) }))
+      .filter((s) => s.urls.length);
+    // re-mint at half-life so clients (which refresh at ttl/2) never get nearly-expired creds
+    cfCache = { servers, until: Date.now() + TURN_TTL_S * 500 };
+    return servers;
+  } catch (e) {
+    console.warn('[ice] cloudflare TURN unavailable, falling back:', (e as Error).message);
+    return null;
+  }
+}
+
 const app = express();
 app.set('trust proxy', true); // behind nginx / Caddy / platform proxies
 app.use(cors({ origin: (origin, cb) => cb(null, originOk(origin)) }));
 app.use(express.json());
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
-app.get('/ice', (_req, res) => {
+app.get('/ice', async (_req, res) => {
   res.set('Cache-Control', 'no-store');
-  res.json({ iceServers: iceServers(), ttl: TURN_TTL_S });
+  res.json({ iceServers: (await cloudflareIce()) ?? iceServers(), ttl: TURN_TTL_S });
 });
 // quick-match: a public lobby with free seats; ?exclude=ID1,ID2 skips rooms that just refused the client,
 // ?avoid=ID3 deprioritises rooms the client left before
