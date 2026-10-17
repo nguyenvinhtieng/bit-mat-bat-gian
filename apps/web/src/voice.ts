@@ -19,7 +19,8 @@ let iceExpires = 0;
 let iceLoading: Promise<void> | null = null;
 function loadIce(): Promise<void> {
   if (Date.now() < iceExpires) return Promise.resolve();
-  iceLoading ??= fetch(`${httpBase()}/ice`)
+  // bounded: connections wait on this, a hung server must not stall voice (falls back to STUN)
+  iceLoading ??= fetch(`${httpBase()}/ice`, { signal: AbortSignal.timeout(4000) })
     .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
     .then((j: { iceServers?: RTCIceServer[]; ttl?: number }) => {
       if (j.iceServers?.length) ICE = j.iceServers;
@@ -121,6 +122,8 @@ async function onSignal({ from, data }: { from: string; data: VoiceSignal }) {
   try {
     if ('sdp' in data) {
       if (data.sdp.type === 'offer') {
+        await loadIce(); // answer with the TURN relay too, not just the STUN fallback
+        if (!room) return;
         const cur = peers.get(from);
         // glare: both offered at once -> the lower id keeps its own offer
         if (cur?.pc.signalingState === 'have-local-offer' && myId < from) return;
@@ -264,17 +267,23 @@ export function initVoice() {
   if (started || typeof RTCPeerConnection === 'undefined') return;
   started = true;
   void loadIce();
-  onRoom((r) => {
-    void loadIce(); // credentials may have expired on a long session
+  onRoom(async (r) => {
     teardown();
     room = r;
     myId = r.sessionId;
-    fresh = true;
     r.send('voice:mic', { on: false }); // a resumed seat may still say "mic on"
-    r.onMessage('voice:signal', onSignal);
+    // one at a time, in order: an offer may wait on loadIce() and its ICE candidates must not overtake it
+    let signals = Promise.resolve();
+    r.onMessage('voice:signal', (m: { from: string; data: VoiceSignal }) => {
+      signals = signals.then(() => onSignal(m));
+    });
     r.onLeave(() => {
       if (room === r) teardown();
     });
+    // build the first connections with the TURN relay already in hand (credentials may also have expired)
+    await loadIce();
+    if (room !== r) return;
+    fresh = true;
     sync();
   });
   useStore.subscribe((s, prev) => {
