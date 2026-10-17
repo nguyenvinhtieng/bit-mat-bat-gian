@@ -19,6 +19,8 @@ export type PlayerView = {
   body: boolean;
   bodyX: number;
   bodyY: number;
+  /** voice chat: microphone on */
+  micOn: boolean;
 };
 
 export type RoomView = {

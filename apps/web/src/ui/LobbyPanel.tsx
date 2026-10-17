@@ -185,6 +185,11 @@ function PlayersModal({ isHost, onClose }: { isHost: boolean; onClose: () => voi
                 {p.name}
                 {p.id === sessionId && <em className="pme"> ({t('you')})</em>}
               </span>
+              {p.micOn && (
+                <span className="ptag mic" title="Micro">
+                  🎙
+                </span>
+              )}
               {p.id === room.hostId && (
                 <span className="ptag host" title={t('host')}>
                   👑

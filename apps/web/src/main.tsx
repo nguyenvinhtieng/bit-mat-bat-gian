@@ -7,6 +7,7 @@ import { AssetGate } from './ui/Preloader';
 import { MobileShell } from './ui/MobileShell';
 import { registerAssetWorker } from './preload';
 import { AdminStats } from './ui/AdminStats';
+import { initVoice } from './voice';
 
 // dev-only hooks for automated visual checks (tools/smoke)
 if (import.meta.env.DEV) Object.assign(window, { __store: useStore, __net: net });
@@ -18,6 +19,7 @@ if (/^\/admin\/?$/.test(location.pathname)) {
   root.render(<AdminStats />);
 } else {
   registerAssetWorker();
+  initVoice();
   root.render(
     <>
       <AssetGate>

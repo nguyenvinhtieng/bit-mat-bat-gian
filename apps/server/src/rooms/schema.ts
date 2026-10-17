@@ -23,6 +23,8 @@ export class Player extends Schema {
   @type('boolean') body = false;
   @type('float64') bodyX = 0;
   @type('float64') bodyY = 0;
+  /** voice chat: microphone switched on */
+  @type('boolean') micOn = false;
 }
 
 export class GameState extends Schema {

@@ -202,6 +202,18 @@ export class GameRoom extends Room<GameState> {
 
     this.onMessage('ping', (client, t: number) => client.send('pong', t));
 
+    // voice chat: peer-to-peer WebRTC; the server only relays the handshake between two players of this room
+    this.onMessage('voice:signal', (client, msg: { to?: unknown; data?: unknown }) => {
+      const to = typeof msg?.to === 'string' ? msg.to : '';
+      if (!to || to === client.sessionId || !this.state.players.has(client.sessionId) || !this.state.players.has(to)) return;
+      if (!msg.data || typeof msg.data !== 'object' || JSON.stringify(msg.data).length > 16_000) return;
+      this.clients.getById(to)?.send('voice:signal', { from: client.sessionId, data: msg.data });
+    });
+    this.onMessage('voice:mic', (client, msg: { on?: unknown }) => {
+      const p = this.state.players.get(client.sessionId);
+      if (p) p.micOn = msg?.on === true;
+    });
+
     this.onMessage('ready', (client, msg: { ready: boolean }) => {
       this.lastActive.set(client.sessionId, Date.now());
       const p = this.state.players.get(client.sessionId);

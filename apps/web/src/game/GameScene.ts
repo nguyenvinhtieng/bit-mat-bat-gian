@@ -24,6 +24,7 @@ import {
   type TaskId,
 } from '@hidden-truth/shared';
 import { fix, onRoom, room, send } from '../net';
+import { setVoiceProbe } from '../voice';
 import { KILLER_NAME_COLOR, uiBlocksMovement, useStore, type Nearby } from '../store';
 
 const NAME_COLOR = '#fff8e8';
@@ -202,6 +203,15 @@ export class GameScene extends Phaser.Scene {
     this.unbind.push(useStore.subscribe((s) => this.lobbyKeyOf(s.room) !== this.lobbyKey && this.refreshNameColors()));
     this.unbind.push(useStore.subscribe((s, prev) => (s.room?.sabotage ?? '') !== (prev.room?.sabotage ?? '') && this.onSabotage(s.room?.sabotage ?? '')));
     this.unbind.push(useStore.subscribe((s, prev) => (s.me?.completedTasks !== prev.me?.completedTasks || s.me?.tasks !== prev.me?.tasks) && this.refreshStations()));
+    // proximity voice: how far / whether in sight each speaker is for us (same sight rule as the fog)
+    setVoiceProbe((id) => {
+      const av = this.avatars.get(id);
+      if (!av) return null;
+      const at = { x: av.c.x, y: av.c.y };
+      const radius = GAME.sightRadius * this.vis;
+      return { dist: dist(this.pred, at), seen: canSeePoint(this.grid, this.pred, at, radius), radius };
+    });
+    this.unbind.push(() => setVoiceProbe(null));
     this.events.once('shutdown', () => this.unbind.forEach((u) => u()));
   }
 

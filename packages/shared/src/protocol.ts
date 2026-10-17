@@ -33,7 +33,13 @@ export type ClientMessages = {
   'host:map': { map: string };
   /** lobby only: public = listed for quick-match, private = invite code only */
   'host:visibility': { public: boolean };
+  /** voice chat: WebRTC offer/answer/ICE for one peer (relayed as-is to `to`) */
+  'voice:signal': { to: string; data: VoiceSignal };
+  'voice:mic': { on: boolean };
 };
+
+/** voice:signal payload; the server relays it to the peer as `{ from, data }` */
+export type VoiceSignal = { sdp: { type: 'offer' | 'answer'; sdp: string } } | { ice: { candidate: string; sdpMid?: string | null; sdpMLineIndex?: number | null } };
 
 /** Server -> client (private, only to the owner) */
 export type PrivateInfo = {

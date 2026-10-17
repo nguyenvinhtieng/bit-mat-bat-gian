@@ -46,6 +46,7 @@ import { useLang, useT } from '../i18n';
 import { CloseButton, Digits, Icon, RoleBadge, asset, fmt, tapProps, useCountdown, useSkin, useWardSpot } from './common';
 import { MapView } from './MapView';
 import { GameSettings } from './GameSetting';
+import { VoiceControls } from './VoiceControls';
 import { isTouchDevice } from './Joystick';
 
 /** Sweeping ring over a round button: fills clockwise from 0 to 100% while the cooldown runs (pure CSS animation, no re-render). */
@@ -488,7 +489,12 @@ const room = useStore((s) => s.room)!;
       </div>
       {/* the end screen has its own leave button; the cog would sit on top of its corner */}
       {/* phones: hidden over the meeting, where the corner cog covered the vote timer */}
-      {room.phase !== 'ended' && !(touch && (room.phase === 'meeting' || room.phase === 'reveal')) && <GameSettings />}
+      {room.phase !== 'ended' && !(touch && (room.phase === 'meeting' || room.phase === 'reveal')) && (
+        <>
+          <VoiceControls />
+          <GameSettings />
+        </>
+      )}
       {me && inGame && <GhostNotice dead={!alive} crew={me.faction === 'crew'} />}
 
       {me && inGame && (

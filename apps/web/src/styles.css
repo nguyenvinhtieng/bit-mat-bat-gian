@@ -1959,6 +1959,7 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
   .role-card strong { font-size: 0.74em; }
   /* keep the role chip clear of the settings cog in the top-right corner */
   .hud-settings ~ .role-card { right: calc(max(8px, env(safe-area-inset-right)) + 48px); }
+  .hud-voice ~ .role-card { right: calc(max(8px, env(safe-area-inset-right)) + 128px); }
   /* tasks: icon + count chip, the list opens as a popup */
   .task-pop-backdrop { z-index: 30; background: rgba(10, 6, 3, 0.45); }
   .task-list.task-pop { width: min(360px, 86vw); min-width: 0; max-width: none; max-height: 82vh; overflow: auto; padding: 10px 14px; animation: popIn 0.18s; }
@@ -3075,3 +3076,24 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
 .ping-badge.ok i { background: #f2c14e; }
 .ping-badge.bad i { background: #ff6b55; }
 .ping-badge.bad { color: #ffb3a3; }
+
+/* ---------- voice chat: mic + speaker toggles, left of the settings cog */
+.hud-voice {
+  position: absolute; top: 6px; right: calc(max(8px, env(safe-area-inset-right)) + 50px); z-index: 15;
+  display: flex; gap: 6px;
+}
+.voice-btn {
+  width: 40px; height: 40px; padding: 8px; border-radius: 50%; cursor: pointer;
+  border: 2px solid var(--ochre-d); background: radial-gradient(circle at 35% 30%, #5a3a26, #2a190d);
+  color: var(--ochre); filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.5)); transition: transform 0.15s, filter 0.15s;
+}
+.voice-btn svg { width: 100%; height: 100%; display: block; }
+.voice-btn.off { color: var(--muted); border-color: #5c4632; }
+.voice-btn.on:first-child { border-color: #6fbf5a; color: #a8e08e; }
+.voice-btn:hover:not(:disabled) { filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.5)) brightness(1.2); }
+.voice-btn:active:not(:disabled) { transform: scale(0.92); }
+.voice-btn:disabled { opacity: 0.6; cursor: wait; }
+@media (pointer: coarse) {
+  .hud-voice { top: 4px; right: calc(max(8px, env(safe-area-inset-right)) + 46px); gap: 4px; }
+  .voice-btn { width: 36px; height: 36px; padding: 7px; }
+}

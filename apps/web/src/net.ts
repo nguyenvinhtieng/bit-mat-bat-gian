@@ -52,6 +52,7 @@ function snapshot(state: any): RoomView {
       body: p.body,
       bodyX: p.bodyX,
       bodyY: p.bodyY,
+      micOn: !!p.micOn,
     }),
   );
   return {

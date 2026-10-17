@@ -7,3 +7,4 @@ export * from './maps/co-do-hue';
 export * from './maps/thang-long';
 export * from './maps/catalog';
 export * from './maps/registry';
+export * from './voice';
