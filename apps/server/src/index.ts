@@ -1,6 +1,7 @@
 import http from 'node:http';
 import path from 'node:path';
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import express from 'express';
 import cors from 'cors';
 import { Server, matchMaker } from '@colyseus/core';
@@ -20,12 +21,36 @@ const PROD = process.env.NODE_ENV === 'production';
 const ALLOWED = new Set([GAME_URL, ...(process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean) ?? [])]);
 const originOk = (origin?: string) => !PROD || !origin || ALLOWED.has(origin);
 
+/**
+ * Voice chat ICE servers. STUN alone fails behind carrier NAT (3G/4G) and UDP-blocking office
+ * networks, so with TURN_SECRET set we also hand out our coturn relay (deployment/coturn/setup.sh)
+ * using its time-limited "TURN REST" credentials: username = expiry:tag, password = HMAC-SHA1(secret).
+ */
+const TURN_TTL_S = 12 * 3600;
+const STUN: RTCIceServerJson = { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] };
+type RTCIceServerJson = { urls: string[]; username?: string; credential?: string };
+function iceServers(): RTCIceServerJson[] {
+  const secret = process.env.TURN_SECRET;
+  const host = process.env.TURN_HOST;
+  if (!secret || !host) return [STUN];
+  const username = `${Math.floor(Date.now() / 1000) + TURN_TTL_S}:voice`;
+  const credential = crypto.createHmac('sha1', secret).update(username).digest('base64');
+  const tls = process.env.TURN_TLS_HOST;
+  const urls = [`turn:${host}:3478?transport=udp`, `turn:${host}:3478?transport=tcp`, `turn:${host}:443?transport=tcp`];
+  if (tls) urls.push(`turns:${tls}:443?transport=tcp`);
+  return [STUN, { urls, username, credential }];
+}
+
 const app = express();
 app.set('trust proxy', true); // behind nginx / Caddy / platform proxies
 app.use(cors({ origin: (origin, cb) => cb(null, originOk(origin)) }));
 app.use(express.json());
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
+app.get('/ice', (_req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json({ iceServers: iceServers(), ttl: TURN_TTL_S });
+});
 // quick-match: a public lobby with free seats; ?exclude=ID1,ID2 skips rooms that just refused the client,
 // ?avoid=ID3 deprioritises rooms the client left before
 app.get('/rooms/find', async (req, res) => {

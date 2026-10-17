@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { Room } from 'colyseus.js';
 import { voiceGain, type VoiceSignal } from '@hidden-truth/shared';
-import { onRoom, send } from './net';
+import { httpBase, onRoom, send } from './net';
 import { useStore } from './store';
 
 /**
@@ -13,7 +13,25 @@ import { useStore } from './store';
  * later offer to it. Two offers crossing each other (glare): the lower session id keeps its own.
  */
 
-const ICE: RTCIceServer[] = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
+/** STUN fallback; loadIce() swaps in the server's list, which adds our TURN relay with short-lived credentials */
+let ICE: RTCIceServer[] = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
+let iceExpires = 0;
+let iceLoading: Promise<void> | null = null;
+function loadIce(): Promise<void> {
+  if (Date.now() < iceExpires) return Promise.resolve();
+  iceLoading ??= fetch(`${httpBase()}/ice`)
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+    .then((j: { iceServers?: RTCIceServer[]; ttl?: number }) => {
+      if (j.iceServers?.length) ICE = j.iceServers;
+      // refresh well before the credentials run out
+      iceExpires = Date.now() + (j.ttl ?? 3600) * 500;
+    })
+    .catch(() => {})
+    .finally(() => {
+      iceLoading = null;
+    });
+  return iceLoading;
+}
 const SPEAKER_KEY = 'tht:speaker';
 const TICK_MS = 100;
 
@@ -245,7 +263,9 @@ let started = false;
 export function initVoice() {
   if (started || typeof RTCPeerConnection === 'undefined') return;
   started = true;
+  void loadIce();
   onRoom((r) => {
+    void loadIce(); // credentials may have expired on a long session
     teardown();
     room = r;
     myId = r.sessionId;
