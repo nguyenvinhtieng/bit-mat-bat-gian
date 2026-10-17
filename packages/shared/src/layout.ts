@@ -87,7 +87,7 @@ const px = (tx: number, ty: number): Point => ({ x: Math.round(tx * TILE), y: Ma
 /** Meeting table centre and 10 spawn slots around it (pixel, feet position). */
 export const MEETING_POINT = px(21, 4);
 export const SPAWNS: Point[] = [
-  px(18, 2.6), px(18, 4.2), px(18, 5.8), px(20, 6.0), px(22, 6.0),
+  px(18, 2.6), px(18, 4.2), px(18, 5.8), px(20, 5.5), px(22, 5.5),
   px(24, 5.8), px(24, 4.2), px(24, 2.6), px(16.4, 4.2), px(25.6, 4.2),
 ];
 
@@ -136,8 +136,9 @@ export function getGrid(): LayoutGrid {
   return (cached ??= buildGrid());
 }
 
-/** Lobby only: the courtyard's one exit (top of the central hall) is gated so everyone waits in the courtyard. */
-export const LOBBY_GATE: Rect = [19, 7, 4, 1];
+/** Lobby only: the courtyard's one exit (top of the central hall) is gated so everyone waits in the courtyard.
+ *  Two rows: the gate art (roof + stone step) reaches a tile into the courtyard, so players must stop in front of it. */
+export const LOBBY_GATE: Rect = [19, 6, 4, 2];
 
 let lobbyCached: LayoutGrid | null = null;
 /** The normal grid with LOBBY_GATE made solid — server and client prediction both use it while phase is 'lobby'. */

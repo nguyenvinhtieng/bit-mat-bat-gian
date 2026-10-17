@@ -534,8 +534,8 @@ export class GameScene extends Phaser.Scene {
 
   /** Closed gate on the courtyard's only exit while the lobby waits (LOBBY_GATE is solid in the lobby grid). */
   private buildLobbyGate() {
-    const [gx, gy, gw] = LOBBY_GATE;
-    const feet = (gy + 1) * TILE - 8;
+    const [gx, gy, gw, gh] = LOBBY_GATE;
+    const feet = (gy + gh) * TILE - 8;
     this.lobbyGate = this.add
       .image((gx + gw / 2) * TILE, feet, 'lobby-gate')
       .setOrigin(0.5, 104 / 108)

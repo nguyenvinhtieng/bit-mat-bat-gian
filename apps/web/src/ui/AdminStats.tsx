@@ -188,11 +188,11 @@ export function AdminStats() {
                 <dl className="admin-meta">
                   <div>
                     <dt>Map</dt>
-                    <dd>{r.map ? mapMeta(r.map).name.vi : '—'}</dd>
+                    <dd title={r.map ? mapMeta(r.map).name.vi : undefined}>{r.map ? mapMeta(r.map).name.vi : '—'}</dd>
                   </div>
                   <div>
                     <dt>Người tạo</dt>
-                    <dd>{r.creator || '—'}</dd>
+                    <dd title={r.creator || undefined}>{r.creator || '—'}</dd>
                   </div>
                   <div>
                     <dt>Đã mở</dt>
