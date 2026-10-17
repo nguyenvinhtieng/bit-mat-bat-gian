@@ -174,3 +174,19 @@ export function hasLineOfSight(g: LayoutGrid, a: Point, b: Point): boolean {
   }
   return true;
 }
+
+/** silhouette sample heights (px above the feet): head, chest, knees */
+const SIGHT_OFFSETS = [30, 18, 6];
+
+/**
+ * Can someone standing at `eye` (feet) see a player standing at `target` (feet)?
+ * Within `radius`, and any of a few rays between the two silhouettes clears the walls —
+ * a single head-to-head ray loses players whose head just grazes a wall corner.
+ */
+export function canSeePoint(g: LayoutGrid, eye: Point, target: Point, radius: number): boolean {
+  if (Math.hypot(target.x - eye.x, target.y - eye.y) > radius) return false;
+  for (const a of SIGHT_OFFSETS)
+    for (const b of SIGHT_OFFSETS)
+      if (hasLineOfSight(g, { x: eye.x, y: eye.y - a }, { x: target.x, y: target.y - b })) return true;
+  return false;
+}

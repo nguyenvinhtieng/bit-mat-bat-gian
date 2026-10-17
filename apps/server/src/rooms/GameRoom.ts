@@ -22,7 +22,7 @@ import {
   dist,
   getGrid,
   getLobbyGrid,
-  hasLineOfSight,
+  canSeePoint,
   clampKillers,
   killersFor,
   MIN_PLAYERS,
@@ -301,8 +301,10 @@ export class GameRoom extends Room<GameState> {
       if (this.state.phase === 'reveal') this.advancePhase();
     });
 
-    this.onMessage('host:restart', (client) => {
-      if (client.sessionId !== this.state.hostId || this.state.phase !== 'ended') return;
+    // the game is over: anyone may head back to the lobby (room code, map and settings stay); the others keep
+    // reading their result screen until they leave it themselves
+    this.onMessage('lobby:return', (client) => {
+      if (this.state.phase !== 'ended' || !this.state.players.has(client.sessionId)) return;
       this.resetToLobby();
     });
 
@@ -677,6 +679,10 @@ export class GameRoom extends Room<GameState> {
         p.body = false;
       }
     }
+    // a whole game (plus the result screen) without walking must not count as lobby-idle -> the AFK kick would
+    // throw everyone out the moment the room is back in the lobby
+    const now = Date.now();
+    for (const id of this.state.players.keys()) this.lastActive.set(id, now);
     this.teleportToSpawns();
     this.setPhase('lobby', 0);
     this.broadcast('private', null);
@@ -835,13 +841,13 @@ export class GameRoom extends Room<GameState> {
 
   /** living crew see less while a `blind` sabotage runs (also bounds who witnesses a kill) */
   private visionRadius() {
-    return GAME.visionRadius * (this.sab.kind === 'blind' ? SABOTAGE.blindVision : 1);
+    return GAME.sightRadius * (this.sab.kind === 'blind' ? SABOTAGE.blindVision : 1);
   }
 
   /** living players (other than the two involved) who can see the target right now */
   private bystanders(actor: Player, target: Player) {
     return [...this.state.players.values()].filter(
-      (w) => w.id !== actor.id && w.id !== target.id && w.alive && dist(w, target) <= this.visionRadius() && hasLineOfSight(grid, { x: w.x, y: w.y - 30 }, { x: target.x, y: target.y - 30 }),
+      (w) => w.id !== actor.id && w.id !== target.id && w.alive && canSeePoint(grid, w, target, this.visionRadius()),
     );
   }
 

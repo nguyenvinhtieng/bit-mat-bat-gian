@@ -6,10 +6,10 @@ import { RoleBadge, asset } from './common';
 export function EndScreen() {
   const end = useStore((s) => s.end);
   const room = useStore((s) => s.room);
-  const sessionId = useStore((s) => s.sessionId);
   if (!end || !room) return null;
   const skin = mapSkin(room.mapSlug);
-  const isHost = room.hostId === sessionId;
+  // the first one to leave the results brings the room back to its lobby; later ones just close their own screen
+  const backToLobby = () => (room.phase === 'ended' ? send('lobby:return', {}) : useStore.getState().set({ end: null }));
   return (
     // the world dims first, then the winning faction's emblem + ribbon rise, then the details
     <div className={`end-screen ${end.winner}`}>
@@ -51,13 +51,9 @@ export function EndScreen() {
         </section>
 
         <div className="end-actions">
-          {isHost ? (
-            <button className="btn primary" onClick={() => send('host:restart', {})}>
-              Về sảnh — chơi ván mới
-            </button>
-          ) : (
-            <span className="muted">Chờ host mở ván mới…</span>
-          )}
+          <button className="btn primary" onClick={backToLobby}>
+            Về sảnh — chơi ván mới
+          </button>
           <button className="btn ghost" onClick={leaveRoom}>
             Rời phòng
           </button>

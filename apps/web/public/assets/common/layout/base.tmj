@@ -3412,7 +3412,7 @@
      "name": "spawn_3",
      "type": "spawn",
      "x": 960,
-     "y": 288,
+     "y": 264,
      "point": true
     },
     {
@@ -3420,7 +3420,7 @@
      "name": "spawn_4",
      "type": "spawn",
      "x": 1056,
-     "y": 288,
+     "y": 264,
      "point": true
     },
     {

@@ -218,7 +218,7 @@ async function main() {
   log('winner', host.end.winner, '-', host.end.reason);
   if (host.end.winner !== 'crew') throw new Error('crew should win after ejecting the only killer');
 
-  host.room.send('host:restart', {});
+  host.room.send('lobby:return', {});
   await until(() => host.room.state.phase === 'lobby', 3000, 'lobby');
   log('back to lobby ✓');
   for (const b of bots) b.room.leave();

@@ -98,6 +98,8 @@ export const GAME = {
   killRange: 84,
   /** how far a living player can see (px); also blocked by walls */
   visionRadius: 264,
+  /** how far other players are actually detected (px) — a bit past the lamp's glow */
+  sightRadius: 330,
   reportRange: 110,
   killCooldownSec: 25,
   firstKillCooldownSec: 15,

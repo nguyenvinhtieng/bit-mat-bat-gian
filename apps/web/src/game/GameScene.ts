@@ -17,7 +17,7 @@ import {
   LOBBY_GATE,
   getGrid,
   getLobbyGrid,
-  hasLineOfSight,
+  canSeePoint,
   mapSkin,
   playerArt,
   stepMovement,
@@ -734,8 +734,7 @@ export class GameScene extends Phaser.Scene {
     const iAmGhost = mine ? !mine.alive : false;
     const lobby = useStore.getState().room?.phase !== 'explore';
     if (iAmGhost || lobby || !mine) return true;
-    const eye = { x: this.pred.x, y: this.pred.y - 30 };
-    return Math.hypot(x - this.pred.x, y - this.pred.y) <= GAME.visionRadius * this.vis && hasLineOfSight(this.grid, eye, { x, y: y - 30 });
+    return canSeePoint(this.grid, this.pred, { x, y }, GAME.sightRadius * this.vis);
   }
 
   /** must match the server: the lobby gate is solid only while phase is 'lobby' */
@@ -933,9 +932,7 @@ export class GameScene extends Phaser.Scene {
     const goal = blind ? SABOTAGE.blindVision : 1;
     this.vis += (goal - this.vis) * Math.min(1, (dtMs / 1000) * (blind ? 10 : 1.6));
     if (Math.abs(goal - this.vis) < 0.002) this.vis = goal;
-    const eye = { x: this.pred.x, y: this.pred.y - 30 };
-    const canSee = (x: number, y: number) =>
-      !limited || (Math.hypot(x - this.pred.x, y - this.pred.y) <= GAME.visionRadius * this.vis && hasLineOfSight(this.grid, eye, { x, y: y - 30 }));
+    const canSee = (x: number, y: number) => !limited || canSeePoint(this.grid, this.pred, { x, y }, GAME.sightRadius * this.vis);
     for (const [id, av] of this.avatars) {
       av.c.setDepth(av.c.y);
       if (id === r.sessionId) av.c.setVisible(true).setAlpha(av.alive ? 1 : 0.5);

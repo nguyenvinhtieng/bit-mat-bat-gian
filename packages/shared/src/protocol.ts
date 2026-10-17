@@ -26,7 +26,8 @@ export type ClientMessages = {
   /** press (on) / release (off) the fix button at the ward spot */
   'sabotage:fix': { on: boolean };
   'host:skip': Record<string, never>;
-  'host:restart': Record<string, never>;
+  /** after the game: anyone may bring the room back to its lobby */
+  'lobby:return': Record<string, never>;
   'host:kick': { target: string };
   /** lobby only: switch the room's map (falls back to the default when not playable) */
   'host:map': { map: string };

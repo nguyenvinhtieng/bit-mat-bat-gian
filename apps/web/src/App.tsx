@@ -36,7 +36,8 @@ export function App() {
         <Hud />
         {phase === 'lobby' && <LobbyPanel />}
         {(phase === 'meeting' || phase === 'reveal') && <Meeting />}
-        {phase === 'ended' && end && <EndScreen />}
+        {/* stays up in the lobby too, until I leave it — someone else may have gone back first */}
+        {(phase === 'ended' || phase === 'lobby') && end && <EndScreen />}
         <TaskModal />
         <IntroModal />
         <Cinematic />

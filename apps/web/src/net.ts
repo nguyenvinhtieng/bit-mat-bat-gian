@@ -117,7 +117,9 @@ function bind(r: Room) {
     const s = useStore.getState();
     if (snap.phase !== lastPhase) {
       if (snap.phase === 'meeting') s.set({ task: null, taskResult: null, voteResult: null });
-      if (snap.phase === 'lobby') s.set({ end: null, me: null, voteResult: null });
+      // the result screen survives the return to the lobby (closed by each player); a new game drops it
+      if (snap.phase === 'lobby') s.set({ me: null, voteResult: null });
+      if (snap.phase === 'explore') s.set({ end: null });
       lastPhase = snap.phase;
     }
     s.set({ room: snap });
