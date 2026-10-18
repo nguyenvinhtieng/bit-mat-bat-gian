@@ -110,7 +110,30 @@ export type TaskData =
   /** tap the phách on the beats (ms from the first beat). Answer: tap times, ms */
   | { taskId: 'task_ca_tru'; prompt: string; beats: number[]; tolerance: number }
   /** steer the puppet across the pond through the marks in order. Answer: { x, y, t }[] (0..1, ms) */
-  | { taskId: 'task_roi_nuoc'; prompt: string; puppet: string; start: Pt; marks: Pt[]; radius: number; speed: number };
+  | { taskId: 'task_roi_nuoc'; prompt: string; puppet: string; start: Pt; marks: Pt[]; radius: number; speed: number }
+  // ---- sai-gon
+  /** read each (self-correcting) passenger line, pick the turn they finally mean. Answer: SgTurn[] in step order */
+  | { taskId: 'task_chi_duong'; prompt: string; passenger: string; steps: { id: string; say: string }[] }
+  /** memorise the order (hidden after memoMs), then pick exactly what goes on the plate. Answer: kind[] */
+  | { taskId: 'task_com_tam'; prompt: string; customer: string; order: string[]; memoMs: number; want: number; tray: { kind: string; name: string }[] }
+  /** learn tonight's signals, then judge each street call as it passes. Answer: Record<callId, 'safe' | 'stranger'> */
+  | { taskId: 'task_tieng_rao'; prompt: string; legend: { text: string; means: 'safe' | 'stranger' }[]; calls: { id: string; text: string }[]; callMs: number }
+  /** wait for the phin to drip through, then pour condensed milk to the line. Answer: { milk } (0..1 of the glass) */
+  | { taskId: 'task_ca_phe_phin'; prompt: string; drips: number; dripMs: number; line: number; tolerance: number }
+  /** hold the nozzle and let go on the target amount. Answer: { holdMs }; the server recomputes the money */
+  | { taskId: 'task_do_xang'; prompt: string; target: number; pricePerLiter: number; litersPerSec: number; tolerance: number }
+  /** turn the tube through the basin, spot where it bubbles, patch every leak. Answer: { patches: sector[] } */
+  | { taskId: 'task_va_vo'; prompt: string; sectors: number; leaks: number[] }
+  /** read the group chat, write each driver's contribution in the ledger. Answer: Record<rowId, amountId> */
+  | { taskId: 'task_so_hui'; prompt: string; rows: { id: string; name: string }[]; messages: { from: string; text: string }[]; amounts: { id: string; label: string }[] }
+  /** sort the loose notes into one stack per value, then report the total. Answer: { stacks: Record<noteId, value>, total } */
+  | { taskId: 'task_dem_tien'; prompt: string; notes: { id: string; value: number }[]; values: number[]; choices: number[] }
+  /** flip the envelopes and pick the highest bid before time runs out. Answer: envelopeId */
+  | { taskId: 'task_khui_hui'; prompt: string; envelopes: { id: string; name: string; bid: string }[]; limitMs: number }
+  /** park every bike in the lot (grid cells, no overlap, off the pillars). Answer: Record<bikeId, { x, y, vertical }> */
+  | { taskId: 'task_xep_xe'; prompt: string; w: number; h: number; blocked: Pt[]; bikes: { id: string; len: number; crab?: boolean }[] };
+
+export type SgTurn = 'trai' | 'phai' | 'thang';
 
 export type Pt = { x: number; y: number };
 /** `hint` = the paired words of a first line, e.g. "Đông ↔ Nam" (helps players who don't know the couplet) */

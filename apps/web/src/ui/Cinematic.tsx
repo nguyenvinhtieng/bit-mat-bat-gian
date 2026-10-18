@@ -34,7 +34,22 @@ function loadImg(src: string) {
   return p;
 }
 
-/** Canvas rendering of the player atlas (48x64 frames, 4 columns); the tint layer is multiplied by the colour and clipped to its own alpha. */
+type Rect = { x: number; y: number; w: number; h: number };
+const frameCache = new Map<string, Promise<Record<string, Rect>>>();
+/** Frame rects of a texture-packer atlas JSON, so maps can ship any frame size/count. */
+function loadFrames(src: string) {
+  let p = frameCache.get(src);
+  if (!p) {
+    p = fetch(src)
+      .then((r) => r.json())
+      .then((j: { frames: Record<string, { frame: Rect }> }) => Object.fromEntries(Object.entries(j.frames).map(([k, v]) => [k, v.frame])))
+      .catch(() => ({}));
+    frameCache.set(src, p);
+  }
+  return p;
+}
+
+/** Canvas rendering of the player atlas (walk-<dir>-<i> frames, size read from its JSON); the tint layer is multiplied by the colour and clipped to its own alpha. */
 export function Sprite({
   color,
   dir = 'down',
@@ -60,18 +75,20 @@ export function Sprite({
     if (!cv) return;
     const ctx = cv.getContext('2d')!;
     const tmp = document.createElement('canvas');
-    tmp.width = 48;
-    tmp.height = 64;
-    Promise.all([loadImg(asset(`${art.atlas}.webp`)), loadImg(asset(`${art.tint}.webp`))]).then(([base, tint]) => {
+    Promise.all([loadImg(asset(`${art.atlas}.webp`)), loadImg(asset(`${art.tint}.webp`)), loadFrames(asset(`${art.atlas}.json`))]).then(([base, tint, fr]) => {
       if (dead) return;
+      const walk: Rect[] = [];
+      for (let i = 0; fr[`walk-${dir}-${i}`]; i++) walk.push(fr[`walk-${dir}-${i}`]);
+      // fallback: legacy 48x64 x4 grid
+      if (!walk.length) for (let i = 0; i < 4; i++) walk.push({ x: i * 48, y: ROW[dir] * 64, w: 48, h: 64 });
       let f = 0;
-      const draw = () => drawTinted(ctx, tmp, base, tint, f * 48, ROW[dir] * 64, hex);
+      const draw = () => drawTinted(ctx, tmp, base, tint, walk[f], hex);
       draw();
       if (walking)
         timer = setInterval(() => {
-          f = (f + 1) % 4;
+          f = (f + 1) % walk.length;
           draw();
-        }, 125);
+        }, (125 * 4) / walk.length);
     });
     return () => {
       dead = true;
@@ -85,9 +102,12 @@ export function Sprite({
   );
 }
 
-/** Base frame + tint frame multiplied by `hex` (clipped to the tint's own alpha), drawn scaled into `ctx`. */
-function drawTinted(ctx: CanvasRenderingContext2D, tmp: HTMLCanvasElement, base: HTMLImageElement, tint: HTMLImageElement, sx: number, sy: number, hex: string) {
-  const w = tmp.width, h = tmp.height, t = tmp.getContext('2d')!;
+/** Base frame + tint frame multiplied by `hex` (clipped to the tint's own alpha), fitted to `ctx`'s height and centred. */
+function drawTinted(ctx: CanvasRenderingContext2D, tmp: HTMLCanvasElement, base: HTMLImageElement, tint: HTMLImageElement, r: Rect, hex: string) {
+  const { x: sx, y: sy, w, h } = r;
+  if (tmp.width !== w) tmp.width = w;
+  if (tmp.height !== h) tmp.height = h;
+  const t = tmp.getContext('2d')!;
   t.globalCompositeOperation = 'source-over';
   t.clearRect(0, 0, w, h);
   t.drawImage(tint, sx, sy, w, h, 0, 0, w, h);
@@ -99,8 +119,9 @@ function drawTinted(ctx: CanvasRenderingContext2D, tmp: HTMLCanvasElement, base:
   const cv = ctx.canvas;
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, cv.width, cv.height);
-  ctx.drawImage(base, sx, sy, w, h, 0, 0, cv.width, cv.height);
-  ctx.drawImage(tmp, 0, 0, cv.width, cv.height);
+  const dw = (w * cv.height) / h, dx = (cv.width - dw) / 2;
+  ctx.drawImage(base, sx, sy, w, h, dx, 0, dw, cv.height);
+  ctx.drawImage(tmp, dx, 0, dw, cv.height);
 }
 
 const ACT_W = 96, ACT_H = 64;
@@ -108,7 +129,7 @@ const ACT_ROW: Record<string, number> = { strike: 0, die: 1, guard: 2 };
 /** [ms since mount, frame] — frames are `strike|die|guard-0..3` from the action sheet (figure faces left). */
 export type PoseTrack = [number, string][];
 
-/** Action-pose canvas (96x64 frames); steps through `track` on a mount-relative clock, so a slow image load skips ahead instead of lagging. */
+/** Action-pose canvas (96x64 box; frame rects read from the action JSON); steps through `track` on a mount-relative clock, so a slow image load skips ahead instead of lagging. */
 export function PoseSprite({ color, track, scale = 4 }: { color: number; track: PoseTrack; scale?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const hex = colorHex(PLAYER_COLORS[color] ?? 0xffffff);
@@ -121,13 +142,11 @@ export function PoseSprite({ color, track, scale = 4 }: { color: number; track: 
     if (!cv) return;
     const ctx = cv.getContext('2d')!;
     const tmp = document.createElement('canvas');
-    tmp.width = ACT_W;
-    tmp.height = ACT_H;
-    Promise.all([loadImg(asset(`${art.action}.webp`)), loadImg(asset(`${art.actionTint}.webp`))]).then(([base, tint]) => {
+    Promise.all([loadImg(asset(`${art.action}.webp`)), loadImg(asset(`${art.actionTint}.webp`)), loadFrames(asset(`${art.action}.json`))]).then(([base, tint, fr]) => {
       if (dead) return;
       const draw = (f: string) => {
         const [row, i] = f.split('-');
-        drawTinted(ctx, tmp, base, tint, Number(i) * ACT_W, (ACT_ROW[row] ?? 0) * ACT_H, hex);
+        drawTinted(ctx, tmp, base, tint, fr[f] ?? { x: Number(i) * ACT_W, y: (ACT_ROW[row] ?? 0) * ACT_H, w: ACT_W, h: ACT_H }, hex);
       };
       const now = performance.now() - t0;
       let cur = track[0][1];
@@ -171,6 +190,8 @@ export function Cinematic() {
     const a = playerArt(slug);
     loadImg(asset(`${a.action}.webp`));
     loadImg(asset(`${a.actionTint}.webp`));
+    loadFrames(asset(`${a.action}.json`));
+    loadFrames(asset(`${a.atlas}.json`));
     for (const n of PROPS) loadImg(asset(`common/ui/fx/${n}.webp`));
   }, [slug]);
   useLayoutEffect(() => {
@@ -186,10 +207,15 @@ export function Cinematic() {
   const actorCol = colorHex(PLAYER_COLORS[c.actor.color] ?? 0xffffff);
   const victimCol = c.victim ? colorHex(PLAYER_COLORS[c.victim.color] ?? 0xffffff) : '';
   const nm = (n: string, col: string) => <b style={{ color: col }}>{n}</b>;
+  const skin = mapSkin(slug);
+  const arrest = skin.arrest;
 
   let title = '';
   let sub: React.ReactNode = null;
-  if (c.kind === 'kill') {
+  if (c.kind === 'kill' && arrest) {
+    title = c.youAre === 'victim' ? 'BẠN BỊ BẮT' : 'BẮT LÊN ĐỒN';
+    sub = c.youAre === 'victim' ? <>{nm(c.actor.name, actorCol)} là {skin.killerName.vi}!</> : <>Bạn đã còng tay {nm(c.victim!.name, victimCol)}</>;
+  } else if (c.kind === 'kill') {
     title = c.youAre === 'victim' ? 'BẠN BỊ HẠ GỤC' : 'HẠ GỤC';
     sub = c.youAre === 'victim' ? <>{nm(c.actor.name, actorCol)} là {mapSkin(useStore.getState().room?.mapSlug).killerName.vi}!</> : <>Bạn đã hạ gục {nm(c.victim!.name, victimCol)}</>;
   } else if (c.kind === 'shield') {
@@ -225,7 +251,19 @@ export function Cinematic() {
         <div className="cine-set" style={{ '--k': k } as React.CSSProperties}>
           <div className="cine-stage">
             <div className="cine-ground" />
-            {c.kind === 'kill' && (
+            {c.kind === 'kill' && arrest && (
+              <>
+                <i className="cine-siren red" />
+                <i className="cine-siren blue" />
+                {attacker(ACTOR_STRIKE, 'lunge')}
+                <div className="cine-victim struck">
+                  <PoseSprite color={c.victim!.color} track={VICTIM_DIE} />
+                </div>
+                <img className="cine-cuffs" src={asset(`${arrest.cuffs}.webp`)} alt="" draggable={false} />
+                <b className="cine-clack">CẠCH!</b>
+              </>
+            )}
+            {c.kind === 'kill' && !arrest && (
               <>
                 <img className="cine-splat" src={asset('common/ui/fx/ink-splat.webp')} alt="" draggable={false} />
                 {attacker(ACTOR_STRIKE, 'lunge')}
@@ -303,7 +341,7 @@ export function Cinematic() {
       </div>
       <div className="cine-text">
         <img className="cine-brush" src={asset('common/ui/fx/brush-stroke.webp')} alt="" draggable={false} />
-        <span className="cine-kicker">{KICKER[c.kind]}</span>
+        <span className="cine-kicker">{arrest && c.kind === 'kill' ? '✦ Bắt quả tang ✦' : KICKER[c.kind]}</span>
         <h1 data-text={title}>{title}</h1>
         <p>{sub}</p>
       </div>

@@ -74,6 +74,10 @@ export type MapSkin = {
     minigames: string;
     /** per-task heritage card: `${cards}/<prefix>-card-<taskId>.webp` */
     cards: string;
+    /** decor-atlas frame left where a player was taken out (+ `${body}-tint`, multiplied by their colour); default: the die pose */
+    body?: string;
+    /** walk/idle frames ride a scooter: a headlight beam (+ tail light) replaces the hand-held oil lamp */
+    ride?: boolean;
   };
   /** Role names/descriptions flavoured for the map (icons stay common). */
   roles: Record<RoleId, RoleSkin>;
@@ -109,6 +113,42 @@ export type MapSkin = {
     /** private objective line per faction */
     objective: { crew: string; killer: string };
   };
+  /**
+   * Optional rewording of the common game words (kill, body, ghost, vote verdicts, progress bar).
+   * Maps without it keep the default wording. `{name}` is filled with the player's name.
+   */
+  phrases?: {
+    /** kill button / action verb, e.g. "Mời lên phường" */
+    kill: L;
+    /** big banner when someone is taken out */
+    killBanner: L;
+    /** what a player becomes after being taken out */
+    ghost: L;
+    /** what is left on the floor */
+    body: L;
+    /** line shown when a body is found */
+    bodyFound: L;
+    meetingTitle: L;
+    ejectKiller: L;
+    ejectInnocent: L;
+    tie: L;
+    /** task progress bar label */
+    progress: L;
+    /** pop on each finished task */
+    progressBump: L;
+  };
+  /** Killer's action button, reskinned (default: common btn-kill + the "kill" word). icon: asset path under /assets, no extension */
+  killButton?: { label: L; icon: string };
+  /** Kill restaged as an arrest: this cuffs sprite (asset path under /assets, no extension) snaps shut instead of the blade slash / ink / soul. */
+  arrest?: { cuffs: string };
+  /** Street writing drawn in-game over the art (painted props carry no text): hand-sprayed warnings, tin signs, ad stickers. x/y = centre in px. */
+  signs?: StreetSign[];
+  /** Vote-result ejection scene (default: the ejected player flies off). 'socks': a hand rolls up the trouser leg — green socks = killer, white/blue = innocent. */
+  ejectScene?: 'socks';
+  /** Task-card eyebrow above the task title (default: Huế's "Chuẩn bị Lễ Ban Sóc"). */
+  taskEyebrow?: L;
   /** Optional map sound effects (paths under /assets, with extension). */
   sfx?: { clock?: string };
 };
+
+export type StreetSign = { text: string; x: number; y: number; style: 'spray' | 'board' | 'sticker'; angle?: number };

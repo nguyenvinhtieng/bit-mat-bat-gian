@@ -592,7 +592,7 @@ export class GameRoom extends Room<GameState> {
       result.ejected
         ? `${result.ejected} bị loại khỏi đoàn.`
         : tie
-          ? 'Hoà phiếu — không ai bị loại.'
+          ? (this.skin.phrases?.tie.vi ?? 'Hoà phiếu — không ai bị loại.')
           : 'Không ai bị loại.',
     );
     for (const p of this.state.players.values()) {
@@ -891,7 +891,11 @@ export class GameRoom extends Room<GameState> {
     const st = this.station(taskId)!;
     if (!this.near(p, st.x, st.y)) return client.send('toast', { text: 'Bạn đã rời khỏi điểm nhiệm vụ.', kind: 'warn' });
     const ok = this.content.verifyTask(s.pending, msg.answer);
-    if (!ok) return client.send('task:result', { ok: false, text: 'Chưa đúng — thử lại nhé.' } satisfies TaskResultMsg);
+    if (!ok) {
+      // the client remounts the game for the retry: timed games start their clock again
+      s.pending.openedAt = Date.now();
+      return client.send('task:result', { ok: false, text: 'Chưa đúng — thử lại nhé.' } satisfies TaskResultMsg);
+    }
 
     s.pending = undefined;
     s.completed.add(taskId);

@@ -124,7 +124,7 @@ export function IntroModal() {
               </p>
               <p className="opening-tip">
                 {killer ? (
-                  isTouchDevice() ? <>Lại gần mục tiêu và bấm nút Hạ gục. Nhiệm vụ của bạn chỉ là giả.</> : <>Lại gần mục tiêu và bấm <kbd>K</kbd>. Nhiệm vụ của bạn chỉ là giả.</>
+                  isTouchDevice() ? <>Lại gần mục tiêu và bấm nút {skin.killButton?.label.vi ?? 'Hạ gục'}. Nhiệm vụ của bạn chỉ là giả.</> : <>Lại gần mục tiêu và bấm <kbd>K</kbd>. Nhiệm vụ của bạn chỉ là giả.</>
                 ) : isTouchDevice() ? (
                   <>Làm nhiệm vụ ở các vòng sáng vàng. Thấy thi thể thì bấm nút Báo cáo.</>
                 ) : (

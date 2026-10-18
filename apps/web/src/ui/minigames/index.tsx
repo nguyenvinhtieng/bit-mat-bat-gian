@@ -3,6 +3,7 @@ import type { ComponentType } from 'react';
 import { HueMinigame } from './co-do-hue';
 import type { Submit } from './common/kit';
 import { TlMinigame } from './thang-long';
+import { SgMinigame } from './sai-gon';
 
 type MinigameUI = ComponentType<{ task: TaskData; submit: Submit }>;
 
@@ -10,6 +11,7 @@ type MinigameUI = ComponentType<{ task: TaskData; submit: Submit }>;
 const BY_MAP: Record<string, MinigameUI> = {
   'co-do-hue': HueMinigame,
   'thang-long': TlMinigame,
+  'sai-gon': SgMinigame,
 };
 
 /** Task ids are unique across maps, so the task alone tells which map's UI to render. */

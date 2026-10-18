@@ -149,5 +149,6 @@ export const TL_SKIN: MapSkin = {
       crew: 'Hoàn thành mọi nhiệm vụ trước giao thừa để pháo hoa nổ đúng nửa đêm — hoặc tìm ra Quỷ trong cuộc họp và bỏ phiếu loại họ.',
     },
   },
+  taskEyebrow: { vi: 'Chuẩn bị lễ Trừ tịch', en: 'Year-End rite preparations' },
   sfx: { clock: `${DIR}/sfx/trong-chau-tom.wav` },
 };

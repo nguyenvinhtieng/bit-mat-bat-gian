@@ -261,10 +261,13 @@ function teardown() {
   room = null;
 }
 
+/** Off in local dev (a WebRTC mesh between tabs on one machine only lags it); VITE_VOICE=1 turns it back on. */
+export const VOICE_ENABLED = import.meta.env.PROD || import.meta.env.VITE_VOICE === '1';
+
 let started = false;
 /** wire voice chat to every room we join (call once at startup) */
 export function initVoice() {
-  if (started || typeof RTCPeerConnection === 'undefined') return;
+  if (started || !VOICE_ENABLED || typeof RTCPeerConnection === 'undefined') return;
   started = true;
   void loadIce();
   onRoom(async (r) => {

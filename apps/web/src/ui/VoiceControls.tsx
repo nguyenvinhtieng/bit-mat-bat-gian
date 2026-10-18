@@ -1,5 +1,5 @@
 import { useT } from '../i18n';
-import { toggleMic, toggleSpeaker, useVoice } from '../voice';
+import { VOICE_ENABLED, toggleMic, toggleSpeaker, useVoice } from '../voice';
 
 const Slash = () => <path d="M4 3 21 20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />;
 
@@ -7,6 +7,7 @@ const Slash = () => <path d="M4 3 21 20" stroke="currentColor" strokeWidth="2.2"
 export function VoiceControls() {
   const t = useT();
   const { mic, micBusy, speaker } = useVoice();
+  if (!VOICE_ENABLED) return null;
   return (
     <div className="hud-voice">
       <button

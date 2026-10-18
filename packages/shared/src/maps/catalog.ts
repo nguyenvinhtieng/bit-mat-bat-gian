@@ -46,6 +46,18 @@ export const MAP_CATALOG: MapMeta[] = [
     charPrefix: 'tl', // áo the + khăn xếp
   },
   {
+    slug: 'sai-gon',
+    available: true,
+    name: { vi: 'Hụi Sài Gòn', en: 'Saigon Hụi Club' },
+    subtitle: { vi: 'Phiên Hụi Chui Hẻm 42', en: 'The Secret Savings Circle of Alley 42' },
+    hook: {
+      vi: 'Cả hội tài xế áo xanh lén khui hụi giữa đêm ở Hẻm 42. Khổ nỗi trong hội có một đứa áo xanh… là công an chìm!',
+      en: 'A crew of green-jacket ride drivers holds a secret savings-circle night in Alley 42. Trouble is, one of the green jackets… is an undercover cop!',
+    },
+    players: '4–10',
+    charPrefix: 'sg', // áo khoác CRAB xanh lá + nón bảo hiểm (tint)
+  },
+  {
     slug: 'hoi-an',
     available: false,
     name: { vi: 'Phố cổ Hội An', en: 'Hội An Ancient Town' },

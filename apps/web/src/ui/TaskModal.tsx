@@ -6,6 +6,8 @@ import { Modal, asset, useSkin } from './common';
 import { Minigame } from './minigames';
 import { QUOTES } from './minigames/registry';
 
+const AUTO_CLOSE_MS = 2500;
+
 export function TaskModal() {
   const task = useStore((s) => s.task);
   const result = useStore((s) => s.taskResult);
@@ -20,7 +22,9 @@ export function TaskModal() {
     if (!result) return;
     const h = (e: KeyboardEvent) => e.key === 'Enter' && close();
     window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
+    // Sài Gòn: the card gets out of the way by itself (no confirm click)
+    const auto = skin.slug === 'sai-gon' ? window.setTimeout(close, AUTO_CLOSE_MS) : 0;
+    return () => (window.removeEventListener('keydown', h), clearTimeout(auto));
   }, [!!result]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!task) return null;
   const st = skin.stations.find((x) => x.id === task.taskId)!;
@@ -33,7 +37,7 @@ export function TaskModal() {
     const total = me?.tasks.length ?? 0;
     return (
       <Modal title={en ? 'Task complete' : 'Hoàn thành nhiệm vụ'} onClose={close} wide className="hcard-modal">
-        <div className="hcard">
+        <div className="hcard" onClick={skin.slug === 'sai-gon' ? close : undefined}>
           <figure className="hcard-art">
             <img src={asset(`${skin.art.cards}/${skin.prefix}-card-${task.taskId}.webp`)} alt="" draggable={false} />
             <figcaption>{en ? skin.areas[st.area].nameEn : skin.areas[st.area].name}</figcaption>
@@ -45,7 +49,7 @@ export function TaskModal() {
             <i className="hcard-spark s3" />
           </figure>
           <div className="hcard-body">
-            <span className="hcard-eyebrow">{en ? 'Ceremony preparations' : 'Chuẩn bị Lễ Ban Sóc'}</span>
+            <span className="hcard-eyebrow">{skin.taskEyebrow ? (en ? skin.taskEyebrow.en : skin.taskEyebrow.vi) : en ? 'Ceremony preparations' : 'Chuẩn bị Lễ Ban Sóc'}</span>
             <h2>{title}</h2>
             <p className="hcard-result">{result.text}</p>
             {quote && (

@@ -4,6 +4,7 @@ import { send } from '../net';
 import { colorHex, KILLER_NAME_COLOR, useKillerIds, useStore, type PlayerView } from '../store';
 import { Chat } from './Chat';
 import { Sprite } from './Cinematic';
+import { SockReveal } from './SockReveal';
 import { asset, Digits, fmt, useCountdown } from './common';
 
 const mt = (n: string) => asset(`common/ui/meeting/${n}.webp`);
@@ -78,6 +79,8 @@ export function Meeting() {
   const room = useStore((s) => s.room)!;
   const sessionId = useStore((s) => s.sessionId);
   const result = useStore((s) => s.voteResult);
+  const skin = mapSkin(room.mapSlug);
+  const socks = skin.ejectScene === 'socks';
   const left = useCountdown(room.phaseEndsAt);
   const isHost = room.hostId === sessionId;
   const reveal = room.phase === 'reveal';
@@ -115,8 +118,19 @@ export function Meeting() {
       </header>
 
       {reveal && result ? (
-        <div className="vote-result v2">
-          {result.ejected ? (
+        <div className={`vote-result v2 ${socks && result.ejected ? 'socks' : ''}`}>
+          {result.ejected && socks ? (
+            <>
+              <h1 className="eject-line">
+                Kéo ống quần <span style={{ color: colorHex(PLAYER_COLORS[result.ejectedColor ?? 0] ?? 0xffffff) }}>{result.ejected}</span> lên coi tất…
+              </h1>
+              <SockReveal name={result.ejected} wasKiller={!!result.wasKiller} />
+              <p className={`eject-verdict ${result.wasKiller ? 'good' : 'bad'}`}>
+                {(result.wasKiller ? skin.phrases?.ejectKiller : skin.phrases?.ejectInnocent)?.vi.replace('{name}', result.ejected) ??
+                  `${result.ejected} ${result.wasKiller ? `CHÍNH LÀ ${skin.killerName.vi}!` : `KHÔNG phải là ${skin.killerName.vi}…`}`}
+              </p>
+            </>
+          ) : result.ejected ? (
             <>
               <div className="eject-sky">
                 {Array.from({ length: 24 }, (_, i) => (

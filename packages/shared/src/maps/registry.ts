@@ -2,6 +2,7 @@ import type { RoleId, TaskId } from '../constants';
 import { DEFAULT_MAP_SLUG } from './catalog';
 import { HUE_SKIN } from './co-do-hue';
 import type { MapSkin, StationDef } from './common/skin';
+import { SG_SKIN } from './sai-gon';
 import { TL_SKIN } from './thang-long';
 
 /**
@@ -11,6 +12,7 @@ import { TL_SKIN } from './thang-long';
 export const MAP_SKINS: Record<string, MapSkin> = {
   [HUE_SKIN.slug]: HUE_SKIN,
   [TL_SKIN.slug]: TL_SKIN,
+  [SG_SKIN.slug]: SG_SKIN,
 };
 
 export const mapSkin = (slug?: string | null): MapSkin => MAP_SKINS[slug ?? ''] ?? MAP_SKINS[DEFAULT_MAP_SLUG];

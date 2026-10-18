@@ -58,6 +58,16 @@ const LAMP_GRIP: Record<(typeof DIRS)[number], { x: number; y: number; behind: b
   up: { x: -14, y: -29, behind: true },
 };
 const GLOW_SIZE = 230;
+/** Scooter lights (frame px from the feet, see tools/char-art SAI_GON.ride): beam apex + angle per facing, tail light when riding away. */
+const HEADLIGHT: Record<(typeof DIRS)[number], { x: number; y: number; angle: number }> = {
+  down: { x: 0, y: -6, angle: 180 },
+  left: { x: -24, y: -8, angle: -90 },
+  right: { x: 24, y: -8, angle: 90 },
+  up: { x: 0, y: -30, angle: 0 },
+};
+const TAIL_LIGHT = { x: 0, y: -21 };
+const BEAM_W = 150;
+const BEAM_L = 190;
 
 type Snap = { t: number; x: number; y: number };
 type Avatar = {
@@ -121,6 +131,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   private skin = mapSkin(useStore.getState().room?.mapSlug);
+  /** Player frame height / 64: bigger rigs (e.g. Sài Gòn's 64x88) scale the name label, shadow and lamp grip with it. */
+  private charK = 1;
+  private hasIdle = false;
 
   preload() {
     this.skin = mapSkin(useStore.getState().room?.mapSlug);
@@ -145,6 +158,7 @@ export class GameScene extends Phaser.Scene {
     // 2x raster of a 208x108 SVG, shown at 1x so it stays crisp on hi-dpi
     this.load.svg('lobby-gate', `${A}/common/props/lobby-gate.svg`, { width: 416, height: 216 });
     this.load.image('body-marker', `${A}/common/ui/body-marker.webp`);
+    if (this.skin.arrest) this.load.image('arrest-cuffs', `${A}/${this.skin.arrest.cuffs}.webp`);
     for (const k of Object.keys(FX)) this.load.spritesheet(k, `${A}/common/ui/fx/${k}.webp`, { frameWidth: 256, frameHeight: 256 });
     for (const k of ['spark', 'ink-drop', 'ink-splat']) this.load.image(k, `${A}/common/ui/fx/${k}.webp`);
   }
@@ -152,21 +166,34 @@ export class GameScene extends Phaser.Scene {
   create() {
     this.buildMap();
     this.buildProps();
+    this.buildStreetSigns();
     this.buildStations();
     this.buildLobbyGate();
+    // frame size / counts come from the atlas itself (48x64 x4 on the older maps, 64x88 x8 + idle on Sài Gòn)
+    const idx = (tex: string, prefix: string) =>
+      this.textures
+        .get(tex)
+        .getFrameNames()
+        .filter((n) => n.startsWith(prefix) && /^\d+$/.test(n.slice(prefix.length)))
+        .map((n) => Number(n.slice(prefix.length)))
+        .sort((a, b) => a - b);
+    this.charK = (this.textures.getFrame('player', 'walk-down-0')?.height ?? 64) / 64;
+    const idleMeta = (this.textures.get('player').customData as { meta?: { anim?: { idle?: number[]; idleFps?: number } } }).meta?.anim;
     for (const tex of ['player', 'player-tint'])
-      DIRS.forEach((d) =>
-        this.anims.create({
-          key: `${tex}-walk-${d}`,
-          frames: [0, 1, 2, 3].map((i) => ({ key: tex, frame: `walk-${d}-${i}` })),
-          frameRate: 9,
-          repeat: -1,
-        }),
-      );
+      DIRS.forEach((d) => {
+        const walk = idx(tex, `walk-${d}-`);
+        // keep the stride speed: a 4-frame cycle plays at 9 fps, longer cycles proportionally faster
+        this.anims.create({ key: `${tex}-walk-${d}`, frames: walk.map((i) => ({ key: tex, frame: `walk-${d}-${i}` })), frameRate: (9 * walk.length) / 4, repeat: -1 });
+        const idle = idx(tex, `idle-${d}-`);
+        if (!idle.length) return;
+        this.hasIdle = true;
+        const seq = (idleMeta?.idle ?? idle).filter((i) => idle.includes(i));
+        this.anims.create({ key: `${tex}-idle-${d}`, frames: seq.map((i) => ({ key: tex, frame: `idle-${d}-${i}` })), frameRate: idleMeta?.idleFps ?? 3, repeat: -1 });
+      });
 
     for (const tex of ['player-action', 'player-action-tint'])
       for (const [row, rate] of Object.entries(POSES))
-        this.anims.create({ key: `${tex}-${row}`, frames: [0, 1, 2, 3].map((i) => ({ key: tex, frame: `${row}-${i}` })), frameRate: rate });
+        this.anims.create({ key: `${tex}-${row}`, frames: idx(tex, `${row}-`).map((i) => ({ key: tex, frame: `${row}-${i}` })), frameRate: rate });
 
     for (const [k, v] of Object.entries(FX)) this.anims.create({ key: k, frames: this.anims.generateFrameNumbers(k, { start: 0, end: FX_FRAMES - 1 }), frameRate: v.rate });
 
@@ -341,6 +368,39 @@ export class GameScene extends Phaser.Scene {
       img.setDepth(p.wall ? -5 : p.y);
       if (!p.wall && img.height >= 150) this.tallProps.push(img);
       if (!p.wall) this.propImgs.push(img);
+    }
+  }
+
+  /** MapSkin.signs: wall writing over the bake (sprayed warnings with drips, tin boards, ad stickers). Depth -4: above the floor/walls, under everyone. */
+  private buildStreetSigns() {
+    for (const sg of this.skin.signs ?? []) {
+      const font = "'Arial Black', 'Arial', sans-serif";
+      const parts: Phaser.GameObjects.GameObject[] = [];
+      if (sg.style === 'spray') {
+        const txt = this.add.text(0, 0, sg.text, { fontFamily: font, fontSize: '19px', color: '#c8221a', align: 'center', resolution: 2 }).setOrigin(0.5).setAlpha(0.88);
+        // runny paint: a few drips under the letters, seeded by the text so every client paints the same
+        const g = this.add.graphics().fillStyle(0xc8221a, 0.75);
+        let h = 0;
+        for (const ch of sg.text) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+        for (let i = 0; i < 6; i++) {
+          h = (h * 1103515245 + 12345) >>> 0;
+          const x = -txt.width / 2 + 6 + (h % Math.max(1, Math.floor(txt.width - 12)));
+          const len = 4 + (h >>> 8) % 9;
+          g.fillRect(x, 7, 1.6, len).fillCircle(x + 0.8, 7 + len, 1.4);
+        }
+        parts.push(g, txt);
+      } else {
+        const sticker = sg.style === 'sticker';
+        const txt = this.add
+          .text(0, 0, sg.text, { fontFamily: font, fontSize: sticker ? '8px' : '10px', color: sticker ? '#1d3fa8' : '#c8221a', align: 'center', lineSpacing: 1, resolution: 3 })
+          .setOrigin(0.5);
+        const w = txt.width + 8, h = txt.height + 6;
+        const bg = this.add.graphics();
+        if (sticker) bg.fillStyle(0xf4f1e6, 0.92).fillRect(-w / 2, -h / 2, w, h).fillStyle(0x000000, 0.12).fillRect(-w / 2, h / 2 - 2, w, 2);
+        else bg.fillStyle(0x5e6268, 1).fillRect(-1, h / 2, 2, 4).fillStyle(0xf2f2ee, 1).fillRect(-w / 2, -h / 2, w, h).lineStyle(2, 0xc8221a, 1).strokeRect(-w / 2 + 2, -h / 2 + 2, w - 4, h - 4);
+        parts.push(bg, txt);
+      }
+      this.add.container(sg.x, sg.y, parts).setAngle(sg.angle ?? 0).setDepth(-4);
     }
   }
 
@@ -557,17 +617,25 @@ export class GameScene extends Phaser.Scene {
   }
 
   private makeAvatar(name: string, color: number): Avatar {
-    const shadow = this.add.image(0, -2, 'shadow').setDisplaySize(34, 14);
+    const k = this.charK;
+    const shadow = this.add.image(0, -2, 'shadow').setDisplaySize(34 * k, 14 * k);
     const base = this.add.sprite(0, 0, 'player', 'walk-down-0').setOrigin(0.5, 1);
     const tint = this.add.sprite(0, 0, 'player-tint', 'walk-down-0').setOrigin(0.5, 1).setTint(color);
     const label = this.add
-      .text(0, -70, name, { fontFamily: '"Be Vietnam Pro", system-ui, sans-serif', fontSize: '13px', fontStyle: '600', color: NAME_COLOR })
+      .text(0, -64 * k - 6, name, { fontFamily: '"Be Vietnam Pro", system-ui, sans-serif', fontSize: '13px', fontStyle: '600', color: NAME_COLOR })
       .setOrigin(0.5, 1)
       .setShadow(0, 1, 'rgba(0,0,0,0.6)', 2)
       .setResolution(2);
     const plate = this.add.graphics();
-    const lamp = this.add.image(0, 0, 'lantern').setOrigin(0.5, 0.05).setScale(LAMP_SCALE).setVisible(false);
-    const glow = this.add.image(0, 0, 'lantern-glow').setDisplaySize(GLOW_SIZE, GLOW_SIZE * 0.8).setBlendMode(Phaser.BlendModes.ADD).setDepth(-5).setVisible(false);
+    const ride = !!this.skin.art.ride;
+    if (ride) this.makeHeadlightTexture();
+    // riders: `lamp` is the red tail light, `glow` the headlight beam on the road
+    const lamp = ride
+      ? this.add.image(TAIL_LIGHT.x, TAIL_LIGHT.y, 'lantern-glow').setDisplaySize(26, 20).setTint(0xff3b30).setBlendMode(Phaser.BlendModes.ADD).setVisible(false)
+      : this.add.image(0, 0, 'lantern').setOrigin(0.5, 0.05).setScale(LAMP_SCALE * k).setVisible(false);
+    const glow = ride
+      ? this.add.image(0, 0, 'headlight-beam').setOrigin(0.5, 1).setDisplaySize(BEAM_W, BEAM_L).setBlendMode(Phaser.BlendModes.ADD).setDepth(-5).setVisible(false)
+      : this.add.image(0, 0, 'lantern-glow').setDisplaySize(GLOW_SIZE, GLOW_SIZE * 0.8).setBlendMode(Phaser.BlendModes.ADD).setDepth(-5).setVisible(false);
     const c = this.add.container(0, 0, [shadow, base, tint, lamp, plate, label]);
     const av: Avatar = { c, base, tint, label, plate, lamp, glow, seed: Math.random() * 100, buf: [], dir: 0, moving: false, lastMoveAt: 0, name, alive: true, posedUntil: 0 };
     this.drawPlate(av, false);
@@ -579,24 +647,57 @@ export class GameScene extends Phaser.Scene {
     av.glow.destroy();
   }
 
-  /** In the dark every living player carries an oil lamp: it swings with the stride, the flame flickers and lights the floor. */
+  /** Warm cone (apex at the bottom-centre, pointing up): drawn once, rotated per facing. */
+  private makeHeadlightTexture() {
+    if (this.textures.exists('headlight-beam')) return;
+    const W = 128, H = 192;
+    const tex = this.textures.createCanvas('headlight-beam', W, H)!;
+    const ctx = tex.getContext();
+    const gr = ctx.createRadialGradient(W / 2, H, 4, W / 2, H, H);
+    gr.addColorStop(0, 'rgba(255,246,200,0.95)');
+    gr.addColorStop(0.35, 'rgba(255,232,160,0.55)');
+    gr.addColorStop(1, 'rgba(255,220,140,0)');
+    ctx.fillStyle = gr;
+    ctx.beginPath();
+    ctx.moveTo(W / 2 - 5, H);
+    ctx.lineTo(4, 22);
+    ctx.quadraticCurveTo(W / 2, -10, W - 4, 22);
+    ctx.lineTo(W / 2 + 5, H);
+    ctx.closePath();
+    ctx.fill();
+    tex.refresh();
+  }
+
+  /** In the dark every living player carries an oil lamp (Sài Gòn: rides with the headlight on): it swings with the stride, the flame flickers and lights the floor. */
   private updateLamp(av: Avatar, dir: number, moving: boolean, on: boolean, now: number) {
     const show = on && av.alive && av.c.visible && !av.posedUntil;
+    const d = DIRS[dir] ?? 'down';
+    if (this.skin.art.ride) {
+      av.glow.setVisible(show);
+      av.lamp.setVisible(show && d === 'up');
+      if (!show) return;
+      const h = HEADLIGHT[d];
+      const t = now / 1000 + av.seed;
+      // the engine hums: a faint shimmer, a little more when moving
+      const hum = 1 + Math.sin(t * (moving ? 31 : 11)) * (moving ? 0.03 : 0.015);
+      av.glow.setPosition(av.c.x + h.x, av.c.y + h.y).setAngle(h.angle).setAlpha(0.5 * hum);
+      av.lamp.setAlpha(0.85 * hum);
+      return;
+    }
     av.lamp.setVisible(show);
     av.glow.setVisible(show);
     if (!show) return;
-    const d = DIRS[dir] ?? 'down';
     const g = LAMP_GRIP[d];
     const t = now / 1000 + av.seed;
     // pendulum: big swing while walking (sideways when walking up/down, fore-aft is just a small bob when walking sideways)
     const swing = moving ? (d === 'left' || d === 'right' ? 7 : 16) : 3;
     av.lamp.setAngle(Math.sin(t * (moving ? 9 : 1.6)) * swing);
-    av.lamp.setPosition(g.x, g.y + (moving ? Math.abs(Math.sin(t * 9)) * -1.5 : 0));
+    av.lamp.setPosition(g.x * this.charK, g.y * this.charK + (moving ? Math.abs(Math.sin(t * 9)) * -1.5 : 0));
     // behind the body when walking away from the camera, in front otherwise
     if (g.behind) av.c.moveBelow(av.lamp, av.base);
     else av.c.moveAbove(av.lamp, av.tint);
     const flick = 0.92 + Math.sin(t * 13) * 0.04 + Math.sin(t * 29.7) * 0.03 + Math.sin(t * 5.3) * 0.02;
-    av.glow.setPosition(av.c.x + g.x, av.c.y + g.y + 18).setAlpha(0.42 * flick);
+    av.glow.setPosition(av.c.x + g.x * this.charK, av.c.y + g.y * this.charK + 18).setAlpha(0.42 * flick);
     av.glow.setDisplaySize(GLOW_SIZE * flick, GLOW_SIZE * 0.8 * flick);
   }
 
@@ -610,6 +711,7 @@ export class GameScene extends Phaser.Scene {
     }
     if (existing) return;
     const fresh = live && useStore.getState().room?.phase === 'explore';
+    if (this.skin.art.body) return this.syncPropBody(id, p, fresh, this.skin.art.body);
     const splat = this.add.image(0, -4, 'ink-splat').setDisplaySize(96, 56).setAlpha(0.9);
     const shadow = this.add.image(0, -2, 'shadow').setDisplaySize(40, 16);
     const base = this.add.sprite(0, 2, 'player-action', 'die-3').setOrigin(0.5, 1).setAlpha(0.95);
@@ -632,6 +734,52 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: splat, scaleX: 96 / 256, scaleY: 56 / 256, delay: 260, duration: 520, ease: 'Cubic.easeOut' });
     this.burst('ink-drop', x, y - 30, { count: 26, speed: [90, 260], life: 650, scale: [0.35, 0.1], gravity: 520, tint: 0xffffff, add: false, delay: 160 });
     // no red flash / shake / zoom: bystanders must only see the act itself, so a kill in a crowd can go unnoticed
+  }
+
+  /** Bodies drawn as a painted prop (Sài Gòn: the bike left on its stand + the victim's helmet, tinted); no blood, no soul. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private syncPropBody(id: string, p: any, fresh: boolean, frame: string) {
+    const col = PLAYER_COLORS[p.color] ?? 0xffffff;
+    const prop = this.add.image(0, 2, 'map-decor', frame).setOrigin(0.5, 1);
+    const helm = this.add.image(0, 2, 'map-decor', `${frame}-tint`).setOrigin(0.5, 1).setTint(col);
+    const top = -prop.height + 18;
+    const mark = this.add.image(0, top, 'body-marker').setDisplaySize(30, 30).setOrigin(0.5, 1);
+    const c = this.add.container(p.bodyX, p.bodyY, [prop, helm, mark]).setDepth(p.bodyY - 1);
+    this.tweens.add({ targets: mark, y: top - 10, yoyo: true, repeat: -1, duration: 700, ease: 'Sine.inOut' });
+    this.bodies.set(id, c);
+    if (!fresh || !this.canSee(p.bodyX, p.bodyY)) return;
+    // ---- fresh "invite to the ward" on screen: hands up -> the victim is gone -> only the bike is left
+    const base = this.add.sprite(0, 2, 'player-action', 'die-0').setOrigin(0.5, 1);
+    const tint = this.add.sprite(0, 2, 'player-action-tint', 'die-0').setOrigin(0.5, 1).setTint(col);
+    c.addAt([base, tint], 2);
+    base.play('player-action-die');
+    tint.play('player-action-tint-die');
+    for (const o of [prop, helm, mark]) o.setAlpha(0);
+    this.tweens.add({ targets: [base, tint], alpha: 0, y: -6, delay: 650, duration: 350, ease: 'Quad.easeIn', onComplete: () => (base.destroy(), tint.destroy()) });
+    this.tweens.add({ targets: [prop, helm], alpha: 1, delay: 650, duration: 350 });
+    this.tweens.add({ targets: mark, alpha: 1, delay: 1000, duration: 250 });
+    if (this.skin.arrest) this.cuffsSnap(p.bodyX, p.bodyY);
+  }
+
+  /** Arrest instead of a stab: cuffs drop in and clack shut over the victim, under a red/blue siren blink. */
+  private cuffsSnap(x: number, y: number) {
+    const cuffs = this.add.image(x, y - 90, 'arrest-cuffs').setDisplaySize(70, 70).setDepth(y + 10000).setAngle(-40).setAlpha(0);
+    const sx = cuffs.scaleX;
+    this.tweens.chain({
+      targets: cuffs,
+      tweens: [
+        { alpha: 1, y: y - 42, angle: 8, duration: 220, ease: 'Back.easeOut' },
+        { scaleX: sx * 1.25, scaleY: sx * 0.8, duration: 70, yoyo: true, ease: 'Quad.easeOut' },
+        { angle: 0, duration: 120 },
+        { alpha: 0, y: y - 60, delay: 650, duration: 300, ease: 'Quad.easeIn' },
+      ],
+      onComplete: () => cuffs.destroy(),
+    });
+    this.time.delayedCall(240, () => {
+      this.burst('spark', x, y - 42, { count: 10, speed: [80, 180], life: 380, scale: [0.5, 0], gravity: 0, tint: 0xe9f2ff, add: true });
+      this.shockRing(x, y - 10, 0xff3b30, 90, 500);
+      this.time.delayedCall(160, () => this.shockRing(x, y - 10, 0x3b7bff, 110, 550));
+    });
   }
 
   /** Particle explosion that cleans itself up. */
@@ -1002,6 +1150,12 @@ export class GameScene extends Phaser.Scene {
       if (av.base.anims.currentAnim?.key !== key || !av.base.anims.isPlaying) {
         av.base.play(key);
         av.tint.play(`player-tint-walk-${d}`);
+      }
+    } else if (this.hasIdle) {
+      const key = `player-idle-${d}`;
+      if (av.base.anims.currentAnim?.key !== key || !av.base.anims.isPlaying) {
+        av.base.play(key);
+        av.tint.play(`player-tint-idle-${d}`);
       }
     } else {
       av.base.anims.stop();

@@ -20,9 +20,9 @@ import path from 'node:path';
 import sharp from 'sharp';
 
 const ROOT = path.resolve(process.argv[2] || path.join(path.dirname(new URL(import.meta.url).pathname), '../..'));
-const SRC = path.join(ROOT, 'assets/_src/common/ui');
-const OUT = path.join(ROOT, 'assets/common/ui');
-const PUB = path.join(ROOT, 'apps/web/public/assets/common/ui');
+const SRC0 = path.join(ROOT, 'assets/_src/common/ui');
+const OUT0 = path.join(ROOT, 'assets/common/ui');
+const PUB0 = path.join(ROOT, 'apps/web/public/assets/common/ui');
 
 const INK = '#22100a';
 const GOLD_STOPS = `<stop offset="0" stop-color="#fff2bf"/><stop offset=".32" stop-color="#f3c75a"/><stop offset=".68" stop-color="#c58b26"/><stop offset="1" stop-color="#7d4f12"/>`;
@@ -294,6 +294,51 @@ function frameAreaDoor() {
   `);
 }
 
+
+/** Sài Gòn: steel handcuffs + a police whistle on a cobalt disc — "Bắt lên đồn" */
+const CUFFS = `
+  <g stroke="${INK}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" paint-order="stroke">
+    <g transform="rotate(-18 128 128)">
+      <circle cx="96" cy="140" r="34" fill="none" stroke="${INK}" stroke-width="22"/>
+      <circle cx="96" cy="140" r="34" fill="none" stroke="url(#steel)" stroke-width="13"/>
+      <circle cx="166" cy="114" r="34" fill="none" stroke="${INK}" stroke-width="22"/>
+      <circle cx="166" cy="114" r="34" fill="none" stroke="url(#steel)" stroke-width="13"/>
+      <rect x="114" y="98" width="20" height="26" rx="4" fill="url(#steel)"/>
+      <rect x="128" y="118" width="20" height="26" rx="4" fill="url(#steel)"/>
+      <path d="M126 116 L136 124" stroke="#8d9aa4" stroke-width="6" fill="none"/>
+      <path d="M74 122 Q80 110 92 108" stroke="#fff" stroke-width="4" fill="none" opacity=".8"/>
+      <path d="M146 94 Q152 84 164 82" stroke="#fff" stroke-width="4" fill="none" opacity=".8"/>
+    </g>
+  </g>
+  <g transform="translate(150 150) rotate(-24)" stroke="${INK}" stroke-width="4" stroke-linejoin="round" paint-order="stroke">
+    <path d="M0 0 H40 Q52 0 52 14 Q52 30 34 30 Q18 30 14 18 L0 18 Z" fill="url(#gold)"/>
+    <circle cx="34" cy="15" r="6" fill="#7d4f12" stroke="none"/>
+    <rect x="-6" y="2" width="8" height="14" rx="2" fill="#c4241b"/>
+  </g>
+  <g fill="#ffe082" stroke="${INK}" stroke-width="3" paint-order="stroke">
+    <path d="M72 66 L78 80 L92 82 L81 91 L84 105 L72 97 L60 105 L63 91 L52 82 L66 80 Z"/>
+  </g>`;
+
+/** Sài Gòn arrest FX: a lone pair of cuffs (no disc), snapped shut over the victim. */
+function cuffsFx() {
+  const ring = (cx, cy) => `
+      <circle cx="${cx}" cy="${cy}" r="40" fill="none" stroke="${INK}" stroke-width="26"/>
+      <circle cx="${cx}" cy="${cy}" r="40" fill="none" stroke="url(#steel)" stroke-width="15"/>
+      <path d="M${cx - 30} ${cy - 22} Q${cx - 22} ${cy - 34} ${cx - 8} ${cy - 37}" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".85"/>`;
+  return svg(256, 256, `
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#e3e9ee"/><stop offset=".55" stop-color="#9eabb5"/><stop offset="1" stop-color="#d7dee4"/>
+    </linearGradient>
+  </defs>
+  <g transform="rotate(-14 128 128)" stroke-linejoin="round">
+    ${ring(78, 136)}
+    ${ring(178, 120)}
+    <rect x="108" y="112" width="20" height="28" rx="4" fill="url(#steel)" stroke="${INK}" stroke-width="5"/>
+    <rect x="128" y="104" width="20" height="28" rx="4" fill="url(#steel)" stroke="${INK}" stroke-width="5"/>
+  </g>`);
+}
+
 /* ------------------------------------------------------------------ render */
 const JOBS = [
   ['btn-kill', roundButton({ disc: ['#ef5a45', '#a8231d', '#540d0a'], icon: DAGGER }), 256, 256],
@@ -301,15 +346,19 @@ const JOBS = [
   ['btn-task', roundButton({ disc: ['#6fe0a8', '#1f8a5c', '#0b3d27'], icon: SCROLL_TICK }), 256, 256],
   ['btn-bell', roundButton({ disc: ['#e0574a', '#9c1f17', '#4a0906'], icon: BELL }), 256, 256],
   ['frame-task-panel', frameTaskPanel(), 384, 384],
+  // per-map buttons land in that map's ui/ folder (see MapSkin.killButton)
+  ['sg-btn-kill', roundButton({ disc: ['#ff5a4a', '#c41e18', '#5a0806'], icon: CUFFS }), 256, 256, 'maps/sai-gon/ui'],
+  ['sg-fx-cuffs', cuffsFx(), 256, 256, 'maps/sai-gon/ui'],
   ['frame-modal', frameModal(), 512, 512],
   ['frame-chat', frameChat(), 384, 384],
   ['frame-area-door', frameAreaDoor(), 1280, 400],
 ];
 
-for (const dir of [SRC, OUT, PUB]) fs.mkdirSync(dir, { recursive: true });
 // optional filter: UI_ART_ONLY=btn-task,frame-chat node tools/ui-art/draw-ui.mjs
 const ONLY = process.env.UI_ART_ONLY?.split(',');
-for (const [name, code, w, h] of JOBS.filter(([n]) => !ONLY || ONLY.includes(n))) {
+for (const [name, code, w, h, sub] of JOBS.filter(([n]) => !ONLY || ONLY.includes(n))) {
+  const [SRC, OUT, PUB] = sub ? ['assets/_src', 'assets', 'apps/web/public/assets'].map((d) => path.join(ROOT, d, sub)) : [SRC0, OUT0, PUB0];
+  for (const dir of [SRC, OUT, PUB]) fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(SRC, `${name}.svg`), code);
   const png = await sharp(Buffer.from(code), { density: 72 * (w / Number(code.match(/width="(\d+)"/)[1])) })
     .resize(w, h)

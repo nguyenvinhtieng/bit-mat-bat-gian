@@ -89,6 +89,17 @@ export const TASK_IDS = [
   'task_ngu_qua',
   'task_ca_tru',
   'task_roi_nuoc',
+  // sai-gon
+  'task_chi_duong',
+  'task_com_tam',
+  'task_tieng_rao',
+  'task_ca_phe_phin',
+  'task_do_xang',
+  'task_va_vo',
+  'task_so_hui',
+  'task_dem_tien',
+  'task_khui_hui',
+  'task_xep_xe',
 ] as const;
 export type TaskId = (typeof TASK_IDS)[number];
 

@@ -384,8 +384,8 @@ const phase = useStore((s) => s.room?.phase);
 }
 
 export function Hud() {
-    const skin = useSkin();
-const room = useStore((s) => s.room)!;
+  const skin = useSkin();
+  const room = useStore((s) => s.room)!;
   const me = useStore((s) => s.me);
   const nearby = useStore((s) => s.nearby);
   const killTarget = useStore((s) => s.killTarget);
@@ -393,6 +393,7 @@ const room = useStore((s) => s.room)!;
   const set = useStore((s) => s.set);
   const t = useT();
   const en = useLang((s) => s.lang) === 'en';
+  const killLabel = skin.killButton ? (en ? skin.killButton.label.en : skin.killButton.label.vi) : t('kill');
   const sessionId = useStore((s) => s.sessionId);
   const left = useCountdown(room.phaseEndsAt);
   const cdLeft = useCountdown(me?.killReadyAt ?? 0);
@@ -595,14 +596,14 @@ const room = useStore((s) => s.room)!;
               className={`round-btn kill slot-main ${killReady ? 'ready' : 'idle'} ${cdLeft ? 'cooling' : ''}`}
               disabled={!killReady}
               {...tapProps(() => send('kill', {}))}
-              title={`${t('kill')} (K)`}
-              aria-label={t('kill')}
+              title={`${killLabel} (K)`}
+              aria-label={killLabel}
             >
-              <img src={asset('common/ui/btn-kill.webp')} alt="" draggable={false} />
+              <img src={asset(`${skin.killButton?.icon ?? 'common/ui/btn-kill'}.webp`)} alt="" draggable={false} />
               {cdLeft ? <CooldownRing readyAt={me!.killReadyAt ?? 0} /> : null}
               {cdLeft ? <span className="cd"><Digits text={cdLeft} /></span> : null}
               <kbd>K</kbd>
-              <em>{t('kill')}</em>
+              <em>{killLabel}</em>
             </button>
           )}
           {alive && <button
