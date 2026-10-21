@@ -3,7 +3,6 @@ import { getStateCallbacks, type Room } from 'colyseus.js';
 import {
   AREA_ORDER,
   GAME,
-  SABOTAGE,
   INTERACT_RADIUS,
   LAYOUT_H,
   LAYOUT_W,
@@ -22,7 +21,8 @@ import {
   stepMovement,
   type TaskId,
 } from '@hidden-truth/shared';
-import { fix, onRoom, room, send } from '../net';
+import { arrest, onHeard, onRoom, room, send } from '../net';
+import { sfx } from '../ui/minigames/common/kit';
 import { setVoiceProbe } from '../voice';
 import { KILLER_NAME_COLOR, uiBlocksMovement, useStore, type Nearby } from '../store';
 
@@ -200,19 +200,19 @@ export class GameScene extends Phaser.Scene {
       const ae = document.activeElement as HTMLElement | null;
       if (ae && ae !== document.body && ['INPUT', 'TEXTAREA', 'SELECT'].includes(ae.tagName)) ae.blur();
     });
-    // one key per action, under the right hand while the left one is on WASD: J task/fix, K kill, L report, I sabotage, B bell; E/Space/R/Q stay as aliases
+    // one key per action, under the right hand while the left one is on WASD: J task/package, G package, hold K arrest, L report, B bell; E/Space/R stay as aliases
     kb.on('keydown-J', (e: KeyboardEvent) => !e.repeat && this.interact());
     kb.on('keydown-E', (e: KeyboardEvent) => !e.repeat && this.interact());
     kb.on('keydown-SPACE', (e: KeyboardEvent) => !e.repeat && this.interact());
-    kb.on('keyup-J', () => fix(false));
-    kb.on('keyup-E', () => fix(false));
-    kb.on('keyup-SPACE', () => fix(false));
-    kb.on('keydown-K', () => this.doKill());
+    kb.on('keydown-G', (e: KeyboardEvent) => !e.repeat && this.togglePackage());
+    kb.on('keydown-K', (e: KeyboardEvent) => !e.repeat && this.arrestKey(true));
+    kb.on('keyup-K', () => this.arrestKey(false));
     kb.on('keydown-L', () => this.doReport());
     kb.on('keydown-R', () => this.doReport());
     kb.on('keydown-B', (e: KeyboardEvent) => !e.repeat && this.ringBell());
 
     this.buildFog();
+    this.buildPackage();
     const cam = this.cameras.main;
     cam.setBounds(0, 0, LAYOUT_W * TILE, LAYOUT_H * TILE);
     cam.setBackgroundColor('#1b120d');
@@ -224,8 +224,14 @@ export class GameScene extends Phaser.Scene {
     this.unbind.push(useStore.subscribe((s, prev) => s.cinematic && s.cinematic !== prev.cinematic && this.onCinematic(s.cinematic)));
     this.unbind.push(useStore.subscribe((s, prev) => s.me?.killerIds !== prev.me?.killerIds && this.refreshNameColors()));
     this.unbind.push(useStore.subscribe((s) => this.lobbyKeyOf(s.room) !== this.lobbyKey && this.refreshNameColors()));
-    this.unbind.push(useStore.subscribe((s, prev) => (s.room?.sabotage ?? '') !== (prev.room?.sabotage ?? '') && this.onSabotage(s.room?.sabotage ?? '')));
-    this.unbind.push(useStore.subscribe((s, prev) => (s.me?.completedTasks !== prev.me?.completedTasks || s.me?.tasks !== prev.me?.tasks) && this.refreshStations()));
+    this.unbind.push(
+      useStore.subscribe(
+        (s, prev) =>
+          (s.room?.stations !== prev.room?.stations || s.room?.handoffOpen !== prev.room?.handoffOpen || s.room?.packageState !== prev.room?.packageState || s.room?.phase !== prev.room?.phase) &&
+          this.refreshStations(),
+      ),
+    );
+    this.unbind.push(onHeard((at) => this.onHeard(at)) as unknown as () => void);
     // proximity voice: how far / whether in sight each speaker is for us (same sight rule as the fog)
     setVoiceProbe((id) => {
       const av = this.avatars.get(id);
@@ -322,35 +328,56 @@ export class GameScene extends Phaser.Scene {
     this.myLight!.setPosition(me.x, me.y - 30).setDisplaySize(d, d).setAlpha(0.2 + Math.sin(t * 7.3) * 0.015);
   }
 
-  // ------------------------------------------------------------ sabotage
-  /** 1 = normal vision; eased toward SABOTAGE.blindVision during a blind sabotage */
+  // ------------------------------------------------------------ package
+  /** vision scale (1 = normal); the fog brush and sight checks are sized by it */
   private vis = 1;
-  private wardMark?: Phaser.GameObjects.Container;
+  private pkg?: Phaser.GameObjects.Container;
+  private pkgGlow?: Phaser.GameObjects.Arc;
 
-  private onSabotage(kind: string) {
-    const cam = this.cameras.main;
-    const killer = useStore.getState().me?.faction === 'killer';
-    if (kind === 'blind' && !killer) {
-      cam.flash(520, 255, 244, 214);
-      cam.shake(420, 0.008);
-    } else if (kind === 'ward') cam.flash(260, 200, 40, 30);
-    this.wardMark?.destroy();
-    this.wardMark = undefined;
-    const r = useStore.getState().room;
-    if (kind !== 'ward' || !r) return;
-    // the broken lime ring on the floor: dashed arcs with a gap, over a red pulse
+  /** The Last Ride package: a taped cardboard box. On the ground it pulses; carried, it rides above the carrier's head. */
+  private buildPackage() {
     const g = this.add.graphics();
-    g.fillStyle(0xd23a2a, 0.22).fillCircle(0, 0, 54);
-    g.lineStyle(7, 0xf3efe0, 0.95);
-    for (let a = 0; a < 360; a += 30) {
-      if (a >= 210 && a < 300) continue;
-      g.beginPath();
-      g.arc(0, 0, 40, Phaser.Math.DegToRad(a), Phaser.Math.DegToRad(a + 18));
-      g.strokePath();
+    g.fillStyle(0x000000, 0.28).fillEllipse(0, 4, 50, 14);
+    g.fillStyle(0xb9834a, 1).fillRect(-22, -34, 44, 36);
+    g.fillStyle(0xd9a466, 1).fillRect(-22, -42, 44, 10);
+    g.fillStyle(0x8c5f31, 1).fillRect(-22, -34, 44, 3);
+    g.fillStyle(0xe9e2c8, 0.9).fillRect(-4, -42, 8, 44);
+    g.fillStyle(0x2fae5b, 1).fillRect(-17, -24, 12, 9);
+    g.lineStyle(2, 0x5a3a1c, 1).strokeRect(-22, -42, 44, 44);
+    this.pkgGlow = this.add.circle(0, -2, 34).setStrokeStyle(3, 0x4ee08a, 0.9);
+    this.tweens.add({ targets: this.pkgGlow, scale: 1.6, alpha: 0, duration: 1200, repeat: -1 });
+    this.pkg = this.add.container(0, 0, [this.pkgGlow, g]).setVisible(false);
+  }
+
+  private updatePackage(canSee: (x: number, y: number) => boolean) {
+    const r = useStore.getState().room;
+    const c = this.pkg;
+    if (!c) return;
+    if (!r || r.phase === 'lobby' || r.packageState === 'delivered') return void c.setVisible(false);
+    if (r.packageState === 'carried') {
+      const at = this.avatars.get(r.packageCarrier)?.c;
+      if (!at) return void c.setVisible(false);
+      c.setPosition(at.x, at.y - 118).setScale(0.62).setDepth(at.y + 2).setVisible(at.visible);
+      this.pkgGlow!.setVisible(false);
+      return;
     }
-    const pulse = this.add.circle(0, 0, 40).setStrokeStyle(3, 0xff5a3c, 0.9);
-    this.tweens.add({ targets: pulse, scale: 1.7, alpha: 0, duration: 1100, repeat: -1 });
-    this.wardMark = this.add.container(r.sabotageX, r.sabotageY, [g, pulse]).setScale(1, 0.62).setDepth(r.sabotageY - 48);
+    c.setPosition(r.packageX, r.packageY).setScale(1).setDepth(r.packageY).setVisible(canSee(r.packageX, r.packageY));
+    this.pkgGlow!.setVisible(r.packageState === 'dropped');
+  }
+
+  private togglePackage() {
+    const s = useStore.getState();
+    if (s.room?.phase !== 'explore' || uiBlocksMovement()) return;
+    send(s.room.packageCarrier === s.sessionId ? 'package:drop' : 'package:pick', {});
+  }
+
+  /** Someone was arrested near us: cuffs + a red ping where it happened (nobody is named). */
+  private onHeard(at: { x: number; y: number }) {
+    sfx.cuffs();
+    const ring = this.add.circle(at.x, at.y - 30, 30).setStrokeStyle(5, 0x3c7bff, 0.95).setDepth(at.y + 1);
+    const ring2 = this.add.circle(at.x, at.y - 30, 30).setStrokeStyle(5, 0xff3c3c, 0.95).setDepth(at.y + 1);
+    this.tweens.add({ targets: ring, scale: 3, alpha: 0, duration: 900, onComplete: () => ring.destroy() });
+    this.tweens.add({ targets: ring2, scale: 3, alpha: 0, duration: 900, delay: 300, onComplete: () => ring2.destroy() });
   }
 
   /** Tall props (columns, trees…) fade when a player walks behind them so nobody hides in the art. */
@@ -501,13 +528,13 @@ export class GameScene extends Phaser.Scene {
     this.tapBadge.setPosition(s.ring.x, s.top - 6).setVisible(true);
   }
 
-  /** Highlight only the stations assigned to me; finished / foreign stations are dimmed. */
+  /** Highlight the stations that still need prep (and the handoff once open); finished / locked ones are dimmed. */
   private refreshStations() {
-    const me = useStore.getState().me;
-    const mine = new Set(me?.tasks ?? []);
-    const done = new Set(me?.completedTasks ?? []);
+    const r = useStore.getState().room;
+    const me = this.myView();
+    const open = (id: TaskId) => this.stationOpen(id);
     for (const [id, s] of this.stationSprites) {
-      const active = mine.has(id) && !done.has(id);
+      const active = me?.alive !== false && r?.phase !== 'lobby' && open(id);
       s.icon.setTint(active ? 0xffffff : 0x777777).setAlpha(active ? 1 : 0.55);
       s.ring.setVisible(active);
       for (const o of s.fx) (o as unknown as Phaser.GameObjects.Components.Visible).setVisible(active);
@@ -910,11 +937,22 @@ export class GameScene extends Phaser.Scene {
     return { dx, dy };
   }
 
+  /** prep station with turns left, or the handoff point once it has opened */
+  private stationOpen(id: TaskId) {
+    const r = useStore.getState().room;
+    if (!r) return false;
+    if (id === 'handoff_package') return r.handoffOpen && r.packageState !== 'delivered';
+    const c = r.stations[id];
+    return !!c && c.done < c.need;
+  }
+
   private tryTask(id: TaskId) {
     const s = useStore.getState();
     if (s.room?.phase !== 'explore' || uiBlocksMovement()) return;
     const st = this.skin.stations.find((x) => x.id === id)!;
-    if (!s.me?.tasks.includes(id)) return s.toast({ text: 'Đây không phải nhiệm vụ của bạn.', kind: 'info' });
+    if (this.myView()?.alive === false) return s.toast({ text: 'Bạn đã bị bắt — chỉ có thể quan sát.', kind: 'info' });
+    if (id === 'handoff_package' && !s.room.handoffOpen) return s.toast({ text: 'Chưa chuẩn bị đủ 100% — bàn giao còn khoá.', kind: 'info' });
+    if (!this.stationOpen(id)) return s.toast({ text: `“${st.title}” đã xong phần chuẩn bị.`, kind: 'info' });
     if (dist(this.pred, st) > INTERACT_RADIUS) return s.toast({ text: `Lại gần “${st.title}” để làm nhiệm vụ.`, kind: 'info' });
     send('task:open', { taskId: id });
   }
@@ -924,7 +962,7 @@ export class GameScene extends Phaser.Scene {
     const n = s.nearby;
     if (!n || uiBlocksMovement()) return;
     if (n.kind === 'task') this.tryTask(n.id);
-    else if (n.kind === 'fix') fix(true);
+    else if (n.kind === 'package') this.togglePackage();
   }
 
   private ringBell() {
@@ -932,10 +970,12 @@ export class GameScene extends Phaser.Scene {
     if (n?.kind === 'emergency' && !uiBlocksMovement()) send('emergency', {});
   }
 
-  private doKill() {
+  /** hold K (or the HUD button) to arrest; release cancels — the server checks range, cooldown and phase */
+  private arrestKey(on: boolean) {
     const s = useStore.getState();
+    if (!on) return arrest(false);
     if (s.me?.faction !== 'killer' || s.room?.phase !== 'explore' || uiBlocksMovement()) return;
-    send('kill', {});
+    arrest(true);
   }
 
   private doReport() {
@@ -953,42 +993,37 @@ export class GameScene extends Phaser.Scene {
     const s = useStore.getState();
     if (s.room?.phase !== 'explore') return null;
     const me = this.myView();
-    const alive = me?.alive !== false;
-    if (alive) {
-      const body = s.room.players.find((p) => p.body && dist(this.pred, { x: p.bodyX, y: p.bodyY }) <= GAME.reportRange);
-      if (body) return { kind: 'report', title: `Báo cáo thi thể của ${body.name}` };
-      const r = s.room;
-      if (r.sabotage === 'ward' && dist(this.pred, { x: r.sabotageX, y: r.sabotageY }) <= SABOTAGE.fixRange) return { kind: 'fix', title: this.skin.sabotage.ward.fix.vi };
-    }
+    // arrested players only watch: no tasks, no reports, no package
+    if (me?.alive === false) return null;
+    const r = s.room;
+    const body = r.players.find((p) => p.body && dist(this.pred, { x: p.bodyX, y: p.bodyY }) <= GAME.reportRange);
+    if (body) return { kind: 'report', title: `Báo xe bỏ lại của ${body.name}` };
+    if ((r.packageState === 'home' || r.packageState === 'dropped') && dist(this.pred, { x: r.packageX, y: r.packageY }) <= GAME.packageRange)
+      return { kind: 'package', title: 'Nhặt kiện hàng' };
     let best: Nearby = null;
     let bestD = INTERACT_RADIUS;
-    const done = new Set(s.me?.completedTasks ?? []);
-    const mine = new Set(s.me?.tasks ?? []);
     for (const st of this.skin.stations) {
-      if (!mine.has(st.id)) continue;
+      if (st.id === 'handoff_package' && !r.handoffOpen) continue;
       const d = dist(this.pred, st);
       if (d < bestD) {
         bestD = d;
-        best = { kind: 'task', id: st.id, title: st.title, done: done.has(st.id) };
+        best = { kind: 'task', id: st.id, title: st.title, done: !this.stationOpen(st.id) };
       }
     }
-    if (alive && dist(this.pred, MEETING_POINT) < INTERACT_RADIUS + 50 && bestD >= INTERACT_RADIUS) {
+    if (dist(this.pred, MEETING_POINT) < INTERACT_RADIUS + 50 && bestD >= INTERACT_RADIUS) {
       best = { kind: 'emergency', title: `${this.skin.emergency.vi} (họp khẩn)`, used: !!me?.emergencyUsed };
     }
     return best;
   }
 
-  /** Is someone killable within range? (client hint only; the server decides) */
-  private computeKillTarget(): boolean {
+  /** Is a driver within arrest range? (client hint only; the server decides) */
+  private computeArrestTarget(): boolean {
     const s = useStore.getState();
     if (s.me?.faction !== 'killer' || s.room?.phase !== 'explore') return false;
-    const me = this.myView();
-    if (!me?.alive) return false;
-    // by session id, never by name — players may share a name with a mate
-    const mates = new Set(s.me.killerIds ?? []);
+    if (!this.myView()?.alive) return false;
     for (const [id, av] of this.avatars) {
-      if (id === s.sessionId || !av.alive || mates.has(id)) continue;
-      if (dist(this.pred, { x: av.c.x, y: av.c.y }) <= GAME.killRange) return true;
+      if (id === s.sessionId || !av.alive) continue;
+      if (dist(this.pred, { x: av.c.x, y: av.c.y }) <= GAME.arrestRange) return true;
     }
     return false;
   }
@@ -1065,12 +1100,6 @@ export class GameScene extends Phaser.Scene {
     const iAmGhost = mine ? !mine.alive : false;
     const lobby = useStore.getState().room?.phase !== 'explore';
     const limited = !iAmGhost && !lobby && !!mine;
-    // blind sabotage: crew vision closes in fast and opens back slowly; killers keep their sight
-    const st = useStore.getState();
-    const blind = st.room?.sabotage === 'blind' && st.me?.faction !== 'killer';
-    const goal = blind ? SABOTAGE.blindVision : 1;
-    this.vis += (goal - this.vis) * Math.min(1, (dtMs / 1000) * (blind ? 10 : 1.6));
-    if (Math.abs(goal - this.vis) < 0.002) this.vis = goal;
     const canSee = (x: number, y: number) => !limited || canSeePoint(this.grid, this.pred, { x, y }, GAME.sightRadius * this.vis);
     for (const [id, av] of this.avatars) {
       av.c.setDepth(av.c.y);
@@ -1079,6 +1108,7 @@ export class GameScene extends Phaser.Scene {
       else av.c.setVisible(canSee(av.c.x, av.c.y)).setAlpha(1);
     }
     for (const b of this.bodies.values()) b.setVisible(canSee(b.x, b.y));
+    this.updatePackage(canSee);
     const now = performance.now();
     for (const [id, av] of this.avatars) {
       const mineAv = id === r.sessionId;
@@ -1095,9 +1125,8 @@ export class GameScene extends Phaser.Scene {
       useStore.getState().set({ nearby });
       this.updateTapBadge(nearby);
     }
-    if (nearby?.kind !== 'fix' && useStore.getState().fixing) fix(false);
-    const kt = this.computeKillTarget();
-    if (kt !== useStore.getState().killTarget) useStore.getState().set({ killTarget: kt });
+    const at = this.computeArrestTarget();
+    if (at !== useStore.getState().arrestTarget) useStore.getState().set({ arrestTarget: at });
     const px = Math.round((this.pred.x / TILE) * 2) / 2;
     const py = Math.round((this.pred.y / TILE) * 2) / 2;
     const cur = useStore.getState().pos;

@@ -13,6 +13,7 @@ export function TaskModal() {
   const result = useStore((s) => s.taskResult);
   const attempt = useStore((s) => s.taskAttempt);
   const me = useStore((s) => s.me);
+  const room = useStore((s) => s.room);
   const set = useStore((s) => s.set);
   const lang = useLang((s) => s.lang);
   const skin = useSkin();
@@ -33,8 +34,9 @@ export function TaskModal() {
 
   if (result) {
     const quote = QUOTES[task.taskId];
-    const done = me?.completedTasks.length ?? 0;
-    const total = me?.tasks.length ?? 0;
+    // shared crew prep progress (fake tasks never move it), shown as 10 pips
+    const total = 10;
+    const done = room ? Math.floor((room.progress / Math.max(1, room.progressTarget)) * total) : 0;
     return (
       <Modal title={en ? 'Task complete' : 'Hoàn thành nhiệm vụ'} onClose={close} wide className="hcard-modal">
         <div className="hcard" onClick={close}>
@@ -49,7 +51,7 @@ export function TaskModal() {
             <i className="hcard-spark s3" />
           </figure>
           <div className="hcard-body">
-            <span className="hcard-eyebrow">{skin.taskEyebrow ? (en ? skin.taskEyebrow.en : skin.taskEyebrow.vi) : en ? 'Ceremony preparations' : 'Chuẩn bị Lễ Ban Sóc'}</span>
+            <span className="hcard-eyebrow">{skin.taskEyebrow ? (en ? skin.taskEyebrow.en : skin.taskEyebrow.vi) : en ? 'Last Ride prep' : 'Chuẩn bị Cuốc Cuối'}</span>
             <h2>{title}</h2>
             <p className="hcard-result">{result.text}</p>
             {quote && (
@@ -60,7 +62,7 @@ export function TaskModal() {
             )}
             <div className="hcard-foot">
               <div className="hcard-progress">
-                <span>{en ? 'Your tasks' : 'Nhiệm vụ của bạn'}</span>
+                <span>{en ? 'Last Ride prep' : 'Chuẩn bị Cuốc Cuối'}</span>
                 <div className="hcard-pips">
                   {Array.from({ length: total }, (_, i) => (
                     <i key={i} className={i < done ? 'on' : ''} />

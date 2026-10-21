@@ -1,14 +1,15 @@
 /**
  * Headless end-to-end smoke test against a running server (pnpm dev:server).
  * N bot clients: create/join by code, start, walk to a station (server-validated movement),
- * killer hunts a villager, body report, vote, end reveal.
+ * prep tasks, undercover arrest (hold), abandoned-bike report, vote, end reveal.
  *   pnpm smoke            (default 4 bots)
  */
 import { Client, type Room } from 'colyseus.js';
 import {
   GAME,
   GAME_STATIONS,
-  type GameTurn,
+  PREP_TASK_IDS,
+  type Pt,
   ROOM_NAME,
   SIM_DT,
   getGrid,
@@ -80,76 +81,70 @@ async function walkTo(b: Bot, target: Vec) {
   return Math.hypot(sp.x - target.x, sp.y - target.y);
 }
 
-function finalTurn(say: string): GameTurn {
-  const s = say.toLowerCase();
-  const last = Math.max(s.lastIndexOf('trái'), s.lastIndexOf('phải'), s.lastIndexOf('chạy thẳng'));
-  if (last === s.lastIndexOf('chạy thẳng') && last >= 0) return 'thang';
-  if (s.lastIndexOf('trái') > s.lastIndexOf('phải')) return 'trai';
-  if (s.lastIndexOf('phải') > s.lastIndexOf('trái')) return 'phai';
-  return 'thang';
+const pk = (p: Pt) => `${p.x},${p.y}`;
+/** BFS through the free cells visiting each stop in order, never reusing a cell. */
+function solveRoute(d: Extract<TaskData, { taskId: 'plan_route' }>): Pt[] {
+  const blocked = new Set([...d.flooded, ...d.deadEnds].map(pk));
+  const out: Pt[] = [d.start];
+  const used = new Set([pk(d.start)]);
+  for (const goal of [...d.stops, d.end]) {
+    const from = out.at(-1)!;
+    const prev = new Map<string, Pt | null>([[pk(from), null]]);
+    const q = [from];
+    while (q.length) {
+      const c = q.shift()!;
+      if (c.x === goal.x && c.y === goal.y) break;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const n = { x: c.x + dx, y: c.y + dy };
+        if (n.x < 0 || n.y < 0 || n.x >= d.w || n.y >= d.h || blocked.has(pk(n)) || used.has(pk(n)) || prev.has(pk(n))) continue;
+        prev.set(pk(n), c);
+        q.push(n);
+      }
+    }
+    const leg: Pt[] = [];
+    for (let c: Pt | null | undefined = goal; c && pk(c) !== pk(from); c = prev.get(pk(c))) leg.unshift(c);
+    for (const c of leg) used.add(pk(c));
+    out.push(...leg);
+  }
+  return out;
 }
 
 /** Solve a mini-game from the client payload only (what a skilled player can see on screen). */
 function solve(t: TaskData): unknown {
   switch (t.taskId) {
-    case 'task_chi_duong':
-      return t.steps.map((s) => finalTurn(s.say));
-    case 'task_com_tam': {
-      const want = new Set<string>();
-      for (const line of t.order) {
-        const low = line.toLowerCase();
-        for (const item of t.tray) {
-          const n = item.name.toLowerCase();
-          if (!low.includes(n)) continue;
-          if (low.includes(`bỏ ${n}`)) continue;
-          want.add(item.kind);
-        }
-      }
-      return [...want].slice(0, t.want);
+    case 'receive_package': {
+      const key = (c: string[]) => [...c].sort().join('|');
+      return t.boxes.find((b) => key(b.codes) === key(t.slip))!.id;
     }
-    case 'task_tieng_rao': {
-      const legend = new Map(t.legend.map((l) => [l.text.toLowerCase(), l.means]));
-      return Object.fromEntries(t.calls.map((c) => {
-        const key = t.legend.find((l) => c.text.includes(l.text))!;
-        return [c.id, key.means];
-      }));
+    case 'check_seal':
+      return Object.fromEntries(t.pieces.map((p) => [p.id, (4 - p.rot) % 4]));
+    case 'decode_address': {
+      const said = t.messages.filter((m) => m.from === 'Khách').map((m) => m.text).join(' ');
+      const value = (l: string) => l.replace(/^(Hẻm|Gần|Nhà|Trước nhà có) /, '');
+      return t.cards.find((c) => c.lines.every((l) => said.includes(value(l))))!.id;
     }
-    case 'task_ca_phe_phin':
-      return { milk: t.line };
-    case 'task_do_xang':
-      return { holdMs: (t.target / (t.pricePerLiter * t.litersPerSec)) * 1000 };
-    case 'task_va_vo':
-      return { patches: t.leaks };
-    case 'task_so_hui': {
-      const out: Record<string, string> = {};
-      for (const row of t.rows) {
-        const msg = t.messages.find((m) => m.text.includes(row.name) || m.from === row.name);
-        const amt = t.amounts.find((a) => msg && msg.text.includes(a.label));
-        if (amt) out[row.id] = amt.id;
-      }
-      return out;
+    case 'plan_route':
+      return solveRoute(t);
+    case 'prepare_bike':
+      return { pumps: Math.ceil(t.green[0] / t.perPump), order: [...t.straps].sort((a, b) => a.n - b.n).map((s) => s.id) };
+    case 'pack_disguise': {
+      const [boxLine, labelLine, layerLine] = t.note;
+      const byName = (xs: { id: string; name: string }[], n: string) => xs.find((x) => x.name === n.trim())!.id;
+      const box = byName(t.boxes, boxLine.replace(/^Thùng ngoài: /, '').replace(/\.$/, ''));
+      const label = byName(t.labels, labelLine.match(/“(.+)”/)![1]);
+      const layers = layerLine.replace(/^Lót từ dưới lên: /, '').replace(/\.$/, '').split(' → ').map((n) => byName(t.layers, n));
+      return { box, label, layers };
     }
-    case 'task_dem_tien': {
-      const stacks = Object.fromEntries(t.notes.map((n) => [n.id, n.value]));
-      const total = t.notes.reduce((s, n) => s + n.value, 0);
-      return { stacks, total };
+    case 'confirm_recipient': {
+      const phrase = t.message.match(/“(.+)”/)![1];
+      return t.callers.find((c) => t.message.includes(c.code4) && c.phrase === phrase)!.id;
     }
-    case 'task_khui_hui': {
-      const best = [...t.envelopes].sort((a, b) => parseInt(b.bid, 10) - parseInt(a.bid, 10))[0];
-      return best.id;
-    }
-    case 'task_xep_xe':
-      throw new Error('xep_xe bot solver not implemented');
+    case 'handoff_package':
+      return { code: t.message.match(/\d{4}/)![0] };
   }
 }
 
-const MIN_MS: Partial<Record<TaskData['taskId'], number>> = {
-  task_com_tam: 9000,
-  task_ca_phe_phin: 3500,
-  task_do_xang: 2500,
-  task_va_vo: 3500,
-  task_khui_hui: 5000,
-};
+const MIN_MS = 3600;
 
 function wire(b: Bot) {
   b.room.onMessage('private', (m) => (b.me = m));
@@ -157,7 +152,7 @@ function wire(b: Bot) {
   b.room.onMessage('task:result', (r) => (b.lastResult = r));
   b.room.onMessage('vote:result', (r) => (b.voteResult = r));
   b.room.onMessage('end', (e) => (b.end = e));
-  for (const t of ['chat', 'chat:history', 'toast', 'intro', 'teleport', 'task:close', 'time', 'canh', 'cinematic', 'pong', 'private:refresh']) b.room.onMessage(t, () => {});
+  for (const t of ['chat', 'chat:history', 'toast', 'intro', 'teleport', 'task:close', 'time', 'cinematic', 'pong', 'arrest:hold', 'arrest:heard', 'inspect:result', 'voice:signal']) b.room.onMessage(t, () => {});
 }
 
 async function until(fn: () => unknown, ms = 5000, label = 'condition') {
@@ -183,7 +178,7 @@ async function main() {
   }
   await until(() => host.room.state.players.size === N, 3000, 'players joined');
 
-  host.room.send('configure', { tasksPerPlayer: 3 });
+  host.room.send('configure', { turnsPerDriver: 1 });
   for (const b of bots) b.room.send('ready', { ready: true });
   await sleep(200);
   host.room.send('start', {});
@@ -192,47 +187,47 @@ async function main() {
   const killer = bots.find((b) => b.me!.faction === 'killer')!;
   const crew = bots.filter((b) => b.me!.faction === 'crew');
   if (!killer) throw new Error('no killer assigned');
-  if (killer.me!.tasks.length === 0) throw new Error('killer has no fake task list');
 
-  // a crew member plays EVERY assigned mini-game -> shared progress goes up, night-watch drum strikes
+  // a crew member plays every prep station -> shared progress goes up; a wrong answer is rejected first
   const worker = crew[0];
-  let canh = 0;
-  host.room.onMessage('canh', (c: { canh: number }) => (canh = c.canh));
-  for (const tid of worker.me!.tasks) {
+  for (const tid of PREP_TASK_IDS) {
     const st = GAME_STATIONS.find((x) => x.id === tid)!;
     await walkTo(worker, st);
     worker.task = undefined;
     worker.lastResult = undefined;
     worker.room.send('task:open', { taskId: tid });
     await until(() => worker.task, 4000, `task:data ${tid}`);
-    // a wrong answer must be rejected
     worker.room.send('task:submit', { taskId: tid, answer: { wrong: true } });
     await until(() => worker.lastResult, 4000, `reject ${tid}`);
     if (worker.lastResult!.ok) throw new Error(`${tid}: wrong answer accepted`);
+    worker.task = undefined;
     worker.lastResult = undefined;
-    await sleep((MIN_MS[tid] ?? 2500) + 100);
+    worker.room.send('task:open', { taskId: tid });
+    await until(() => worker.task, 4000, `task:data retry ${tid}`);
+    await sleep(MIN_MS);
     worker.room.send('task:submit', { taskId: tid, answer: solve(worker.task!) });
     await until(() => worker.lastResult, 4000, `task result ${tid}`);
     if (!worker.lastResult!.ok) throw new Error(`${tid}: correct answer rejected`);
-    log('task done', tid, '-> progress', host.room.state.progress, '/', host.room.state.progressTarget, 'canh', canh);
+    log('task done', tid, '-> progress', host.room.state.progress, '/', host.room.state.progressTarget);
   }
-  if (host.room.state.progress < worker.me!.tasks.length) throw new Error('progress did not increase');
+  if (host.room.state.progress < PREP_TASK_IDS.length) throw new Error('progress did not increase');
 
   // killer walks to a victim and kills (server validates range + cooldown)
   const victim = crew[crew.length - 1];
   const vp = victim.room.state.players.get(victim.room.sessionId);
   await walkTo(killer, { x: vp.x + 20, y: vp.y });
-  log('waiting for kill cooldown…');
+  log('waiting for arrest cooldown…');
   let killed = false;
   for (let i = 0; i < 6 && !killed; i++) {
     await sleep(3000);
-    killer.room.send('kill', {});
-    await sleep(300);
+    killer.room.send('arrest', { on: true });
+    await sleep(GAME.arrestHoldSec * 1000 + 400);
+    killer.room.send('arrest', { on: false });
     killed = [...host.room.state.players.values()].some((p: any) => !p.alive);
   }
-  if (!killed) throw new Error('kill never landed (guardian shield may have absorbed one; check logs)');
+  if (!killed) throw new Error('arrest never landed');
   const dead = [...host.room.state.players.values()].find((p: any) => !p.alive) as any;
-  log('killed', dead.name, 'body', dead.body);
+  log('arrested', dead.name, 'body', dead.body);
 
   // report -> meeting -> everyone votes for the killer -> crew wins (or tie-safe)
   const reporter = bots.find((b) => b.room.state.players.get(b.room.sessionId).alive && b !== killer)!;
@@ -254,7 +249,7 @@ async function main() {
   await until(() => host.room.state.phase === 'lobby', 3000, 'lobby');
   log('back to lobby ✓');
   for (const b of bots) b.room.leave();
-  log('ALL OK (cooldown', GAME.killCooldownSec, 's, quick mode shortens it)');
+  log('ALL OK (arrest cooldown', GAME.arrestCooldownSec, 's)');
   process.exit(0);
 }
 

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Cinematic, ChatMsg, EndReveal, Phase, PrivateInfo, SabotageKind, TaskData, TaskId, ToastMsg, VoteResult } from '@hidden-truth/shared';
+import type { ArrestHoldMsg, Cinematic, ChatMsg, EndReveal, InspectResult, Phase, PrivateInfo, TaskData, TaskId, ToastMsg, VoteResult } from '@hidden-truth/shared';
 
 /** which matchmaking call is in flight (false = idle) */
 export type Connecting = false | 'create' | 'join' | 'find' | 'reconnect';
@@ -33,21 +33,21 @@ export type RoomView = {
   phaseEndsAt: number;
   progress: number;
   progressTarget: number;
-  /** night clock: elapsed = (nightPausedAt || serverNow) - nightStartAt; 0 = not running */
+  /** countdown: elapsed = (nightPausedAt || serverNow) - nightStartAt; 0 = not running */
   nightStartAt: number;
   nightPausedAt: number;
   meetingReason: string;
-  /** running sabotage ('' = none); ward spot/area only while a ward runs */
-  sabotage: '' | SabotageKind;
-  sabotageEndsAt: number;
-  sabotageArea: string;
-  sabotageX: number;
-  sabotageY: number;
-  killers: number;
-  tasksPerPlayer: number;
-  /** whole-night length (min); nightAuto = follows lobby size until the host sets it */
+  /** shared preparation turns per prep station */
+  stations: Record<string, { need: number; done: number }>;
+  /** handoff_package unlocked (preparation at 100%) */
+  handoffOpen: boolean;
+  packageState: 'home' | 'carried' | 'dropped' | 'delivered';
+  packageCarrier: string;
+  packageX: number;
+  packageY: number;
+  turnsPerDriver: number;
+  /** countdown length (min) */
   nightMin: number;
-  nightAuto: boolean;
   crewAlive: number;
   killersAlive: number;
   players: PlayerView[];
@@ -57,7 +57,7 @@ export type Nearby =
   | { kind: 'task'; id: TaskId; title: string; done: boolean }
   | { kind: 'report'; title: string }
   | { kind: 'emergency'; title: string; used: boolean }
-  | { kind: 'fix'; title: string }
+  | { kind: 'package'; title: string }
   | null;
 
 type TaskResult = { ok: boolean; text: string; fact?: string; headline?: string };
@@ -77,16 +77,17 @@ type Store = {
   taskResult: TaskResult | null;
   /** bumps when the server rejects an answer -> the mini-game restarts */
   taskAttempt: number;
-  /** night-watch drum banner (5 canh) */
-  canh: { n: number; text: string; id: number } | null;
   nearby: Nearby;
-  /** a player (not killer-mate) is within kill range of me */
-  killTarget: boolean;
+  /** a driver is within arrest range of me (undercover only) */
+  arrestTarget: boolean;
+  /** an arrest hold in progress that involves me (as the cop or the target) */
+  arrestHold: ArrestHoldMsg | null;
+  /** veteran: the inspect picker is open / its result */
+  inspectOpen: boolean;
+  inspect: InspectResult | null;
   area: string;
   /** my position in tile units */
   pos: { x: number; y: number } | null;
-  /** holding the sabotage fix button (pointer or J/Space) */
-  fixing: boolean;
   introOpen: boolean;
   /** reopened from the HUD: show only the role card, no story / long animation */
   introQuick: boolean;
@@ -113,12 +114,13 @@ export const useStore = create<Store>((set, get) => ({
   task: null,
   taskResult: null,
   taskAttempt: 0,
-  canh: null,
   nearby: null,
-  killTarget: false,
+  arrestTarget: false,
+  arrestHold: null,
+  inspectOpen: false,
+  inspect: null,
   area: '',
   pos: null,
-  fixing: false,
   introOpen: false,
   introQuick: false,
   voteResult: null,
@@ -137,13 +139,13 @@ export const useStore = create<Store>((set, get) => ({
 /** Any modal that should freeze movement / keyboard input in Phaser. */
 export function uiBlocksMovement(): boolean {
   const s = useStore.getState();
-  return !!(s.task || s.introOpen);
+  return !!(s.task || s.introOpen || s.inspectOpen);
 }
 
 export const colorHex = (n: number) => '#' + n.toString(16).padStart(6, '0');
 
-/** Name colour Âm Binh see on fellow Âm Binh (and themselves). Only killers ever receive `killerIds`. */
+/** Name colour the undercover sees on themselves. Only the undercover ever receives `killerIds`. */
 export const KILLER_NAME_COLOR = '#ff5a4a';
 const NO_KILLERS: readonly string[] = [];
-/** ids of every Âm Binh — non-empty only when the viewer is one */
+/** the undercover's own id — non-empty only when the viewer is the undercover */
 export const useKillerIds = () => useStore((s) => s.me?.killerIds ?? NO_KILLERS);

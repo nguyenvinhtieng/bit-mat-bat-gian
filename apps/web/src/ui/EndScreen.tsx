@@ -18,10 +18,9 @@ export function EndScreen() {
           <div className="end-rays" aria-hidden />
           <img className="end-emblem" src={asset(`maps/common/ui/end/victory-${end.winner}.webp`)} alt="" draggable={false} />
           <div className="end-ribbon">
-            <h1 className={end.winner}>{end.winner === 'crew' ? 'Người Dân thắng!' : `${skin.killerName.vi} thắng!`}</h1>
+            <h1 className={end.winner}>{end.winner === 'crew' ? `${skin.crewName.vi} thắng!` : `${skin.killerName.vi} thắng!`}</h1>
           </div>
-          <p className={`end-reason ${end.reason === skin.story.endings.sabotage ? 'sabotage' : ''}`}>
-            {end.reason === skin.story.endings.sabotage && skin.sabotage.ward.icon && <img src={asset(`${skin.sabotage.ward.icon}.webp`)} alt="" draggable={false} />}
+          <p className={`end-reason ${end.reason === skin.story.endings.timeout ? 'timeout' : ''}`}>
             {end.reason}
           </p>
         </div>
@@ -29,7 +28,7 @@ export function EndScreen() {
         <section>
           <h3>Vai trò</h3>
           <div className="role-list">
-            {/* Âm Binh first so the reveal is the first thing everyone reads */}
+            {/* the cop first so the reveal is the first thing everyone reads */}
             {[...end.roles].sort((a, b) => Number(b.faction === 'killer') - Number(a.faction === 'killer')).map((r, i) => (
               <div
                 key={i}

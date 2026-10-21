@@ -71,11 +71,11 @@ export const CloseButton = ({ onClick, label = 'Đóng', className = '' }: { onC
   </button>
 );
 
-/** Ward spot (px) while a ward sabotage runs. Primitive selectors: an object selector would re-render forever. */
-export function useWardSpot() {
-  const on = useStore((s) => s.room?.sabotage === 'ward');
-  const x = useStore((s) => s.room?.sabotageX ?? 0);
-  const y = useStore((s) => s.room?.sabotageY ?? 0);
+/** Where the package lies (px) while nobody carries it. Primitive selectors: an object selector would re-render forever. */
+export function usePackageSpot() {
+  const on = useStore((s) => s.room?.phase === 'explore' && (s.room.packageState === 'home' || s.room.packageState === 'dropped'));
+  const x = useStore((s) => s.room?.packageX ?? 0);
+  const y = useStore((s) => s.room?.packageY ?? 0);
   return on ? { x, y } : null;
 }
 

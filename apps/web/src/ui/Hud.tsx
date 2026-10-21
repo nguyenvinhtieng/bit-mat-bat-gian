@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { sfx } from './minigames/common/kit';
-import { AREA_RECTS, GAME, SABOTAGE, TILE, canhMs as canhMsFor, LAYOUT_H, LAYOUT_W, type AreaId, type SabotageKind } from '@hidden-truth/shared';
+import { AREA_RECTS, GAME, PREP_TASK_IDS, LAYOUT_H, LAYOUT_W, TILE, type AreaId, type TaskId } from '@hidden-truth/shared';
 
 function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''; pending: Set<AreaId>; pos: { x: number; y: number } | null; big?: boolean; onClick?: () => void }) {
   const skin = useSkin();
-  const ward = useWardSpot();
+  const pkg = usePackageSpot();
   const ids = Object.keys(AREA_RECTS) as AreaId[];
   return (
     <svg className={`minimap ${big ? 'big' : 'mini'}`} onClick={onClick} viewBox={`0 0 ${LAYOUT_W} ${LAYOUT_H}`}>
@@ -25,10 +25,10 @@ function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''
             </text>
           );
         })}
-      {ward && (
+      {pkg && (
         <g className="mm-ward">
-          <circle cx={ward.x / TILE} cy={ward.y / TILE} r={2.6} className="mm-ward-pulse" />
-          <circle cx={ward.x / TILE} cy={ward.y / TILE} r={1.2} className="mm-ward-dot" />
+          <circle cx={pkg.x / TILE} cy={pkg.y / TILE} r={2.6} className="mm-ward-pulse" />
+          <circle cx={pkg.x / TILE} cy={pkg.y / TILE} r={1.2} className="mm-ward-dot" />
         </g>
       )}
       {pos && (
@@ -40,10 +40,10 @@ function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''
     </svg>
   );
 }
-import { fix, send } from '../net';
-import { KILLER_NAME_COLOR, uiBlocksMovement, useStore } from '../store';
+import { arrest, send } from '../net';
+import { colorHex, uiBlocksMovement, useStore } from '../store';
 import { useLang, useT } from '../i18n';
-import { CloseButton, Digits, Icon, RoleBadge, asset, fmt, tapProps, useCountdown, useSkin, useWardSpot } from './common';
+import { CloseButton, Digits, Icon, RoleBadge, asset, fmt, tapProps, useCountdown, usePackageSpot, useSkin } from './common';
 import { MapView } from './MapView';
 import { GameSettings } from './GameSetting';
 import { VoiceControls } from './VoiceControls';
@@ -72,175 +72,52 @@ function CooldownRing({ readyAt }: { readyAt: number }) {
   );
 }
 
-/** Sabotage icon from the map skin, or a common glyph. */
-function SabIcon({ kind, size = 28 }: { kind: SabotageKind; size?: number }) {
-  const skin = useSkin();
-  const icon = skin.sabotage[kind].icon;
-  return icon ? <img src={asset(`${icon}.webp`)} alt="" width={size} height={size} draggable={false} /> : <span className="sab-glyph">{kind === 'blind' ? '💥' : '⛩'}</span>;
-}
-
-/** Alert while a sabotage runs: a short burst for `blind`, a countdown + where to go for `ward`. */
-function SabotageAlert() {
-  const skin = useSkin();
-  const room = useStore((s) => s.room)!;
+/** Notices under the top HUD: an arrest hold involving me, and "you carry the package". */
+function HoldNotice() {
+  const hold = useStore((s) => s.arrestHold);
   const t = useT();
-  const en = useLang((s) => s.lang) === 'en';
-  const left = useCountdown(room.sabotage ? room.sabotageEndsAt : 0);
-  const kind = room.sabotage;
+  const left = useCountdown(hold?.endsAt ?? 0);
   useEffect(() => {
-    if (kind === 'blind') (sfx.drum(), setTimeout(() => sfx.senh(), 90), setTimeout(() => sfx.senh(), 260));
-    else if (kind === 'ward') sfx.bad();
-  }, [kind, room.sabotageEndsAt]);
-  useEffect(() => {
-    if (kind === 'ward' && left != null && left > 0 && left <= 10) sfx.scrape();
-  }, [kind, left]);
-  if (!kind || room.phase !== 'explore') return null;
-  const sk = skin.sabotage[kind];
-  const area = room.sabotageArea ? skin.areas[room.sabotageArea as AreaId] : null;
-  const text = (en ? sk.alert.en : sk.alert.vi).replace('{area}', area ? (en ? area.nameEn : area.name) : '');
+    if (hold?.youAre === 'target') sfx.bad();
+  }, [hold?.endsAt, hold?.youAre]);
+  if (!hold) return null;
+  const target = hold.youAre === 'target';
   return (
-    <div className={`notice sab-alert ${kind} ${kind === 'ward' && (left ?? 99) <= 10 ? 'urgent' : ''}`} role="alert" key={room.sabotageEndsAt}>
-      <span className="notice-ico">
-        <SabIcon kind={kind} size={36} />
-      </span>
+    <div className={`notice arrest-alert ${target ? 'urgent' : ''}`} role="alert" key={hold.endsAt}>
+      <span className="notice-ico">🚨</span>
       <div className="notice-body">
-        <b>{en ? sk.name.en : sk.name.vi}</b>
-        <span>{text}</span>
+        <b>{target ? t('arrestingYou').replace('{name}', hold.by ?? '?') : t('arresting')}</b>
+        <span>{target ? t('arrestRun') : t('arrestKeep')}</span>
       </div>
-      {kind === 'ward' && left != null && (
+      {left != null && (
         <span className="notice-timer">
-          <Digits text={fmt(left)} />
+          <Digits text={left} />
         </span>
       )}
     </div>
   );
 }
 
-/** Killer button: opens a two-item menu (blind / ward). Shares one cooldown; one sabotage at a time. */
-function SabotageButton({ slot = '' }: { slot?: string }) {
-  const skin = useSkin();
-  const room = useStore((s) => s.room)!;
-  const me = useStore((s) => s.me)!;
+function CarryNotice() {
+  const mine = useStore((s) => !!s.room && s.room.packageState === 'carried' && s.room.packageCarrier === s.sessionId);
+  const open = useStore((s) => !!s.room?.handoffOpen);
   const t = useT();
-  const en = useLang((s) => s.lang) === 'en';
-  const [open, setOpen] = useState(false);
-  const cd = useCountdown(me.sabotageReadyAt ?? 0);
-  const busy = !!room.sabotage;
-  const ready = !cd && !busy;
-  useEffect(() => {
-    const h = (e: KeyboardEvent) => {
-      const ae = document.activeElement;
-      if (e.repeat || (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA'))) return;
-      if (useStore.getState().task) return;
-      if (e.code === 'KeyI' || e.code === 'KeyQ') setOpen((v) => !v);
-      else if (open && (e.code === 'Digit1' || e.code === 'Digit2')) go(e.code === 'Digit1' ? 'blind' : 'ward');
-    };
-    window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
-  });
-  useEffect(() => {
-    if (!ready) setOpen(false);
-  }, [ready]);
-  const go = (kind: SabotageKind) => {
-    setOpen(false);
-    send('sabotage', { kind });
-  };
-  const label = en ? 'Sabotage' : 'Phá';
+  if (!mine) return null;
   return (
-    <div className={`sab-wrap ${slot}`}>
-      {open && ready && (
-        <div className="sab-menu" role="menu">
-          {(['blind', 'ward'] as const).map((k, i) => (
-            <button key={k} role="menuitem" {...tapProps(() => go(k))}>
-              <SabIcon kind={k} />
-              <span>
-                <b>{en ? skin.sabotage[k].name.en : skin.sabotage[k].name.vi}</b>
-                <small>{k === 'blind' ? (en ? `Blinds the crew ${SABOTAGE.blindSec}s` : `Làm mù phe dân ${SABOTAGE.blindSec}s`) : en ? `Fix within ${SABOTAGE.wardSec}s or you win` : `Không sửa kịp ${SABOTAGE.wardSec}s là thắng`}</small>
-              </span>
-              <kbd>{i + 1}</kbd>
-            </button>
-          ))}
-        </div>
-      )}
-      <button
-        className={`round-btn sab ${ready ? 'ready' : 'idle'} ${cd ? 'cooling' : ''}`}
-        disabled={!ready}
-        {...tapProps(() => setOpen((v) => !v))}
-        title={`${label} (I)`}
-        aria-label={label}
-        aria-expanded={open}
-      >
-        <SabIcon kind="ward" size={44} />
-        {cd ? <CooldownRing readyAt={me.sabotageReadyAt ?? 0} /> : null}
-        {cd ? <span className="cd"><Digits text={cd} /></span> : null}
-        <kbd>I</kbd>
-        <em>{label}</em>
-      </button>
-    </div>
-  );
-}
-
-/** Hold-to-fix pill at the ward spot (pointer or J/Space); the server times the hold. */
-function FixButton({ title }: { title: string }) {
-  const skin = useSkin();
-  const fixing = useStore((s) => s.fixing);
-  const t = useT();
-  const en = useLang((s) => s.lang) === 'en';
-  useEffect(() => () => fix(false), []);
-  return (
-    <button
-      className={`interact fix ${fixing ? 'holding' : ''}`}
-      style={{ '--hold': `${SABOTAGE.fixHoldSec}s` } as React.CSSProperties}
-      onPointerDown={(e) => ((e.target as HTMLElement).setPointerCapture?.(e.pointerId), fix(true))}
-      onPointerUp={() => fix(false)}
-      onPointerCancel={() => fix(false)}
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      <i className="fix-fill" aria-hidden />
-      <kbd>J</kbd>
-      <SabIcon kind="ward" size={22} />
-      {en ? skin.sabotage.ward.fix.en : title}
-      <small>{en ? '(hold)' : '(giữ)'}</small>
-    </button>
-  );
-}
-
-/** Night-watch drum banner: shown (with the drum) each time a new canh begins. */
-function CanhBanner() {
-    const skin = useSkin();
-const canh = useStore((s) => s.canh);
-  const [show, setShow] = useState(false);
-  useEffect(() => sfx.preloadDrum(), []);
-  useEffect(() => {
-    if (!canh) return;
-    setShow(true);
-    sfx.watch(canh.n);
-    const t = setTimeout(() => setShow(false), 5200);
-    return () => clearTimeout(t);
-  }, [canh?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-  if (!canh || !show) return null;
-  return (
-    <div className={`notice canh-banner ${canh.n > GAME.canhCount ? 'dawn' : ''}`} key={canh.id}>
-      <span className="notice-ico">
-        <img src={asset(`${skin.art.clockIcon}.webp`)} alt="" />
-      </span>
+    <div className="notice carry-notice">
+      <span className="notice-ico">📦</span>
       <div className="notice-body">
-        <b className="canh-pips">
-          {Array.from({ length: GAME.canhCount }, (_, i) => (
-            <i key={i} className={i < canh.n ? 'on' : ''} />
-          ))}
-        </b>
-        <span>{canh.text}</span>
+        <b>{t('carrying')}</b>
+        <span>{open ? t('carryGo') : t('carryWait')}</span>
       </div>
     </div>
   );
 }
 
-
-/** Night clock: 5 canh that run on time (paused during meetings). Elapsed is derived from synced timestamps. */
-function useNight() {
-    const skin = useSkin();
-const room = useStore((s) => s.room)!;
+/** One countdown (paused during meetings); the fictional clock runs 23:42 -> 05:00 over it. */
+function useClock() {
+  const skin = useSkin();
+  const room = useStore((s) => s.room)!;
   const offset = useStore((s) => s.timeOffset);
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -248,33 +125,30 @@ const room = useStore((s) => s.room)!;
     return () => clearInterval(t);
   }, []);
   if (!room.nightStartAt) return null;
-  const canhMs = canhMsFor(room.nightMin);
-  const total = canhMs * GAME.canhCount;
+  const total = room.nightMin * 60_000;
   const elapsed = Math.min(total, Math.max(0, (room.nightPausedAt || now + offset) - room.nightStartAt));
-  // in-game clock from the map skin (Huế: canh một starts 19:00, each canh is 2 hours)
-  const { startMin, segmentMin } = skin.story.clock;
-  const mins = startMin + Math.floor((elapsed / canhMs) * segmentMin);
+  const { startMin, endMin } = skin.story.clock;
+  const mins = startMin + Math.floor((elapsed / total) * (endMin - startMin));
   const h = Math.floor(mins / 60) % 24;
+  const left = Math.ceil((total - elapsed) / 1000);
   return {
     frac: elapsed / total,
-    canh: Math.min(GAME.canhCount, Math.floor(elapsed / canhMs) + 1),
     clock: `${String(h).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`,
-    left: Math.ceil((total - elapsed) / 1000),
-    canhLeft: Math.ceil((canhMs - (elapsed % canhMs)) / 1000),
+    left,
+    last: left <= 60,
     paused: !!room.nightPausedAt,
   };
 }
 
-/** "Canh … · còn lại mm:ss" pill; on touch screens it sits in the right column under the role card. */
-function NightClock({ night }: { night: NonNullable<ReturnType<typeof useNight>> }) {
+/** "05:00 · còn lại mm:ss" pill; on touch screens it sits in the right column under the role card. */
+function NightClock({ night }: { night: NonNullable<ReturnType<typeof useClock>> }) {
   const skin = useSkin();
   const t = useT();
-  const en = useLang((s) => s.lang) === 'en';
   return (
     <div className="night-clock" title={t('nightTitle')}>
       <img src={asset(`${skin.art.clockIcon}.webp`)} width={26} height={26} alt="" />
       <span className="nc-canh">
-        {t('canh')} {en ? skin.story.segments[night.canh - 1].en : skin.story.segments[night.canh - 1].vi}
+        <Digits text={night.clock} />
       </span>
       <i className="nc-sep" aria-hidden />
       {night.paused ? (
@@ -288,56 +162,48 @@ function NightClock({ night }: { night: NonNullable<ReturnType<typeof useNight>>
   );
 }
 
-/** Touch screens: the night clock on its own, with the same last-canh / paused styling as the top strip. */
+/** Touch screens: the clock on its own, with the same last-minute / paused styling as the top strip. */
 function NightClockDock() {
-  const night = useNight();
+  const night = useClock();
   if (!night) return null;
   return (
-    <div className={`night-wrap ${night.canh === GAME.canhCount ? 'last' : ''} ${night.paused ? 'paused' : ''}`}>
+    <div className={`night-wrap ${night.last ? 'last' : ''} ${night.paused ? 'paused' : ''}`}>
       <NightClock night={night} />
     </div>
   );
 }
 
-function NightBar({ pct, progress, target }: { pct: number; progress: number; target: number }) {
-    const skin = useSkin();
-const night = useNight();
+function NightBar({ pct, progress, target, open }: { pct: number; progress: number; target: number; open: boolean }) {
+  const skin = useSkin();
+  const night = useClock();
   const t = useT();
-  const en = useLang((s) => s.lang) === 'en';
   const touch = isTouchDevice();
   if (!night) return null;
-  const last = night.canh === GAME.canhCount;
   return (
-    <div className={`night-wrap ${last ? 'last' : ''} ${night.paused ? 'paused' : ''}`}>
+    <div className={`night-wrap ${night.last ? 'last' : ''} ${night.paused ? 'paused' : ''}`}>
       <div className="nw-row">
-      {!touch && <NightClock night={night} />}
-      <div className="night-bar" title={`${t('canhLeft')}: ${fmt(night.canhLeft)}`}>
-        {Array.from({ length: GAME.canhCount }, (_, i) => {
-          const f = Math.min(1, Math.max(0, night.frac * GAME.canhCount - i));
-          return (
-            <div key={i} className={`nb-seg ${f >= 1 ? 'done' : f > 0 ? 'cur' : ''}`}>
-              <i style={{ width: `${f * 100}%` }} />
-              <span>{en ? skin.story.segments[i].en : skin.story.segments[i].vi}</span>
-            </div>
-          );
-        })}
-        <img className="nb-moon" src={asset(`${skin.art.nightMarker}.webp`)} alt="" style={{ left: `${night.frac * 100}%` }} />
+        {!touch && <NightClock night={night} />}
+        <div className="night-bar single" title={t('nightLeftTitle')}>
+          <div className={`nb-seg ${night.frac >= 1 ? 'done' : 'cur'}`}>
+            <i style={{ width: `${night.frac * 100}%` }} />
+          </div>
+          <img className="nb-moon" src={asset(`${skin.art.nightMarker}.webp`)} alt="" style={{ left: `${night.frac * 100}%` }} />
+        </div>
       </div>
-      </div>
-      <div className="progress" title={t('progress')}>
+      <div className={`progress ${open ? 'open' : ''}`} title={t('progress')}>
         <div className="fill" style={{ width: `${pct}%` }} />
         <span>
-          {t('progress')} · {progress}/{target} ({pct}%)
+          {open ? t('handoffOpen') : `${t('progress')} · ${progress}/${target} (${pct}%)`}
         </span>
       </div>
     </div>
   );
 }
 
-/** After dying: tell the player (once) that ghosts keep doing tasks — the crew still needs them before canh năm ends. */
+/** After being arrested: tell the player (once) that they are now a spectator. */
 function GhostNotice({ dead, crew }: { dead: boolean; crew: boolean }) {
-    const skin = useSkin();
-const phase = useStore((s) => s.room?.phase);
+  const skin = useSkin();
+  const phase = useStore((s) => s.room?.phase);
   const cinematic = useStore((s) => s.cinematic);
   const t = useT();
   const [state, setState] = useState<'none' | 'open' | 'seen' | 'hidden'>('none');
@@ -361,25 +227,110 @@ const phase = useStore((s) => s.room?.phase);
       <div className="ghost-notice">
         <img src={asset(`${skin.art.ghostIcon}.webp`)} width={120} height={120} alt="" />
         <div className="ghost-body">
-        <h2>{t('ghostTitle')}</h2>
-        {crew ? (
-          <>
-            <p>{t('ghostBody1')}</p>
-            <p className="ghost-em">{t('ghostBody2')}</p>
-            <ul>
-              <li>{t('ghostRule1')}</li>
-              <li>{t('ghostRule2')}</li>
-            </ul>
-          </>
-        ) : (
-          <p>{t('ghostKillerBody')}</p>
-        )}
-        <button className="btn" autoFocus onClick={() => setState('seen')}>
-          {crew ? t('ghostGo') : t('close')}
-        </button>
+          <h2>{crew ? t('ghostTitle') : t('ghostKillerTitle')}</h2>
+          {crew ? (
+            <>
+              <p>{t('ghostBody1')}</p>
+              <p className="ghost-em">{t('ghostBody2')}</p>
+              <ul>
+                <li>{t('ghostRule1')}</li>
+                <li>{t('ghostRule2')}</li>
+              </ul>
+            </>
+          ) : (
+            <p>{t('ghostKillerBody')}</p>
+          )}
+          <button className="btn" autoFocus onClick={() => setState('seen')}>
+            {t('ghostGo')}
+          </button>
         </div>
       </div>
     </div>
+  );
+}
+
+/** Veteran: pick one driver (once per game), then read their last task activities. */
+export function InspectPanel() {
+  const open = useStore((s) => s.inspectOpen);
+  const result = useStore((s) => s.inspect);
+  const me = useStore((s) => s.me);
+  const room = useStore((s) => s.room);
+  const sessionId = useStore((s) => s.sessionId);
+  const set = useStore((s) => s.set);
+  const t = useT();
+  if (!open || !room) return null;
+  const close = () => set({ inspectOpen: false });
+  const pickable = room.players.filter((p) => p.alive && p.id !== sessionId);
+  return (
+    <div className="modal-backdrop" onClick={close}>
+      <div className="modal inspect-panel" onClick={(e) => e.stopPropagation()}>
+        <CloseButton className="modal-x" onClick={close} label={t('close')} />
+        {result ? (
+          <>
+            <h2>
+              {t('inspectOf')} <b style={{ color: colorHex(result.color) }}>{result.target}</b>
+            </h2>
+            {result.entries.length === 0 ? (
+              <p className="inspect-empty">{t('inspectNone')}</p>
+            ) : (
+              <ul className="inspect-list">
+                {result.entries.map((e, i) => (
+                  <li key={i} className={e.status}>
+                    <i className="tick">{e.status === 'done' ? '✔' : '✖'}</i>
+                    <span>
+                      <b>{e.title}</b>
+                      <small>
+                        📍 {e.area} · {t('agoSec').replace('{n}', String(e.agoSec))} · {e.status === 'done' ? t('statusDone') : t('statusFailed')}
+                      </small>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="inspect-note">{t('inspectNote')}</p>
+          </>
+        ) : me?.inspectLeft ? (
+          <>
+            <h2>{t('inspectPick')}</h2>
+            <div className="inspect-pick">
+              {pickable.map((p) => (
+                <button key={p.id} className="btn ghost" {...tapProps(() => send('skill:inspect', { target: p.id }))}>
+                  <i className="dot" style={{ background: colorHex(p.color) }} /> {p.name}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p>{t('inspectUsed')}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Undercover: press and hold next to a driver; the server times the hold and cancels it if they get away. */
+function ArrestButton({ ready, cdLeft, readyAt, label, icon }: { ready: boolean; cdLeft: number | null; readyAt: number; label: string; icon: string }) {
+  const holding = useStore((s) => s.arrestHold?.youAre === 'actor');
+  useEffect(() => () => arrest(false), []);
+  return (
+    <button
+      className={`round-btn kill slot-main ${ready || holding ? 'ready' : 'idle'} ${cdLeft ? 'cooling' : ''} ${holding ? 'holding' : ''}`}
+      style={{ '--hold': `${GAME.arrestHoldSec}s` } as React.CSSProperties}
+      disabled={!ready && !holding}
+      onPointerDown={(e) => ((e.target as HTMLElement).setPointerCapture?.(e.pointerId), arrest(true))}
+      onPointerUp={() => arrest(false)}
+      onPointerCancel={() => arrest(false)}
+      onContextMenu={(e) => e.preventDefault()}
+      title={`${label} (K)`}
+      aria-label={label}
+    >
+      <img src={asset(`${icon}.webp`)} alt="" draggable={false} />
+      {holding && <i className="hold-fill" aria-hidden />}
+      {cdLeft ? <CooldownRing readyAt={readyAt} /> : null}
+      {cdLeft ? <span className="cd"><Digits text={cdLeft} /></span> : null}
+      <kbd>K</kbd>
+      <em>{label}</em>
+    </button>
   );
 }
 
@@ -388,7 +339,7 @@ export function Hud() {
   const room = useStore((s) => s.room)!;
   const me = useStore((s) => s.me);
   const nearby = useStore((s) => s.nearby);
-  const killTarget = useStore((s) => s.killTarget);
+  const arrestTarget = useStore((s) => s.arrestTarget);
   const area = useStore((s) => s.area) as AreaId | '';
   const set = useStore((s) => s.set);
   const t = useT();
@@ -396,20 +347,23 @@ export function Hud() {
   const killLabel = skin.killButton ? (en ? skin.killButton.label.en : skin.killButton.label.vi) : t('kill');
   const sessionId = useStore((s) => s.sessionId);
   const left = useCountdown(room.phaseEndsAt);
-  const cdLeft = useCountdown(me?.killReadyAt ?? 0);
+  const cdLeft = useCountdown(me?.arrestReadyAt ?? 0);
   const pct = Math.min(100, Math.round((room.progress / Math.max(1, room.progressTarget)) * 100));
   const inGame = room.phase !== 'lobby';
   const mine = room.players.find((p) => p.id === sessionId);
   const alive = mine?.alive !== false;
   const killer = me?.faction === 'killer';
+  const veteran = me?.role === 'veteran_driver';
   const pos = useStore((s) => s.pos);
-  const killReady = killer && killTarget && !cdLeft;
+  const arrestReady = killer && arrestTarget && !cdLeft;
   const canReport = nearby?.kind === 'report';
-  // phones: a big "do task" button pops in only while standing at one of my unfinished stations
+  const carrying = room.packageState === 'carried' && room.packageCarrier === sessionId;
+  const canPick = nearby?.kind === 'package';
+  // phones: a big "do task" button pops in only while standing at an open station
   const taskHere = nearby?.kind === 'task' && !nearby.done ? nearby : null;
   const [mapOpen, setMapOpen] = useState(false);
   const taskOpen = useStore((s) => !!s.task);
-  // phones start with the task list folded so the left thumb (joystick) has room
+  // phones start with the prep list folded so the left thumb (joystick) has room
   const [tasksOpen, setTasksOpen] = useState(() => !isTouchDevice());
   const exploring = !!me && inGame && room.phase === 'explore';
   useEffect(() => {
@@ -417,69 +371,85 @@ export function Hud() {
     const h = (e: KeyboardEvent) => {
       const ae = document.activeElement;
       if (e.repeat || (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA'))) return;
-      if (useStore.getState().task || useStore.getState().introOpen) return;
+      if (uiBlocksMovement()) return;
       if (e.code === 'KeyM') setMapOpen((v) => !v);
       else if (e.code === 'KeyT') setTasksOpen((v) => !v);
+      else if (e.code === 'KeyU' && veteran) set({ inspectOpen: true });
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [exploring]);
+  }, [exploring, veteran, set]);
   useEffect(() => {
     if (!exploring) setMapOpen(false);
   }, [exploring]);
-  const pendingAreas = new Set<AreaId>(
-    (me?.tasks ?? [])
-      .filter((id) => !me!.completedTasks.includes(id))
-      .map((id) => skin.stations.find((x) => x.id === id)!.area),
-  );
+
+  /** prep stations with turns left, and the handoff point once it opens */
+  const rows = [...PREP_TASK_IDS, 'handoff_package' as const].map((id: TaskId) => {
+    const st = skin.stations.find((x) => x.id === id)!;
+    const c = room.stations[id];
+    const handoff = id === 'handoff_package';
+    const done = handoff ? room.packageState === 'delivered' : !!c && c.done >= c.need;
+    const locked = handoff && !room.handoffOpen;
+    return { id, st, need: c?.need ?? 1, got: c?.done ?? 0, done, locked, handoff };
+  });
+  const pendingAreas = new Set<AreaId>(rows.filter((r) => !r.done && !r.locked).map((r) => r.st.area));
 
   const touch = isTouchDevice();
-  const taskItems = me && (
-          <ul>
-            {me.tasks.map((id) => {
-              const st = skin.stations.find((x) => x.id === id)!;
-              const done = me.completedTasks.includes(id);
-              const here = st.area === area && !done;
-              return (
-                <li key={id} className={`${done ? 'done' : ''} ${here ? 'here' : ''}`}>
-                  <i className="tick">{done ? '✔' : ''}</i>
-                  <span>
-                    {en ? st.titleEn : st.title}
-                    <small className="task-where">📍 {en ? skin.areas[st.area].nameEn : skin.areas[st.area].name}</small>
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+  const taskItems = (
+    <ul>
+      {rows.map((r) => {
+        const here = r.st.area === area && !r.done && !r.locked;
+        return (
+          <li key={r.id} className={`${r.done ? 'done' : ''} ${here ? 'here' : ''} ${r.locked ? 'locked' : ''}`}>
+            <i className="tick">{r.done ? '✔' : r.locked ? '🔒' : ''}</i>
+            <span>
+              {en ? r.st.titleEn : r.st.title}
+              {!r.handoff && r.need > 1 && (
+                <b className="task-turns">
+                  {' '}
+                  {Math.min(r.got, r.need)}/{r.need}
+                </b>
+              )}
+              <small className="task-where">📍 {en ? skin.areas[r.st.area].nameEn : skin.areas[r.st.area].name}</small>
+            </span>
+          </li>
+        );
+      })}
+    </ul>
   );
 
   const taskChip = me && (
     <button className="task-chip" onClick={() => setTasksOpen(true)} title={touch ? t('myTasks') : `${t('myTasks')} (T)`}>
       <img src={asset('maps/common/ui/notebook.webp')} alt="" draggable={false} />
       <b>
-        {me.completedTasks.length}/{me.tasks.length}
+        {room.progress}/{room.progressTarget}
       </b>
       {!touch && <kbd className="task-chip-key">T</kbd>}
     </button>
   );
 
+  const meter = (
+    <div className="task-meter">
+      <div style={{ width: `${pct}%` }} />
+    </div>
+  );
+
   return (
     <>
-      {/* drum / sabotage notices share one centred column under the top HUD so they never overlap */}
       {inGame && (
         <div className="hud-notices">
-          <CanhBanner />
-          <SabotageAlert />
+          <HoldNotice />
+          {room.phase === 'explore' && <CarryNotice />}
         </div>
       )}
-      {/* top centre: the (small) location plate on top, night clock + progress under it */}
+      {/* top centre: the (small) location plate on top, countdown + preparation under it */}
       <div className="hud-top">
         {area && (
           <div className="area-name" key={area}>
             <span>{skin.areas[area].name}</span>
           </div>
         )}
-        {inGame && room.phase !== 'ended' && <NightBar pct={pct} progress={room.progress} target={room.progressTarget} />}
+        {inGame && room.phase !== 'ended' && <NightBar pct={pct} progress={room.progress} target={room.progressTarget} open={room.handoffOpen} />}
         {inGame && left != null && (
           <div className="hud-status">
             <span className="timer">
@@ -497,6 +467,7 @@ export function Hud() {
         </>
       )}
       {me && inGame && <GhostNotice dead={!alive} crew={me.faction === 'crew'} />}
+      <InspectPanel />
 
       {me && inGame && (
         <button className={`role-card ${me.faction}`} onClick={() => set({ introOpen: true, introQuick: true })} title={t('roleGoal')}>
@@ -504,19 +475,7 @@ export function Hud() {
           <div>
             <strong>{skin.roles[me.role].name}</strong>
             <span className="faction">{killer ? t('killerFaction') : t('crewFaction')}</span>
-            <span className="ability">
-              {!alive ? (
-                t('ghost')
-              ) : me.role === 'guardian' ? (
-                <>
-                  <img className={`shield-pip ${me.shield ? 'on' : 'off'}`} src={asset('maps/common/ui/shield.webp')} alt="" draggable={false} />
-                  {me.shield ? t('shieldOn') : t('shieldOff')}
-                </>
-              ) : (
-                skin.roles[me.role].short
-              )}
-            </span>
-            {killer && me.mates && me.mates.length > 0 && <span className="ability">{t('mates')}: <b style={{ color: KILLER_NAME_COLOR }}>{me.mates.join(', ')}</b></span>}
+            <span className="ability">{!alive ? t('ghost') : skin.roles[me.role].short}</span>
           </div>
         </button>
       )}
@@ -532,28 +491,25 @@ export function Hud() {
           {touch ? null : !tasksOpen ? (
             taskChip
           ) : (
-          <div className={`task-list ${tasksOpen ? 'open' : 'closed'}`}>
-            <button className="task-head" onClick={() => setTasksOpen(!tasksOpen)} aria-expanded={tasksOpen} title={`${tasksOpen ? t('hide') : t('show')} (T)`}>
-              <span className="task-head-title">{t('myTasks')}</span>
-              <b className="task-count">
-                {me.completedTasks.length}/{me.tasks.length}
-              </b>
-              <span className="task-toggle" aria-hidden>
-                <kbd>T</kbd>
-                <i className="chev" />
-              </span>
-            </button>
-            <div className="task-meter">
-              <div style={{ width: `${(me.completedTasks.length / Math.max(1, me.tasks.length)) * 100}%` }} />
+            <div className="task-list open">
+              <button className="task-head" onClick={() => setTasksOpen(false)} aria-expanded title={`${t('hide')} (T)`}>
+                <span className="task-head-title">{t('myTasks')}</span>
+                <b className="task-count">
+                  {room.progress}/{room.progressTarget}
+                </b>
+                <span className="task-toggle" aria-hidden>
+                  <kbd>T</kbd>
+                  <i className="chev" />
+                </span>
+              </button>
+              {meter}
+              {killer && <p className="task-note">{t('fakeTasks')}</p>}
+              {taskItems}
             </div>
-            {tasksOpen && killer && <p className="task-note">{t('fakeTasks')}</p>}
-            {tasksOpen && taskItems}
-          </div>
           )}
         </div>
       )}
-      {/* phones: the chip sits under the role card, keeping the left thumb area free for the joystick */}
-      {/* touch: right column under the role card — night clock, then the task chip */}
+      {/* touch: right column under the role card — clock, then the prep chip */}
       {inGame && touch && room.phase !== 'ended' && (
         <div className="task-chip-dock">
           <NightClockDock />
@@ -566,13 +522,11 @@ export function Hud() {
             <div className="task-pop-head">
               <span className="task-head-title">{t('myTasks')}</span>
               <b className="task-count">
-                {me.completedTasks.length}/{me.tasks.length}
+                {room.progress}/{room.progressTarget}
               </b>
               <CloseButton className="task-pop-x" onClick={() => setTasksOpen(false)} label={t('close')} />
             </div>
-            <div className="task-meter">
-              <div style={{ width: `${(me.completedTasks.length / Math.max(1, me.tasks.length)) * 100}%` }} />
-            </div>
+            {meter}
             {killer && <p className="task-note">{t('fakeTasks')}</p>}
             {taskItems}
             <button
@@ -588,25 +542,32 @@ export function Hud() {
         </div>
       )}
 
-      {room.phase === 'explore' && (alive || killer) && (
+      {/* veteran: one inspection per game, in explore and in meetings */}
+      {veteran && alive && (room.phase === 'explore' || room.phase === 'meeting') && (
+        <button
+          className={`round-btn inspect ${me?.inspectLeft ? 'ready' : 'idle'}`}
+          {...tapProps(() => set({ inspectOpen: true }))}
+          title={`${t('inspect')} (U)`}
+          aria-label={t('inspect')}
+        >
+          <span className="round-glyph">🔎</span>
+          <kbd>U</kbd>
+          <em>{me?.inspectLeft ? t('inspect') : t('used')}</em>
+        </button>
+      )}
+
+      {room.phase === 'explore' && alive && (
         <div className="action-bar cluster">
-          {killer && <SabotageButton slot={alive ? 'slot-left' : 'slot-main'} />}
-          {killer && alive && (
-            <button
-              className={`round-btn kill slot-main ${killReady ? 'ready' : 'idle'} ${cdLeft ? 'cooling' : ''}`}
-              disabled={!killReady}
-              {...tapProps(() => send('kill', {}))}
-              title={`${killLabel} (K)`}
-              aria-label={killLabel}
-            >
-              <img src={asset(`${skin.killButton?.icon ?? 'maps/common/ui/btn-kill'}.webp`)} alt="" draggable={false} />
-              {cdLeft ? <CooldownRing readyAt={me!.killReadyAt ?? 0} /> : null}
-              {cdLeft ? <span className="cd"><Digits text={cdLeft} /></span> : null}
-              <kbd>K</kbd>
-              <em>{killLabel}</em>
-            </button>
+          {killer && (
+            <ArrestButton
+              ready={!!arrestReady}
+              cdLeft={cdLeft}
+              readyAt={me?.arrestReadyAt ?? 0}
+              label={killLabel}
+              icon={skin.killButton?.icon ?? 'maps/common/ui/btn-kill'}
+            />
           )}
-          {alive && <button
+          <button
             className={`round-btn report slot-top ${canReport ? 'ready' : 'idle'}`}
             disabled={!canReport}
             {...tapProps(() => send('report', {}))}
@@ -616,9 +577,22 @@ export function Hud() {
             <img src={asset('maps/common/ui/btn-report.webp')} alt="" draggable={false} />
             <kbd>L</kbd>
             <em>{t('report')}</em>
-          </button>}
-          {/* crew: the main button, always there and lit at an unfinished station; killers: a small one that only pops in there */}
-          {alive && (!killer || taskHere) && (
+          </button>
+          {/* the package: pick it up next to it, put it down anywhere (G) */}
+          {(carrying || canPick) && (
+            <button
+              className={`round-btn package slot-left ready`}
+              {...tapProps(() => !uiBlocksMovement() && send(carrying ? 'package:drop' : 'package:pick', {}))}
+              title={`${carrying ? t('dropPkg') : t('pickUp')} (G)`}
+              aria-label={carrying ? t('dropPkg') : t('pickUp')}
+            >
+              <span className="round-glyph">📦</span>
+              <kbd>G</kbd>
+              <em>{carrying ? t('dropPkg') : t('pickUp')}</em>
+            </button>
+          )}
+          {/* drivers: the main button, lit at an open station; the undercover: a small one that only pops in there */}
+          {(!killer || taskHere) && (
             <button
               key={killer ? taskHere?.id : 'task'}
               className={`round-btn task ${killer ? 'slot-diag' : 'slot-main'} ${taskHere ? 'ready' : 'idle'}`}
@@ -628,16 +602,14 @@ export function Hud() {
               aria-label={taskHere ? `${t('doTask')}: ${taskHere.title}` : t('doTask')}
             >
               <img src={asset('maps/common/ui/btn-task.webp')} alt="" draggable={false} />
-              {/* at the ward spot J holds the fix pill instead */}
-              {nearby?.kind !== 'fix' && <kbd>J</kbd>}
+              <kbd>J</kbd>
               <em>{t('doTask')}</em>
             </button>
           )}
         </div>
       )}
 
-      {/* tasks get an in-world "tap" badge over the station (GameScene) — the lit report button covers bodies; the bell gets its own art button */}
-      {nearby?.kind === 'fix' && room.phase === 'explore' && <FixButton title={nearby.title} />}
+      {/* tasks get an in-world "tap" badge over the station (GameScene) — the lit report button covers abandoned bikes; the horn gets its own art button */}
       {nearby?.kind === 'emergency' && room.phase === 'explore' && (
         <button
           className={`round-btn bell ${nearby.used ? 'idle' : 'ready'}`}

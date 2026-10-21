@@ -42,7 +42,6 @@ if (want('rooms')) {
   await p1.evaluate(() => { const s = window.__game.scene.getScene('game'); s.cameras.main.setZoom(1); s.cameras.main.startFollow(s.avatars.get(window.__net.room.sessionId).c); });
 }
 // start game
-if (want('kill')) await p1.evaluate(() => window.__net.send('configure', { quick: true }));
 await sleep(200);
 await p1.evaluate(() => window.__net.send('start', {}));
 await sleep(1200);
@@ -95,10 +94,11 @@ if (want('kill')) {
   await sleep(10500);
   let killer = null;
   for (const p of pages) if (await p.evaluate(() => window.__store.getState().me?.faction === 'killer')) killer = p;
-  // try kill until it lands (someone in range)
+  // hold arrest until it lands (someone in range)
   for (let i = 0; i < 6; i++) {
-    await killer.evaluate(() => window.__net.send('kill', {}));
-    await sleep(300);
+    await killer.evaluate(() => window.__net.send('arrest', { on: true }));
+    await sleep(1900);
+    await killer.evaluate(() => window.__net.send('arrest', { on: false }));
     if (await killer.evaluate(() => window.__store.getState().cinematic?.kind === 'kill')) break;
     await killer.keyboard.down(i % 2 ? 'KeyA' : 'KeyD'); await sleep(250); await killer.keyboard.up(i % 2 ? 'KeyA' : 'KeyD');
   }
@@ -113,11 +113,6 @@ if (want('kill')) {
   for (const p of pages) if (p !== killer && (await p.evaluate(() => window.__store.getState().room.players.find((x) => x.id === window.__net.room.sessionId).alive))) live.push(p);
   await sleep(100);
   await shot('kill-world', live[0] ?? witness);
-  // shield: inject the cinematic locally (overlay + in-world FX)
-  await p1.evaluate(() => { const s = window.__game.scene.getScene('game'); window.__store.getState().set({ cinematic: { kind: 'shield', actor: { name: 'Âm Binh', color: 0 }, victim: { name: 'Lính', color: 1 }, youAre: 'victim', at: { x: s.pred.x + 40, y: s.pred.y }, id: Date.now() } }); });
-  await sleep(1250); await shot('shield-cine', p1);
-  await p1.evaluate(() => window.__store.getState().set({ cinematic: null }));
-  await sleep(150); await shot('shield-world', p1);
   if (live[0]) {
     await live[0].evaluate(() => window.__net.send('report', {}));
     await sleep(1700); await shot('report-cine', live[0]);

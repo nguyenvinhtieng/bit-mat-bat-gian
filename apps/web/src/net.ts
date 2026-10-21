@@ -1,5 +1,5 @@
 import { Client, type Room } from 'colyseus.js';
-import { PLAYER_COLORS, ROOM_NAME, type ClientMessages, type Cinematic } from '@hidden-truth/shared';
+import { PLAYER_COLORS, ROOM_NAME, type ArrestHoldMsg, type ClientMessages, type Cinematic, type InspectResult } from '@hidden-truth/shared';
 import { useStore, type Connecting, type RoomView } from './store';
 
 function endpoint(): string {
@@ -21,11 +21,20 @@ export function onRoom(cb: Listener) {
   return () => roomListeners.delete(cb);
 }
 
-/** press / release the sabotage fix button (the server times the hold) */
-export function fix(on: boolean) {
-  if (useStore.getState().fixing === on) return;
-  useStore.getState().set({ fixing: on });
-  send('sabotage:fix', { on });
+let arresting = false;
+/** undercover: press / release the arrest button (the server times the hold) */
+export function arrest(on: boolean) {
+  if (arresting === on) return;
+  arresting = on;
+  send('arrest', { on });
+}
+
+/** arrest:heard listeners (GameScene plays the sound + a marker) */
+type Heard = (at: { x: number; y: number }) => void;
+const heardListeners = new Set<Heard>();
+export function onHeard(cb: Heard) {
+  heardListeners.add(cb);
+  return () => heardListeners.delete(cb);
 }
 
 export function send<K extends keyof ClientMessages>(type: K, payload: ClientMessages[K]) {
@@ -55,6 +64,8 @@ function snapshot(state: any): RoomView {
       micOn: !!p.micOn,
     }),
   );
+  const stations: RoomView['stations'] = {};
+  state.stations?.forEach((v: any, k: string) => (stations[k] = { need: v.need, done: v.done }));
   return {
     code: state.code,
     mapSlug: state.mapSlug,
@@ -67,15 +78,14 @@ function snapshot(state: any): RoomView {
     nightStartAt: state.nightStartAt ?? 0,
     nightPausedAt: state.nightPausedAt ?? 0,
     meetingReason: state.meetingReason,
-    sabotage: state.sabotage ?? '',
-    sabotageEndsAt: state.sabotageEndsAt ?? 0,
-    sabotageArea: state.sabotageArea ?? '',
-    sabotageX: state.sabotageX ?? 0,
-    sabotageY: state.sabotageY ?? 0,
-    killers: state.killers,
-    tasksPerPlayer: state.tasksPerPlayer,
-    nightMin: state.nightMin ?? 5,
-    nightAuto: state.nightAuto ?? true,
+    stations,
+    handoffOpen: !!state.handoffOpen,
+    packageState: state.packageState ?? 'home',
+    packageCarrier: state.packageCarrier ?? '',
+    packageX: state.packageX ?? 0,
+    packageY: state.packageY ?? 0,
+    turnsPerDriver: state.turnsPerDriver ?? 2,
+    nightMin: state.nightMin ?? 8,
     crewAlive: state.crewAlive ?? 0,
     killersAlive: state.killersAlive ?? 0,
     players,
@@ -117,9 +127,9 @@ function bind(r: Room) {
     last = key;
     const s = useStore.getState();
     if (snap.phase !== lastPhase) {
-      if (snap.phase === 'meeting') s.set({ task: null, taskResult: null, voteResult: null });
+      if (snap.phase === 'meeting') s.set({ task: null, taskResult: null, voteResult: null, arrestHold: null });
       // the result screen survives the return to the lobby (closed by each player); a new game drops it
-      if (snap.phase === 'lobby') s.set({ me: null, voteResult: null });
+      if (snap.phase === 'lobby') s.set({ me: null, voteResult: null, inspect: null, inspectOpen: false, arrestHold: null });
       if (snap.phase === 'explore') s.set({ end: null });
       lastPhase = snap.phase;
     }
@@ -146,10 +156,14 @@ function bind(r: Room) {
       s.set({ taskAttempt: s.taskAttempt + 1 });
     }
   });
-  r.onMessage('canh', (c: { canh: number; text: string }) => {
-    const s = useStore.getState();
-    s.set({ canh: { n: c.canh, text: c.text, id: Date.now() } });
+  r.onMessage('arrest:hold', (m: ArrestHoldMsg) => {
+    if (!m.on && m.youAre === 'actor') arresting = false;
+    useStore.getState().set({ arrestHold: m.on ? m : null });
   });
+  r.onMessage('arrest:heard', (m: { at: { x: number; y: number } }) => {
+    for (const cb of heardListeners) cb(m.at);
+  });
+  r.onMessage('inspect:result', (inspect: InspectResult) => useStore.getState().set({ inspect, inspectOpen: true }));
   r.onMessage('task:close', () => useStore.getState().set({ task: null, taskResult: null }));
   r.onMessage('vote:result', (voteResult) => useStore.getState().set({ voteResult }));
   r.onMessage('cinematic', (c: Cinematic) => useStore.getState().set({ cinematic: { ...c, id: Date.now() } }));

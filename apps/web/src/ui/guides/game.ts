@@ -5,30 +5,30 @@ export const GAME_GUIDE: MapGuide = {
   storyH: l('Câu chuyện', 'Story'),
   story: {
     vi: [
-      'Hẻm 42, Sài Gòn. Mỗi tháng hội tài xế CRAB lén khui hụi ở quán cà phê cóc đầu hẻm.',
-      'Tối nay có một tài xế mới xin vào hụi — nghe đồn là công an chìm.',
-      'Ai cũng áo xanh nón bảo hiểm, chẳng ai phân biệt được.',
-      'Chạy cuốc góp đủ quỹ hụi trước khi trời sáng, và tìm ra công an chìm trước khi cả hội bị mời lên phường!',
+      'Hẻm 42, Sài Gòn, 23:42. Hội tài xế CRAB nhận Cuốc Cuối: một kiện hàng phải bàn giao trước khi trời sáng.',
+      'Cả hội chia nhau chuẩn bị — nhận hàng, kiểm niêm phong, giải địa chỉ, lên lộ trình, sửa xe, ngụy trang, xác nhận người nhận.',
+      'Nhưng trong hội có một Cảnh Sát Chìm — cùng áo, cùng nón, chẳng ai phân biệt được.',
+      'Chuẩn bị đủ 100%, mang kiện hàng tới điểm hẹn và bàn giao — hoặc lột mặt cảnh sát chìm trong buổi họp!',
     ],
     en: [
-      'Alley 42, Saigon. Every month the CRAB drivers hold a secret hụi night at the sidewalk coffee stall.',
-      'Tonight a new driver joins the circle — rumour says they are an undercover cop.',
-      'Everyone wears the same green jacket and helmet — impossible to tell who is who.',
-      'Finish errands, fill the hụi fund before daybreak, and expose the cop before the whole crew gets hauled to the ward office!',
+      'Alley 42, Saigon, 23:42. The CRAB crew takes the Last Ride: one package must be handed off before daybreak.',
+      'The crew splits the prep — receive the box, check the seal, decode the address, plan the route, fix the bike, pack the disguise, confirm the recipient.',
+      'But an Undercover Cop rides among them — same jacket, same helmet, impossible to tell apart.',
+      'Reach 100% prep, carry the package to the meeting point and hand it off — or expose the cop in a meeting!',
     ],
   },
   roles: {
-    villager: l(
-      'Chạy cuốc, làm nhiệm vụ, góp quỹ hụi và bỏ phiếu khi họp. Để ý ai làm việc giả hoặc bỏ xe lại bất thường.',
-      'Run rides, do tasks, fund the hụi, and vote in meetings. Watch for fake work or abandoned bikes.',
+    driver: l(
+      'Tài xế CRAB: làm nhiệm vụ chuẩn bị (mỗi lượt tính một lần, hỏng thì làm lại), mang kiện hàng đi bàn giao và bỏ phiếu khi họp.',
+      'CRAB driver: do prep tasks (each turn counts once, retry on failure), carry the package to the handoff and vote in meetings.',
     ),
-    guardian: l(
-      'Phe tài xế — lần đầu bị công an chìm mời lên phường, bạn quẹo hẻm thoát được một lần (cả hai cùng biết).',
-      'Crew faction — the first time the undercover cop invites you to the ward, you slip away once (both of you know).',
+    veteran_driver: l(
+      'Tài xế lão làng: như tài xế thường, thêm 1 lần mỗi ván soi 3 hoạt động gần nhất của một người (việc, khu vực, thời gian, kết quả) — không thấy vai hay việc thật/giả.',
+      'Veteran driver: a regular driver who can, once per match, inspect a player\'s last 3 activities (task, area, time, result) — never their role or whether a task was fake.',
     ),
-    killer: l(
-      'Công an chìm: lại gần và mời từng người lên phường. Giả vờ chạy cuốc, đừng để ai thấy.',
-      'Undercover cop: get close and invite players to the ward. Fake errands and stay out of sight.',
+    undercover: l(
+      'Cảnh Sát Chìm: giữ nút bắt 1,5 giây khi đứng sát một tài xế để còng tay họ (hồi 35 giây, không bắt khi họp). Làm nhiệm vụ giả để trà trộn — chúng không cộng tiến độ. Thắng khi bắt hết hội hoặc hết giờ.',
+      'Undercover Cop: hold arrest for 1.5s next to a driver to cuff them (35s cooldown, never during meetings). Do fake tasks to blend in — they add no progress. Win by arresting everyone or running out the clock.',
     ),
   },
 };

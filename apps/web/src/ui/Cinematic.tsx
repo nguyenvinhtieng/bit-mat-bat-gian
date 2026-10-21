@@ -4,16 +4,14 @@ import { colorHex, useStore } from '../store';
 import { asset, useEscape } from './common';
 
 const ROW = { down: 0, left: 1, right: 2, up: 3 } as const;
-const DURATION: Record<string, number> = { kill: 3200, shield: 2600, report: 3600, emergency: 3300, witness: 1300 };
+const DURATION: Record<string, number> = { kill: 3200, report: 3600, emergency: 3300, witness: 1300 };
 /** The stage is authored on a fixed SET_W x SET_H board and scaled to whatever room the bars + caption leave. */
 const SET_W = 1000, SET_H = 420;
-const KICKER: Record<string, string> = { kill: '✦ Án mạng ✦', shield: '✦ Hộ thân ✦', report: '✦ Phát hiện ✦', emergency: '✦ Hồi chuông ✦' };
+const KICKER: Record<string, string> = { kill: '✦ Bắt giữ ✦', report: '✦ Xe bỏ lại ✦', emergency: '✦ Họp khẩn ✦' };
 
 // Pose timelines (ms). Impact lands at 900: dash 300-750 → wind-up → slash.
 const ACTOR_STRIKE: PoseTrack = [[0, 'strike-1'], [750, 'strike-0'], [900, 'strike-2'], [1050, 'strike-3']];
 const VICTIM_DIE: PoseTrack = [[0, 'guard-3'], [900, 'die-0'], [1100, 'die-1'], [1350, 'die-2'], [1600, 'die-3']];
-const ACTOR_REPELLED: PoseTrack = [[0, 'strike-1'], [750, 'strike-0'], [900, 'strike-2'], [960, 'guard-2'], [1450, 'guard-3']];
-const VICTIM_GUARD: PoseTrack = [[0, 'guard-3'], [780, 'guard-0'], [900, 'guard-1'], [1150, 'guard-2'], [1450, 'guard-3']];
 const BODY: PoseTrack = [[0, 'die-3']];
 const FINDER_STARTLE: PoseTrack = [[0, 'guard-0'], [1350, 'guard-1'], [1650, 'guard-2']];
 const BELL_RINGER: PoseTrack = [[0, 'guard-3'], [500, 'guard-1'], [780, 'guard-2'], [1100, 'guard-1'], [1380, 'guard-2'], [1700, 'guard-1'], [1980, 'guard-2'], [2350, 'guard-3']];
@@ -218,12 +216,9 @@ export function Cinematic() {
   } else if (c.kind === 'kill') {
     title = c.youAre === 'victim' ? 'BẠN BỊ HẠ GỤC' : 'HẠ GỤC';
     sub = c.youAre === 'victim' ? <>{nm(c.actor.name, actorCol)} là {mapSkin(useStore.getState().room?.mapSlug).killerName.vi}!</> : <>Bạn đã hạ gục {nm(c.victim!.name, victimCol)}</>;
-  } else if (c.kind === 'shield') {
-    title = 'LÁ CHẮN!';
-    sub = c.youAre === 'victim' ? <>Lá chắn đã cứu bạn khỏi {nm(c.actor.name, actorCol)}</> : <>{nm(c.victim!.name, victimCol)} đã chặn đòn của bạn</>;
   } else if (c.kind === 'report') {
-    title = 'BÁO CÁO THI THỂ';
-    sub = <>{nm(c.actor.name, actorCol)} phát hiện thi thể của {nm(c.victim!.name, victimCol)}</>;
+    title = 'BÁO XE BỎ LẠI';
+    sub = <>{nm(c.actor.name, actorCol)} phát hiện chiếc xe CRAB bỏ lại của {nm(c.victim!.name, victimCol)}</>;
   } else {
     title = 'HỌP KHẨN';
     sub = <>{nm(c.actor.name, actorCol)} đã gọi họp khẩn ({mapSkin(useStore.getState().room?.mapSlug).emergency.vi})</>;
@@ -275,21 +270,6 @@ export function Cinematic() {
                   <i key={i} className="cine-drop" style={{ '--a': `${i * 36 + 10}deg`, '--d': `${930 + (i % 3) * 40}ms` } as React.CSSProperties} />
                 ))}
                 <Fx name="fx-soul-rise" className="cine-fx-soul" ms={1100} delay={1700} />
-              </>
-            )}
-            {c.kind === 'shield' && (
-              <>
-                {attacker(ACTOR_REPELLED, 'repelled')}
-                <div className="cine-victim brace">
-                  <PoseSprite color={c.victim!.color} track={VICTIM_GUARD} />
-                </div>
-                <Fx name="fx-shield-dome" className="cine-fx-dome" ms={1000} delay={820} />
-                <i className="cine-ring gold r1" />
-                <i className="cine-ring gold r2" />
-                {Array.from({ length: 12 }, (_, i) => (
-                  <i key={i} className="cine-spark" style={{ '--a': `${i * 30}deg`, '--d': `${900 + (i % 4) * 30}ms` } as React.CSSProperties} />
-                ))}
-                <img className="cine-shield-icon" src={asset('maps/common/ui/shield.webp')} alt="" draggable={false} />
               </>
             )}
             {c.kind === 'report' && (

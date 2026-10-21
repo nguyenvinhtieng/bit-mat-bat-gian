@@ -243,6 +243,8 @@ export const sfx = {
   sao: (f = 784) => tone(f, 0.55, 'sine', 0.18, 1.01),
   stamp: () => (tone(90, 0.18, 'sine', 0.4, 0.6), noise(0.05, 0.12, 800)),
   scrape: () => noise(0.04, 0.05, 2500),
+  /** handcuffs snapping shut + a short whistle (arrest, for the people nearby) */
+  cuffs: () => (noise(0.03, 0.3, 5000), setTimeout(() => noise(0.03, 0.3, 6200), 90), setTimeout(() => tone(1400, 0.3, 'square', 0.05, 0.7), 200)),
   watch: (n = 2) => void watchDrum(n),
   preloadDrum: () => void loadDrum(),
 };

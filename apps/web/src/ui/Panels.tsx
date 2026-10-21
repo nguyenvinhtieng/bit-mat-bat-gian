@@ -108,15 +108,10 @@ export function IntroModal() {
           <div className="opening-badge">
             <RoleBadge role={me.role} size={140} />
           </div>
-          <span className="faction">{killer ? `Phe ${skin.killerName.vi}` : 'Phe Người Dân'}</span>
+          <span className="faction">{killer ? `Phe ${skin.killerName.vi}` : skin.crewName.vi}</span>
           <h2>{info.name}</h2>
           {/* the opening only shows the gist (it is on screen briefly); full details on re-open from the HUD role card */}
           <p className="opening-desc">{quick ? info.desc : info.short}</p>
-          {killer && me.mates && me.mates.length > 0 && (
-            <p className="opening-mates">
-              <b>Đồng bọn:</b> <span style={{ color: KILLER_NAME_COLOR }}>{me.mates.join(', ')}</span>
-            </p>
-          )}
           {quick && (
             <>
               <p className="objective">

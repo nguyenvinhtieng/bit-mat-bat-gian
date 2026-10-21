@@ -1,7 +1,7 @@
-import { AREA_RECTS, LAYOUT_H, LAYOUT_W, MEETING_POINT, TILE, type AreaId } from '@hidden-truth/shared';
+import { AREA_RECTS, LAYOUT_H, LAYOUT_W, MEETING_POINT, PREP_TASK_IDS, TILE, type AreaId, type TaskId } from '@hidden-truth/shared';
 import { useLang } from '../i18n';
 import { useStore } from '../store';
-import { CloseButton, EscHint, asset, useEscape, useSkin, useWardSpot } from './common';
+import { CloseButton, EscHint, asset, useEscape, useSkin, usePackageSpot } from './common';
 
 /** Label anchor per room (tile units) — kept off the furniture. */
 const LABEL_AT: Partial<Record<AreaId, [number, number]>> = {
@@ -14,19 +14,24 @@ const LABEL_AT: Partial<Record<AreaId, [number, number]>> = {
 };
 
 /**
- * Full-screen map: the painted overview of the palace with room plaques, my pending tasks
- * (numbered, pulsing), finished ones, the emergency point and my live position.
+ * Full-screen map: the painted overview of the alley with area plaques, the shared prep stations
+ * (numbered, pulsing until done), the handoff point once open, the package, the meeting point and my position.
  */
 export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: { x: number; y: number } | null; onClose: () => void }) {
   useEscape(onClose);
-  const me = useStore((s) => s.me);
+  const room = useStore((s) => s.room);
   const lang = useLang((s) => s.lang);
   const en = lang === 'en';
   const skin = useSkin();
-  const tasks = (me?.tasks ?? []).map((id, i) => ({ st: skin.stations.find((x) => x.id === id)!, n: i + 1, done: !!me?.completedTasks.includes(id) }));
+  const ids: TaskId[] = room?.handoffOpen ? [...PREP_TASK_IDS, 'handoff_package'] : [...PREP_TASK_IDS];
+  const tasks = ids.map((id, i) => {
+    const c = room?.stations[id];
+    const done = id === 'handoff_package' ? room?.packageState === 'delivered' : !!c && c.done >= c.need;
+    return { st: skin.stations.find((x) => x.id === id)!, n: i + 1, done };
+  });
   const name = (id: AreaId) => (en ? skin.areas[id].nameEn : skin.areas[id].name);
   const tx = (v: number) => v / TILE;
-  const ward = useWardSpot();
+  const pkg = usePackageSpot();
 
   return (
     <div className="mapview" onClick={onClose}>
@@ -73,12 +78,12 @@ export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: 
                   </text>
                 </g>
               ))}
-              {ward && (
-                <g className="mv-ward" transform={`translate(${tx(ward.x)} ${tx(ward.y)})`}>
+              {pkg && (
+                <g className="mv-ward" transform={`translate(${tx(pkg.x)} ${tx(pkg.y)})`}>
                   <circle className="mv-ward-pulse" r={1.8} />
                   <circle className="mv-ward-dot" r={0.7} />
                   <text className="mv-me-label" y={-1.2}>
-                    {en ? skin.sabotage.ward.fix.en : skin.sabotage.ward.fix.vi}
+                    {en ? 'Package' : 'Kiện hàng'}
                   </text>
                 </g>
               )}
@@ -109,7 +114,7 @@ export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: 
           </div>
 
           <aside className="mapview-legend">
-            <h4>{en ? 'Your tasks' : 'Nhiệm vụ của bạn'}</h4>
+            <h4>{en ? 'Last Ride prep' : 'Chuẩn bị Cuốc Cuối'}</h4>
             <ol>
               {tasks.map(({ st, n, done }) => (
                 <li key={st.id} className={`${done ? 'done' : ''} ${st.area === current && !done ? 'here' : ''}`}>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { DEFAULT_MAP_SLUG, GAME, MAX_PLAYERS, MIN_PLAYERS, PLAYER_COLORS, autoNightMin, clampKillers, killersFor, maxKillersFor, mapArt, mapSkin } from '@hidden-truth/shared';
+import { DEFAULT_MAP_SLUG, GAME, MAX_PLAYERS, MIN_PLAYERS, PLAYER_COLORS, mapArt, mapSkin } from '@hidden-truth/shared';
 import { send } from '../net';
 import { colorHex, useStore } from '../store';
 import { CloseButton, Modal, asset } from './common';
@@ -19,8 +19,6 @@ export function LobbyPanel() {
   const total = room.players.length;
   const [showSettings, setShowSettings] = useState(false);
   const [showPlayers, setShowPlayers] = useState(false);
-  const maxKillers = maxKillersFor(total);
-  const killers = room.killers ? clampKillers(room.killers, total) : killersFor(total);
   const canStart = total >= MIN_PLAYERS;
   // the panel unmounts when the phase flips; the timeout only matters if the server refused (toast explains why)
   const [starting, setStarting] = useState(false);
@@ -91,7 +89,7 @@ export function LobbyPanel() {
             <img src={asset('maps/common/ui/settings.webp')} alt="" draggable={false} />
             <span>{t('settings')}</span>
             <small>
-              {room.tasksPerPlayer} · {killers} · {room.nightMin}′
+              {room.turnsPerDriver}× · {room.nightMin}′
             </small>
           </button>
         </aside>
@@ -158,7 +156,7 @@ export function LobbyPanel() {
           {unread > 0 && <b className="chat-badge">{unread > 9 ? '9+' : unread}</b>}
         </button>
       )}
-      {showSettings && <SettingsModal isHost={isHost} total={total} killers={killers} maxKillers={maxKillers} onClose={() => setShowSettings(false)} />}
+      {showSettings && <SettingsModal isHost={isHost} onClose={() => setShowSettings(false)} />}
       {showPlayers && createPortal(<PlayersModal isHost={isHost} onClose={() => setShowPlayers(false)} />, document.body)}
     </>
   );
@@ -247,44 +245,19 @@ function usePersisted(key: string, fallback: boolean) {
 }
 
 /** Edits a local draft; nothing reaches the server until the host presses Save (× / backdrop = discard). */
-function SettingsModal(props: { isHost: boolean; total: number; killers: number; maxKillers: number; onClose: () => void }) {
+function SettingsModal(props: { isHost: boolean; onClose: () => void }) {
   const room = useStore((s) => s.room)!;
   const t = useT();
-  const { isHost, total, maxKillers, onClose } = props;
-  const [draft, setDraft] = useState({
-    tasks: room.tasksPerPlayer,
-    killers: props.killers,
-    nightAuto: room.nightAuto,
-    nightMin: room.nightMin,
-    isPublic: room.isPublic,
-  });
+  const { isHost, onClose } = props;
+  const [draft, setDraft] = useState({ turns: room.turnsPerDriver, timeMin: room.nightMin, isPublic: room.isPublic });
   // guests just watch the live values; only the host edits a draft
-  const { tasks, killers, nightAuto, nightMin, isPublic } = isHost
-    ? draft
-    : {
-        tasks: room.tasksPerPlayer,
-        killers: props.killers,
-        nightAuto: room.nightAuto,
-        nightMin: room.nightMin,
-        isPublic: room.isPublic,
-      };
+  const { turns, timeMin, isPublic } = isHost ? draft : { turns: room.turnsPerDriver, timeMin: room.nightMin, isPublic: room.isPublic };
   const edit = (patch: Partial<typeof draft>) => setDraft((d) => ({ ...d, ...patch }));
-  const maxTasks = mapSkin(room.mapSlug).taskIds.length;
-  // auto preview mirrors the server: an untouched auto killer count follows the room size
-  const previewKillers = !room.killers && killers === props.killers ? killersFor(total) : killers;
-  const shownNight = nightAuto && isHost ? autoNightMin(total, previewKillers, tasks) : nightMin;
 
   const save = () => {
-    const msg: {
-      tasksPerPlayer?: number;
-      killers?: number;
-      nightMin?: number;
-      nightAuto?: boolean;
-    } = {};
-    if (tasks !== room.tasksPerPlayer) msg.tasksPerPlayer = tasks;
-    if (killers !== props.killers) msg.killers = killers;
-    if (nightAuto && !room.nightAuto) msg.nightAuto = true;
-    if (!nightAuto && (room.nightAuto || nightMin !== room.nightMin)) msg.nightMin = nightMin;
+    const msg: { turnsPerDriver?: number; timeMin?: number } = {};
+    if (turns !== room.turnsPerDriver) msg.turnsPerDriver = turns;
+    if (timeMin !== room.nightMin) msg.timeMin = timeMin;
     if (Object.keys(msg).length) send('configure', msg);
     if (isPublic !== room.isPublic) send('host:visibility', { public: isPublic });
     onClose();
@@ -304,31 +277,21 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
           <SliderRow
             icon="maps/common/ui/clue.webp"
             label={t('tasksPer')}
-            min={1}
-            max={maxTasks}
-            value={tasks}
+            min={GAME.turnsPerDriverMin}
+            max={GAME.turnsPerDriverMax}
+            value={turns}
             disabled={!isHost}
-            onChange={(v) => edit({ tasks: v, nightAuto: true })}
-          />
-          <SliderRow
-            icon="maps/common/ui/count-killer.webp"
-            tone="killer"
-            label={t('killersCount')}
-            min={1}
-            max={maxKillers}
-            value={killers}
-            disabled={!isHost}
-            onChange={(v) => edit({ killers: v, nightAuto: true })}
+            onChange={(v) => edit({ turns: v })}
           />
           <SliderRow
             icon={`${mapSkin(room.mapSlug).art.nightMarker}.webp`}
             label={t('nightLen')}
-            min={GAME.nightMinMin}
-            max={GAME.nightMinMax}
-            value={shownNight}
+            min={GAME.timeMinMin}
+            max={GAME.timeMinMax}
+            value={timeMin}
             unit={t('minutesShort')}
             disabled={!isHost}
-            onChange={(v) => edit({ nightAuto: false, nightMin: v })}
+            onChange={(v) => edit({ timeMin: v })}
           />
           <div className={`slider-row ${isHost ? '' : 'is-disabled'}`}>
             <div className="slider-head">
