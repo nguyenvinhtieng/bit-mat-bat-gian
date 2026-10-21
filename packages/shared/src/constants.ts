@@ -60,7 +60,7 @@ export const ROLE_INFO: Record<RoleId, { name: string; nameEn: string; faction: 
     faction: 'killer',
     icon: 'forger',
     short: 'Bắt giữ từng tài xế trước khi hàng được giao',
-    desc: 'Trà trộn như tài xế thường, làm task giả để có vỏ bọc. Giữ nút Bắt giữ ở cự ly gần để bắt từng người.',
+    desc: 'Trà trộn như tài xế thường, làm task giả để có vỏ bọc. Bấm nút Bắt giữ một lần ở cự ly gần để bắt từng người.',
   },
 };
 
@@ -89,7 +89,7 @@ export const GAME = {
   tasksPerPlayerMin: 1,
   tasksPerPlayerMax: PREP_TASK_IDS.length,
   tasksPerPlayerDefault: 3,
-  /** arrest: hold this long next to the target (server-timed); cancelled if they step out of range */
+  /** Legacy hold duration, retained for compatibility; live arrests are immediate */
   arrestRange: 84,
   arrestHoldSec: 1.5,
   arrestCooldownSec: 35,

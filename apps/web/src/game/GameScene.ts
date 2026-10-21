@@ -43,7 +43,7 @@ const FX = {
   'fx-shield-dome': { rate: 9, size: 120 },
   'fx-soul-rise': { rate: 7, size: 110 },
 } as const;
-/** Action-sheet rows (tools/char-art): 4 frames each, drawn facing left. */
+/** Action clips: legacy combat faces left; the eight-frame officer clip faces right. */
 const POSES = { strike: 14, die: 8, guard: 10 } as const;
 type Pose = keyof typeof POSES;
 type FxKey = keyof typeof FX;
@@ -104,6 +104,7 @@ export class GameScene extends Phaser.Scene {
   private tapBadge?: Phaser.GameObjects.Container;
   private tapBadgeFor: TaskId | null = null;
   private bodies = new Map<string, Phaser.GameObjects.Container>();
+  private arrestEffects = new Set<Phaser.GameObjects.Container>();
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   // prediction
   private pred = { x: 0, y: 0 };
@@ -131,6 +132,7 @@ export class GameScene extends Phaser.Scene {
   private skin = mapSkin(useStore.getState().room?.mapSlug);
   /** Player frame height / 64: bigger rigs (e.g. Sài Gòn's 64x88) scale the name label, shadow and lamp grip with it. */
   private charK = 1;
+  private charScale = 1;
   private hasIdle = false;
 
   preload() {
@@ -173,7 +175,9 @@ export class GameScene extends Phaser.Scene {
         .filter((n) => n.startsWith(prefix) && /^\d+$/.test(n.slice(prefix.length)))
         .map((n) => Number(n.slice(prefix.length)))
         .sort((a, b) => a - b);
-    this.charK = (this.textures.getFrame('player', 'walk-down-0')?.height ?? 64) / 64;
+    const playerMeta = (this.textures.get('player').customData as { meta?: { displayScale?: number } }).meta;
+    this.charScale = playerMeta?.displayScale ?? 1;
+    this.charK = ((this.textures.getFrame('player', 'walk-down-0')?.height ?? 64) * this.charScale) / 64;
     const idleMeta = (this.textures.get('player').customData as { meta?: { anim?: { idle?: number[]; idleFps?: number } } }).meta?.anim;
     for (const tex of ['player', 'player-tint'])
       DIRS.forEach((d) => {
@@ -200,13 +204,12 @@ export class GameScene extends Phaser.Scene {
       const ae = document.activeElement as HTMLElement | null;
       if (ae && ae !== document.body && ['INPUT', 'TEXTAREA', 'SELECT'].includes(ae.tagName)) ae.blur();
     });
-    // one key per action, under the right hand while the left one is on WASD: J task/package, G package, hold K arrest, L report, B bell; E/Space/R stay as aliases
+    // one key per action, under the right hand while the left one is on WASD: J task/package, G package, K arrest, L report, B bell; E/Space/R stay as aliases
     kb.on('keydown-J', (e: KeyboardEvent) => !e.repeat && this.interact());
     kb.on('keydown-E', (e: KeyboardEvent) => !e.repeat && this.interact());
     kb.on('keydown-SPACE', (e: KeyboardEvent) => !e.repeat && this.interact());
     kb.on('keydown-G', (e: KeyboardEvent) => !e.repeat && this.togglePackage());
-    kb.on('keydown-K', (e: KeyboardEvent) => !e.repeat && this.arrestKey(true));
-    kb.on('keyup-K', () => this.arrestKey(false));
+    kb.on('keydown-K', (e: KeyboardEvent) => !e.repeat && this.arrestKey());
     kb.on('keydown-L', () => this.doReport());
     kb.on('keydown-R', () => this.doReport());
     kb.on('keydown-B', (e: KeyboardEvent) => !e.repeat && this.ringBell());
@@ -241,7 +244,11 @@ export class GameScene extends Phaser.Scene {
       return { dist: dist(this.pred, at), seen: canSeePoint(this.grid, this.pred, at, radius), radius };
     });
     this.unbind.push(() => setVoiceProbe(null));
-    this.events.once('shutdown', () => this.unbind.forEach((u) => u()));
+    this.events.once('shutdown', () => {
+      this.unbind.forEach((u) => u());
+      for (const pair of this.arrestEffects) pair.destroy();
+      this.arrestEffects.clear();
+    });
   }
 
   /** Phaser only resizes a camera that still matched the previous game size; the burst of resizes during a phone
@@ -541,6 +548,8 @@ export class GameScene extends Phaser.Scene {
     this.avatars.clear();
     for (const b of this.bodies.values()) b.destroy();
     this.bodies.clear();
+    for (const pair of this.arrestEffects) pair.destroy();
+    this.arrestEffects.clear();
     this.pending = [];
     this.hasServerPos = false;
     const $ = getStateCallbacks(r);
@@ -619,8 +628,8 @@ export class GameScene extends Phaser.Scene {
   private makeAvatar(name: string, color: number): Avatar {
     const k = this.charK;
     const shadow = this.add.image(0, -2, 'shadow').setDisplaySize(34 * k, 14 * k);
-    const base = this.add.sprite(0, 0, 'player', 'walk-down-0').setOrigin(0.5, 1);
-    const tint = this.add.sprite(0, 0, 'player-tint', 'walk-down-0').setOrigin(0.5, 1).setTint(color);
+    const base = this.add.sprite(0, 0, 'player', 'walk-down-0').setOrigin(0.5, 1).setScale(this.charScale);
+    const tint = this.add.sprite(0, 0, 'player-tint', 'walk-down-0').setOrigin(0.5, 1).setScale(this.charScale).setTint(color);
     const label = this.add
       .text(0, -64 * k - 6, name, { fontFamily: '"Be Vietnam Pro", system-ui, sans-serif', fontSize: '13px', fontStyle: '600', color: NAME_COLOR })
       .setOrigin(0.5, 1)
@@ -711,7 +720,7 @@ export class GameScene extends Phaser.Scene {
     }
     if (existing) return;
     const fresh = live && useStore.getState().room?.phase === 'explore';
-    if (this.skin.art.body) return this.syncPropBody(id, p, fresh, this.skin.art.body);
+    if (this.skin.art.body) return this.syncPropBody(id, p, fresh);
     const splat = this.add.image(0, -4, 'ink-splat').setDisplaySize(96, 56).setAlpha(0.9);
     const shadow = this.add.image(0, -2, 'shadow').setDisplaySize(40, 16);
     const base = this.add.sprite(0, 2, 'player-action', 'die-3').setOrigin(0.5, 1).setAlpha(0.95);
@@ -738,48 +747,21 @@ export class GameScene extends Phaser.Scene {
 
   /** Bodies drawn as a painted prop (Sài Gòn: the bike left on its stand + the victim's helmet, tinted); no blood, no soul. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private syncPropBody(id: string, p: any, fresh: boolean, frame: string) {
+  private syncPropBody(id: string, p: any, fresh: boolean) {
     const col = PLAYER_COLORS[p.color] ?? 0xffffff;
-    const prop = this.add.image(0, 2, 'map-decor', frame).setOrigin(0.5, 1);
-    const helm = this.add.image(0, 2, 'map-decor', `${frame}-tint`).setOrigin(0.5, 1).setTint(col);
-    const top = -prop.height + 18;
-    const mark = this.add.image(0, top, 'body-marker').setDisplaySize(30, 30).setOrigin(0.5, 1);
-    const c = this.add.container(p.bodyX, p.bodyY, [prop, helm, mark]).setDepth(p.bodyY - 1);
-    this.tweens.add({ targets: mark, y: top - 10, yoyo: true, repeat: -1, duration: 700, ease: 'Sine.inOut' });
+    const prop = this.add.image(0, 2, 'player-action', 'parked-left').setOrigin(0.5, 1).setScale(1 / 3);
+    const helm = this.add.image(0, 2, 'player-action-tint', 'parked-left').setOrigin(0.5, 1).setScale(1 / 3).setTint(col);
+    const top = -prop.displayHeight + 18;
+    const halo = this.add.ellipse(0, -10, 94, 34, 0x68c9df, 0.12).setStrokeStyle(2, 0x9be8f4, 0.6);
+    const mark = this.add.image(0, top, 'player-action', 'cuffs').setDisplaySize(36, 33).setOrigin(0.5, 1);
+    const c = this.add.container(p.bodyX, p.bodyY, [halo, prop, helm, mark]).setDepth(p.bodyY - 1);
+    this.tweens.add({ targets: mark, y: top - 6, yoyo: true, repeat: -1, duration: 850, ease: 'Sine.inOut' });
+    this.tweens.add({ targets: halo, scaleX: 1.16, scaleY: 1.16, alpha: 0.35, yoyo: true, repeat: -1, duration: 1100, ease: 'Sine.inOut' });
     this.bodies.set(id, c);
-    if (!fresh || !this.canSee(p.bodyX, p.bodyY)) return;
-    // ---- fresh "invite to the ward" on screen: hands up -> the victim is gone -> only the bike is left
-    const base = this.add.sprite(0, 2, 'player-action', 'die-0').setOrigin(0.5, 1);
-    const tint = this.add.sprite(0, 2, 'player-action-tint', 'die-0').setOrigin(0.5, 1).setTint(col);
-    c.addAt([base, tint], 2);
-    base.play('player-action-die');
-    tint.play('player-action-tint-die');
-    for (const o of [prop, helm, mark]) o.setAlpha(0);
-    this.tweens.add({ targets: [base, tint], alpha: 0, y: -6, delay: 650, duration: 350, ease: 'Quad.easeIn', onComplete: () => (base.destroy(), tint.destroy()) });
-    this.tweens.add({ targets: [prop, helm], alpha: 1, delay: 650, duration: 350 });
-    this.tweens.add({ targets: mark, alpha: 1, delay: 1000, duration: 250 });
-    if (this.skin.arrest) this.cuffsSnap(p.bodyX, p.bodyY);
-  }
-
-  /** Arrest instead of a stab: cuffs drop in and clack shut over the victim, under a red/blue siren blink. */
-  private cuffsSnap(x: number, y: number) {
-    const cuffs = this.add.image(x, y - 90, 'arrest-cuffs').setDisplaySize(70, 70).setDepth(y + 10000).setAngle(-40).setAlpha(0);
-    const sx = cuffs.scaleX;
-    this.tweens.chain({
-      targets: cuffs,
-      tweens: [
-        { alpha: 1, y: y - 42, angle: 8, duration: 220, ease: 'Back.easeOut' },
-        { scaleX: sx * 1.25, scaleY: sx * 0.8, duration: 70, yoyo: true, ease: 'Quad.easeOut' },
-        { angle: 0, duration: 120 },
-        { alpha: 0, y: y - 60, delay: 650, duration: 300, ease: 'Quad.easeIn' },
-      ],
-      onComplete: () => cuffs.destroy(),
-    });
-    this.time.delayedCall(240, () => {
-      this.burst('spark', x, y - 42, { count: 10, speed: [80, 180], life: 380, scale: [0.5, 0], gravity: 0, tint: 0xe9f2ff, add: true });
-      this.shockRing(x, y - 10, 0xff3b30, 90, 500);
-      this.time.delayedCall(160, () => this.shockRing(x, y - 10, 0x3b7bff, 110, 550));
-    });
+    if (fresh && this.canSee(p.bodyX, p.bodyY)) {
+      c.setAlpha(0);
+      this.tweens.add({ targets: c, alpha: 1, duration: 180 });
+    }
   }
 
   /** Particle explosion that cleans itself up. */
@@ -851,6 +833,32 @@ export class GameScene extends Phaser.Scene {
     // attacker swings toward the target (or toward where the hit landed)
     const target = byName(c.victim?.name);
     const tx = target?.c.x ?? c.at?.x;
+    if (this.skin.arrest && (c.kind === 'kill' || c.kind === 'witness')) {
+      if (!c.at || attacker === me || !this.canSee(c.at.x, c.at.y)) return;
+      const ring = this.add.ellipse(0, -26, 58, 58).setStrokeStyle(2, 0xffdf93, 0.8);
+      const cuffs = this.add.image(0, -32, 'player-action', 'cuffs').setDisplaySize(38, 35).setAlpha(0);
+      const flash = this.add.container(c.at.x, c.at.y, [ring, cuffs]).setDepth(c.at.y + 100);
+      this.arrestEffects.add(flash);
+      // Snapshot the officer's position: a short trail identifies who made the arrest
+      // without attaching a cinematic or a movement lock to either player.
+      if (attacker && this.canSee(attacker.c.x, attacker.c.y)) {
+        const sx = attacker.c.x - c.at.x;
+        const sy = attacker.c.y - c.at.y - 32;
+        const trail = this.add.graphics();
+        trail.lineStyle(8, 0xffd576, 0.18).lineBetween(sx, sy, 0, -32);
+        trail.lineStyle(2, 0xffe6a8, 0.95).lineBetween(sx, sy, 0, -32);
+        const badge = this.add.image(sx, sy - 18, 'player-action', 'badge').setDisplaySize(46, 42);
+        const spark = this.add.circle(sx, sy, 5, 0xfff2bd);
+        flash.addAt(trail, 0);
+        flash.add([badge, spark]);
+        this.tweens.add({ targets: spark, x: 0, y: -32, duration: 240, ease: 'Cubic.easeOut' });
+        this.tweens.add({ targets: badge, y: sy - 24, duration: 300, ease: 'Sine.easeOut' });
+      }
+      this.tweens.add({ targets: cuffs, alpha: 1, delay: 180, duration: 100 });
+      this.tweens.add({ targets: ring, scale: 1.6, alpha: 0, duration: 700 });
+      this.tweens.add({ targets: flash, alpha: 0, delay: 450, duration: 300, onComplete: () => { this.arrestEffects.delete(flash); flash.destroy(); } });
+      return;
+    }
     if ((c.kind === 'kill' || c.kind === 'witness' || c.kind === 'shield') && attacker && tx !== undefined) this.pose(attacker, 'strike', tx > attacker.c.x, 520);
     // the attacker dashes in for the blow (sprite offset only; the container follows the server)
     if ((c.kind === 'kill' || c.kind === 'witness') && attacker && tx !== undefined) {
@@ -970,10 +978,9 @@ export class GameScene extends Phaser.Scene {
     if (n?.kind === 'emergency' && !uiBlocksMovement()) send('emergency', {});
   }
 
-  /** hold K (or the HUD button) to arrest; release cancels — the server checks range, cooldown and phase */
-  private arrestKey(on: boolean) {
+  /** One press arrests immediately; the server checks range, cooldown and phase. */
+  private arrestKey() {
     const s = useStore.getState();
-    if (!on) return arrest(false);
     if (s.me?.faction !== 'killer' || s.room?.phase !== 'explore' || uiBlocksMovement()) return;
     arrest(true);
   }
@@ -1112,6 +1119,12 @@ export class GameScene extends Phaser.Scene {
       else av.c.setVisible(canSee(av.c.x, av.c.y)).setAlpha(1);
     }
     for (const b of this.bodies.values()) b.setVisible(canSee(b.x, b.y));
+    for (const pair of this.arrestEffects) {
+      if (!pair.active || lobby) {
+        this.arrestEffects.delete(pair);
+        if (pair.active) pair.destroy();
+      } else pair.setVisible(canSee(pair.x, pair.y));
+    }
     this.updatePackage(canSee);
     const now = performance.now();
     for (const [id, av] of this.avatars) {
@@ -1145,8 +1158,10 @@ export class GameScene extends Phaser.Scene {
   /** Play an action-sheet row on an avatar for `ms`, then hand the sprites back to the walk cycle. */
   private pose(av: Avatar, row: Pose, faceRight: boolean, ms: number) {
     av.posedUntil = performance.now() + ms;
-    av.base.setTexture('player-action').setFlipX(faceRight).play(`player-action-${row}`);
-    av.tint.setTexture('player-action-tint').setFlipX(faceRight).play(`player-action-tint-${row}`);
+    const scale = 1;
+    const flip = faceRight;
+    av.base.setTexture('player-action').setScale(scale).setFlipX(flip).play(`player-action-${row}`);
+    av.tint.setTexture('player-action-tint').setScale(scale).setFlipX(flip).play(`player-action-tint-${row}`);
   }
 
   private animate(av: Avatar, dir: number, moving: boolean) {
@@ -1155,8 +1170,8 @@ export class GameScene extends Phaser.Scene {
       av.posedUntil = 0;
       av.base.anims.stop();
       av.tint.anims.stop();
-      av.base.setTexture('player', 'walk-down-0').setFlipX(false);
-      av.tint.setTexture('player-tint', 'walk-down-0').setFlipX(false);
+      av.base.setTexture('player', 'walk-down-0').setScale(this.charScale).setFlipX(false);
+      av.tint.setTexture('player-tint', 'walk-down-0').setScale(this.charScale).setFlipX(false);
     }
     const d = DIRS[dir] ?? 'down';
     if (moving) {

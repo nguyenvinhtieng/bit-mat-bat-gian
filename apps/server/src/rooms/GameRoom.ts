@@ -23,7 +23,6 @@ import {
   MIN_PLAYERS,
   dealTasks,
   stepMovement,
-  type ArrestHoldMsg,
   type ChatMsg,
   type EndReveal,
   type Faction,
@@ -35,7 +34,7 @@ import {
   type VoteResult,
 } from '@hidden-truth/shared';
 import { contentFor, type Pending } from '../content';
-import { ArrestHold, Delivery, recentActivities, type Activity } from './delivery';
+import { Delivery, recentActivities, type Activity } from './delivery';
 import { GameState, Player, StationState } from './schema';
 
 type Secret = {
@@ -79,7 +78,6 @@ export class GameRoom extends Room<GameState> {
   private chatLog: ChatMsg[] = [];
   private lastActive = new Map<string, number>();
   private delivery = new Delivery();
-  private hold = new ArrestHold();
   /** this match's receiving code (confirm_recipient shows it, the handoff asks for it) */
   private handoffCode = '';
   /** set once the room closes itself (nobody online) so late reconnect timeouts don't touch a dead room */
@@ -257,7 +255,9 @@ export class GameRoom extends Room<GameState> {
 
     this.onMessage('task:open', (client, msg: { taskId: TaskId }) => this.openTask(client, msg?.taskId));
     this.onMessage('task:submit', (client, msg: { taskId: TaskId; answer: unknown }) => this.submitTask(client, msg));
-    this.onMessage('arrest', (client, msg: { on: boolean }) => (msg?.on ? this.arrestStart(client) : this.arrestRelease(client.sessionId)));
+    this.onMessage('arrest', (client, msg: { on: boolean }) => {
+      if (msg?.on === true) this.arrestStart(client);
+    });
     this.onMessage('report', (client) => this.report(client));
     this.onMessage('package:pick', (client) => this.pickPackage(client));
     this.onMessage('package:drop', (client) => {
@@ -401,7 +401,6 @@ export class GameRoom extends Room<GameState> {
       }
     }
     if (this.state.phaseEndsAt && Date.now() >= this.state.phaseEndsAt) this.advancePhase();
-    if (this.state.phase === 'explore') this.tickArrest();
     if (this.state.phase === 'explore') this.tickClock();
   }
 
@@ -451,7 +450,6 @@ export class GameRoom extends Room<GameState> {
     const deal = dealTasks(players.map((p) => p.id), this.state.tasksPerPlayer);
     const drivers = players.filter((p) => this.secrets.get(p.id)!.faction === 'crew').map((p) => p.id);
     this.delivery.reset(deal, drivers, this.skin.delivery.packageHome);
-    this.hold.clear();
     this.syncDelivery();
     this.state.nightStartAt = dusk;
     this.state.nightPausedAt = 0;
@@ -522,7 +520,6 @@ export class GameRoom extends Room<GameState> {
       s.pending = undefined;
       s.vote = undefined;
     }
-    this.cancelArrest();
     this.teleportToSpawns();
     this.broadcast('task:close', {});
     if (!this.state.nightPausedAt) this.state.nightPausedAt = Date.now();
@@ -648,7 +645,6 @@ export class GameRoom extends Room<GameState> {
       }),
     };
     this.setPhase('ended', 0);
-    this.cancelArrest();
     this.state.nightPausedAt ||= Date.now();
     this.broadcast('end', reveal);
     this.system(`${winner === 'crew' ? this.skin.crewName.vi : this.skin.killerName.vi} thắng! ${reason}`);
@@ -663,7 +659,6 @@ export class GameRoom extends Room<GameState> {
     this.state.nightStartAt = 0;
     this.state.nightPausedAt = 0;
     this.delivery.reset({}, [], this.skin.delivery.packageHome);
-    this.hold.clear();
     this.syncDelivery();
     for (const [id, p] of this.state.players) {
       if (!p.connected) this.state.players.delete(id);
@@ -689,11 +684,11 @@ export class GameRoom extends Room<GameState> {
   }
 
   // ---------------------------------------------------------------- arrest / report
-  /** the cop presses and holds next to the nearest driver; the server times the hold */
+  /** A valid press captures the nearest driver immediately. Legacy release messages are ignored. */
   private arrestStart(client: Client) {
     const me = this.state.players.get(client.sessionId);
     const s = this.secrets.get(client.sessionId);
-    if (!me || !s || s.faction !== 'killer' || !me.alive || this.state.phase !== 'explore' || this.hold.active) return;
+    if (!me || !s || s.faction !== 'killer' || !me.alive || !me.connected || this.state.phase !== 'explore') return;
     const now = Date.now();
     if (now < s.arrestReadyAt) return client.send('toast', { text: 'Còng tay đang hồi — chờ một chút.', kind: 'info' });
     let target: Player | undefined;
@@ -707,44 +702,7 @@ export class GameRoom extends Room<GameState> {
       }
     }
     if (!target) return client.send('toast', { text: 'Không có ai trong tầm tay.', kind: 'warn' });
-    if (!this.hold.start(me.id, target.id, now)) return;
-    client.send('arrest:hold', { on: true, youAre: 'actor', endsAt: this.hold.endsAt } satisfies ArrestHoldMsg);
-    this.clients.getById(target.id)?.send('arrest:hold', { on: true, youAre: 'target', endsAt: this.hold.endsAt, by: me.name } satisfies ArrestHoldMsg);
-  }
-
-  private arrestRelease(id: string) {
-    const ev = this.hold.release(id);
-    if (ev) this.arrestOff(ev.actor, ev.target);
-  }
-
-  private arrestOff(actor: string, target: string) {
-    this.clients.getById(actor)?.send('arrest:hold', { on: false, youAre: 'actor' } satisfies ArrestHoldMsg);
-    this.clients.getById(target)?.send('arrest:hold', { on: false, youAre: 'target' } satisfies ArrestHoldMsg);
-  }
-
-  /** meetings / game end: drop any hold in progress */
-  private cancelArrest() {
-    if (!this.hold.active) return;
-    const ev = this.hold.release(this.holdActor());
-    if (ev) this.arrestOff(ev.actor, ev.target);
-    this.hold.clear();
-  }
-
-  private holdActor() {
-    for (const [id, s] of this.secrets) if (s.faction === 'killer') return id;
-    return '';
-  }
-
-  private tickArrest() {
-    const ev = this.hold.tick(Date.now(), (a, t) => {
-      const cop = this.state.players.get(a);
-      const tg = this.state.players.get(t);
-      return !!cop && !!tg && cop.alive && tg.alive && cop.connected && tg.connected && dist(cop, tg) <= GAME.arrestRange * 1.25;
-    });
-    if (!ev) return;
-    if (ev.type === 'cancel') return this.arrestOff(ev.actor, ev.target);
-    this.arrestOff(ev.actor, ev.target);
-    this.doArrest(ev.actor, ev.target);
+    this.doArrest(me.id, target.id);
   }
 
   private doArrest(actorId: string, targetId: string) {
@@ -754,7 +712,7 @@ export class GameRoom extends Room<GameState> {
     if (!me || !target || !s) return;
     const at = { x: target.x, y: target.y };
     const cine = { actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, at };
-    // The cop gets no cinematic of their own arrest — only the driver (and witnesses) see it.
+    // Only the arrested driver and visible witnesses receive a cinematic.
     this.clients.getById(target.id)?.send('cinematic', { kind: 'kill', ...cine, youAre: 'victim' });
     const seen = new Set<string>([me.id, target.id]);
     for (const w of this.bystanders(me, target)) {

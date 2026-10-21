@@ -39,7 +39,8 @@ export const playableMap = (_slug?: string | null): string => GAME_SLUG;
 
 export const playerArt = (_slug?: string | null) => {
   const base = `maps/${GAME_SLUG}/characters/player`;
-  return { atlas: `${base}-atlas`, tint: `${base}-tint-atlas`, action: `${base}-action`, actionTint: `${base}-action-tint` };
+  const chibi = `maps/${GAME_SLUG}/characters/grab-chibi`;
+  return { atlas: `${chibi}-atlas`, tint: `${chibi}-tint-atlas`, action: `${base}-action`, actionTint: `${base}-action-tint` };
 };
 
 export const mapArt = (_slug: string, kind: 'home-bg' | 'thumb') => `maps/${GAME_SLUG}/meta/${kind}.webp`;

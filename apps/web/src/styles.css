@@ -3402,3 +3402,30 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
 @media (max-height: 500px) {
   .home-card { padding-top: max(48px, calc(env(safe-area-inset-top) + 44px)); padding-bottom: max(48px, calc(env(safe-area-inset-bottom) + 44px)); }
 }
+
+/* The paired drawing owns wrist contact and the shared baseline. */
+.cine.cine-arrest { background: radial-gradient(ellipse at 50% 38%, #254246f5, #101f29f5 75%); animation: arrestReveal .3s both, cineOut .35s 5.35s forwards; }
+.cine-arrest .cine-flash, .cine-arrest .cine-brush { display: none; }
+.cine-arrest .cine-bar { background: transparent; height: clamp(12px, 5vh, 44px); }
+.cine-arrest .cine-set { background: radial-gradient(ellipse at 50% 68%, #b9c7bb0d, transparent 65%); }
+.cine-arrest .cine-ground { left: 24%; right: 24%; height: 1px; background: linear-gradient(90deg, transparent, #cfddcc55, transparent); }
+.arrest-pair { position: absolute; left: 212px; top: -280px; animation: arrestEscort 5.2s both; }
+.arrest-parked { position: absolute; left: 500px; top: -175px; opacity: 0; animation: arrestPark .35s 4.65s forwards; }
+.arrest-badge-glow { position: absolute; left: 380px; top: -260px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, #ffdf9345, #f2c46115 40%, transparent 72%); opacity: 0; animation: arrestBadge 5.2s both; }
+.cine-arrest .cine-text { padding: 12px 24px clamp(32px, 7vh, 70px); animation: arrestReveal .5s 3.2s both; --edge: #d4c49d; --glow: transparent; gap: 10px; }
+.cine-arrest .cine-kicker { color: #bac9c4; font: 600 10px/1.5 'Be Vietnam Pro', sans-serif; letter-spacing: .22em; text-shadow: none; margin: 0; }
+.cine-arrest .cine-kicker::before, .cine-arrest .cine-kicker::after { display: none; }
+.cine-arrest .cine-text h1 { font-family: 'Be Vietnam Pro', sans-serif; font-weight: 600; font-size: clamp(25px, 4.3vw, 38px); line-height: 1.35; letter-spacing: -.035em; color: #f3eee1; background: none; -webkit-text-fill-color: initial; -webkit-text-stroke: 0; text-shadow: none; filter: none; animation: none; }
+.cine-arrest .cine-text h1::after { display: none; }
+.cine-arrest .cine-text p { color: #b6c5c3; text-shadow: none; width: min(100%, 400px); box-sizing: border-box; margin: 0; padding: 0; background: none; border: 0; font-size: 13px; font-weight: 400; line-height: 1.7; animation: none; }
+.cine-arrest .cine-text p b { text-shadow: none; }
+.arrest-witness { position: fixed; z-index: 61; top: max(24px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); width: min(420px, calc(100% - 32px)); box-sizing: border-box; display: flex; align-items: center; gap: 14px; padding: 16px 20px; border: 1px solid #8abcb744; border-radius: 18px; background: #102a34ed; backdrop-filter: blur(14px); box-shadow: 0 12px 40px #0005; color: #e7f3ef; pointer-events: none; animation: arrestReveal .3s both, cineOut .25s .7s forwards; }
+.arrest-witness > span { display: grid; place-items: center; width: 38px; height: 38px; flex: none; border-radius: 50%; background: #d8c48a18; color: #e7d39b; font-size: 26px; }
+.arrest-witness b, .arrest-witness small { display: block; }
+.arrest-witness b { font-size: 14px; margin-bottom: 4px; }
+.arrest-witness small { color: #a9c7cb; font-size: 12px; line-height: 1.5; }
+@keyframes arrestReveal { from { opacity: 0; } to { opacity: 1; } }
+@keyframes arrestEscort { 0%, 85% { transform: translateX(0); opacity: 1; } 98%, 100% { transform: translateX(30px); opacity: 0; } }
+@keyframes arrestPark { to { opacity: 1; } }
+@keyframes arrestBadge { 0%, 12% { opacity: 0; transform: scale(.8); } 17%, 45% { opacity: 1; transform: scale(1); } 52%, 100% { opacity: 0; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .arrest-pair { animation-timing-function: steps(1, end); } .arrest-badge-glow { animation: none; } }

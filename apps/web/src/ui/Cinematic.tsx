@@ -4,7 +4,7 @@ import { colorHex, useStore } from '../store';
 import { asset, useEscape } from './common';
 
 const ROW = { down: 0, left: 1, right: 2, up: 3 } as const;
-const DURATION: Record<string, number> = { kill: 3200, report: 3600, emergency: 3300, witness: 1300 };
+const DURATION: Record<string, number> = { kill: 5700, report: 3600, emergency: 3300, witness: 1000 };
 /** The stage is authored on a fixed SET_W x SET_H board and scaled to whatever room the bars + caption leave. */
 const SET_W = 1000, SET_H = 420;
 const KICKER: Record<string, string> = { kill: '✦ Bắt giữ ✦', report: '✦ Xe bỏ lại ✦', emergency: '✦ Họp khẩn ✦' };
@@ -13,6 +13,8 @@ const KICKER: Record<string, string> = { kill: '✦ Bắt giữ ✦', report: '�
 const ACTOR_STRIKE: PoseTrack = [[0, 'strike-1'], [750, 'strike-0'], [900, 'strike-2'], [1050, 'strike-3']];
 const VICTIM_DIE: PoseTrack = [[0, 'guard-3'], [900, 'die-0'], [1100, 'die-1'], [1350, 'die-2'], [1600, 'die-3']];
 const BODY: PoseTrack = [[0, 'die-3']];
+const ARREST: PoseTrack = [0, 350, 700, 2200, 2700, 3200, 3650, 4050].map((ms, i) => [ms, `arrest-${i}`]);
+const PARKED: PoseTrack = [[0, 'parked-left']];
 const FINDER_STARTLE: PoseTrack = [[0, 'guard-0'], [1350, 'guard-1'], [1650, 'guard-2']];
 const BELL_RINGER: PoseTrack = [[0, 'guard-3'], [500, 'guard-1'], [780, 'guard-2'], [1100, 'guard-1'], [1380, 'guard-2'], [1700, 'guard-1'], [1980, 'guard-2'], [2350, 'guard-3']];
 const BELL_HITS = [800, 1400, 2000];
@@ -101,7 +103,7 @@ export function Sprite({
 }
 
 /** Base frame + tint frame multiplied by `hex` (clipped to the tint's own alpha), fitted to `ctx`'s height and centred. */
-function drawTinted(ctx: CanvasRenderingContext2D, tmp: HTMLCanvasElement, base: HTMLImageElement, tint: HTMLImageElement, r: Rect, hex: string) {
+function drawTinted(ctx: CanvasRenderingContext2D, tmp: HTMLCanvasElement, base: HTMLImageElement, tint: HTMLImageElement, r: Rect, hex: string, secondary?: { frame: Rect; hex: string }) {
   const { x: sx, y: sy, w, h } = r;
   if (tmp.width !== w) tmp.width = w;
   if (tmp.height !== h) tmp.height = h;
@@ -115,11 +117,25 @@ function drawTinted(ctx: CanvasRenderingContext2D, tmp: HTMLCanvasElement, base:
   t.globalCompositeOperation = 'destination-in';
   t.drawImage(tint, sx, sy, w, h, 0, 0, w, h);
   const cv = ctx.canvas;
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.clearRect(0, 0, cv.width, cv.height);
   const dw = (w * cv.height) / h, dx = (cv.width - dw) / 2;
   ctx.drawImage(base, sx, sy, w, h, dx, 0, dw, cv.height);
   ctx.drawImage(tmp, dx, 0, dw, cv.height);
+  if (secondary) {
+    const f = secondary.frame;
+    if (!f) return;
+    t.globalCompositeOperation = 'source-over';
+    t.clearRect(0, 0, w, h);
+    t.drawImage(tint, f.x, f.y, f.w, f.h, 0, 0, w, h);
+    t.globalCompositeOperation = 'multiply';
+    t.fillStyle = secondary.hex;
+    t.fillRect(0, 0, w, h);
+    t.globalCompositeOperation = 'destination-in';
+    t.drawImage(tint, f.x, f.y, f.w, f.h, 0, 0, w, h);
+    ctx.drawImage(tmp, dx, 0, dw, cv.height);
+  }
 }
 
 const ACT_W = 96, ACT_H = 64;
@@ -128,7 +144,7 @@ const ACT_ROW: Record<string, number> = { strike: 0, die: 1, guard: 2 };
 export type PoseTrack = [number, string][];
 
 /** Action-pose canvas (96x64 box; frame rects read from the action JSON); steps through `track` on a mount-relative clock, so a slow image load skips ahead instead of lagging. */
-export function PoseSprite({ color, track, scale = 4 }: { color: number; track: PoseTrack; scale?: number }) {
+export function PoseSprite({ color, track, scale = 4, tall = false, pairColor }: { color: number; track: PoseTrack; scale?: number; tall?: boolean; pairColor?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const hex = colorHex(PLAYER_COLORS[color] ?? 0xffffff);
   const art = playerArt(useStore((s) => s.room?.mapSlug));
@@ -144,7 +160,7 @@ export function PoseSprite({ color, track, scale = 4 }: { color: number; track: 
       if (dead) return;
       const draw = (f: string) => {
         const [row, i] = f.split('-');
-        drawTinted(ctx, tmp, base, tint, fr[f] ?? { x: Number(i) * ACT_W, y: (ACT_ROW[row] ?? 0) * ACT_H, w: ACT_W, h: ACT_H }, hex);
+        drawTinted(ctx, tmp, base, tint, fr[f] ?? { x: Number(i) * ACT_W, y: (ACT_ROW[row] ?? 0) * ACT_H, w: ACT_W, h: ACT_H }, hex, pairColor === undefined ? undefined : { frame: fr[`arrest-victim-${i}`], hex: colorHex(PLAYER_COLORS[pairColor] ?? 0xffffff) });
       };
       const now = performance.now() - t0;
       let cur = track[0][1];
@@ -158,8 +174,8 @@ export function PoseSprite({ color, track, scale = 4 }: { color: number; track: 
       dead = true;
       timers.forEach(clearTimeout);
     };
-  }, [hex, art.action, art.actionTint]);
-  return <canvas className="pose" ref={ref} width={ACT_W * scale} height={ACT_H * scale} />;
+  }, [hex, pairColor, art.action, art.actionTint]);
+  return <canvas className="pose" ref={ref} width={(pairColor === undefined ? ACT_W : 192) * scale} height={(pairColor !== undefined ? 128 : tall ? 88 : ACT_H) * scale} />;
 }
 
 function Fx({ name, className = '', ms = 700, delay = 0 }: { name: string; className?: string; ms?: number; delay?: number }) {
@@ -211,14 +227,14 @@ export function Cinematic() {
   let title = '';
   let sub: React.ReactNode = null;
   if (c.kind === 'kill' && arrest) {
-    title = c.youAre === 'victim' ? 'BẠN BỊ BẮT' : 'BẮT LÊN ĐỒN';
-    sub = c.youAre === 'victim' ? <>{nm(c.actor.name, actorCol)} là {skin.killerName.vi}!</> : <>Bạn đã còng tay {nm(c.victim!.name, victimCol)}</>;
+    title = c.youAre === 'victim' ? 'Đã bị bắt' : 'Đã khống chế';
+    sub = c.youAre === 'victim' ? 'Bạn có thể tiếp tục theo dõi ván chơi.' : 'Tài xế đã được còng tay và áp giải.';
   } else if (c.kind === 'kill') {
     title = c.youAre === 'victim' ? 'BẠN BỊ HẠ GỤC' : 'HẠ GỤC';
     sub = c.youAre === 'victim' ? <>{nm(c.actor.name, actorCol)} là {mapSkin(useStore.getState().room?.mapSlug).killerName.vi}!</> : <>Bạn đã hạ gục {nm(c.victim!.name, victimCol)}</>;
   } else if (c.kind === 'report') {
     title = 'BÁO XE BỎ LẠI';
-    sub = <>{nm(c.actor.name, actorCol)} phát hiện chiếc xe CRAB bỏ lại của {nm(c.victim!.name, victimCol)}</>;
+    sub = <>{nm(c.actor.name, actorCol)} phát hiện chiếc xe CRAP bỏ lại của {nm(c.victim!.name, victimCol)}</>;
   } else {
     title = 'HỌP KHẨN';
     sub = <>{nm(c.actor.name, actorCol)} đã gọi họp khẩn ({mapSkin(useStore.getState().room?.mapSlug).emergency.vi})</>;
@@ -226,7 +242,12 @@ export function Cinematic() {
 
   // witnesses get no overlay: only the in-world strike + fall, so nobody is named or flagged
   // bystanders of a blocked strike likewise get the public in-world dome/flash only
-  if (c.kind === 'witness' || c.youAre === 'witness') return null;
+  if (c.kind === 'witness' || c.youAre === 'witness') return arrest ? (
+    <aside className="arrest-witness" key={c.id} role="status">
+      <span aria-hidden="true">✦</span>
+      <div><b>Vừa có người bị bắt</b></div>
+    </aside>
+  ) : null;
 
   // attacker always enters from the left; action sheets face left, so the attacker is mirrored
   const attacker = (track: PoseTrack, cls: string) => (
@@ -239,7 +260,7 @@ export function Cinematic() {
   );
 
   return (
-    <div className={`cine cine-${c.kind} ${c.youAre === 'victim' ? 'as-victim' : ''}`} key={c.id} onClick={() => set({ cinematic: null })}>
+    <div className={`cine cine-${c.kind} ${arrest && c.kind === 'kill' ? 'cine-arrest' : ''} ${c.youAre === 'victim' ? 'as-victim' : ''}`} key={c.id} onClick={() => set({ cinematic: null })}>
       <div className="cine-flash" />
       <div className="cine-bar top" />
       <div className="cine-area" ref={area}>
@@ -248,14 +269,9 @@ export function Cinematic() {
             <div className="cine-ground" />
             {c.kind === 'kill' && arrest && (
               <>
-                <i className="cine-siren red" />
-                <i className="cine-siren blue" />
-                {attacker(ACTOR_STRIKE, 'lunge')}
-                <div className="cine-victim struck">
-                  <PoseSprite color={c.victim!.color} track={VICTIM_DIE} />
-                </div>
-                <img className="cine-cuffs" src={asset(`${arrest.cuffs}.webp`)} alt="" draggable={false} />
-                <b className="cine-clack">CẠCH!</b>
+                <div className="arrest-badge-glow" aria-hidden="true" />
+                <div className="arrest-parked"><PoseSprite color={c.victim!.color} track={PARKED} tall scale={3} /></div>
+                <div className="arrest-pair"><PoseSprite color={c.actor.color} pairColor={c.victim!.color} track={ARREST} scale={3} /></div>
               </>
             )}
             {c.kind === 'kill' && !arrest && (
@@ -276,7 +292,7 @@ export function Cinematic() {
               <>
                 <i className="cine-spot" />
                 <div className="cine-victim lie">
-                  <PoseSprite color={c.victim!.color} track={BODY} />
+                  <PoseSprite color={c.victim!.color} track={arrest ? PARKED : BODY} tall={!!arrest} />
                 </div>
                 <Fx name="fx-shock-lines" className="cine-fx-shock" ms={900} delay={1150} />
                 <div className="cine-actor findin">
@@ -321,7 +337,7 @@ export function Cinematic() {
       </div>
       <div className="cine-text">
         <img className="cine-brush" src={asset('maps/common/ui/fx/brush-stroke.webp')} alt="" draggable={false} />
-        <span className="cine-kicker">{arrest && c.kind === 'kill' ? '✦ Bắt quả tang ✦' : KICKER[c.kind]}</span>
+        <span className="cine-kicker">{arrest && c.kind === 'kill' ? 'CÔNG AN CHÌM' : KICKER[c.kind]}</span>
         <h1 data-text={title}>{title}</h1>
         <p>{sub}</p>
       </div>

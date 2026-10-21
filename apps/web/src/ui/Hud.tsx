@@ -72,32 +72,6 @@ function CooldownRing({ readyAt }: { readyAt: number }) {
   );
 }
 
-/** Notices under the top HUD: an arrest hold involving me, and "you carry the package". */
-function HoldNotice() {
-  const hold = useStore((s) => s.arrestHold);
-  const t = useT();
-  const left = useCountdown(hold?.endsAt ?? 0);
-  useEffect(() => {
-    if (hold?.youAre === 'target') sfx.bad();
-  }, [hold?.endsAt, hold?.youAre]);
-  if (!hold) return null;
-  const target = hold.youAre === 'target';
-  return (
-    <div className={`notice arrest-alert ${target ? 'urgent' : ''}`} role="alert" key={hold.endsAt}>
-      <span className="notice-ico">🚨</span>
-      <div className="notice-body">
-        <b>{target ? t('arrestingYou').replace('{name}', hold.by ?? '?') : t('arresting')}</b>
-        <span>{target ? t('arrestRun') : t('arrestKeep')}</span>
-      </div>
-      {left != null && (
-        <span className="notice-timer">
-          <Digits text={left} />
-        </span>
-      )}
-    </div>
-  );
-}
-
 function CarryNotice() {
   const mine = useStore((s) => !!s.room && s.room.packageState === 'carried' && s.room.packageCarrier === s.sessionId);
   const open = useStore((s) => !!s.room?.handoffOpen);
@@ -274,24 +248,18 @@ export function InspectPanel() {
   );
 }
 
-/** Undercover: press and hold next to a driver; the server times the hold and cancels it if they get away. */
+/** One click requests an immediate arrest. */
 function ArrestButton({ ready, cdLeft, readyAt, label, icon }: { ready: boolean; cdLeft: number | null; readyAt: number; label: string; icon: string }) {
-  const holding = useStore((s) => s.arrestHold?.youAre === 'actor');
-  useEffect(() => () => arrest(false), []);
   return (
     <button
-      className={`round-btn kill slot-main ${ready || holding ? 'ready' : 'idle'} ${cdLeft ? 'cooling' : ''} ${holding ? 'holding' : ''}`}
-      style={{ '--hold': `${GAME.arrestHoldSec}s` } as React.CSSProperties}
-      disabled={!ready && !holding}
-      onPointerDown={(e) => ((e.target as HTMLElement).setPointerCapture?.(e.pointerId), arrest(true))}
-      onPointerUp={() => arrest(false)}
-      onPointerCancel={() => arrest(false)}
+      className={`round-btn kill slot-main ${ready ? 'ready' : 'idle'} ${cdLeft ? 'cooling' : ''}`}
+      disabled={!ready}
+      onClick={() => arrest(true)}
       onContextMenu={(e) => e.preventDefault()}
       title={`${label} (K)`}
       aria-label={label}
     >
       <img src={asset(`${icon}.webp`)} alt="" draggable={false} />
-      {holding && <i className="hold-fill" aria-hidden />}
       {cdLeft ? <CooldownRing readyAt={readyAt} /> : null}
       {cdLeft ? <span className="cd"><Digits text={cdLeft} /></span> : null}
       <kbd>K</kbd>
@@ -400,7 +368,6 @@ export function Hud() {
     <>
       {inGame && (
         <div className="hud-notices">
-          <HoldNotice />
           {room.phase === 'explore' && <CarryNotice />}
         </div>
       )}

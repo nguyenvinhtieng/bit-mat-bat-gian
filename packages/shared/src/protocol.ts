@@ -11,7 +11,7 @@ export type ClientMessages = {
   start: Record<string, never>;
   'task:open': { taskId: TaskId };
   'task:submit': { taskId: TaskId; answer: unknown };
-  /** undercover only: press (on) / release (off) the arrest button; the server times the hold */
+  /** undercover only: on=true requests an immediate arrest; on=false is a compatibility no-op */
   arrest: { on: boolean };
   /** pick up the package when standing next to it */
   'package:pick': Record<string, never>;
