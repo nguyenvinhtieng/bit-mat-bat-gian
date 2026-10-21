@@ -5,13 +5,13 @@
  *   to-te.wav      — short two-tone "tò te" whistle-horn, called up to the ward
  *   go-hu-tieu.wav — the hủ tiếu gõ seller's bamboo clappers "lốc cốc lốc cốc"
  *   node tools/sfx/draw-sai-gon.mjs
- * Writes apps/web/public/assets/maps/sai-gon/sfx/*.wav
+ * Writes apps/web/public/assets/maps/game/sfx/*.wav
  */
 import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
-const DIR = path.join(ROOT, 'apps/web/public/assets/maps/sai-gon/sfx');
+const DIR = path.join(ROOT, 'apps/web/public/assets/maps/game/sfx');
 const SR = 22050;
 
 let seed = 42;

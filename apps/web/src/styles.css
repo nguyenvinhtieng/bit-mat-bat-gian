@@ -781,6 +781,7 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 .home-crest { position: absolute; left: 50%; top: calc(-1 * var(--b) - 58px); width: 280px; transform: translateX(-50%); pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
 .home-card h1 { text-align: center; padding: 0; margin-bottom: 4px; font-size: 2.3em; color: #ffd36b; text-shadow: 0 3px 0 #3a1206, 0 0 22px rgba(255, 180, 80, 0.35); }
 .home-logo { display: block; width: min(260px, 100%); height: auto; margin: 6px auto 0; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55)); }
+.home-tagline { margin: 8px auto 0; max-width: 28em; text-align: center; font-size: 0.92rem; line-height: 1.45; color: #e8dcc4; opacity: 0.92; }
 .home-card h1 small {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   color: #f6ecd6; letter-spacing: 0.14em; font-size: 0.36em; font-weight: 600; margin-top: 8px;

@@ -439,8 +439,8 @@ function crabWord(k, cx, y, w = 2.3, h = 2.9, gap = 0.45) {
 }
 
 const SAI_GON = {
-  slug: 'sai-gon',
-  prefix: 'sg',
+  slug: 'game',
+  prefix: 'player',
   // walk/idle frames are wider: the driver rides a scooter (see `ride`); actions stay on foot
   rig: { s: 1.375, fw: 80, fh: 88, walk: 8, idle: 4, aw: 132 },
   trouser: JEAN.main,
@@ -931,7 +931,7 @@ function actionJson(image, r) {
   return { frames, meta: { app: 'the-hidden-truth/char-art', image, size: { w: W * 4, h: H * ACTION_ROWS.length }, scale: '1' } };
 }
 
-const COSTUMES = [HUE, HOI_AN, THANG_LONG, SAI_GON];
+const COSTUMES = [SAI_GON];
 
 for (const c of COSTUMES) {
   if (ONLY && c.slug !== ONLY) continue;

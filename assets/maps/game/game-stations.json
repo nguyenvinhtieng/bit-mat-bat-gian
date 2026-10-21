@@ -1,0 +1,99 @@
+{
+ "mapVersion": 1,
+ "hitbox": [
+  96,
+  96
+ ],
+ "stations": [
+  {
+   "id": "task_chi_duong",
+   "area": "courtyard_checkin",
+   "x": 826,
+   "y": 91,
+   "title": "Chạy cuốc theo khách chỉ đường",
+   "titleEn": "Follow the passenger’s directions",
+   "icon": "station-chi-duong"
+  },
+  {
+   "id": "task_com_tam",
+   "area": "exhibition",
+   "x": 307,
+   "y": 605,
+   "title": "Giao cơm tấm",
+   "titleEn": "Deliver the broken-rice plate",
+   "icon": "station-com-tam"
+  },
+  {
+   "id": "task_tieng_rao",
+   "area": "corridor",
+   "x": 504,
+   "y": 1032,
+   "title": "Nghe rao canh chừng",
+   "titleEn": "Listen to the street calls",
+   "icon": "station-tieng-rao"
+  },
+  {
+   "id": "task_ca_phe_phin",
+   "area": "coordination",
+   "x": 1646,
+   "y": 418,
+   "title": "Pha cà phê sữa đá",
+   "titleEn": "Brew an iced milk coffee",
+   "icon": "station-ca-phe-phin"
+  },
+  {
+   "id": "task_khui_hui",
+   "area": "coordination",
+   "x": 1891,
+   "y": 835,
+   "title": "Bỏ thăm khui hụi",
+   "titleEn": "Open the hụi bids",
+   "icon": "station-khui-hui"
+  },
+  {
+   "id": "task_do_xang",
+   "area": "editing",
+   "x": 1315,
+   "y": 1032,
+   "title": "Đổ xăng tròn 50",
+   "titleEn": "Fill up exactly 50k",
+   "icon": "station-do-xang"
+  },
+  {
+   "id": "task_va_vo",
+   "area": "editing",
+   "x": 701,
+   "y": 1032,
+   "title": "Vá vỏ xe",
+   "titleEn": "Patch the inner tube",
+   "icon": "station-va-vo"
+  },
+  {
+   "id": "task_so_hui",
+   "area": "archive",
+   "x": 605,
+   "y": 1310,
+   "title": "Ghi sổ hụi",
+   "titleEn": "Write up the hụi ledger",
+   "icon": "station-so-hui"
+  },
+  {
+   "id": "task_dem_tien",
+   "area": "archive",
+   "x": 216,
+   "y": 1373,
+   "title": "Đếm tiền bó thun",
+   "titleEn": "Count the rubber-banded cash",
+   "icon": "station-dem-tien"
+  },
+  {
+   "id": "task_xep_xe",
+   "area": "artifact_storage",
+   "x": 1795,
+   "y": 1459,
+   "title": "Xếp xe bãi giữ xe",
+   "titleEn": "Pack the bike park",
+   "icon": "station-xep-xe"
+  }
+ ]
+}

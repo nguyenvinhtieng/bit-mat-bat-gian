@@ -29,7 +29,7 @@ export class Player extends Schema {
 
 export class GameState extends Schema {
   @type('string') code = '';
-  @type('string') mapSlug = 'co-do-hue';
+  @type('string') mapSlug = 'game';
   @type('uint8') mapVersion = 2;
   @type('string') hostId = '';
   /** public (default) = findable via quick-match; private = only joinable with the room code */

@@ -61,58 +61,12 @@ export type PrivateInfo = {
   shield?: boolean;
 };
 
-/** Ngọ Môn traveller kinds (task_ngo_mon_gates). */
-export type GateTraveler = 'vua' | 'van' | 'vo' | 'linh' | 'voi' | 'ngua';
-export type PoemKind = 'tho' | 'hoa';
-
 /**
  * Mini-game payloads (server -> client). Answers stay on the server; the client only gets
- * what it needs to draw the game. See apps/server/src/content/<slug>/.
+ * what it needs to draw the game. See apps/server/src/content/game/.
  */
 export type TaskData =
-  /** tap the 8 moon phases in cycle order, starting from Sóc (new moon). Answer: moon ids in order. */
-  | { taskId: 'task_moon_phase'; prompt: string; moons: { id: string; phase: number }[] }
-  /** pick the mirrored block, ink it, press the paper. Answer: { block } */
-  | { taskId: 'task_woodblock_print'; prompt: string; glyph: string; meaning: string; blocks: { id: string; flip: 'none' | 'mirror' | 'flipV' | 'rot180' }[] }
-  /** route each traveller to one of the 5 gates (index 0..4, screen left -> right). Answer: gate index per traveller. */
-  | { taskId: 'task_ngo_mon_gates'; prompt: string; travelers: { id: string; kind: GateTraveler }[]; gates: { name: string; for: string }[] }
-  /** place 6 officials on the phẩm sơn steles. Answer: Record<slotId, officialId>, slotId = `${side}-${rank}` */
-  | { taskId: 'task_court_ranks'; prompt: string; officials: { id: string; side: 'van' | 'vo'; rank: number; name: string }[] }
-  /** repeat the instrument sequence. Answer: instrument ids. */
-  | { taskId: 'task_nha_nhac'; prompt: string; instruments: { id: string; name: string }[]; sequence: string[] }
-  /** scratch the dust, tap the requested relief images. Answer: cell ids. */
-  | { taskId: 'task_cuu_dinh'; prompt: string; urn: string; cells: { id: string; motif: string; name: string }[]; targets: string[] }
-  /** fill the missing wall panels (alternate poem / painting, matching themes). Answer: Record<slot, trayId>. */
-  | {
-      taskId: 'task_poem_wall';
-      prompt: string;
-      panels: { slot: number; kind?: PoemKind; theme?: string }[];
-      tray: { id: string; kind: PoemKind; theme: string }[];
-      themes: Record<string, { han: string; name: string }>;
-    }
-  /** move the swaying seal onto the red frame, then hold to press. Answer: { x, y } (0..1 of the paper). */
-  | { taskId: 'task_royal_seal'; prompt: string; target: { x: number; y: number }; tolerance: number; holdMs: number }
-  /** build N bánh bèo cups step by step. Answer: { cups } */
-  | { taskId: 'task_banh_beo'; prompt: string; cups: number; steps: { id: string; name: string }[] }
-  // ---- thang-long
-  /** stack the layers into the mould bottom -> top, then tie the lạt. Answer: { layers: kind[], ties } */
-  | { taskId: 'task_banh_chung'; prompt: string; tray: { kind: string; name: string }[]; slots: number; ties: number }
-  /** match each Đông Hồ colour to its natural source. Answer: Record<colorId, sourceId> */
-  | { taskId: 'task_dong_ho'; prompt: string; painting: string; colors: { id: string; name: string; hex: string }[]; sources: { id: string; name: string; hex?: string }[] }
-  /** trace the calligraphy strokes in order (points 0..1 of the paper). Answer: { x, y }[][] */
-  | { taskId: 'task_cho_chu'; prompt: string; glyph: string; meaning: string; strokes: Pt[][] }
-  /** hang the right ornaments, then raise the swaying pole upright. Answer: { ornaments: id[], tilt } (tilt in degrees) */
-  | { taskId: 'task_cay_neu'; prompt: string; tray: { id: string; name: string; desc?: string }[]; need: number; maxTilt: number }
-  /** pair each first line with its second line. Answer: Record<topId, bottomId> */
-  | { taskId: 'task_cau_doi'; prompt: string; tops: CoupletLine[]; bottoms: CoupletLine[] }
-  /** nam: line fruits up to spell the saying; bac: chuối at the base, bưởi/phật thủ at the centre + 3 more. Answer: kind[] (nam) | { base, center, ring: kind[] } (bac) */
-  | { taskId: 'task_ngu_qua'; prompt: string; region: 'bac' | 'nam'; fruits: { kind: string; name: string }[]; slots: number }
-  /** tap the phách on the beats (ms from the first beat). Answer: tap times, ms */
-  | { taskId: 'task_ca_tru'; prompt: string; beats: number[]; tolerance: number }
-  /** steer the puppet across the pond through the marks in order. Answer: { x, y, t }[] (0..1, ms) */
-  | { taskId: 'task_roi_nuoc'; prompt: string; puppet: string; start: Pt; marks: Pt[]; radius: number; speed: number }
-  // ---- sai-gon
-  /** read each (self-correcting) passenger line, pick the turn they finally mean. Answer: SgTurn[] in step order */
+  /** read each (self-correcting) passenger line, pick the turn they finally mean. Answer: GameTurn[] in step order */
   | { taskId: 'task_chi_duong'; prompt: string; passenger: string; steps: { id: string; say: string }[] }
   /** memorise the order (hidden after memoMs), then pick exactly what goes on the plate. Answer: kind[] */
   | { taskId: 'task_com_tam'; prompt: string; customer: string; order: string[]; memoMs: number; want: number; tray: { kind: string; name: string }[] }
@@ -133,11 +87,9 @@ export type TaskData =
   /** park every bike in the lot (grid cells, no overlap, off the pillars). Answer: Record<bikeId, { x, y, vertical }> */
   | { taskId: 'task_xep_xe'; prompt: string; w: number; h: number; blocked: Pt[]; bikes: { id: string; len: number; crab?: boolean }[] };
 
-export type SgTurn = 'trai' | 'phai' | 'thang';
+export type GameTurn = 'trai' | 'phai' | 'thang';
 
 export type Pt = { x: number; y: number };
-/** `hint` = the paired words of a first line, e.g. "Đông ↔ Nam" (helps players who don't know the couplet) */
-export type CoupletLine = { id: string; text: string; han?: string; hint?: string };
 
 /** Sent when a task is solved: success line + the heritage card ("Bạn có biết?"). */
 export type TaskResultMsg = { ok: boolean; text: string; fact?: string; headline?: string };

@@ -23,7 +23,7 @@ export function TaskModal() {
     const h = (e: KeyboardEvent) => e.key === 'Enter' && close();
     window.addEventListener('keydown', h);
     // Sài Gòn: the card gets out of the way by itself (no confirm click)
-    const auto = skin.slug === 'sai-gon' ? window.setTimeout(close, AUTO_CLOSE_MS) : 0;
+    const auto = window.setTimeout(close, AUTO_CLOSE_MS);
     return () => (window.removeEventListener('keydown', h), clearTimeout(auto));
   }, [!!result]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!task) return null;
@@ -37,9 +37,9 @@ export function TaskModal() {
     const total = me?.tasks.length ?? 0;
     return (
       <Modal title={en ? 'Task complete' : 'Hoàn thành nhiệm vụ'} onClose={close} wide className="hcard-modal">
-        <div className="hcard" onClick={skin.slug === 'sai-gon' ? close : undefined}>
+        <div className="hcard" onClick={close}>
           <figure className="hcard-art">
-            <img src={asset(`${skin.art.cards}/${skin.prefix}-card-${task.taskId}.webp`)} alt="" draggable={false} />
+            <img src={asset(`${skin.art.cards}/${skin.prefix}-${task.taskId}.webp`)} alt="" draggable={false} />
             <figcaption>{en ? skin.areas[st.area].nameEn : skin.areas[st.area].name}</figcaption>
             <span className="hcard-stamp" aria-hidden>
               <b>{en ? 'DONE' : 'ĐÃ XONG'}</b>

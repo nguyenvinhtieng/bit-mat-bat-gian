@@ -7,8 +7,9 @@ const KEY = 'tht:lang';
 
 const dict = {
   vi: {
-    slogan: 'Mắt Ai Cũng Bịt, Gian Ai Cũng Giấu',
-    tagline: 'Làm nhiệm vụ di sản, đọc vị từng người, tìm ra kẻ gian trước khi quá muộn.',
+    slogan: 'Ai là công an chìm?',
+    appTagline: 'Game suy luận xã hội — khui hụi giữa đêm ở Hẻm 42, tìm công an chìm trước khi trời sáng.',
+    tagline: 'Chạy cuốc, làm nhiệm vụ, bỏ phiếu — và lột nón kẻ công an chìm trong hội tài xế.',
     displayName: 'Tên hiển thị',
     namePlaceholder: 'Ví dụ: Minh',
     createRoom: 'Tạo phòng mới',
@@ -140,8 +141,9 @@ const dict = {
     later: 'Để sau',
   },
   en: {
-    slogan: 'Every Eye Blindfolded, Every Hand Hiding Something',
-    tagline: 'Complete heritage tasks, read every player, unmask the impostors before it is too late.',
+    slogan: 'Who is the undercover cop?',
+    appTagline: 'Social deduction in Alley 42 — finish the secret hụi night and expose the cop before daybreak.',
+    tagline: 'Run rides, do tasks, vote in meetings — and unmask the undercover cop among the drivers.',
     displayName: 'Display name',
     namePlaceholder: 'e.g. Minh',
     createRoom: 'Create room',

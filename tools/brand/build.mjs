@@ -116,7 +116,7 @@ const icoPngs = await Promise.all([16, 32, 48].map((s) => png(emblem, s, s).toBu
 fs.writeFileSync(path.join(PUB, 'favicon.ico'), await pngToIco(icoPngs));
 
 // ---------- Open Graph / social card 1200x630 ----------
-const bg = await sharp(path.join(PUB, 'assets/maps/co-do-hue/meta/home-bg.webp')).resize(1200, 630, { fit: 'cover' }).toBuffer();
+const bg = await sharp(path.join(PUB, 'assets/maps/game/meta/home-bg.webp')).resize(1200, 630, { fit: 'cover' }).toBuffer();
 const tag = 'Mắt Ai Cũng Bịt, Gian Ai Cũng Giấu';
 const tp = textPath(SANS, tag, 44, 600, 520, 1, 'middle');
 const sub = 'Game suy luận xã hội nhiều người chơi · Chơi miễn phí trên trình duyệt';

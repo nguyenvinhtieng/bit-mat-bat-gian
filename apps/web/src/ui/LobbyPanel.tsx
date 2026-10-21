@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { GAME, MAP_CATALOG, MAX_PLAYERS, MIN_PLAYERS, PLAYER_COLORS, autoNightMin, clampKillers, killersFor, maxKillersFor, mapArt, mapSkin } from '@hidden-truth/shared';
+import { DEFAULT_MAP_SLUG, GAME, MAX_PLAYERS, MIN_PLAYERS, PLAYER_COLORS, autoNightMin, clampKillers, killersFor, maxKillersFor, mapArt, mapSkin } from '@hidden-truth/shared';
 import { send } from '../net';
 import { colorHex, useStore } from '../store';
 import { CloseButton, Modal, asset } from './common';
 import { Chat } from './Chat';
-import { useLang, useT } from '../i18n';
+import { useT } from '../i18n';
 
 export function LobbyPanel() {
   const room = useStore((s) => s.room)!;
@@ -59,7 +59,7 @@ export function LobbyPanel() {
       <div className={`lobby-dock ${panelOpen ? '' : 'is-collapsed'}`}>
         <aside className="lobby-panel" aria-hidden={!panelOpen}>
           <div className="lobby-head">
-            <img className="lobby-thumb" src={asset(mapArt(room.mapSlug, 'thumb'))} alt="" />
+            <img className="lobby-thumb" src={asset(mapArt(DEFAULT_MAP_SLUG, 'thumb'))} alt="" />
             <div className="room-code">
               <span>{t('roomCode')}</span>
               <strong>{room.code}</strong>
@@ -251,10 +251,7 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
   const room = useStore((s) => s.room)!;
   const t = useT();
   const { isHost, total, maxKillers, onClose } = props;
-  const lang = useLang((s) => s.lang);
-  const toast = useStore((s) => s.toast);
   const [draft, setDraft] = useState({
-    map: room.mapSlug,
     tasks: room.tasksPerPlayer,
     killers: props.killers,
     nightAuto: room.nightAuto,
@@ -262,10 +259,9 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
     isPublic: room.isPublic,
   });
   // guests just watch the live values; only the host edits a draft
-  const { map, tasks, killers, nightAuto, nightMin, isPublic } = isHost
+  const { tasks, killers, nightAuto, nightMin, isPublic } = isHost
     ? draft
     : {
-        map: room.mapSlug,
         tasks: room.tasksPerPlayer,
         killers: props.killers,
         nightAuto: room.nightAuto,
@@ -273,10 +269,7 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
         isPublic: room.isPublic,
       };
   const edit = (patch: Partial<typeof draft>) => setDraft((d) => ({ ...d, ...patch }));
-  // the task slider follows the picked map (server clamps the same way on host:map)
-  const maxTasks = mapSkin(map).taskIds.length;
-  const pickMap = (m: (typeof MAP_CATALOG)[number]) =>
-    m.available ? edit({ map: m.slug, tasks: Math.min(tasks, mapSkin(m.slug).taskIds.length), nightAuto: true }) : toast({ text: t('comingSoonToast'), kind: 'warn' });
+  const maxTasks = mapSkin(room.mapSlug).taskIds.length;
   // auto preview mirrors the server: an untouched auto killer count follows the room size
   const previewKillers = !room.killers && killers === props.killers ? killersFor(total) : killers;
   const shownNight = nightAuto && isHost ? autoNightMin(total, previewKillers, tasks) : nightMin;
@@ -288,8 +281,6 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
       nightMin?: number;
       nightAuto?: boolean;
     } = {};
-    // map first: the server clamps tasks to the new map before the configure lands
-    if (map !== room.mapSlug) send('host:map', { map });
     if (tasks !== room.tasksPerPlayer) msg.tasksPerPlayer = tasks;
     if (killers !== props.killers) msg.killers = killers;
     if (nightAuto && !room.nightAuto) msg.nightAuto = true;
@@ -310,31 +301,6 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
           <CloseButton onClick={onClose} label={t('close')} />
         </header>
         <div className="modal-content">
-          <div className={`settings-map ${isHost ? '' : 'is-disabled'}`}>
-            <div className="map-grid" role="radiogroup" aria-label={t('chooseMap')}>
-              {MAP_CATALOG.map((m) => (
-                <button
-                  key={m.slug}
-                  type="button"
-                  role="radio"
-                  aria-checked={m.slug === map}
-                  aria-disabled={!m.available}
-                  disabled={!isHost}
-                  className={`map-tile ${m.slug === map ? 'active' : ''} ${m.available ? '' : 'locked'}`}
-                  onClick={() => pickMap(m)}
-                >
-                  <span className="map-thumb" style={{ backgroundImage: `url(${asset(mapArt(m.slug, 'thumb'))})` }}>
-                    {!m.available && (
-                      <em className="map-soon">
-                        <span>{t('comingSoon')}</span>
-                      </em>
-                    )}
-                  </span>
-                  <b>{m.name[lang]}</b>
-                </button>
-              ))}
-            </div>
-          </div>
           <SliderRow
             icon="maps/common/ui/clue.webp"
             label={t('tasksPer')}
@@ -355,7 +321,7 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
             onChange={(v) => edit({ killers: v, nightAuto: true })}
           />
           <SliderRow
-            icon={`${mapSkin(map).art.nightMarker}.webp`}
+            icon={`${mapSkin(room.mapSlug).art.nightMarker}.webp`}
             label={t('nightLen')}
             min={GAME.nightMinMin}
             max={GAME.nightMinMax}

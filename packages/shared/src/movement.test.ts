@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { getGrid, getLobbyGrid, areaAt, SPAWNS, isSolidTile } from './layout';
 import { stepMovement } from './movement';
 import { PLAYER_SPEED, SIM_DT, TILE } from './constants';
-import { HUE_STATIONS } from './maps/co-do-hue/index';
+import { GAME_STATIONS } from './maps/game/index';
 
 test('spawns are walkable and inside the courtyard', () => {
   const g = getGrid();
@@ -15,7 +15,7 @@ test('spawns are walkable and inside the courtyard', () => {
 
 test('stations sit inside their area', () => {
   const g = getGrid();
-  for (const st of HUE_STATIONS) assert.equal(areaAt(g, st.x, st.y), st.area, st.id);
+  for (const st of GAME_STATIONS) assert.equal(areaAt(g, st.x, st.y), st.area, st.id);
 });
 
 test('walls block movement', () => {
@@ -57,7 +57,7 @@ test('every area is reachable from spawn', () => {
       q.push([nx, ny]);
     }
   }
-  for (const st of HUE_STATIONS) {
+  for (const st of GAME_STATIONS) {
     assert.ok(seen.has(Math.floor(st.y / TILE) * g.w + Math.floor(st.x / TILE)), `${st.id} unreachable`);
   }
 });

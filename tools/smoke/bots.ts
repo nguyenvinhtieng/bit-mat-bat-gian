@@ -7,7 +7,8 @@
 import { Client, type Room } from 'colyseus.js';
 import {
   GAME,
-  HUE_STATIONS,
+  GAME_STATIONS,
+  type GameTurn,
   ROOM_NAME,
   SIM_DT,
   getGrid,
@@ -79,45 +80,76 @@ async function walkTo(b: Bot, target: Vec) {
   return Math.hypot(sp.x - target.x, sp.y - target.y);
 }
 
+function finalTurn(say: string): GameTurn {
+  const s = say.toLowerCase();
+  const last = Math.max(s.lastIndexOf('trái'), s.lastIndexOf('phải'), s.lastIndexOf('chạy thẳng'));
+  if (last === s.lastIndexOf('chạy thẳng') && last >= 0) return 'thang';
+  if (s.lastIndexOf('trái') > s.lastIndexOf('phải')) return 'trai';
+  if (s.lastIndexOf('phải') > s.lastIndexOf('trái')) return 'phai';
+  return 'thang';
+}
+
 /** Solve a mini-game from the client payload only (what a skilled player can see on screen). */
 function solve(t: TaskData): unknown {
   switch (t.taskId) {
-    case 'task_moon_phase':
-      return [...t.moons].sort((a, b) => a.phase - b.phase).map((m) => m.id);
-    case 'task_woodblock_print':
-      return { block: t.blocks.find((b) => b.flip === 'mirror')!.id };
-    case 'task_ngo_mon_gates': {
-      const g: Record<string, number> = { vua: 2, vo: 1, van: 3, linh: 0, voi: 4, ngua: 0 };
-      return t.travelers.map((x) => g[x.kind]);
-    }
-    case 'task_court_ranks':
-      return Object.fromEntries(t.officials.map((o) => [`${o.side}-${o.rank}`, o.id]));
-    case 'task_nha_nhac':
-      return t.sequence;
-    case 'task_cuu_dinh':
-      return t.cells.filter((c) => t.targets.includes(c.motif)).map((c) => c.id);
-    case 'task_poem_wall': {
-      const ans: Record<number, string> = {};
-      const used = new Set<string>();
-      for (const p of t.panels.filter((x) => !x.kind)) {
-        const row = p.slot >> 2, col = p.slot & 3;
-        const kind = (row + col) % 2 === 0 ? 'tho' : 'hoa';
-        const theme = t.panels.find((x) => x.slot === (p.slot ^ 1))!.theme;
-        const tile = t.tray.find((x) => !used.has(x.id) && x.kind === kind && x.theme === theme)!;
-        used.add(tile.id);
-        ans[p.slot] = tile.id;
+    case 'task_chi_duong':
+      return t.steps.map((s) => finalTurn(s.say));
+    case 'task_com_tam': {
+      const want = new Set<string>();
+      for (const line of t.order) {
+        const low = line.toLowerCase();
+        for (const item of t.tray) {
+          const n = item.name.toLowerCase();
+          if (!low.includes(n)) continue;
+          if (low.includes(`bỏ ${n}`)) continue;
+          want.add(item.kind);
+        }
       }
-      return ans;
+      return [...want].slice(0, t.want);
     }
-    case 'task_royal_seal':
-      return { x: t.target.x + 0.01, y: t.target.y - 0.01 };
-    case 'task_banh_beo':
-      return { cups: t.cups };
+    case 'task_tieng_rao': {
+      const legend = new Map(t.legend.map((l) => [l.text.toLowerCase(), l.means]));
+      return Object.fromEntries(t.calls.map((c) => {
+        const key = t.legend.find((l) => c.text.includes(l.text))!;
+        return [c.id, key.means];
+      }));
+    }
+    case 'task_ca_phe_phin':
+      return { milk: t.line };
+    case 'task_do_xang':
+      return { holdMs: (t.target / (t.pricePerLiter * t.litersPerSec)) * 1000 };
+    case 'task_va_vo':
+      return { patches: t.leaks };
+    case 'task_so_hui': {
+      const out: Record<string, string> = {};
+      for (const row of t.rows) {
+        const msg = t.messages.find((m) => m.text.includes(row.name) || m.from === row.name);
+        const amt = t.amounts.find((a) => msg && msg.text.includes(a.label));
+        if (amt) out[row.id] = amt.id;
+      }
+      return out;
+    }
+    case 'task_dem_tien': {
+      const stacks = Object.fromEntries(t.notes.map((n) => [n.id, n.value]));
+      const total = t.notes.reduce((s, n) => s + n.value, 0);
+      return { stacks, total };
+    }
+    case 'task_khui_hui': {
+      const best = [...t.envelopes].sort((a, b) => parseInt(b.bid, 10) - parseInt(a.bid, 10))[0];
+      return best.id;
+    }
+    case 'task_xep_xe':
+      throw new Error('xep_xe bot solver not implemented');
   }
 }
 
-/** minimum play time the server expects per task (anti-instant-submit) */
-const MIN_MS: Partial<Record<TaskData['taskId'], number>> = { task_woodblock_print: 3000, task_ngo_mon_gates: 3000, task_nha_nhac: 3500, task_banh_beo: 4000, task_royal_seal: 1500 };
+const MIN_MS: Partial<Record<TaskData['taskId'], number>> = {
+  task_com_tam: 9000,
+  task_ca_phe_phin: 3500,
+  task_do_xang: 2500,
+  task_va_vo: 3500,
+  task_khui_hui: 5000,
+};
 
 function wire(b: Bot) {
   b.room.onMessage('private', (m) => (b.me = m));
@@ -167,7 +199,7 @@ async function main() {
   let canh = 0;
   host.room.onMessage('canh', (c: { canh: number }) => (canh = c.canh));
   for (const tid of worker.me!.tasks) {
-    const st = HUE_STATIONS.find((x) => x.id === tid)!;
+    const st = GAME_STATIONS.find((x) => x.id === tid)!;
     await walkTo(worker, st);
     worker.task = undefined;
     worker.lastResult = undefined;

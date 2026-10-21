@@ -1,97 +1,45 @@
 /**
- * Map catalog shown on the home screen. Add a map here first (available: false = "coming soon" card),
- * then its art via tools/ui-art/draw-home.mjs: apps/web/public/assets/maps/<slug>/meta/{home-bg,thumb}.webp
+ * Single playable world (Alley 42, Saigon). Art: apps/web/public/assets/maps/game/meta/{home-bg,thumb}.webp
  */
 type L = { vi: string; en: string };
 
+export const GAME_SLUG = 'game';
+
+/** @deprecated use GAME_SLUG — kept for room state / protocol */
+export const DEFAULT_MAP_SLUG = GAME_SLUG;
+
 export type MapMeta = {
   slug: string;
-  /** false = locked "coming soon" card, cannot be selected or created */
-  available: boolean;
   name: L;
   subtitle: L;
   hook: L;
   players: string;
-  /**
-   * Map-specific player costume (tools/char-art/draw-characters.mjs):
-   * apps/web/public/assets/maps/<slug>/characters/<charPrefix>-player{,-tint}-atlas.{webp,json}.
-   * Omit to fall back to the common avatar.
-   */
-  charPrefix?: string;
+  charPrefix: string;
 };
 
-export const MAP_CATALOG: MapMeta[] = [
-  {
-    slug: 'co-do-hue',
-    available: true,
-    name: { vi: 'Cố đô Huế', en: 'Imperial City of Huế' },
-    subtitle: { vi: 'Năm Canh Trước Bình Minh', en: 'Five Watches Before Dawn' },
-    hook: {
-      vi: 'Đêm trước Lễ Ban Sóc: in lịch, dượt Nhã nhạc, xếp bá quan trước canh năm — và tìm ra Âm Binh đang muốn đêm không bao giờ tàn!',
-      en: 'The night before the Calendar Ceremony: print the calendar, rehearse court music, line up the mandarins before dawn — and unmask the Shadow who wants the night to last forever!',
-    },
-    players: '4–10',
-    charPrefix: 'hue', // áo dài + khăn đóng
+export const GAME_META: MapMeta = {
+  slug: GAME_SLUG,
+  name: { vi: 'Công An Chìm', en: 'The Hidden Police' },
+  subtitle: { vi: 'Phiên Hụi Chui Hẻm 42', en: 'The Secret Savings Circle of Alley 42' },
+  hook: {
+    vi: 'Cả hội tài xế áo xanh lén khui hụi giữa đêm ở Hẻm 42. Khổ nỗi trong hội có một đứa áo xanh… là công an chìm!',
+    en: 'A crew of green-jacket ride drivers holds a secret savings-circle night in Alley 42. Trouble is, one of the green jackets… is an undercover cop!',
   },
-  {
-    slug: 'thang-long',
-    available: true,
-    name: { vi: 'Thăng Long – Hồ Gươm', en: 'Thăng Long – Sword Lake' },
-    subtitle: { vi: 'Đêm Giao Thừa Hồ Gươm', en: 'Sword Lake on New Year’s Eve' },
-    hook: {
-      vi: 'Đêm ba mươi bên Hồ Gươm, Quỷ đội lốt người lẻn vào xoá vòng vôi — làm xong lễ Trừ tịch trước giao thừa, kẻo Quỷ ở lại trần gian suốt năm mới.',
-      en: 'New Year’s Eve by Sword Lake: demons in human form slip in to wipe the lime ring — finish the Year-End rite before midnight, or they stay for the whole new year.',
-    },
-    players: '4–10',
-    charPrefix: 'tl', // áo the + khăn xếp
-  },
-  {
-    slug: 'sai-gon',
-    available: true,
-    name: { vi: 'Hụi Sài Gòn', en: 'Saigon Hụi Club' },
-    subtitle: { vi: 'Phiên Hụi Chui Hẻm 42', en: 'The Secret Savings Circle of Alley 42' },
-    hook: {
-      vi: 'Cả hội tài xế áo xanh lén khui hụi giữa đêm ở Hẻm 42. Khổ nỗi trong hội có một đứa áo xanh… là công an chìm!',
-      en: 'A crew of green-jacket ride drivers holds a secret savings-circle night in Alley 42. Trouble is, one of the green jackets… is an undercover cop!',
-    },
-    players: '4–10',
-    charPrefix: 'sg', // áo khoác CRAB xanh lá + nón bảo hiểm (tint)
-  },
-  {
-    slug: 'hoi-an',
-    available: false,
-    name: { vi: 'Phố cổ Hội An', en: 'Hội An Ancient Town' },
-    subtitle: { vi: 'Đêm Rằm Phố Hội', en: 'Full-Moon Lantern Night' },
-    hook: {
-      vi: 'Đèn lồng giăng kín phố, thuyền hoa đăng trôi trên sông Hoài — ai đã tắt ngọn đèn ở Chùa Cầu?',
-      en: 'Lanterns over every street, flower boats on the Hoài river — who put out the light at the Covered Bridge?',
-    },
-    players: '4–10',
-    charPrefix: 'hoian', // áo bà ba + nón lá
-  },
-];
-
-export const DEFAULT_MAP_SLUG = 'co-do-hue';
-
-export const mapMeta = (slug?: string | null): MapMeta => MAP_CATALOG.find((m) => m.slug === slug) ?? MAP_CATALOG[0];
-
-/** Playable slug for a requested one (falls back to the default when unknown or not released yet). */
-export const playableMap = (slug?: string | null): string => {
-  const m = MAP_CATALOG.find((x) => x.slug === slug);
-  return m?.available ? m.slug : DEFAULT_MAP_SLUG;
+  players: '4–10',
+  charPrefix: 'player',
 };
 
-/** Path under /assets for a map's art. */
-/**
- * Player atlas paths (under /assets, no extension) for a map: its own costume, or the common avatar.
- * `action`/`actionTint`: strike · die · guard poses (96x64 frames `<row>-<i>`, facing left) from tools/char-art;
- * the common avatar has none, so it borrows the Huế costume's.
- */
-export const playerArt = (slug?: string | null): { atlas: string; tint: string; action: string; actionTint: string } => {
-  const m = MAP_CATALOG.find((x) => x.slug === slug);
-  const base = m?.charPrefix ? `maps/${m.slug}/characters/${m.charPrefix}-player` : 'maps/common/characters/player';
-  const act = m?.charPrefix ? base : 'maps/co-do-hue/characters/hue-player';
-  return { atlas: `${base}-atlas`, tint: `${base}-tint-atlas`, action: `${act}-action`, actionTint: `${act}-action-tint` };
+/** Legacy name — only one map remains */
+export const MAP_CATALOG: MapMeta[] = [GAME_META];
+
+export const mapMeta = (_slug?: string | null): MapMeta => GAME_META;
+
+/** Always the single world; old room slugs are normalized here. */
+export const playableMap = (_slug?: string | null): string => GAME_SLUG;
+
+export const playerArt = (_slug?: string | null) => {
+  const base = `maps/${GAME_SLUG}/characters/player`;
+  return { atlas: `${base}-atlas`, tint: `${base}-tint-atlas`, action: `${base}-action`, actionTint: `${base}-action-tint` };
 };
 
-export const mapArt = (slug: string, kind: 'home-bg' | 'thumb') => `maps/${slug}/meta/${kind}.webp`;
+export const mapArt = (_slug: string, kind: 'home-bg' | 'thumb') => `maps/${GAME_SLUG}/meta/${kind}.webp`;

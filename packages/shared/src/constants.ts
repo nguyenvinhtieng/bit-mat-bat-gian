@@ -71,25 +71,6 @@ export const PLAYER_COLORS = [
 
 /** Union of every map's task ids (ids are globally unique; each map plays its own subset, see MapSkin.taskIds). */
 export const TASK_IDS = [
-  'task_moon_phase',
-  'task_woodblock_print',
-  'task_ngo_mon_gates',
-  'task_court_ranks',
-  'task_nha_nhac',
-  'task_cuu_dinh',
-  'task_poem_wall',
-  'task_royal_seal',
-  'task_banh_beo',
-  // thang-long
-  'task_banh_chung',
-  'task_dong_ho',
-  'task_cho_chu',
-  'task_cay_neu',
-  'task_cau_doi',
-  'task_ngu_qua',
-  'task_ca_tru',
-  'task_roi_nuoc',
-  // sai-gon
   'task_chi_duong',
   'task_com_tam',
   'task_tieng_rao',
