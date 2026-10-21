@@ -31,35 +31,36 @@ export const AREA_IDS = [
 ] as const;
 export type AreaId = (typeof AREA_IDS)[number];
 
-/** Among-Us style: a few killers hunt, everybody else does tasks. */
-export const ROLE_IDS = ['villager', 'guardian', 'killer'] as const;
+/** Hẻm 42 — Cuốc Cuối: one undercover cop hunts the CRAB drivers; one veteran driver can read a task log once. */
+export const ROLE_IDS = ['driver', 'veteran_driver', 'undercover'] as const;
 export type RoleId = (typeof ROLE_IDS)[number];
+/** internal faction ids: `crew` = Hội CRAB, `killer` = Cảnh sát (display names come from the skin) */
 export type Faction = 'crew' | 'killer';
 
 export const ROLE_INFO: Record<RoleId, { name: string; nameEn: string; faction: Faction; icon: string; short: string; desc: string }> = {
-  villager: {
-    name: 'Nghệ Nhân Cố Đô',
-    nameEn: 'Heritage Artisan',
+  driver: {
+    name: 'Tài Xế CRAB',
+    nameEn: 'CRAB Driver',
     faction: 'crew',
     icon: 'local_guide',
-    short: 'Làm nhiệm vụ, tránh Âm Binh',
-    desc: 'Bạn là một người trong đoàn chuẩn bị Lễ Ban Sóc. Hoàn thành các nhiệm vụ trước canh năm, tránh xa kẻ đáng ngờ và báo khi thấy thi thể.',
+    short: 'Chuẩn bị Cuốc Cuối, tìm cảnh sát chìm',
+    desc: 'Làm các nhiệm vụ chuẩn bị chuyến hàng 50 triệu, quan sát người khác, họp và bỏ phiếu.',
   },
-  guardian: {
-    name: 'Lính Ngự Lâm',
-    nameEn: 'Royal Guard',
+  veteran_driver: {
+    name: 'Tài Xế Lão Làng',
+    nameEn: 'Veteran Driver',
     faction: 'crew',
     icon: 'conservator',
-    short: 'Có một lá chắn chống bị hạ gục',
-    desc: 'Bạn thuộc phe Người Dân và có MỘT lá chắn: lần đầu Âm Binh ra tay với bạn, đòn đánh bị chặn (cả hai cùng biết). Sau đó bạn như người thường.',
+    short: 'Soi lịch sử nhiệm vụ của một người (1 lần)',
+    desc: 'Tài xế CRAB thật. Một lần mỗi trận, xem tối đa 3 hoạt động nhiệm vụ gần nhất của một người.',
   },
-  killer: {
-    name: 'Âm Binh',
-    nameEn: 'Shadow',
+  undercover: {
+    name: 'Cảnh Sát Chìm — Tất Xanh',
+    nameEn: 'Undercover Cop — Green Socks',
     faction: 'killer',
     icon: 'forger',
-    short: 'Hạ gục mọi người để thắng',
-    desc: 'Bạn là bóng đêm muốn giữ kinh thành mãi ở đêm cuối năm. Lại gần một người và bấm Hạ gục (có thời gian hồi). Giả vờ làm nhiệm vụ, đừng để ai thấy, và thuyết phục mọi người trong cuộc họp.',
+    short: 'Bắt giữ từng tài xế trước khi hàng được giao',
+    desc: 'Trà trộn như tài xế thường, làm task giả để có vỏ bọc. Giữ nút Bắt giữ ở cự ly gần để bắt từng người.',
   },
 };
 
@@ -69,80 +70,61 @@ export const PLAYER_COLORS = [
   0xe8524a, 0x3f7fd9, 0x3fae5a, 0xf2c230, 0xa05bd6, 0xf08a2c, 0x35c0c0, 0xef6fb0, 0x8d6e4a, 0x6b7a8f, 0xb8d94a, 0xf4f0e6,
 ];
 
-/** Union of every map's task ids (ids are globally unique; each map plays its own subset, see MapSkin.taskIds). */
-export const TASK_IDS = [
-  'task_chi_duong',
-  'task_com_tam',
-  'task_tieng_rao',
-  'task_ca_phe_phin',
-  'task_do_xang',
-  'task_va_vo',
-  'task_so_hui',
-  'task_dem_tien',
-  'task_khui_hui',
-  'task_xep_xe',
+/** Cuốc Cuối tasks: 7 preparation tasks feed `deliveryPreparation`; `handoff_package` ends the run. */
+export const PREP_TASK_IDS = [
+  'receive_package',
+  'check_seal',
+  'decode_address',
+  'plan_route',
+  'prepare_bike',
+  'pack_disguise',
+  'confirm_recipient',
 ] as const;
+export const TASK_IDS = [...PREP_TASK_IDS, 'handoff_package'] as const;
 export type TaskId = (typeof TASK_IDS)[number];
+export type PrepTaskId = (typeof PREP_TASK_IDS)[number];
 
 export const GAME = {
-  /** tasks assigned to every player */
-  tasksPerPlayer: 4,
-  killRange: 84,
+  /** preparation turns per driver (host-adjustable); total turns = max(7, turnsPerDriver × drivers) */
+  turnsPerDriverMin: 1,
+  turnsPerDriverMax: 3,
+  turnsPerDriverDefault: 2,
+  /** arrest: hold this long next to the target (server-timed); cancelled if they step out of range */
+  arrestRange: 84,
+  arrestHoldSec: 1.5,
+  arrestCooldownSec: 35,
+  firstArrestCooldownSec: 20,
+  /** nearby players hear the cuffs (px, through walls) */
+  arrestHearRadius: 420,
   /** how far a living player can see (px); also blocked by walls */
   visionRadius: 264,
   /** how far other players are actually detected (px) — a bit past the lamp's glow */
   sightRadius: 330,
   reportRange: 110,
-  killCooldownSec: 25,
-  firstKillCooldownSec: 15,
+  /** pick up / drop the package within this range */
+  packageRange: 84,
   /** after a meeting */
   postMeetingCooldownSec: 15,
   meetingSec: 75,
-  /** 5 canh = the whole round; length is per-room (`nightMin`), the clock pauses during meetings */
-  canhCount: 5,
-  /** host-adjustable range for the whole night, in minutes */
-  nightMinMin: 2,
-  nightMinMax: 15,
+  /** single countdown "before daybreak" (minutes, host-adjustable); pauses during meetings; at zero the cop wins */
+  timeMinMin: 4,
+  timeMinMax: 15,
+  timeMinDefault: 8,
   revealSec: 6,
-  /** prelude + role reveal on game start; the night clock (canh một) starts when it ends */
+  /** prelude + role reveal on game start; the countdown starts when it ends */
   introSec: 9.5,
   emergencyPerPlayer: 1,
-};
-
-/** Killer sabotages (common engine; names/art come from `skin.sabotage`). One runs at a time; killers share the cooldown. */
-export const SABOTAGE = {
-  cooldownSec: 40,
-  /** after the role reveal */
-  firstCooldownSec: 20,
-  /** after a meeting ends */
-  postMeetingCooldownSec: 20,
-  /** `blind`: living players' vision shrinks to `blindVision` of normal (killers keep theirs) */
-  blindSec: 6,
-  blindVision: 0.25,
-  /** `ward`: fix it at its spot before this runs out or the killers win */
-  wardSec: 45,
-  /** hold time at the spot to fix a ward (server-timed) */
-  fixHoldSec: 2.5,
-  fixRange: INTERACT_RADIUS + 24,
+  /** veteran: how many recent task activities the inspection shows */
+  inspectEntries: 3,
 };
 
 /**
- * Most killers a room of `n` may have: the crew must stay at least twice the killers
- * (4–6 → 1, 7–9 → 2, 10 → 3), otherwise a couple of quick kills end the game. Always at least 1.
+ * Preparation turns for one game: every prep task at least once, then repeats round-robin
+ * (in `PREP_TASK_IDS` order) until `max(7, turnsPerDriver × drivers)`.
  */
-export const maxKillersFor = (n: number) => Math.max(1, Math.floor((n - 1) / 3));
-/** A requested killer count clamped to 1..maxKillersFor(n). */
-export const clampKillers = (k: number, n: number) => Math.max(1, Math.min(maxKillersFor(n), Math.floor(k)));
-/** Default number of killers for a given player count. */
-export const killersFor = (n: number) => clampKillers(n >= 8 ? 2 : 1, n);
-
-/**
- * Auto night length (minutes) so the crew can just finish in time:
- * ~50s per task each (play + walk; crew work in parallel), extra slack per killer (deaths slow the crew)
- * and per player (crowding, emergency calls). Meetings pause the clock, so they are not counted.
- */
-export const autoNightMin = (players: number, killers: number, tasksPerPlayer: number) =>
-  Math.max(3, Math.min(GAME.nightMinMax, Math.round((60 + tasksPerPlayer * 50 + killers * 30 + players * 5) / 60)));
-
-/** real ms of one canh for a night of `nightMin` minutes */
-export const canhMs = (nightMin: number) => (nightMin * 60_000) / GAME.canhCount;
+export const prepPlan = (drivers: number, turnsPerDriver: number): Record<PrepTaskId, number> => {
+  const total = Math.max(PREP_TASK_IDS.length, Math.floor(turnsPerDriver) * Math.max(0, drivers));
+  const plan = Object.fromEntries(PREP_TASK_IDS.map((id) => [id, 0])) as Record<PrepTaskId, number>;
+  for (let i = 0; i < total; i++) plan[PREP_TASK_IDS[i % PREP_TASK_IDS.length]]++;
+  return plan;
+};

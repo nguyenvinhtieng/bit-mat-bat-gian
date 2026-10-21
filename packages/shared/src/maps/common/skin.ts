@@ -29,15 +29,6 @@ export type StationDef = {
   icon: string;
 };
 
-/** Map flavour for one sabotage kind (the rules are common, see SABOTAGE). */
-export type SabotageSkin = {
-  name: L;
-  /** banner shown to everyone while it runs; ward alerts fill `{area}` */
-  alert: L;
-  /** HUD icon (asset path under /assets, no extension); a common glyph when absent */
-  icon?: string;
-};
-
 export type RoleSkin = { name: string; nameEn: string; short: string; desc: string };
 
 export type MapSkin = {
@@ -81,19 +72,19 @@ export type MapSkin = {
   };
   /** Role names/descriptions flavoured for the map (icons stay common). */
   roles: Record<RoleId, RoleSkin>;
-  /** Traitor faction name, e.g. Âm Binh / Quỷ. */
+  /** Traitor faction name (Cảnh Sát Chìm). */
   killerName: L;
+  /** Crew faction name (Hội CRAB). */
+  crewName: L;
   /** Emergency-meeting point label (bell, drum…). */
   emergency: L;
-  /** Killer sabotages, reskinned per map. */
-  sabotage: { blind: SabotageSkin; ward: SabotageSkin & { /** fix button label */ fix: L } };
+  /** Cuốc Cuối: where the package starts (feet position, px). The handoff point is the `handoff_package` station. */
+  delivery: { packageHome: { x: number; y: number } };
   /** Map popup header + where meetings are held. */
   labels: {
     mapTitle: L;
     mapSubtitle: L;
     meetingPlace: L;
-    /** one clock segment, lower case (canh / watch, mốc / mark) */
-    segment: L;
     /** when the clock runs out, lower case, as in "before {deadline}" */
     deadline: L;
   };
@@ -103,13 +94,9 @@ export type MapSkin = {
     intro: string;
     /** dark prelude before role reveal, one line per beat */
     prelude: string[];
-    /** canh[i] is announced when segment i+1 of the clock begins (GAME.canhCount segments) */
-    canh: string[];
-    /** short names of the clock segments shown on the night bar */
-    segments: L[];
-    /** in-game clock: minute-of-day when the round starts, and minutes per segment */
-    clock: { startMin: number; segmentMin: number };
-    endings: { tasks: string; vote: string; killer: string; timeout: string; /** a ward ran out */ sabotage: string };
+    /** fictional clock shown with the countdown: minute-of-day at the start and at daybreak (may pass 24*60) */
+    clock: { startMin: number; endMin: number };
+    endings: { /** package handed off */ tasks: string; vote: string; killer: string; timeout: string };
     /** private objective line per faction */
     objective: { crew: string; killer: string };
   };

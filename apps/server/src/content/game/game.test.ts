@@ -1,20 +1,22 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { GAME_TASK_IDS, type Pt, type TaskData } from '@hidden-truth/shared';
+import { TASK_IDS, type Pt, type TaskData } from '@hidden-truth/shared';
 import { GAME_CONTENT } from './index';
 import type { Pending } from '../common/util';
 
+const CTX = { handoffCode: '4721' };
+
 /** Build a task and a Pending opened just long enough ago to pass the minimum solve time. */
 function open<T extends TaskData['taskId']>(taskId: T) {
-  const built = GAME_CONTENT.buildTask(taskId);
+  const built = GAME_CONTENT.buildTask(taskId, CTX);
   assert.ok(built, `buildTask(${taskId}) returned null`);
   const p: Pending = { taskId, expected: built.expected, openedAt: Date.now() - (built.minMs ?? 0) - 10, minMs: built.minMs };
   return { data: built.data as Extract<TaskData, { taskId: T }>, p, built };
 }
 const ok = (p: Pending, a: unknown) => GAME_CONTENT.verifyTask(p, a);
 
-test('every SG task builds, has a fact + done line, and rejects garbage', () => {
-  for (const id of GAME_TASK_IDS) {
+test('every task builds, has a story card + done line, and rejects garbage', () => {
+  for (const id of TASK_IDS) {
     const { data, p, built } = open(id);
     assert.equal(data.taskId, id);
     assert.ok(built.fact.headline && built.fact.text, `${id} fact`);
@@ -24,108 +26,111 @@ test('every SG task builds, has a fact + done line, and rejects garbage', () => 
 });
 
 test('answers are rejected when submitted too fast', () => {
-  const built = GAME_CONTENT.buildTask('task_so_hui')!;
-  const p: Pending = { taskId: 'task_so_hui', expected: built.expected, openedAt: Date.now(), minMs: built.minMs };
+  const built = GAME_CONTENT.buildTask('receive_package', CTX)!;
+  const p: Pending = { taskId: 'receive_package', expected: built.expected, openedAt: Date.now(), minMs: built.minMs };
   assert.equal(ok(p, built.expected), false);
 });
 
-test('Huế / Thăng Long ids are not built by the SG content', () => {
-  assert.equal(GAME_CONTENT.buildTask('task_banh_beo'), null);
-  assert.equal(GAME_CONTENT.buildTask('task_banh_chung'), null);
+test('receive package: exactly one box matches the slip', () => {
+  for (let i = 0; i < 30; i++) {
+    const { data, p } = open('receive_package');
+    const key = (codes: string[]) => [...codes].sort().join('|');
+    const match = data.boxes.filter((b) => key(b.codes) === key(data.slip));
+    assert.equal(match.length, 1);
+    assert.equal(ok(p, match[0].id), true);
+    for (const b of data.boxes) if (b !== match[0]) assert.equal(ok(p, b.id), false);
+  }
 });
 
-test('chỉ đường: the final turns pass, one wrong turn fails', () => {
-  const { data, p } = open('task_chi_duong');
-  const exp = p.expected as string[];
-  assert.equal(exp.length, data.steps.length);
+test('check seal: turning every piece upright passes, one piece off fails', () => {
+  const { data, p } = open('check_seal');
+  assert.ok(data.pieces.some((x) => x.rot !== 0), 'something to fix');
+  const fix = Object.fromEntries(data.pieces.map((x) => [x.id, (4 - x.rot) % 4]));
+  assert.equal(ok(p, fix), true);
+  assert.equal(ok(p, { ...fix, [data.pieces[0].id]: fix[data.pieces[0].id] + 4 }), true, 'a full extra turn is fine');
+  assert.equal(ok(p, { ...fix, [data.pieces[0].id]: fix[data.pieces[0].id] + 1 }), false);
+});
+
+test('decode address: the right card only; decoys differ from it', () => {
+  const { data, p } = open('decode_address');
+  assert.equal(data.cards.length, 4);
+  const right = data.cards.filter((c) => ok(p, c.id));
+  assert.equal(right.length, 1);
+  for (const c of data.cards) if (c !== right[0]) assert.notDeepEqual(c.lines, right[0].lines);
+});
+
+const step = (a: Pt, b: Pt) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1;
+/** BFS through the free cells visiting stops in order (stops are on a valid path by construction). */
+function solveRoute(d: Extract<TaskData, { taskId: 'plan_route' }>): Pt[] {
+  const blocked = new Set([...d.flooded, ...d.deadEnds].map((q) => `${q.x},${q.y}`));
+  const legs = [d.start, ...d.stops, d.end];
+  const path: Pt[] = [d.start];
+  const used = new Set([`${d.start.x},${d.start.y}`]);
+  for (let i = 1; i < legs.length; i++) {
+    const goal = legs[i];
+    const prev = new Map<string, Pt | null>([[`${path.at(-1)!.x},${path.at(-1)!.y}`, null]]);
+    const q = [path.at(-1)!];
+    while (q.length) {
+      const c = q.shift()!;
+      if (c.x === goal.x && c.y === goal.y) break;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const n = { x: c.x + dx, y: c.y + dy };
+        const k = `${n.x},${n.y}`;
+        if (n.x < 0 || n.y < 0 || n.x >= d.w || n.y >= d.h || blocked.has(k) || used.has(k) || prev.has(k)) continue;
+        prev.set(k, c);
+        q.push(n);
+      }
+    }
+    const leg: Pt[] = [];
+    for (let c: Pt | null | undefined = goal; c && !(c.x === path.at(-1)!.x && c.y === path.at(-1)!.y); c = prev.get(`${c.x},${c.y}`)) leg.unshift(c);
+    for (const c of leg) used.add(`${c.x},${c.y}`);
+    path.push(...leg);
+  }
+  return path;
+}
+
+test('plan route: a legal path through the stops passes; shortcuts through floods or skipping a stop fail', () => {
+  for (let i = 0; i < 20; i++) {
+    const { data, p } = open('plan_route');
+    assert.ok(data.stops.length >= 2);
+    const path = solveRoute(data);
+    assert.ok(path.every((c, j) => j === 0 || step(path[j - 1], c)));
+    assert.equal(ok(p, path), true, JSON.stringify({ data, path }));
+    assert.equal(ok(p, path.slice(0, -1)), false, 'must reach the end');
+    const flooded = data.flooded[0];
+    assert.equal(ok(p, [...path.slice(0, -1), flooded, path.at(-1)]), false, 'no flooded cells');
+  }
+});
+
+test('prepare bike: pumps inside the green zone + straps in number order', () => {
+  const { data, p } = open('prepare_bike');
+  const pumps = Math.ceil(data.green[0] / data.perPump);
+  assert.ok(pumps * data.perPump <= data.green[1], 'a pump count lands in the green');
+  const order = [...data.straps].sort((a, b) => a.n - b.n).map((s) => s.id);
+  assert.equal(ok(p, { pumps, order }), true);
+  assert.equal(ok(p, { pumps: pumps + 50, order }), false, 'over-pumped');
+  assert.equal(ok(p, { pumps, order: [...order].reverse() }), false);
+});
+
+test('pack disguise: box, label and layers must follow the note', () => {
+  const { p } = open('pack_disguise');
+  const exp = p.expected as { box: string; label: string; layers: string[] };
   assert.equal(ok(p, exp), true);
-  assert.equal(ok(p, [...exp.slice(0, -1), exp.at(-1) === 'trai' ? 'phai' : 'trai']), false);
+  assert.equal(ok(p, { ...exp, layers: [...exp.layers].reverse() }), false);
+  assert.equal(ok(p, { ...exp, label: 'nope' }), false);
 });
 
-test('cơm tấm: exact plate passes (any order), missing or extra item fails', () => {
-  const { data, p } = open('task_com_tam');
-  const exp = p.expected as string[];
-  for (const k of exp) assert.ok(data.tray.some((t) => t.kind === k), `tray lacks ${k}`);
-  assert.equal(ok(p, [...exp].reverse()), true);
-  assert.equal(ok(p, exp.slice(1)), false);
-  const extra = data.tray.find((t) => !exp.includes(t.kind));
-  if (extra) assert.equal(ok(p, [...exp, extra.kind]), false);
+test('confirm recipient: only the caller with both the code and the passphrase; the code is the handoff code', () => {
+  const { data, p } = open('confirm_recipient');
+  const right = data.callers.filter((c) => ok(p, c.id));
+  assert.equal(right.length, 1);
+  assert.equal(right[0].code4, CTX.handoffCode);
+  assert.ok(data.message.includes(CTX.handoffCode));
 });
 
-test('tiếng rao: right verdicts pass, a flipped verdict fails', () => {
-  const { data, p } = open('task_tieng_rao');
-  const exp = p.expected as Record<string, 'safe' | 'stranger'>;
-  assert.deepEqual(Object.keys(exp).sort(), data.calls.map((c) => c.id).sort());
-  assert.equal(ok(p, exp), true);
-  const k = data.calls[0].id;
-  assert.equal(ok(p, { ...exp, [k]: exp[k] === 'safe' ? 'stranger' : 'safe' }), false);
-});
-
-test('cà phê phin: milk on the line passes, overpour fails, too fast fails', () => {
-  const { data, p } = open('task_ca_phe_phin');
-  assert.equal(ok(p, { milk: data.line }), true);
-  assert.equal(ok(p, { milk: data.line + data.tolerance * 0.9 }), true);
-  assert.equal(ok(p, { milk: data.line + data.tolerance * 2 }), false);
-  assert.equal(ok({ ...p, openedAt: Date.now() }, { milk: data.line }), false);
-});
-
-test('đổ xăng: releasing on 50k passes, overfilling fails, hold longer than open time fails', () => {
-  const built = GAME_CONTENT.buildTask('task_do_xang')!;
-  const data = built.data as Extract<TaskData, { taskId: 'task_do_xang' }>;
-  const holdMs = (data.target / (data.pricePerLiter * data.litersPerSec)) * 1000;
-  const p: Pending = { taskId: 'task_do_xang', expected: built.expected, openedAt: Date.now() - holdMs - 500, minMs: built.minMs };
-  assert.equal(ok(p, { holdMs }), true);
-  assert.equal(ok(p, { holdMs: holdMs * 1.2 }), false);
-  assert.equal(ok({ ...p, openedAt: Date.now() - (built.minMs ?? 0) - 10 }, { holdMs }), holdMs <= (built.minMs ?? 0) + 10);
-});
-
-test('vá vỏ: patching the leak passes, nothing, a wrong sector or an extra patch fails', () => {
-  const { data, p } = open('task_va_vo');
-  assert.equal(data.leaks.length, 1);
-  assert.equal(ok(p, { patches: data.leaks }), true);
-  assert.equal(ok(p, { patches: [] }), false);
-  assert.equal(ok(p, { patches: [(data.leaks[0] + 1) % data.sectors] }), false);
-  assert.equal(ok(p, { patches: [data.leaks[0], (data.leaks[0] + 1) % data.sectors] }), false);
-});
-
-test('sổ hụi: right amounts pass, a swap fails', () => {
-  const { data, p } = open('task_so_hui');
-  const exp = p.expected as Record<string, string>;
-  assert.deepEqual(Object.keys(exp).sort(), data.rows.map((r) => r.id).sort());
-  for (const v of Object.values(exp)) assert.ok(data.amounts.some((a) => a.id === v));
-  assert.equal(ok(p, exp), true);
-  const [a, b] = Object.keys(exp);
-  assert.equal(ok(p, { ...exp, [a]: exp[b], [b]: exp[a] }), false);
-});
-
-test('đếm tiền: right stacks + total pass, wrong total or misplaced note fails', () => {
-  const { data, p } = open('task_dem_tien');
-  const stacks = Object.fromEntries(data.notes.map((n) => [n.id, n.value]));
-  const total = data.notes.reduce((s, n) => s + n.value, 0);
-  assert.ok(data.choices.includes(total));
-  assert.equal(ok(p, { stacks, total }), true);
-  assert.equal(ok(p, { stacks, total: total + data.values[0] }), false);
-  const n = data.notes[0];
-  assert.equal(ok(p, { stacks: { ...stacks, [n.id]: data.values.find((v) => v !== n.value) }, total }), false);
-});
-
-test('khui hụi: the highest bid passes, another bid or a late pick fails', () => {
-  const { data, p } = open('task_khui_hui');
-  const exp = p.expected as { id: string; limitMs: number };
-  assert.ok(data.envelopes.some((e) => e.id === exp.id));
-  assert.equal(ok(p, exp.id), true);
-  assert.equal(ok(p, data.envelopes.find((e) => e.id !== exp.id)!.id), false);
-  assert.equal(ok({ ...p, openedAt: Date.now() - data.limitMs - 5000 }, exp.id), false);
-});
-
-test('xếp xe: the generated packing passes, overlap / pillar / off-lot fails', () => {
-  const { data, p } = open('task_xep_xe');
-  const sol = (p.expected as { solution: Record<string, { x: number; y: number; vertical: boolean }> }).solution;
-  assert.deepEqual(Object.keys(sol).sort(), data.bikes.map((b) => b.id).sort());
-  assert.equal(ok(p, sol), true);
-  const [a, b] = data.bikes;
-  assert.equal(ok(p, { ...sol, [b.id]: sol[a.id] }), false, 'overlap');
-  const pillar: Pt | undefined = data.blocked[0];
-  if (pillar) assert.equal(ok(p, { ...sol, [a.id]: { x: pillar.x, y: pillar.y, vertical: false } }), false, 'pillar');
-  assert.equal(ok(p, { ...sol, [a.id]: { x: data.w - 1, y: 0, vertical: false } }), false, 'off-lot');
+test('handoff: the verified code opens it, anything else fails', () => {
+  const { data, p } = open('handoff_package');
+  assert.equal(data.digits, 4);
+  assert.equal(ok(p, { code: CTX.handoffCode }), true);
+  assert.equal(ok(p, { code: '0000' }), false);
 });

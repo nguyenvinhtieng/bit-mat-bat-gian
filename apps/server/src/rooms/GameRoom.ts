@@ -9,48 +9,47 @@ import {
   MEETING_POINT,
   PATCH_MS,
   PLAYER_COLORS,
+  PREP_TASK_IDS,
   ROLE_INFO,
-  SABOTAGE,
   SIM_DT,
   SIM_HZ,
   SPAWNS,
-  WARD_SPOTS,
   areaAt,
-  autoNightMin,
-  canhMs as canhMsFor,
   dirFromInput,
   dist,
   getGrid,
   getLobbyGrid,
   canSeePoint,
-  clampKillers,
-  killersFor,
   MIN_PLAYERS,
+  prepPlan,
   stepMovement,
+  type ArrestHoldMsg,
   type ChatMsg,
   type EndReveal,
   type Faction,
+  type InspectResult,
   type PrivateInfo,
   type RoleId,
-  type SabotageKind,
   type TaskId,
   type TaskResultMsg,
   type VoteResult,
 } from '@hidden-truth/shared';
 import { contentFor, type Pending } from '../content';
-import { Sabotage } from './sabotage';
-import { GameState, Player } from './schema';
+import { ArrestHold, Delivery, recentActivities, type Activity } from './delivery';
+import { GameState, Player, StationState } from './schema';
 
 type Secret = {
   role: RoleId;
   faction: Faction;
   objective: string;
-  tasks: TaskId[];
-  completed: Set<TaskId>;
+  /** tasks this player finished (real or faked) — shown on the end screen */
+  done: number;
+  /** what the veteran may read: every submit, success or not */
+  log: Activity[];
   pending?: Pending;
   vote?: string;
-  shield: boolean;
-  killReadyAt: number;
+  arrestReadyAt: number;
+  inspectLeft: boolean;
 };
 type MoveState = { queue: { seq: number; dx: number; dy: number }[]; budget: number; lastQueued: number };
 
@@ -79,7 +78,10 @@ export class GameRoom extends Room<GameState> {
   private lastChat = new Map<string, number>();
   private chatLog: ChatMsg[] = [];
   private lastActive = new Map<string, number>();
-  private sab = new Sabotage();
+  private delivery = new Delivery();
+  private hold = new ArrestHold();
+  /** this match's receiving code (confirm_recipient shows it, the handoff asks for it) */
+  private handoffCode = '';
   /** set once the room closes itself (nobody online) so late reconnect timeouts don't touch a dead room */
   private closing = false;
   /** sessions the server itself removed (host kick / AFK): their close is never "unexpected", so no seat is held */
@@ -139,7 +141,6 @@ export class GameRoom extends Room<GameState> {
     this.lastActive.set(client.sessionId, Date.now());
     if (!this.state.hostId) this.state.hostId = client.sessionId;
     this.syncMeta();
-    this.refreshNight();
     this.system(`${p.name} đã vào phòng.`);
     client.send('time', Date.now());
     client.send('chat:history', this.chatLog.slice(-40));
@@ -171,10 +172,10 @@ export class GameRoom extends Room<GameState> {
       this.moves.delete(client.sessionId);
       // dropped below the minimum: nobody can stay ready for a game that can't start
       if (this.state.players.size < MIN_PLAYERS) for (const x of this.state.players.values()) x.ready = false;
-      this.refreshNight();
     } else {
       p.connected = false;
       p.alive = false; // counter catches up at the next vote — syncing now would reveal the leaver's side
+      this.dropPackage(p.id, p);
     }
     if (!kicked) this.system(`${p.name} đã rời phòng.`);
     if (!this.keepOnlineHost()) return;
@@ -234,20 +235,14 @@ export class GameRoom extends Room<GameState> {
       this.system(`${prev} đã đổi tên thành ${name}.`);
     });
 
-    this.onMessage('configure', (client, msg: { killers?: number; tasksPerPlayer?: number; nightMin?: number; nightAuto?: boolean }) => {
+    this.onMessage('configure', (client, msg: { turnsPerDriver?: number; timeMin?: number }) => {
       if (client.sessionId !== this.state.hostId || this.state.phase !== 'lobby') return;
-      if (Number.isFinite(msg?.tasksPerPlayer)) {
-        this.state.tasksPerPlayer = Math.max(1, Math.min(this.skin.taskIds.length, Math.floor(msg.tasksPerPlayer!)));
+      if (Number.isFinite(msg?.turnsPerDriver)) {
+        this.state.turnsPerDriver = Math.max(GAME.turnsPerDriverMin, Math.min(GAME.turnsPerDriverMax, Math.floor(msg.turnsPerDriver!)));
       }
-      if (Number.isFinite(msg?.killers)) {
-        this.state.killers = clampKillers(msg.killers!, this.state.players.size);
+      if (Number.isFinite(msg?.timeMin)) {
+        this.state.nightMin = Math.max(GAME.timeMinMin, Math.min(GAME.timeMinMax, Math.floor(msg.timeMin!)));
       }
-      if (msg?.nightAuto === true) this.state.nightAuto = true;
-      else if (Number.isFinite(msg?.nightMin)) {
-        this.state.nightAuto = false;
-        this.state.nightMin = Math.max(GAME.nightMinMin, Math.min(GAME.nightMinMax, Math.floor(msg.nightMin!)));
-      }
-      this.refreshNight();
     });
 
     this.onMessage('start', (client) => {
@@ -261,15 +256,18 @@ export class GameRoom extends Room<GameState> {
 
     this.onMessage('task:open', (client, msg: { taskId: TaskId }) => this.openTask(client, msg?.taskId));
     this.onMessage('task:submit', (client, msg: { taskId: TaskId; answer: unknown }) => this.submitTask(client, msg));
-    this.onMessage('kill', (client) => this.kill(client));
+    this.onMessage('arrest', (client, msg: { on: boolean }) => (msg?.on ? this.arrestStart(client) : this.arrestRelease(client.sessionId)));
     this.onMessage('report', (client) => this.report(client));
-    this.onMessage('sabotage', (client, msg: { kind: SabotageKind }) => this.sabotage(client, msg?.kind));
-    this.onMessage('sabotage:fix', (client, msg: { on: boolean }) => this.sabotageFix(client, !!msg?.on));
+    this.onMessage('package:pick', (client) => this.pickPackage(client));
+    this.onMessage('package:drop', (client) => {
+      const p = this.state.players.get(client.sessionId);
+      if (p && this.state.phase === 'explore' && this.delivery.drop(p.id, p)) this.syncDelivery();
+    });
+    this.onMessage('skill:inspect', (client, msg: { target: string }) => this.inspect(client, String(msg?.target ?? '')));
 
     this.onMessage('emergency', (client) => {
       const p = this.state.players.get(client.sessionId);
       if (!p || !p.alive || this.state.phase !== 'explore' || p.emergencyUsed) return;
-      if (this.sab.kind === 'ward') return client.send('toast', { text: `Không thể họp khẩn lúc này — hãy ${this.skin.sabotage.ward.fix.vi.toLowerCase()} trước!`, kind: 'warn' });
       if (dist(p, MEETING_POINT) > INTERACT_RADIUS + 60) return client.send('toast', { text: `Hãy đến bàn họp ở ${this.skin.areas[areaAt(grid, MEETING_POINT.x, MEETING_POINT.y)!].name} để đánh ${this.skin.emergency.vi}.`, kind: 'warn' });
       p.emergencyUsed = true;
       this.broadcast('cinematic', { kind: 'emergency', actor: { name: p.name, color: p.color } });
@@ -325,9 +323,7 @@ export class GameRoom extends Room<GameState> {
       const slug = playableMap(String(msg?.map ?? ''));
       if (slug === this.state.mapSlug) return;
       this.state.mapSlug = slug;
-      this.state.tasksPerPlayer = Math.max(1, Math.min(this.skin.taskIds.length, this.state.tasksPerPlayer));
       this.syncMeta();
-      this.refreshNight();
       this.system(`Chủ phòng đã đổi bản đồ: ${mapMeta(slug).name.vi}.`);
     });
 
@@ -396,18 +392,24 @@ export class GameRoom extends Room<GameState> {
       }
       p.moving = moved;
     }
+    if (this.delivery.state === 'carried') {
+      const c = this.state.players.get(this.delivery.carrier);
+      if (c) {
+        this.state.packageX = this.delivery.x = c.x;
+        this.state.packageY = this.delivery.y = c.y;
+      }
+    }
     if (this.state.phaseEndsAt && Date.now() >= this.state.phaseEndsAt) this.advancePhase();
-    if (this.state.phase === 'explore') this.tickNight();
-    if (this.state.phase === 'explore') this.tickSabotage();
+    if (this.state.phase === 'explore') this.tickArrest();
+    if (this.state.phase === 'explore') this.tickClock();
   }
 
   // ---------------------------------------------------------------- phases
   private cfg() {
     return {
-      tasksPerPlayer: this.state.tasksPerPlayer,
       meetingMs: GAME.meetingSec * 1000,
-      killCd: GAME.killCooldownSec * 1000,
-      firstCd: GAME.firstKillCooldownSec * 1000,
+      arrestCd: GAME.arrestCooldownSec * 1000,
+      firstCd: GAME.firstArrestCooldownSec * 1000,
       postMeetingCd: GAME.postMeetingCooldownSec * 1000,
     };
   }
@@ -416,19 +418,14 @@ export class GameRoom extends Room<GameState> {
     const players = [...this.state.players.values()];
     const n = players.length;
     const c = this.cfg();
-    const killers = this.plannedKillers(n);
-    const crew = n - killers;
-    const roles: RoleId[] = [];
-    for (let i = 0; i < killers; i++) roles.push('killer');
-    if (crew >= 3) roles.push('guardian');
-    while (roles.length < n) roles.push('villager');
+    // exactly one undercover cop and one veteran; everyone else is a plain CRAB driver
+    const roles: RoleId[] = ['undercover', 'veteran_driver'];
+    while (roles.length < n) roles.push('driver');
     const assigned = shuffle(roles);
-    const tpp = Math.min(c.tasksPerPlayer, this.skin.taskIds.length);
 
     this.secrets.clear();
-    const now = Date.now();
-    // the night (and the first kill cooldown) only starts once the role reveal is over
-    const dusk = now + GAME.introSec * 1000;
+    // the countdown (and the first arrest cooldown) only starts once the role reveal is over
+    const dusk = Date.now() + GAME.introSec * 1000;
     players.forEach((p, i) => {
       const role = assigned[i];
       const faction = ROLE_INFO[role].faction;
@@ -436,10 +433,10 @@ export class GameRoom extends Room<GameState> {
         role,
         faction,
         objective: faction === 'killer' ? this.skin.story.objective.killer : this.skin.story.objective.crew,
-        tasks: shuffle(this.skin.taskIds).slice(0, tpp),
-        completed: new Set(),
-        shield: role === 'guardian',
-        killReadyAt: dusk + c.firstCd,
+        done: 0,
+        log: [],
+        arrestReadyAt: dusk + c.firstCd,
+        inspectLeft: role === 'veteran_driver',
       });
       p.tasksDone = 0;
       p.voted = false;
@@ -448,20 +445,19 @@ export class GameRoom extends Room<GameState> {
       p.alive = true;
       p.body = false;
     });
-    this.state.progress = 0;
-    this.state.progressTarget = Math.max(1, n * tpp);
-    this.canh = 0;
+    this.handoffCode = String(Math.floor(1000 + Math.random() * 9000));
+    this.delivery.reset(prepPlan(n - 1, this.state.turnsPerDriver), this.skin.delivery.packageHome);
+    this.hold.clear();
+    this.syncDelivery();
     this.state.nightStartAt = dusk;
     this.state.nightPausedAt = 0;
     this.state.meetingReason = '';
-    this.sab.reset(dusk + SABOTAGE.firstCooldownSec * 1000);
-    this.syncSabotage();
     this.teleportToSpawns();
     this.setPhase('explore', 0);
     this.syncAlive();
     for (const p of players) this.sendPrivate(p.id);
     this.broadcast('intro', {});
-    this.system(`Ván bắt đầu — ${killers} ${this.skin.killerName.vi} đang trà trộn trong đoàn. Làm nhiệm vụ, giữ khoảng cách và quan sát!`);
+    this.system(`Ván bắt đầu — một ${this.skin.killerName.vi} đang trà trộn trong ${this.skin.crewName.vi}. Chuẩn bị Cuốc Cuối và bàn giao trước khi trời sáng!`);
   }
 
   private setPhase(phase: GameState['phase'], durationMs: number) {
@@ -502,8 +498,7 @@ export class GameRoom extends Room<GameState> {
     } else if (ph === 'reveal') {
       if (this.checkWin()) return;
       const now = Date.now();
-      for (const s of this.secrets.values()) if (s.faction === 'killer') s.killReadyAt = now + this.cfg().postMeetingCd;
-      this.sab.cooldown(now + SABOTAGE.postMeetingCooldownSec * 1000);
+      for (const s of this.secrets.values()) if (s.faction === 'killer') s.arrestReadyAt = Math.max(s.arrestReadyAt, now + this.cfg().postMeetingCd);
       this.state.meetingReason = '';
       this.setPhase('explore', 0);
       this.resumeNight();
@@ -523,8 +518,7 @@ export class GameRoom extends Room<GameState> {
       s.pending = undefined;
       s.vote = undefined;
     }
-    this.sab.interrupt();
-    this.syncSabotage();
+    this.cancelArrest();
     this.teleportToSpawns();
     this.broadcast('task:close', {});
     if (!this.state.nightPausedAt) this.state.nightPausedAt = Date.now();
@@ -581,6 +575,7 @@ export class GameRoom extends Room<GameState> {
     if (ejectedId) {
       const p = this.state.players.get(ejectedId)!;
       p.alive = false;
+      this.dropPackage(p.id, p);
       result.ejected = p.name;
       result.ejectedColor = p.color;
       result.wasKiller = this.secrets.get(ejectedId)?.faction === 'killer';
@@ -590,7 +585,7 @@ export class GameRoom extends Room<GameState> {
     this.broadcast('vote:result', result);
     this.system(
       result.ejected
-        ? `${result.ejected} bị loại khỏi đoàn.`
+        ? `${result.ejected} bị loại khỏi ${this.skin.crewName.vi}.`
         : tie
           ? (this.skin.phrases?.tie.vi ?? 'Hoà phiếu — không ai bị loại.')
           : 'Không ai bị loại.',
@@ -630,23 +625,10 @@ export class GameRoom extends Room<GameState> {
   /** Returns true if the game ended. */
   private checkWin(): boolean {
     if (this.state.phase === 'ended' || this.state.phase === 'lobby') return false;
-    // only the crew's tasks count (killers fake theirs); ghosts keep working, so their tasks stay in the target
-    let done = 0;
-    let target = 0;
-    for (const s of this.secrets.values()) {
-      if (s.faction !== 'crew') continue;
-      done += s.completed.size;
-      target += s.tasks.length;
-    }
-    this.state.progress = done;
-    this.state.progressTarget = Math.max(1, target);
-    // no syncAlive() here: a kill must not show on the public counter — it updates after each vote
-    const total = this.totalKillers();
-    const k = this.aliveKillers();
-    const c = this.aliveCrew();
-    if (total > 0 && k === 0) return this.finishGame('crew', this.skin.story.endings.vote);
-    if (total > 0 && k >= c) return this.finishGame('killer', this.skin.story.endings.killer);
-    if (this.state.progress >= this.state.progressTarget) return this.finishGame('crew', this.skin.story.endings.tasks);
+    // no syncAlive() here: an arrest must not show on the public counter — it updates after each vote
+    if (this.delivery.state === 'delivered') return this.finishGame('crew', this.skin.story.endings.tasks);
+    if (this.totalKillers() > 0 && this.aliveKillers() === 0) return this.finishGame('crew', this.skin.story.endings.vote);
+    if (this.aliveCrew() === 0) return this.finishGame('killer', this.skin.story.endings.killer);
     return false;
   }
 
@@ -658,15 +640,14 @@ export class GameRoom extends Room<GameState> {
       fact: pick(this.content.funFacts),
       roles: [...this.state.players.values()].map((p) => {
         const s = this.secrets.get(p.id)!;
-        return { name: p.name, color: p.color, role: s.role, faction: s.faction, alive: p.alive, tasksDone: s.completed.size };
+        return { name: p.name, color: p.color, role: s.role, faction: s.faction, alive: p.alive, tasksDone: s.done };
       }),
     };
     this.setPhase('ended', 0);
-    this.sab.interrupt();
-    this.syncSabotage();
+    this.cancelArrest();
     this.state.nightPausedAt ||= Date.now();
     this.broadcast('end', reveal);
-    this.system(winner === 'crew' ? `Phe Người Dân thắng! ${reason}` : `${this.skin.killerName.vi} thắng! ${reason}`);
+    this.system(`${winner === 'crew' ? this.skin.crewName.vi : this.skin.killerName.vi} thắng! ${reason}`);
     return true;
   }
 
@@ -677,8 +658,9 @@ export class GameRoom extends Room<GameState> {
     this.state.meetingReason = '';
     this.state.nightStartAt = 0;
     this.state.nightPausedAt = 0;
-    this.sab.reset(0);
-    this.syncSabotage();
+    this.delivery.reset(prepPlan(0, 0), this.skin.delivery.packageHome);
+    this.hold.clear();
+    this.syncDelivery();
     for (const [id, p] of this.state.players) {
       if (!p.connected) this.state.players.delete(id);
       else {
@@ -702,17 +684,18 @@ export class GameRoom extends Room<GameState> {
     this.broadcast('chat:history', []);
   }
 
-  // ---------------------------------------------------------------- kill / report
-  private kill(client: Client) {
+  // ---------------------------------------------------------------- arrest / report
+  /** the cop presses and holds next to the nearest driver; the server times the hold */
+  private arrestStart(client: Client) {
     const me = this.state.players.get(client.sessionId);
     const s = this.secrets.get(client.sessionId);
-    if (!me || !s || s.faction !== 'killer' || !me.alive || this.state.phase !== 'explore') return;
+    if (!me || !s || s.faction !== 'killer' || !me.alive || this.state.phase !== 'explore' || this.hold.active) return;
     const now = Date.now();
-    if (now < s.killReadyAt) return client.send('toast', { text: 'Kỹ năng đang hồi — chờ một chút.', kind: 'info' });
+    if (now < s.arrestReadyAt) return client.send('toast', { text: 'Còng tay đang hồi — chờ một chút.', kind: 'info' });
     let target: Player | undefined;
-    let best = GAME.killRange;
+    let best = GAME.arrestRange;
     for (const p of this.state.players.values()) {
-      if (p.id === me.id || !p.alive || this.secrets.get(p.id)?.faction === 'killer') continue;
+      if (p.id === me.id || !p.alive || !p.connected || this.secrets.get(p.id)?.faction === 'killer') continue;
       const d = dist(me, p);
       if (d <= best) {
         best = d;
@@ -720,31 +703,75 @@ export class GameRoom extends Room<GameState> {
       }
     }
     if (!target) return client.send('toast', { text: 'Không có ai trong tầm tay.', kind: 'warn' });
-    const ts = this.secrets.get(target.id)!;
-    s.killReadyAt = now + this.cfg().killCd;
-    if (ts.shield) {
-      ts.shield = false;
-      const sh = { kind: 'shield', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, at: { x: target.x, y: target.y } };
-      // The killer sees the block like a witness does (in-world shield FX, no full-screen overlay).
-      client.send('cinematic', { ...sh, youAre: 'witness' });
-      this.clients.getById(target.id)?.send('cinematic', { ...sh, youAre: 'victim' });
-      for (const w of this.bystanders(me, target)) this.clients.getById(w.id)?.send('cinematic', { ...sh, youAre: 'witness' });
-      client.send('toast', { text: `Đòn đánh bị chặn bởi lá chắn của ${this.skin.roles.guardian.name}!`, kind: 'warn' });
-      this.clients.getById(target.id)?.send('toast', { text: '🛡️ Lá chắn của bạn đã cứu bạn khỏi một đòn hạ gục!', kind: 'success' });
-      this.sendPrivate(target.id);
-      this.sendPrivate(me.id);
-      return;
-    }
+    if (!this.hold.start(me.id, target.id, now)) return;
+    client.send('arrest:hold', { on: true, youAre: 'actor', endsAt: this.hold.endsAt } satisfies ArrestHoldMsg);
+    this.clients.getById(target.id)?.send('arrest:hold', { on: true, youAre: 'target', endsAt: this.hold.endsAt, by: me.name } satisfies ArrestHoldMsg);
+  }
+
+  private arrestRelease(id: string) {
+    const ev = this.hold.release(id);
+    if (ev) this.arrestOff(ev.actor, ev.target);
+  }
+
+  private arrestOff(actor: string, target: string) {
+    this.clients.getById(actor)?.send('arrest:hold', { on: false, youAre: 'actor' } satisfies ArrestHoldMsg);
+    this.clients.getById(target)?.send('arrest:hold', { on: false, youAre: 'target' } satisfies ArrestHoldMsg);
+  }
+
+  /** meetings / game end: drop any hold in progress */
+  private cancelArrest() {
+    if (!this.hold.active) return;
+    const ev = this.hold.release(this.holdActor());
+    if (ev) this.arrestOff(ev.actor, ev.target);
+    this.hold.clear();
+  }
+
+  private holdActor() {
+    for (const [id, s] of this.secrets) if (s.faction === 'killer') return id;
+    return '';
+  }
+
+  private tickArrest() {
+    const ev = this.hold.tick(Date.now(), (a, t) => {
+      const cop = this.state.players.get(a);
+      const tg = this.state.players.get(t);
+      return !!cop && !!tg && cop.alive && tg.alive && cop.connected && tg.connected && dist(cop, tg) <= GAME.arrestRange * 1.25;
+    });
+    if (!ev) return;
+    if (ev.type === 'cancel') return this.arrestOff(ev.actor, ev.target);
+    this.arrestOff(ev.actor, ev.target);
+    this.doArrest(ev.actor, ev.target);
+  }
+
+  private doArrest(actorId: string, targetId: string) {
+    const me = this.state.players.get(actorId);
+    const target = this.state.players.get(targetId);
+    const s = this.secrets.get(actorId);
+    if (!me || !target || !s) return;
     const at = { x: target.x, y: target.y };
-    // The killer gets no cinematic/FX of their own kill — only the victim (and witnesses) see it.
-    this.clients.getById(target.id)?.send('cinematic', { kind: 'kill', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, youAre: 'victim', at });
-    for (const w of this.bystanders(me, target))
-      this.clients.getById(w.id)?.send('cinematic', { kind: 'witness', actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, at });
+    const cine = { actor: { name: me.name, color: me.color }, victim: { name: target.name, color: target.color }, at };
+    // The cop gets no cinematic of their own arrest — only the driver (and witnesses) see it.
+    this.clients.getById(target.id)?.send('cinematic', { kind: 'kill', ...cine, youAre: 'victim' });
+    const seen = new Set<string>([me.id, target.id]);
+    for (const w of this.bystanders(me, target)) {
+      seen.add(w.id);
+      this.clients.getById(w.id)?.send('cinematic', { kind: 'witness', ...cine });
+    }
+    // out of sight but within earshot: only the siren/handcuff sound, no names
+    for (const p of this.state.players.values()) {
+      if (seen.has(p.id) || !p.alive || dist(p, at) > GAME.arrestHearRadius) continue;
+      this.clients.getById(p.id)?.send('arrest:heard', { at });
+    }
     target.alive = false;
     target.body = true;
-    target.bodyX = target.x;
-    target.bodyY = target.y;
-    this.clients.getById(target.id)?.send('toast', { text: 'Bạn đã bị hạ gục! Bạn vẫn có thể làm nhiệm vụ như một hồn ma.', kind: 'warn' });
+    target.bodyX = at.x;
+    target.bodyY = at.y;
+    this.dropPackage(target.id, at);
+    s.arrestReadyAt = Date.now() + this.cfg().arrestCd;
+    const ts = this.secrets.get(target.id);
+    if (ts) ts.pending = undefined;
+    this.clients.getById(target.id)?.send('task:close', {});
+    this.clients.getById(target.id)?.send('toast', { text: 'Bạn đã bị bắt! Giờ bạn chỉ có thể theo dõi — không làm nhiệm vụ, không bỏ phiếu.', kind: 'warn' });
     this.sendPrivate(me.id);
     this.checkWin();
   }
@@ -753,113 +780,91 @@ export class GameRoom extends Room<GameState> {
     const me = this.state.players.get(client.sessionId);
     if (!me || !me.alive || this.state.phase !== 'explore') return;
     const body = [...this.state.players.values()].find((p) => p.body && dist(me, { x: p.bodyX, y: p.bodyY }) <= GAME.reportRange);
-    if (!body) return client.send('toast', { text: 'Không có thi thể nào ở gần.', kind: 'info' });
+    if (!body) return client.send('toast', { text: 'Không có xe CRAB bỏ lại nào ở gần.', kind: 'info' });
     this.broadcast('cinematic', { kind: 'report', actor: { name: me.name, color: me.color }, victim: { name: body.name, color: body.color }, at: { x: body.bodyX, y: body.bodyY } });
-    this.startMeeting(`${me.name} phát hiện thi thể của ${body.name}`);
+    this.startMeeting(`${me.name} phát hiện xe CRAB bỏ lại của ${body.name}`);
   }
 
-  // ---------------------------------------------------------------- night watch (5 canh)
-  private canh = 0;
-
+  // ---------------------------------------------------------------- countdown
   private nightElapsed() {
     const { nightStartAt, nightPausedAt } = this.state;
     return nightStartAt ? (nightPausedAt || Date.now()) - nightStartAt : 0;
   }
 
-  /** Shift the start forward by the paused span so meetings don't eat the night. */
+  /** Shift the start forward by the paused span so meetings don't eat the clock. */
   private resumeNight() {
     if (!this.state.nightPausedAt) return;
     this.state.nightStartAt += Date.now() - this.state.nightPausedAt;
     this.state.nightPausedAt = 0;
   }
 
-  /** killers the next game will get (manual count clamped to the room's cap, else auto) */
-  private plannedKillers(n = this.state.players.size) {
-    return this.state.killers > 0 ? clampKillers(this.state.killers, n) : killersFor(n);
-  }
-
-  /** auto night length follows the lobby (players, killers, tasks) until the host sets it by hand */
-  private refreshNight() {
-    if (!this.state.nightAuto) return;
-    const n = this.state.players.size;
-    this.state.nightMin = autoNightMin(n, this.plannedKillers(n), Math.min(this.state.tasksPerPlayer, this.skin.taskIds.length));
-  }
-
-  /** The clock runs on time: the drum strikes each new canh; when canh năm runs out the Shadows win. */
-  private tickNight() {
+  /** one countdown; when it runs out before the handoff, the undercover wins */
+  private tickClock() {
     if (!this.state.nightStartAt || this.state.nightPausedAt) return;
-    const canhMs = canhMsFor(this.state.nightMin);
-    const elapsed = this.nightElapsed();
-    if (elapsed < 0) return; // role reveal still showing
-    if (elapsed >= canhMs * GAME.canhCount) {
-      this.broadcast('canh', { canh: GAME.canhCount + 1, text: this.skin.story.endings.timeout });
-      this.finishGame('killer', this.skin.story.endings.timeout);
-      return;
-    }
-    const c = Math.min(GAME.canhCount, Math.floor(elapsed / canhMs) + 1);
-    while (this.canh < c) {
-      this.canh++;
-      const text = this.skin.story.canh[this.canh - 1];
-      this.broadcast('canh', { canh: this.canh, text });
-      this.system(text);
-    }
+    if (this.nightElapsed() >= this.state.nightMin * 60_000) this.finishGame('killer', this.skin.story.endings.timeout);
   }
 
-  // ---------------------------------------------------------------- sabotage (common rules in ./sabotage, names from skin.sabotage)
-  private sabotage(client: Client, kind: SabotageKind) {
-    const s = this.secrets.get(client.sessionId);
-    if (!s || s.faction !== 'killer' || this.state.phase !== 'explore' || (kind !== 'blind' && kind !== 'ward')) return;
-    const now = Date.now();
-    if (this.nightElapsed() < 0) return client.send('toast', { text: 'Chưa thể phá lúc này.', kind: 'info' });
-    const res = this.sab.start(kind, now, kind === 'ward' ? pick(WARD_SPOTS) : undefined);
-    if (res === 'busy') return client.send('toast', { text: 'Đang có một trò phá khác diễn ra.', kind: 'info' });
-    if (res === 'cooldown') return client.send('toast', { text: 'Kỹ năng phá đang hồi — chờ một chút.', kind: 'info' });
-    this.syncSabotage();
-    const sk = this.skin.sabotage[kind];
-    this.system(sk.alert.vi.replace('{area}', this.state.sabotageArea ? this.skin.areas[this.state.sabotageArea as keyof typeof this.skin.areas].name : ''));
-    for (const [id, x] of this.secrets) if (x.faction === 'killer') this.sendPrivate(id);
-  }
-
-  private sabotageFix(client: Client, on: boolean) {
+  // ---------------------------------------------------------------- package
+  private pickPackage(client: Client) {
     const p = this.state.players.get(client.sessionId);
-    if (!on) return this.sab.fixStop(client.sessionId);
     if (!p || !p.alive || this.state.phase !== 'explore') return;
-    if (!this.sab.fixStart(p.id, Date.now(), p)) client.send('toast', { text: 'Hãy đứng sát chỗ bị phá.', kind: 'warn' });
+    const r = this.delivery.pick(p.id, p);
+    if (r === 'far') return client.send('toast', { text: 'Bạn cần đứng sát kiện hàng.', kind: 'warn' });
+    if (r === 'taken') return client.send('toast', { text: 'Kiện hàng đang ở trong tay người khác.', kind: 'info' });
+    if (r === 'ok') this.syncDelivery();
   }
 
-  private tickSabotage() {
-    const ev = this.sab.tick(Date.now(), (id) => {
-      const p = this.state.players.get(id);
-      return p && p.alive && p.connected ? p : null;
-    });
-    if (!ev) return;
-    this.syncSabotage();
-    if (ev.type === 'expired') this.finishGame('killer', this.skin.story.endings.sabotage);
-    else if (ev.type === 'fixed') {
-      const p = this.state.players.get(ev.by);
-      this.system(`${p?.name ?? '?'} đã ${this.skin.sabotage.ward.fix.vi.toLowerCase()} kịp thời!`);
-    }
+  /** the carrier was arrested / voted out / left: the box falls where they stood */
+  private dropPackage(id: string, at: { x: number; y: number }) {
+    if (this.delivery.carrier !== id) return;
+    this.delivery.onGone(id, at);
+    this.syncDelivery();
   }
 
-  /** mirror the engine into public state (spot/area only while a ward runs) */
-  private syncSabotage() {
+  /** mirror the delivery engine into public state (no roles, no who-did-what) */
+  private syncDelivery() {
     const st = this.state;
-    st.sabotage = this.sab.kind ?? '';
-    st.sabotageEndsAt = this.sab.endsAt;
-    st.sabotageArea = this.sab.spot?.area ?? '';
-    st.sabotageX = this.sab.spot?.x ?? 0;
-    st.sabotageY = this.sab.spot?.y ?? 0;
+    const d = this.delivery;
+    for (const id of PREP_TASK_IDS) {
+      let row = st.stations.get(id);
+      if (!row) {
+        row = new StationState();
+        st.stations.set(id, row);
+      }
+      row.need = d.need.get(id) ?? 0;
+      row.done = d.doneBy.get(id) ?? 0;
+    }
+    st.progress = d.done;
+    st.progressTarget = Math.max(1, d.target);
+    st.handoffOpen = d.handoffOpen;
+    st.packageState = d.state;
+    st.packageCarrier = d.carrier;
+    st.packageX = d.x;
+    st.packageY = d.y;
   }
 
-  /** living crew see less while a `blind` sabotage runs (also bounds who witnesses a kill) */
-  private visionRadius() {
-    return GAME.sightRadius * (this.sab.kind === 'blind' ? SABOTAGE.blindVision : 1);
+  // ---------------------------------------------------------------- veteran
+  private inspect(client: Client, targetId: string) {
+    const me = this.state.players.get(client.sessionId);
+    const s = this.secrets.get(client.sessionId);
+    const target = this.state.players.get(targetId);
+    const ts = this.secrets.get(targetId);
+    if (!me || !s || s.role !== 'veteran_driver' || !me.alive || !s.inspectLeft) return;
+    if (this.state.phase !== 'explore' && this.state.phase !== 'meeting') return;
+    if (!target || !ts || target.id === me.id || !target.alive) return client.send('toast', { text: 'Chọn một tài xế khác còn trong đoàn.', kind: 'info' });
+    s.inspectLeft = false;
+    const entries = recentActivities(ts.log, Date.now(), GAME.inspectEntries).map((e) => {
+      const st = this.station(e.taskId);
+      return { ...e, title: st?.title ?? e.taskId, area: st ? this.skin.areas[st.area].name : '' };
+    });
+    client.send('inspect:result', { target: target.name, color: target.color, entries } satisfies InspectResult);
+    this.sendPrivate(me.id);
   }
 
   /** living players (other than the two involved) who can see the target right now */
   private bystanders(actor: Player, target: Player) {
     return [...this.state.players.values()].filter(
-      (w) => w.id !== actor.id && w.id !== target.id && w.alive && canSeePoint(grid, w, target, this.visionRadius()),
+      (w) => w.id !== actor.id && w.id !== target.id && w.alive && canSeePoint(grid, w, target, GAME.sightRadius),
     );
   }
 
@@ -872,12 +877,14 @@ export class GameRoom extends Room<GameState> {
     const p = this.state.players.get(client.sessionId);
     const s = this.secrets.get(client.sessionId);
     const st = this.station(taskId);
-    // ghosts of the crew keep working: their tasks still count toward dawn
-    if (!p || !s || !st || this.state.phase !== 'explore' || (!p.alive && s.faction !== 'crew')) return;
-    if (!s.tasks.includes(taskId)) return client.send('toast', { text: 'Đây không phải nhiệm vụ của bạn.', kind: 'info' });
+    // arrested drivers are spectators: no tasks
+    if (!p || !s || !st || this.state.phase !== 'explore' || !p.alive) return;
     if (!this.near(p, st.x, st.y)) return client.send('toast', { text: 'Bạn cần đứng gần điểm nhiệm vụ.', kind: 'warn' });
-    if (s.completed.has(taskId)) return client.send('toast', { text: 'Bạn đã hoàn thành nhiệm vụ này.', kind: 'info' });
-    const built = this.content.buildTask(taskId);
+    if (taskId === 'handoff_package') {
+      if (!this.delivery.handoffOpen) return client.send('toast', { text: 'Chưa chuẩn bị xong — bàn giao còn khoá.', kind: 'info' });
+      if (this.delivery.carrier !== p.id) return client.send('toast', { text: 'Bạn cần cầm kiện hàng tới đây.', kind: 'info' });
+    } else if (!this.delivery.canOpen(taskId)) return client.send('toast', { text: 'Trạm này đã xong phần chuẩn bị.', kind: 'info' });
+    const built = this.content.buildTask(taskId, { handoffCode: this.handoffCode });
     if (!built) return;
     s.pending = { expected: built.expected, openedAt: Date.now(), reward: built.fact, done: built.done, taskId, minMs: built.minMs };
     client.send('task:data', built.data);
@@ -886,22 +893,42 @@ export class GameRoom extends Room<GameState> {
   private submitTask(client: Client, msg: { taskId: TaskId; answer: unknown }) {
     const p = this.state.players.get(client.sessionId);
     const s = this.secrets.get(client.sessionId);
-    if (!p || !s || (!p.alive && s.faction !== 'crew') || this.state.phase !== 'explore' || !s.pending || s.pending.taskId !== msg?.taskId) return;
+    if (!p || !s || !p.alive || this.state.phase !== 'explore' || !s.pending || s.pending.taskId !== msg?.taskId) return;
     const { taskId, reward, done } = s.pending;
     const st = this.station(taskId)!;
     if (!this.near(p, st.x, st.y)) return client.send('toast', { text: 'Bạn đã rời khỏi điểm nhiệm vụ.', kind: 'warn' });
+    const now = Date.now();
     const ok = this.content.verifyTask(s.pending, msg.answer);
     if (!ok) {
+      s.log.push({ taskId, at: now, status: 'failed' });
       // the client remounts the game for the retry: timed games start their clock again
-      s.pending.openedAt = Date.now();
+      s.pending.openedAt = now;
       return client.send('task:result', { ok: false, text: 'Chưa đúng — thử lại nhé.' } satisfies TaskResultMsg);
     }
-
     s.pending = undefined;
-    s.completed.add(taskId);
-    p.tasksDone = s.completed.size;
-    // only the crew advances the shared bar (checkWin recounts it)
+
+    if (taskId === 'handoff_package') {
+      // the cop can never trigger the delivery win
+      if (s.faction !== 'crew' || !this.delivery.deliver(p.id)) return client.send('task:close', {});
+      s.log.push({ taskId, at: now, status: 'done' });
+      s.done++;
+      p.tasksDone = s.done;
+      client.send('task:result', { ok: true, text: done ?? `Hoàn thành: ${st.title}.`, fact: reward?.text, headline: reward?.headline } satisfies TaskResultMsg);
+      this.syncDelivery();
+      this.checkWin();
+      return;
+    }
+
+    // the cop's fake work is logged like anyone's but never moves the bar
+    if (s.faction === 'crew' && !this.delivery.complete(taskId, true)) {
+      client.send('task:close', {});
+      return client.send('toast', { text: 'Người khác vừa làm xong trạm này trước bạn.', kind: 'info' });
+    }
+    s.log.push({ taskId, at: now, status: 'done' });
+    s.done++;
+    p.tasksDone = s.done;
     client.send('task:result', { ok: true, text: done ?? `Hoàn thành: ${st.title}.`, fact: reward?.text, headline: reward?.headline } satisfies TaskResultMsg);
+    this.syncDelivery();
     this.sendPrivate(client.sessionId);
     this.checkWin();
   }
@@ -915,17 +942,12 @@ export class GameRoom extends Room<GameState> {
       role: s.role,
       faction: s.faction,
       objective: s.objective,
-      tasks: s.tasks,
-      completedTasks: [...s.completed],
     };
     if (s.faction === 'killer') {
-      info.killReadyAt = s.killReadyAt;
-      info.sabotageReadyAt = this.sab.readyAt;
-      const killers = [...this.secrets.entries()].filter(([, x]) => x.faction === 'killer').map(([pid]) => pid);
-      info.killerIds = killers;
-      info.mates = killers.filter((pid) => pid !== id).map((pid) => this.state.players.get(pid)?.name ?? '?');
+      info.arrestReadyAt = s.arrestReadyAt;
+      info.killerIds = [id];
     }
-    if (s.role === 'guardian') info.shield = s.shield;
+    if (s.role === 'veteran_driver') info.inspectLeft = s.inspectLeft;
     client.send('private', info);
   }
 

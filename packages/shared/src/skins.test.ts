@@ -6,10 +6,11 @@ test('the game world has a skin', () => {
   assert.ok(MAP_SKINS[GAME_SLUG]);
 });
 
-test('skin names roles, segments and deadline in both languages', () => {
+test('skin names roles, factions and deadline in both languages', () => {
   const skin = MAP_SKINS[GAME_SLUG];
   for (const id of ROLE_IDS) assert.ok(skin.roles[id].name && skin.roles[id].nameEn, id);
-  for (const k of ['segment', 'deadline'] as const) assert.ok(skin.labels[k].vi && skin.labels[k].en, k);
+  assert.ok(skin.labels.deadline.vi && skin.labels.deadline.en);
+  assert.ok(skin.crewName.vi && skin.killerName.vi);
 });
 
 test('skin has a task-card eyebrow', () => {
