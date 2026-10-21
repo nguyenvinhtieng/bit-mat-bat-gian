@@ -3,9 +3,9 @@
  * Procedural (vector) UI art for the HUD — no AI / API key needed.
  *   node tools/ui-art/draw-ui.mjs [repoRoot]
  * Writes:
- *   assets/_src/common/ui/<name>.svg           (editable vector source)
- *   assets/common/ui/<name>.png                (packed PNG)
- *   apps/web/public/assets/common/ui/<name>.webp (runtime)
+ *   assets/_src/maps/common/ui/<name>.svg           (editable vector source)
+ *   assets/maps/common/ui/<name>.png                (packed PNG)
+ *   apps/web/public/assets/maps/common/ui/<name>.webp (runtime)
  *
  * Assets:
  *   btn-kill / btn-report / btn-task / btn-bell  round lacquer action buttons (256px)
@@ -20,9 +20,9 @@ import path from 'node:path';
 import sharp from 'sharp';
 
 const ROOT = path.resolve(process.argv[2] || path.join(path.dirname(new URL(import.meta.url).pathname), '../..'));
-const SRC0 = path.join(ROOT, 'assets/_src/common/ui');
-const OUT0 = path.join(ROOT, 'assets/common/ui');
-const PUB0 = path.join(ROOT, 'apps/web/public/assets/common/ui');
+const SRC0 = path.join(ROOT, 'assets/_src/maps/common/ui');
+const OUT0 = path.join(ROOT, 'assets/maps/common/ui');
+const PUB0 = path.join(ROOT, 'apps/web/public/assets/maps/common/ui');
 
 const INK = '#22100a';
 const GOLD_STOPS = `<stop offset="0" stop-color="#fff2bf"/><stop offset=".32" stop-color="#f3c75a"/><stop offset=".68" stop-color="#c58b26"/><stop offset="1" stop-color="#7d4f12"/>`;

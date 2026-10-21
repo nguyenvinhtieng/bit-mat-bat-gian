@@ -2,8 +2,8 @@
 /**
  * Procedural (vector) art for the "How to play" guide popup — no AI / API key needed.
  *   node tools/ui-art/draw-guide.mjs [repoRoot]
- * Writes assets/_src/common/ui/guide/<name>.svg, assets/common/ui/guide/<name>.png,
- *        apps/web/public/assets/common/ui/guide/<name>.webp
+ * Writes assets/_src/maps/common/ui/guide/<name>.svg, assets/maps/common/ui/guide/<name>.png,
+ *        apps/web/public/assets/maps/common/ui/guide/<name>.webp
  *
  * Assets (rendered at 2x the SVG size; numbers below are final px — keep styles.css in sync):
  *   frame-guide            512x512 9-slice, slice 112   (teak + double gold + jade gems + cloud corners)
@@ -19,9 +19,9 @@ import path from 'node:path';
 import sharp from 'sharp';
 
 const ROOT = path.resolve(process.argv[2] || path.join(path.dirname(new URL(import.meta.url).pathname), '../..'));
-const SRC = path.join(ROOT, 'assets/_src/common/ui/guide');
-const OUT = path.join(ROOT, 'assets/common/ui/guide');
-const PUB = path.join(ROOT, 'apps/web/public/assets/common/ui/guide');
+const SRC = path.join(ROOT, 'assets/_src/maps/common/ui/guide');
+const OUT = path.join(ROOT, 'assets/maps/common/ui/guide');
+const PUB = path.join(ROOT, 'apps/web/public/assets/maps/common/ui/guide');
 
 const INK = '#22100a';
 const GOLD_STOPS = `<stop offset="0" stop-color="#fff2bf"/><stop offset=".32" stop-color="#f3c75a"/><stop offset=".68" stop-color="#c58b26"/><stop offset="1" stop-color="#7d4f12"/>`;

@@ -7,7 +7,7 @@ import { Sprite } from './Cinematic';
 import { SockReveal } from './SockReveal';
 import { asset, Digits, fmt, useCountdown } from './common';
 
-const mt = (n: string) => asset(`common/ui/meeting/${n}.webp`);
+const mt = (n: string) => asset(`maps/common/ui/meeting/${n}.webp`);
 /** RoomView players carry the hex colour; the sprite renderer wants the palette index. */
 const colorIndex = (hex: number) => Math.max(0, PLAYER_COLORS.indexOf(hex));
 
@@ -60,7 +60,7 @@ function VoteCard({
       <button className="vcard-hit" disabled={!votable} onClick={onVote} title={me ? 'Bạn không thể bỏ phiếu cho chính mình' : undefined}>
         <span className="vcard-portrait" style={{ '--pc': colorHex(p.color) } as React.CSSProperties}>
           <Sprite color={colorIndex(p.color)} dir="down" scale={1.5} />
-          {!p.alive && <img className="vcard-skull" src={asset('common/ui/body-marker.webp')} alt="" />}
+          {!p.alive && <img className="vcard-skull" src={asset('maps/common/ui/body-marker.webp')} alt="" />}
         </span>
         <span className="vcard-info">
           <span className="vcard-name" style={killer ? { color: KILLER_NAME_COLOR } : undefined}>

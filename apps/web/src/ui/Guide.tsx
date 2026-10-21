@@ -5,7 +5,7 @@ import { useLang } from '../i18n';
 import { RoleBadge, asset, useEscape, useSkin } from './common';
 import { mapGuide } from './guides';
 
-const gui = (n: string) => asset(`common/ui/guide/${n}.webp`);
+const gui = (n: string) => asset(`maps/common/ui/guide/${n}.webp`);
 
 const TXT = {
   vi: {

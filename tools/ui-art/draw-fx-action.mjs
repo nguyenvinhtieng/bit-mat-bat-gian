@@ -6,16 +6,16 @@
  *   fx-dash-smear   ink speed streaks trailing a lunge (drawn trailing to the RIGHT, flip for the other way)
  *   fx-soul-rise    pale soul wisp leaving a fallen body, rising and dissolving
  *   fx-shield-dome  jade hex-lattice dome: pops up, ripples from the blade hit on the left, shatters to motes
- * Writes assets/_src/common/ui/fx/*.svg, assets/common/ui/fx/*.png, apps/web/public/assets/common/ui/fx/*.webp
+ * Writes assets/_src/maps/common/ui/fx/*.svg, assets/maps/common/ui/fx/*.png, apps/web/public/assets/maps/common/ui/fx/*.webp
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
 
 const ROOT = path.resolve(process.argv[2] || path.join(path.dirname(new URL(import.meta.url).pathname), '../..'));
-const SRC = path.join(ROOT, 'assets/_src/common/ui/fx');
-const OUT = path.join(ROOT, 'assets/common/ui/fx');
-const PUB = path.join(ROOT, 'apps/web/public/assets/common/ui/fx');
+const SRC = path.join(ROOT, 'assets/_src/maps/common/ui/fx');
+const OUT = path.join(ROOT, 'assets/maps/common/ui/fx');
+const PUB = path.join(ROOT, 'apps/web/public/assets/maps/common/ui/fx');
 for (const d of [SRC, OUT, PUB]) fs.mkdirSync(d, { recursive: true });
 
 const F = 256, N = 8;

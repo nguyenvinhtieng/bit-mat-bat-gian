@@ -2,8 +2,8 @@
 /**
  * Procedural (vector) art for mobile / collapsible-lobby UI — no AI / API key needed.
  *   node tools/ui-art/draw-mobile.mjs [repoRoot]
- * Writes assets/_src/common/ui/mobile/<name>.svg, assets/common/ui/mobile/<name>.png,
- *        apps/web/public/assets/common/ui/mobile/<name>.webp
+ * Writes assets/_src/maps/common/ui/mobile/<name>.svg, assets/maps/common/ui/mobile/<name>.png,
+ *        apps/web/public/assets/maps/common/ui/mobile/<name>.webp
  *
  * Assets (final px — keep styles.css in sync):
  *   btn-chat        256x256 round lacquer button with a speech scroll (collapsed lobby chat)
@@ -20,9 +20,9 @@ import path from 'node:path';
 import sharp from 'sharp';
 
 const ROOT = path.resolve(process.argv[2] || path.join(path.dirname(new URL(import.meta.url).pathname), '../..'));
-const SRC = path.join(ROOT, 'assets/_src/common/ui/mobile');
-const OUT = path.join(ROOT, 'assets/common/ui/mobile');
-const PUB = path.join(ROOT, 'apps/web/public/assets/common/ui/mobile');
+const SRC = path.join(ROOT, 'assets/_src/maps/common/ui/mobile');
+const OUT = path.join(ROOT, 'assets/maps/common/ui/mobile');
+const PUB = path.join(ROOT, 'apps/web/public/assets/maps/common/ui/mobile');
 
 const INK = '#22100a';
 const GOLD_STOPS = `<stop offset="0" stop-color="#fff2bf"/><stop offset=".32" stop-color="#f3c75a"/><stop offset=".68" stop-color="#c58b26"/><stop offset="1" stop-color="#7d4f12"/>`;

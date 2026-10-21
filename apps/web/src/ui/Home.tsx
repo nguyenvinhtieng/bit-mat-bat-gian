@@ -12,7 +12,7 @@ const NAME_KEY = 'tht:name';
 /** dev: every tab gets a fresh themed name so multi-tab testing needs no typing */
 const DEV = import.meta.env.DEV;
 const MAP_KEY = 'tht:map';
-const home = (n: string) => asset(`common/ui/home/${n}.webp`);
+const home = (n: string) => asset(`maps/common/ui/home/${n}.webp`);
 
 const readMap = () => {
   try {

@@ -7,7 +7,7 @@
  *   assets/maps/co-do-hue/{props,stations,minigames}/<name>.png
  *   apps/web/public/assets/maps/co-do-hue/atlas/hue-bansoc-0.{webp,json}   props + station icons (Phaser hash atlas)
  *   apps/web/public/assets/maps/co-do-hue/minigames/<name>.webp            mini-game UI art
- *   manifests/co-do-hue.assets.json (atlases / props / stations / minigames)
+ *   maps/co-do-hue/co-do-hue.assets.json (atlases / props / stations / minigames)
  * Style: top-down 3/4, soft dark outline (#22100a), lacquer red + imperial yellow + gold, bronze, stone.
  * No text is baked into the art (labels are HTML so they can be translated).
  */
@@ -714,7 +714,7 @@ await sharp(atlasPng).webp({ quality: 92, alphaQuality: 100 }).toFile(path.join(
 
 // manifest
 for (const base of [path.join(ROOT, 'assets'), path.join(ROOT, 'apps/web/public/assets')]) {
-  const mf = path.join(base, 'manifests/co-do-hue.assets.json');
+  const mf = path.join(base, 'maps/co-do-hue/co-do-hue.assets.json');
   if (!fs.existsSync(mf)) continue;
   const m = JSON.parse(fs.readFileSync(mf, 'utf8'));
   m.story = 'nam-canh-truoc-binh-minh';

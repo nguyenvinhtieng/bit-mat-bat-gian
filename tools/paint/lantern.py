@@ -1,7 +1,7 @@
 """
 Hand-held oil lamp (đèn dầu) every living player carries in the dark + its warm light pool.
   python3 tools/paint/lantern.py
-Writes apps/web/public/assets/common/characters/lantern.webp (+ lantern-glow.webp) and PNG sources in assets/common/characters/.
+Writes apps/web/public/assets/maps/common/characters/lantern.webp (+ lantern-glow.webp) and PNG sources in assets/maps/common/characters/.
 Painted at 4x then downsampled; per-pixel shading like the other paint tools.
 """
 import os
@@ -14,8 +14,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 from lib import hexc, value_noise  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-PUB = os.path.join(ROOT, 'apps/web/public/assets/common/characters')
-SRC = os.path.join(ROOT, 'assets/common/characters')
+PUB = os.path.join(ROOT, 'apps/web/public/assets/maps/common/characters')
+SRC = os.path.join(ROOT, 'assets/maps/common/characters')
 os.makedirs(PUB, exist_ok=True)
 os.makedirs(SRC, exist_ok=True)
 

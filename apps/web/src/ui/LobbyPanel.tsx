@@ -88,7 +88,7 @@ export function LobbyPanel() {
             </small>
           </button>
           <button className="btn wide settings-btn" onClick={() => setShowSettings(true)}>
-            <img src={asset('common/ui/settings.webp')} alt="" draggable={false} />
+            <img src={asset('maps/common/ui/settings.webp')} alt="" draggable={false} />
             <span>{t('settings')}</span>
             <small>
               {room.tasksPerPlayer} · {killers} · {room.nightMin}′
@@ -154,7 +154,7 @@ export function LobbyPanel() {
         </aside>
       ) : (
         <button className="chat-fab" onClick={() => setChatOpen(true)} title={t('chat')} aria-label={t('chat')}>
-          <img src={asset('common/ui/mobile/btn-chat.webp')} alt="" draggable={false} />
+          <img src={asset('maps/common/ui/mobile/btn-chat.webp')} alt="" draggable={false} />
           {unread > 0 && <b className="chat-badge">{unread > 9 ? '9+' : unread}</b>}
         </button>
       )}
@@ -303,7 +303,7 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
     <div className="modal-backdrop settings-backdrop" onClick={onClose}>
       <div className="modal settings-modal" role="dialog" aria-label={t('settings')} onClick={(e) => e.stopPropagation()}>
         <header>
-          <img className="settings-crest" src={asset('common/ui/settings.webp')} alt="" draggable={false} />
+          <img className="settings-crest" src={asset('maps/common/ui/settings.webp')} alt="" draggable={false} />
           <div>
             <h3>{t('settings')}</h3>
           </div>
@@ -336,7 +336,7 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
             </div>
           </div>
           <SliderRow
-            icon="common/ui/clue.webp"
+            icon="maps/common/ui/clue.webp"
             label={t('tasksPer')}
             min={1}
             max={maxTasks}
@@ -345,7 +345,7 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
             onChange={(v) => edit({ tasks: v, nightAuto: true })}
           />
           <SliderRow
-            icon="common/ui/count-killer.webp"
+            icon="maps/common/ui/count-killer.webp"
             tone="killer"
             label={t('killersCount')}
             min={1}
@@ -366,7 +366,7 @@ function SettingsModal(props: { isHost: boolean; total: number; killers: number;
           />
           <div className={`slider-row ${isHost ? '' : 'is-disabled'}`}>
             <div className="slider-head">
-              <img src={asset('common/ui/home/globe.webp')} alt="" draggable={false} />
+              <img src={asset('maps/common/ui/home/globe.webp')} alt="" draggable={false} />
               <div className="slider-text">
                 <strong>{t('roomVisibility')}</strong>
               </div>

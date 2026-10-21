@@ -1,7 +1,7 @@
 """
 Painted FX sprite strips (8 frames x 256 px) + particle / overlay textures for kill, shield, report, witness.
   python3 tools/paint/fx.py
-Writes apps/web/public/assets/common/ui/fx/<name>.webp (strips + singles) and PNG sources in assets/common/ui/fx/.
+Writes apps/web/public/assets/maps/common/ui/fx/<name>.webp (strips + singles) and PNG sources in assets/maps/common/ui/fx/.
 Everything is computed per pixel (glows, ink bristles, metal lattice) — no vector shapes.
 """
 import math
@@ -15,8 +15,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 from lib import fbm, hexc, value_noise  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-PUB = os.path.join(ROOT, 'apps/web/public/assets/common/ui/fx')
-SRC = os.path.join(ROOT, 'assets/common/ui/fx')
+PUB = os.path.join(ROOT, 'apps/web/public/assets/maps/common/ui/fx')
+SRC = os.path.join(ROOT, 'assets/maps/common/ui/fx')
 os.makedirs(PUB, exist_ok=True)
 os.makedirs(SRC, exist_ok=True)
 N, S = 8, 256

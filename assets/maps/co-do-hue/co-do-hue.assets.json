@@ -34,8 +34,8 @@
  ],
  "textures": {
   "player": {
-   "atlas": "common/characters/player-atlas",
-   "tint": "common/characters/player-tint-atlas",
+   "atlas": "maps/common/characters/player-atlas",
+   "tint": "maps/common/characters/player-tint-atlas",
    "frame": [
     48,
     64
@@ -701,47 +701,47 @@
    "atlas": "hue-gameplay-0"
   },
   "meeting-bell": {
-   "file": "common/ui/meeting-bell.webp",
+   "file": "maps/common/ui/meeting-bell.webp",
    "size": 48
   },
   "clue": {
-   "file": "common/ui/clue.webp",
+   "file": "maps/common/ui/clue.webp",
    "size": 48
   },
   "timer": {
-   "file": "common/ui/timer.webp",
+   "file": "maps/common/ui/timer.webp",
    "size": 32
   },
   "notebook": {
-   "file": "common/ui/notebook.webp",
+   "file": "maps/common/ui/notebook.webp",
    "size": 48
   },
   "meeting-bg": {
-   "file": "common/ui/meeting/meeting-bg",
+   "file": "maps/common/ui/meeting/meeting-bg",
    "generatedBy": "tools/paint/ui.py"
   },
   "seal-eject": {
-   "file": "common/ui/meeting/seal-eject",
+   "file": "maps/common/ui/meeting/seal-eject",
    "generatedBy": "tools/paint/ui.py"
   },
   "seal-skip": {
-   "file": "common/ui/meeting/seal-skip",
+   "file": "maps/common/ui/meeting/seal-skip",
    "generatedBy": "tools/paint/ui.py"
   },
   "stamp-voted": {
-   "file": "common/ui/meeting/stamp-voted",
+   "file": "maps/common/ui/meeting/stamp-voted",
    "generatedBy": "tools/paint/ui.py"
   },
   "den-cung-dinh": {
-   "file": "common/ui/meeting/den-cung-dinh",
+   "file": "maps/common/ui/meeting/den-cung-dinh",
    "generatedBy": "tools/paint/ui.py"
   },
   "chuong-ngu-phung": {
-   "file": "common/ui/meeting/chuong-ngu-phung",
+   "file": "maps/common/ui/meeting/chuong-ngu-phung",
    "generatedBy": "tools/paint/ui.py"
   },
   "fx-kill-slash": {
-   "file": "common/ui/fx/fx-kill-slash",
+   "file": "maps/common/ui/fx/fx-kill-slash",
    "generatedBy": "tools/paint/fx.py",
    "frames": 8,
    "frameSize": [
@@ -750,7 +750,7 @@
    ]
   },
   "fx-shield-block": {
-   "file": "common/ui/fx/fx-shield-block",
+   "file": "maps/common/ui/fx/fx-shield-block",
    "generatedBy": "tools/paint/fx.py",
    "frames": 8,
    "frameSize": [
@@ -759,7 +759,7 @@
    ]
   },
   "fx-report-burst": {
-   "file": "common/ui/fx/fx-report-burst",
+   "file": "maps/common/ui/fx/fx-report-burst",
    "generatedBy": "tools/paint/fx.py",
    "frames": 8,
    "frameSize": [
@@ -768,7 +768,7 @@
    ]
   },
   "fx-witness": {
-   "file": "common/ui/fx/fx-witness",
+   "file": "maps/common/ui/fx/fx-witness",
    "generatedBy": "tools/paint/fx.py",
    "frames": 8,
    "frameSize": [
@@ -777,31 +777,31 @@
    ]
   },
   "spark": {
-   "file": "common/ui/fx/spark",
+   "file": "maps/common/ui/fx/spark",
    "generatedBy": "tools/paint/fx.py"
   },
   "ink-drop": {
-   "file": "common/ui/fx/ink-drop",
+   "file": "maps/common/ui/fx/ink-drop",
    "generatedBy": "tools/paint/fx.py"
   },
   "ink-splat": {
-   "file": "common/ui/fx/ink-splat",
+   "file": "maps/common/ui/fx/ink-splat",
    "generatedBy": "tools/paint/fx.py"
   },
   "brush-stroke": {
-   "file": "common/ui/fx/brush-stroke",
+   "file": "maps/common/ui/fx/brush-stroke",
    "generatedBy": "tools/paint/fx.py"
   }
  },
  "roles": {
   "conservator": {
-   "icon": "common/ui/roles/conservator.webp"
+   "icon": "maps/common/ui/roles/conservator.webp"
   },
   "local_guide": {
-   "icon": "common/ui/roles/local_guide.webp"
+   "icon": "maps/common/ui/roles/local_guide.webp"
   },
   "forger": {
-   "icon": "common/ui/roles/forger.webp"
+   "icon": "maps/common/ui/roles/forger.webp"
   }
  },
  "story": "nam-canh-truoc-binh-minh",

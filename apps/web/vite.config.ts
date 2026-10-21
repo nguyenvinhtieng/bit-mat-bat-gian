@@ -10,16 +10,16 @@ import { MAP_CATALOG } from '../../packages/shared/src/maps/catalog';
 /**
  * public/ files that are dev/tooling-only (never fetched by the game): kept out of dist and
  * out of the precache list. Paths are relative to public/, '/'-separated.
- * - assets/manifests: asset registry for tools/ (runtime keys live in packages/shared)
- * - assets/common/layout, maps/x/x-stations.json: tools/layout-gen output (Tiled/reference; the game builds the tilemap in code)
+ * - assets/maps/<map>/<map>.assets.json: asset registry for tools/ (runtime keys live in packages/shared)
+ * - assets/maps/common/layout, maps/x/x-stations.json: tools/layout-gen output (Tiled/reference; the game builds the tilemap in code)
  * - brand/logo.svg, brand/logo-emblem*: tools/brand sources (the page uses logo.webp/png + icons)
  * - maps not yet released: everything except the home-screen card art (meta/home-bg, meta/thumb)
  */
 const LOCKED_MAPS = MAP_CATALOG.filter((m) => !m.available).map((m) => m.slug);
 const DEV_ONLY = [
   /(^|\/)\./,
-  /^assets\/manifests\//,
-  /^assets\/common\/layout\//,
+  /^assets\/maps\/[^/]+\/[^/]+\.assets\.json$/,
+  /^assets\/maps\/common\/layout\//,
   /^assets\/maps\/[^/]+\/[^/]+-stations\.json$/,
   /^brand\/(logo\.svg|logo-emblem)/,
   ...LOCKED_MAPS.map((slug) => new RegExp(`^assets/maps/${slug}/(?!meta/(home-bg|thumb)\\.webp$)`)),

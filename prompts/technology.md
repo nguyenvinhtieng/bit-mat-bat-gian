@@ -56,7 +56,7 @@ Bước 1 — Thiết kế game
 Bước 2 — Sinh asset
   → GPT Image API: nhân vật, frame walk (hoặc sheet), background, tileset, icon, VFX
   → Lưu file: quy ước tên, kích thước, định dạng (PNG nguồn → WebP/atlas)
-  → Cập nhật manifests/co-do-hue.assets.json
+  → Cập nhật maps/co-do-hue/co-do-hue.assets.json
 
 Bước 3 — Sinh gameplay
   → TypeScript: Phaser scenes, di chuyển, va chạm, animation, HUD tối thiểu

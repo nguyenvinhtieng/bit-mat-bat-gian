@@ -62,7 +62,7 @@ export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: 
               {/* bell */}
               <g className="mv-bell" transform={`translate(${tx(MEETING_POINT.x)} ${tx(MEETING_POINT.y) - 0.6})`}>
                 <circle r={0.75} />
-                <image href={asset('common/ui/meeting-bell.webp')} x={-0.6} y={-0.6} width={1.2} height={1.2} />
+                <image href={asset('maps/common/ui/meeting-bell.webp')} x={-0.6} y={-0.6} width={1.2} height={1.2} />
               </g>
               {tasks.map(({ st, n, done }) => (
                 <g key={st.id} className={`mv-task ${done ? 'done' : 'todo'}`} transform={`translate(${tx(st.x)} ${tx(st.y)})`}>

@@ -11,7 +11,7 @@
  *   hoi-an      Phố cổ Hội An at dusk: yellow houses, Chùa Cầu, lantern strings, river boats   (coming soon)
  *   thang-long  Hồ Gươm at night: Tháp Rùa, Thê Húc bridge, willows                           (coming soon)
  *
- * Home UI (assets/common/ui/home/*):
+ * Home UI (assets/maps/common/ui/home/*):
  *   frame-home        512x512 9-slice, slice 120 (black lacquer + gold double line + lotus corners)
  *   home-crest        560x170 lotus crown that sits on top of the frame (title is HTML)
  *   map-card          256x256 9-slice, slice 48 (idle)       map-card-active (jade glow, selected)
@@ -485,4 +485,4 @@ const UI = [
   ['lang-knob', langKnob(), 116, 60],
   ['globe', globe(), 64, 64],
 ];
-for (const [name, code, w, h] of UI) await emit(`common/ui/home/${name}`, code, w, h);
+for (const [name, code, w, h] of UI) await emit(`maps/common/ui/home/${name}`, code, w, h);

@@ -5,8 +5,8 @@ import lib
 from lib import Mat
 import props as PR
 ROOT = PR.ROOT
-PUB = os.path.join(ROOT, 'apps/web/public/assets/common/ui')
-SRC = os.path.join(ROOT, 'assets/common/ui')
+PUB = os.path.join(ROOT, 'apps/web/public/assets/maps/common/ui')
+SRC = os.path.join(ROOT, 'assets/maps/common/ui')
 os.makedirs(PUB, exist_ok=True); os.makedirs(SRC, exist_ok=True)
 
 def save(name, im, q=90):

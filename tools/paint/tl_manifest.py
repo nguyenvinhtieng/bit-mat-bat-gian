@@ -1,4 +1,4 @@
-"""Writes manifests/thang-long.assets.json (both copies) from the painted Thăng Long assets on disk.
+"""Writes maps/thang-long/thang-long.assets.json (both copies) from the painted Thăng Long assets on disk.
   python3 tools/paint/tl_manifest.py   (run after tl_floor / tl_props / tl_minigames / tl_meta / draw-thang-long)
 Shape mirrors co-do-hue.assets.json; shared (common/*) entries are copied from it."""
 import json
@@ -10,7 +10,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 PUBA = os.path.join(ROOT, 'apps/web/public/assets')
 SLUG = 'thang-long'
 M = f'maps/{SLUG}'
-HUE = json.load(open(os.path.join(PUBA, 'manifests/co-do-hue.assets.json')))
+HUE = json.load(open(os.path.join(PUBA, 'maps/co-do-hue/co-do-hue.assets.json')))
 TASKS = ['task_banh_chung', 'task_dong_ho', 'task_cho_chu', 'task_cay_neu', 'task_cau_doi', 'task_ngu_qua', 'task_ca_tru', 'task_roi_nuoc']
 
 
@@ -69,7 +69,7 @@ d = {
     },
     'sfx': {n: {'file': f'{M}/sfx/{n}.wav', 'generatedBy': 'tools/sfx/draw-thang-long.mjs'} for n in ['phao', 'trong-chau-tom', 'trong-chau-chat']},
 }
-for rel in (f'assets/manifests/{SLUG}.assets.json', f'apps/web/public/assets/manifests/{SLUG}.assets.json'):
+for rel in (f'assets/maps/{SLUG}/{SLUG}.assets.json', f'apps/web/public/assets/maps/{SLUG}/{SLUG}.assets.json'):
     with open(os.path.join(ROOT, rel), 'w') as fh:
         json.dump(d, fh, indent=1, ensure_ascii=False)
         fh.write('\n')

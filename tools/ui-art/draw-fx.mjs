@@ -3,9 +3,9 @@
  * Procedural (vector) FX sprite strips + small world icons — no AI / API key needed.
  *   node tools/ui-art/draw-fx.mjs [repoRoot]
  * Writes:
- *   assets/_src/common/ui/fx/<name>.svg             (editable vector source)
- *   assets/common/ui/fx/<name>.png                  (packed PNG)
- *   apps/web/public/assets/common/ui/fx/<name>.webp (runtime)
+ *   assets/_src/maps/common/ui/fx/<name>.svg             (editable vector source)
+ *   assets/maps/common/ui/fx/<name>.png                  (packed PNG)
+ *   apps/web/public/assets/maps/common/ui/fx/<name>.webp (runtime)
  *
  * Strips are 6 frames x 256px laid out horizontally (1536x256) — the layout the `.fx` CSS class
  * (apps/web/src/styles.css) and the Phaser spritesheets in GameScene expect.
@@ -22,11 +22,11 @@ import path from 'node:path';
 import sharp from 'sharp';
 
 const ROOT = path.resolve(process.argv[2] || path.join(path.dirname(new URL(import.meta.url).pathname), '../..'));
-const SRC = path.join(ROOT, 'assets/_src/common/ui/fx');
-const OUT = path.join(ROOT, 'assets/common/ui/fx');
-const PUB = path.join(ROOT, 'apps/web/public/assets/common/ui/fx');
-const ICON_OUT = path.join(ROOT, 'assets/common/ui');
-const ICON_PUB = path.join(ROOT, 'apps/web/public/assets/common/ui');
+const SRC = path.join(ROOT, 'assets/_src/maps/common/ui/fx');
+const OUT = path.join(ROOT, 'assets/maps/common/ui/fx');
+const PUB = path.join(ROOT, 'apps/web/public/assets/maps/common/ui/fx');
+const ICON_OUT = path.join(ROOT, 'assets/maps/common/ui');
+const ICON_PUB = path.join(ROOT, 'apps/web/public/assets/maps/common/ui');
 
 const INK = '#22100a';
 const F = 256; // frame size

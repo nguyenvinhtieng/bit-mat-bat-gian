@@ -80,7 +80,7 @@ function RotateGate() {
   const t = useT();
   return (
     <div className="rotate-gate" role="alert">
-      <img src={asset('common/ui/mobile/rotate-phone.webp')} alt="" draggable={false} />
+      <img src={asset('maps/common/ui/mobile/rotate-phone.webp')} alt="" draggable={false} />
       <h2>{t('rotateTitle')}</h2>
       <p>{t('rotateBody')}</p>
     </div>

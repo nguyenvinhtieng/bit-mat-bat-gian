@@ -1,4 +1,4 @@
-"""Writes manifests/sai-gon.assets.json (both copies) from the painted Sài Gòn assets on disk.
+"""Writes maps/sai-gon/sai-gon.assets.json (both copies) from the painted Sài Gòn assets on disk.
   python3 tools/paint/sg_manifest.py   (re-run after sg_floor / sg_props / sg_minigames / sg_meta / draw-sai-gon)
 Shape mirrors co-do-hue.assets.json; shared (common/*) entries are copied from it.
 Entries whose files are not painted yet are left out, so the manifest never points at a missing file."""
@@ -11,7 +11,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 PUBA = os.path.join(ROOT, 'apps/web/public/assets')
 SLUG = 'sai-gon'
 M = f'maps/{SLUG}'
-HUE = json.load(open(os.path.join(PUBA, 'manifests/co-do-hue.assets.json')))
+HUE = json.load(open(os.path.join(PUBA, 'maps/co-do-hue/co-do-hue.assets.json')))
 TASKS = ['task_chi_duong', 'task_com_tam', 'task_tieng_rao', 'task_ca_phe_phin', 'task_khui_hui',
          'task_do_xang', 'task_va_vo', 'task_so_hui', 'task_dem_tien', 'task_xep_xe']
 
@@ -84,7 +84,7 @@ d = {
     'meta': drop(meta),
     'sfx': sfx,
 }
-for rel in (f'assets/manifests/{SLUG}.assets.json', f'apps/web/public/assets/manifests/{SLUG}.assets.json'):
+for rel in (f'assets/maps/{SLUG}/{SLUG}.assets.json', f'apps/web/public/assets/maps/{SLUG}/{SLUG}.assets.json'):
     with open(os.path.join(ROOT, rel), 'w') as fh:
         json.dump(d, fh, indent=1, ensure_ascii=False)
         fh.write('\n')

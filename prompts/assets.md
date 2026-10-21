@@ -1,7 +1,7 @@
 # Đặc tả asset — Bịt Mắt Bắt Gian
 
 > **Phạm vi tài liệu:** danh sách asset cần sản xuất, **kích thước**, **định dạng file**, **quy ước đặt tên** và **mapping** với gameplay.  
-> **Nhân vật người chơi (avatar, animation):** mỗi map có **trang phục riêng** (mục 3.1) trên cùng một rig/khung hình; `common/characters` là bản dự phòng.  
+> **Nhân vật người chơi (avatar, animation):** mỗi map có **trang phục riêng** (mục 3.1) trên cùng một rig/khung hình; `maps/common/characters` là bản dự phòng.  
 > **Tham chiếu:** `technology.md` (Phaser + TypeScript, GPT Image API, quy trình AI 4 bước), `cot-truyen-role.md` (role & task logic), `map/co-do-hue.md` (bối cảnh Huế).
 
 ---
@@ -14,13 +14,13 @@ Mọi agent sinh pixel lưu file trực tiếp vào `assets/` (không bake chữ
 
 | Loại asset | Gợi ý prompt (luôn kèm style + kích thước) | Đích lưu |
 |------------|---------------------------------------------|----------|
-| Avatar walk | Cartoon top-down 3/4, 48×64 px/frame, 4 hướng, soft outline, transparent | `common/characters/` |
+| Avatar walk | Cartoon top-down 3/4, 48×64 px/frame, 4 hướng, soft outline, transparent | `maps/common/characters/` |
 | Tile / sàn tường | Seamless tile 48×48, palette Huế (vàng đất, kem, gỗ) | `maps/co-do-hue/tileset/` |
 | Prop | Footprint 48×48, anchor chân prop, prefix `hue-prop-…` | `maps/co-do-hue/props/` |
 | Station / clue nền | 64×64 marker hoặc 400–720 px panel (chữ do UI render) | `stations/`, `clues/` |
-| Icon role / UI | Flat icon 32×48 px, readable at small size | `common/ui/` |
+| Icon role / UI | Flat icon 32×48 px, readable at small size | `maps/common/ui/` |
 
-**Sau mỗi lô ảnh:** đặt tên theo mục **1.2**, kiểm tra alpha, cập nhật `manifests/co-do-hue.assets.json`, pack atlas (mục 1). **Bước 4:** chạy game Phaser, so screenshot với bảng kích thước — sửa prompt hoặc crop nếu lệch.
+**Sau mỗi lô ảnh:** đặt tên theo mục **1.2**, kiểm tra alpha, cập nhật `maps/co-do-hue/co-do-hue.assets.json`, pack atlas (mục 1). **Bước 4:** chạy game Phaser, so screenshot với bảng kích thước — sửa prompt hoặc crop nếu lệch.
 
 API: [Image generation](https://platform.openai.com/docs/guides/image-generation).
 
@@ -79,9 +79,9 @@ Asset **không** skin theo Huế; map chỉ “dán” decor lên trên.
 | `layout/spawns.json` | Điểm spawn, điểm họp | Tọa độ pixel | 10 slot + 1 điểm “bàn họp” |
 | `layout/area-zones.json` | Polygon / rect → `areaId` | Cùng kích thước map | 7 `areaId` bên dưới |
 | `common/tileset/base-floor-wall.png` | Sàn & tường placeholder | Tile **48×48**; sheet ≤2048 | Map skin có thể override layer `floor` |
-| `common/props/door-closed.png` | Cửa generic | 48×96 hoặc 96×48 | Flip H/V |
-| `common/ui/task-marker.png` | Vòng sáng tương tác | **64×64** | Animation 4–8 frame tùy chọn |
-| `common/ui/exhibition-progress.png` | Thanh tiến độ triển lãm | **320×24** + fill slice | UI HUD |
+| `maps/common/props/door-closed.png` | Cửa generic | 48×96 hoặc 96×48 | Flip H/V |
+| `maps/common/ui/task-marker.png` | Vòng sáng tương tác | **64×64** | Animation 4–8 frame tùy chọn |
+| `maps/common/ui/exhibition-progress.png` | Thanh tiến độ triển lãm | **320×24** + fill slice | UI HUD |
 
 ### 2.1. `areaId` cố định (gán skin Huế lên từng vùng)
 
@@ -101,11 +101,11 @@ Asset **không** skin theo Huế; map chỉ “dán” decor lên trên.
 
 | Asset | Kích thước | File | Ghi chú |
 |-------|------------|------|---------|
-| Body sprite (4 hướng) | **48×64** mỗi frame | `common/characters/player-atlas.png` + `.json` | 4–8 frame walk / hướng |
-| Shadow | **32×16** | `common/characters/shadow.png` | Ellipse mờ |
+| Body sprite (4 hướng) | **48×64** mỗi frame | `maps/common/characters/player-atlas.png` + `.json` | 4–8 frame walk / hướng |
+| Shadow | **32×16** | `maps/common/characters/shadow.png` | Ellipse mờ |
 | Màu / palette swap | — | `player-tint-*.png` hoặc shader | 12 màu tối đa / phòng |
-| Icon role (HUD) | **48×48** | `common/ui/roles/<role_id>.svg` | `historian`, `conservator`, `local_guide`, `archivist`, `forger`, `broker` |
-| Icon ability | **32×32** | `common/ui/abilities/<role_id>.png` | Một nút / role, mọi map |
+| Icon role (HUD) | **48×48** | `maps/common/ui/roles/<role_id>.svg` | `historian`, `conservator`, `local_guide`, `archivist`, `forger`, `broker` |
+| Icon ability | **32×32** | `maps/common/ui/abilities/<role_id>.png` | Một nút / role, mọi map |
 
 **Rig chung, trang phục theo map** — xem 3.1.
 
@@ -120,7 +120,7 @@ Cùng khung **48×64**, 4 hàng (`down`, `left`, `right`, `up`) × 4 frame `walk
 | `thang-long` | Áo the dài (nhuộm màu) + **khăn xếp**, quần trắng, giày Gia Định | `tl-player-atlas`, `tl-player-tint-atlas` |
 
 - Sinh bằng `pnpm assets:chars` (`tools/char-art/draw-characters.mjs`, vector, không cần API) → PNG ở `assets/maps/<slug>/characters/`, WebP + JSON ở `apps/web/public/assets/...`, ảnh duyệt `assets/_src/maps/<slug>/characters/*-preview.png`.
-- Map mới: thêm một costume trong script + `charPrefix` trong `packages/shared/src/maps/catalog.ts`. Không có `charPrefix` → dùng `common/characters/player-atlas`.
+- Map mới: thêm một costume trong script + `charPrefix` trong `packages/shared/src/maps/catalog.ts`. Không có `charPrefix` → dùng `maps/common/characters/player-atlas`.
 - Client chọn atlas qua `playerArt(mapSlug)` (GameScene + Sprite cinematic).
 
 ---
@@ -129,11 +129,11 @@ Cùng khung **48×64**, 4 hàng (`down`, `left`, `right`, `up`) × 4 frame `walk
 
 | Asset | Kích thước | File |
 |-------|------------|------|
-| Logo / wordmark | SVG + PNG **512×128** max | `common/ui/logo.svg` |
-| Nút primary/secondary | 9-slice **120×48** | `common/ui/button-*.png` |
-| Panel clue (khung) | 9-slice **720×min** | `common/ui/clue-panel.png` |
+| Logo / wordmark | SVG + PNG **512×128** max | `maps/common/ui/logo.svg` |
+| Nút primary/secondary | 9-slice **120×48** | `maps/common/ui/button-*.png` |
+| Panel clue (khung) | 9-slice **720×min** | `maps/common/ui/clue-panel.png` |
 | Avatar vote / meeting | **40×40** circle mask | dùng texture chung |
-| Map card placeholder | **640×360** (16:9) | `common/ui/map-card-frame.png` |
+| Map card placeholder | **640×360** (16:9) | `maps/common/ui/map-card-frame.png` |
 
 Manh mối **nội dung**: React + markdown/HTML; asset chỉ là **nền giấy / ảnh**.
 
@@ -202,7 +202,7 @@ Mỗi station: sprite **inactive** + **active** (highlight); **64×64** icon tr�
 | `task_seal_box` | `artifact_storage` | `stations/hue-station-seal-box.png` | UI nhập/so số niêm **360×320** |
 | `task_return_shelf_a` | `archive` | `stations/hue-station-return-shelf.png` | Phiếu mượn **400×280** |
 
-**Progress:** mỗi task hoàn thành +1 tiến độ; dùng icon chung `common/ui/task-complete.png` (**32×32**).
+**Progress:** mỗi task hoàn thành +1 tiến độ; dùng icon chung `maps/common/ui/task-complete.png` (**32×32**).
 
 #### 5.4.2. Nhiệm vụ theo role (cùng station type, đổi nội dung theo map data)
 
@@ -215,7 +215,7 @@ Mỗi station: sprite **inactive** + **active** (highlight); **64×64** icon tr�
 | `forger` | (bí mật) | `editing` | Dùng station biên tập; hiệu ứng **glitch nhẹ** optional |
 | `broker` | (bí mật) | `coordination` | `clues/hue-ui-chat-fragment.png` **360×280** |
 
-Icon trên map cho role ability: tái dùng `common/ui/abilities/<role_id>.png`; chỉ **một** điểm tương tác / role / vòng tại tọa độ trong `hue-role-stations.json`.
+Icon trên map cho role ability: tái dùng `maps/common/ui/abilities/<role_id>.png`; chỉ **một** điểm tương tác / role / vòng tại tọa độ trong `hue-role-stations.json`.
 
 ### 5.5. Manh mối (clue art — Huế)
 
@@ -261,7 +261,7 @@ Style: cùng outline với avatar người chơi; nền trong suốt.
 
 ## 6. Manifest & versioning
 
-File `manifests/co-do-hue.assets.json` (schema gợi ý):
+File `maps/co-do-hue/co-do-hue.assets.json` (schema gợi ý):
 
 ```json
 {
@@ -285,7 +285,7 @@ File `manifests/co-do-hue.assets.json` (schema gợi ý):
 ## 7. Checklist sản xuất — Huế MVP (thứ tự)
 
 1. [ ] `layout/base.tmj` + `area-zones.json` + spawn  
-2. [ ] `common/characters` + `common/ui` tối thiểu  
+2. [ ] `maps/common/characters` + `maps/common/ui` tối thiểu  
 3. [ ] `hue-interior-48` tileset + 7 vùng nhận diện được  
 4. [ ] 6 **task station** chung + JSON tọa độ  
 5. [ ] 12 prop tĩnh ưu tiên  

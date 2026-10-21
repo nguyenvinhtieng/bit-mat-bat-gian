@@ -168,7 +168,7 @@ function Fx({ name, className = '', ms = 700, delay = 0 }: { name: string; class
   return (
     <div
       className={`fx ${className}`}
-      style={{ backgroundImage: `url(${asset(`common/ui/fx/${name}.webp`)})`, '--ms': `${ms}ms`, '--d': `${delay}ms` } as React.CSSProperties}
+      style={{ backgroundImage: `url(${asset(`maps/common/ui/fx/${name}.webp`)})`, '--ms': `${ms}ms`, '--d': `${delay}ms` } as React.CSSProperties}
     />
   );
 }
@@ -192,7 +192,7 @@ export function Cinematic() {
     loadImg(asset(`${a.actionTint}.webp`));
     loadFrames(asset(`${a.action}.json`));
     loadFrames(asset(`${a.atlas}.json`));
-    for (const n of PROPS) loadImg(asset(`common/ui/fx/${n}.webp`));
+    for (const n of PROPS) loadImg(asset(`maps/common/ui/fx/${n}.webp`));
   }, [slug]);
   useLayoutEffect(() => {
     const el = area.current;
@@ -265,7 +265,7 @@ export function Cinematic() {
             )}
             {c.kind === 'kill' && !arrest && (
               <>
-                <img className="cine-splat" src={asset('common/ui/fx/ink-splat.webp')} alt="" draggable={false} />
+                <img className="cine-splat" src={asset('maps/common/ui/fx/ink-splat.webp')} alt="" draggable={false} />
                 {attacker(ACTOR_STRIKE, 'lunge')}
                 <div className="cine-victim struck">
                   <PoseSprite color={c.victim!.color} track={VICTIM_DIE} />
@@ -289,7 +289,7 @@ export function Cinematic() {
                 {Array.from({ length: 12 }, (_, i) => (
                   <i key={i} className="cine-spark" style={{ '--a': `${i * 30}deg`, '--d': `${900 + (i % 4) * 30}ms` } as React.CSSProperties} />
                 ))}
-                <img className="cine-shield-icon" src={asset('common/ui/shield.webp')} alt="" draggable={false} />
+                <img className="cine-shield-icon" src={asset('maps/common/ui/shield.webp')} alt="" draggable={false} />
               </>
             )}
             {c.kind === 'report' && (
@@ -311,15 +311,15 @@ export function Cinematic() {
                 <i className="cine-ring red r1" />
                 <i className="cine-ring red r2" />
                 <i className="cine-ring red r3" />
-                <img className="cine-seal" src={asset('common/ui/fx/cine-seal.webp')} alt="" draggable={false} />
+                <img className="cine-seal" src={asset('maps/common/ui/fx/cine-seal.webp')} alt="" draggable={false} />
                 <Fx name="fx-stamp-burst" className="cine-fx-stamp" ms={700} delay={1780} />
               </>
             )}
             {c.kind === 'emergency' && (
               <>
                 <div className="cine-pavilion">
-                  <img className="cine-bell-frame" src={asset('common/ui/fx/cine-bell-frame.webp')} alt="" draggable={false} />
-                  <img className="cine-bell" src={asset('common/ui/fx/cine-bell.webp')} alt="" draggable={false} />
+                  <img className="cine-bell-frame" src={asset('maps/common/ui/fx/cine-bell-frame.webp')} alt="" draggable={false} />
+                  <img className="cine-bell" src={asset('maps/common/ui/fx/cine-bell.webp')} alt="" draggable={false} />
                   {BELL_HITS.map((d) => (
                     <Fx key={d} name="fx-bell-wave" className="cine-fx-bellwave" ms={800} delay={d} />
                   ))}
@@ -327,7 +327,7 @@ export function Cinematic() {
                 <div className="cine-log">
                   <i className="rope l" />
                   <i className="rope r" />
-                  <img src={asset('common/ui/fx/cine-bell-log.webp')} alt="" draggable={false} />
+                  <img src={asset('maps/common/ui/fx/cine-bell-log.webp')} alt="" draggable={false} />
                 </div>
                 <div className="cine-actor ringer">
                   <div className="cine-flip">
@@ -340,7 +340,7 @@ export function Cinematic() {
         </div>
       </div>
       <div className="cine-text">
-        <img className="cine-brush" src={asset('common/ui/fx/brush-stroke.webp')} alt="" draggable={false} />
+        <img className="cine-brush" src={asset('maps/common/ui/fx/brush-stroke.webp')} alt="" draggable={false} />
         <span className="cine-kicker">{arrest && c.kind === 'kill' ? '✦ Bắt quả tang ✦' : KICKER[c.kind]}</span>
         <h1 data-text={title}>{title}</h1>
         <p>{sub}</p>

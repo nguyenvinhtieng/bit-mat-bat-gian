@@ -1,6 +1,6 @@
 # Map asset spec — danh sách asset cho 1 map
 
-Lấy map **Sài Gòn** (`apps/web/public/assets/maps/sai-gon/`, manifest `manifests/sai-gon.assets.json`) làm mẫu.
+Lấy map **Sài Gòn** (`apps/web/public/assets/maps/sai-gon/`, manifest `maps/sai-gon/sai-gon.assets.json`) làm mẫu.
 Map mới thay prefix `sg-` bằng prefix của map (vd `hue-`, `ha-`) và đổi nội dung theo chủ đề.
 
 ## Tổng số
@@ -18,7 +18,7 @@ Map mới thay prefix `sg-` bằng prefix của map (vd `hue-`, `ha-`) và đổ
 | I. Âm thanh | 3 | 3 wav |
 | **Tổng** | **~79 ảnh tĩnh + 60 frame nhân vật (+60 mask) + 3 sfx** | |
 
-Asset dùng chung không cần vẽ lại cho mỗi map: `common/ui/*` (chuông họp, clue, timer, notebook, nền phòng họp, con dấu vote, FX kill/shield/report/witness), `common/ui/roles/*` (icon vai trò).
+Asset dùng chung không cần vẽ lại cho mỗi map: `maps/common/ui/*` (chuông họp, clue, timer, notebook, nền phòng họp, con dấu vote, FX kill/shield/report/witness), `maps/common/ui/roles/*` (icon vai trò).
 
 ## Quy tắc chung (áp cho mọi ảnh)
 
@@ -185,4 +185,4 @@ WAV mono, 22 050 Hz, 16-bit PCM.
 
 1. Convert PNG → WebP (`cwebp -q 85 in.png -o out.webp`, sprite dùng `-lossless` hoặc `-q 95`).
 2. Pack nhóm C và D thành atlas (JSON Hash, đúng tên key ở trên).
-3. Cập nhật `apps/web/public/assets/manifests/<map>.assets.json` (kích thước `size` khớp với frame trong atlas).
+3. Cập nhật `apps/web/public/assets/maps/<map>/<map>.assets.json` (kích thước `size` khớp với frame trong atlas).

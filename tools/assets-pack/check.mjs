@@ -5,7 +5,7 @@ import path from 'node:path';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const PUB = path.join(ROOT, 'apps/web/public/assets');
-const manifest = JSON.parse(fs.readFileSync(path.join(PUB, 'manifests/co-do-hue.assets.json'), 'utf8'));
+const manifest = JSON.parse(fs.readFileSync(path.join(PUB, 'maps/co-do-hue/co-do-hue.assets.json'), 'utf8'));
 
 const errors = [];
 const need = (rel) => {

@@ -5,7 +5,7 @@ export type { PropPlacement, StationDef } from '../common/skin';
 
 /**
  * Public skin for map `co-do-hue` (safe to ship to clients — contains no host truth).
- * Asset keys match assets/manifests/co-do-hue.assets.json.
+ * Asset keys match assets/maps/co-do-hue/co-do-hue.assets.json.
  */
 export const HUE_SLUG = 'co-do-hue';
 export const HUE_MAP_VERSION = 1;

@@ -1,11 +1,11 @@
 [
   {
-    "out": "assets/_src/common/ui-sheet.png",
+    "out": "assets/_src/maps/common/ui-sheet.png",
     "aspect": "4:3",
     "prompt": "Flat 2D cartoon game art, soft dark outline, clean flat shading, cozy museum-interior game look (Among Us-like), top-down 3/4 view (NOT isometric). Hue (Vietnam) palette: earthy ochre yellow, jade green, dark lacquered wood, cream paper, imperial red accents. Game UI icon sheet: exact grid of 4 columns x 3 rows, equal cells, one icon centered per cell with big empty margins. Icons: (1) glowing golden interaction ring seen from above (task marker), (2) green check mark stamp badge (task complete), (3) brass hand bell (emergency meeting), (4) folded document with magnifying glass (clue), (5) speech bubble (chat), (6) hourglass (timer), (7) round wooden meeting table seen from above, (8) red exclamation alert badge, (9) gold star badge (progress), (10) open notebook (clue notebook), (11) ballot box (vote), (12) door with arrow (leave). Bold readable silhouettes at 32px. Solid flat pure magenta #FF00FF background filling everything around the object, no ground shadow, no text, no letters, no watermark, no border."
   },
   {
-    "out": "assets/_src/common/role-icons.png",
+    "out": "assets/_src/maps/common/role-icons.png",
     "aspect": "3:2",
     "prompt": "Flat 2D cartoon game art, soft dark outline, clean flat shading, cozy museum-interior game look (Among Us-like), top-down 3/4 view (NOT isometric). Hue (Vietnam) palette: earthy ochre yellow, jade green, dark lacquered wood, cream paper, imperial red accents. Role icon sheet for a deduction game: exact grid of 3 columns x 2 rows, equal cells, one flat round-badge icon per cell, centered with empty margins. (1) Historian: hourglass in front of a rolled scroll, jade badge. (2) Conservator: magnifying glass over a wax-sealed box, teal badge. (3) Local guide: map pin over folded paper map with compass, ochre badge. (4) Archivist: stack of file folders with version tabs, blue badge. (5) Forger: quill pen with dripping ink and a tiny edited stamp, crimson badge. (6) Broker: two overlapping speech bubbles with a small key, purple badge. Readable at 48px. Solid flat pure magenta #FF00FF background filling everything around the object, no ground shadow, no text, no letters, no watermark, no border."
   },

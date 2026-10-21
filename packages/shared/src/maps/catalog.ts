@@ -89,7 +89,7 @@ export const playableMap = (slug?: string | null): string => {
  */
 export const playerArt = (slug?: string | null): { atlas: string; tint: string; action: string; actionTint: string } => {
   const m = MAP_CATALOG.find((x) => x.slug === slug);
-  const base = m?.charPrefix ? `maps/${m.slug}/characters/${m.charPrefix}-player` : 'common/characters/player';
+  const base = m?.charPrefix ? `maps/${m.slug}/characters/${m.charPrefix}-player` : 'maps/common/characters/player';
   const act = m?.charPrefix ? base : 'maps/co-do-hue/characters/hue-player';
   return { atlas: `${base}-atlas`, tint: `${base}-tint-atlas`, action: `${act}-action`, actionTint: `${act}-action-tint` };
 };

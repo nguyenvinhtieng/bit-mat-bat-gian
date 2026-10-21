@@ -43,7 +43,7 @@ Kinh thành Huế, đêm cuối tháng Mười Một âm lịch. Rạng sáng ma
 ## Art
 
 - Props + icon trạm: atlas `maps/co-do-hue/atlas/hue-bansoc-0` · UI mini-game: `maps/co-do-hue/minigames/*.webp`.
-- Sinh bằng `node tools/ui-art/draw-hue-bansoc.mjs` (vector SVG → PNG/WebP, nguồn ở `assets/_src/maps/co-do-hue/bansoc/`), tự cập nhật `manifests/co-do-hue.assets.json`.
+- Sinh bằng `node tools/ui-art/draw-hue-bansoc.mjs` (vector SVG → PNG/WebP, nguồn ở `assets/_src/maps/co-do-hue/bansoc/`), tự cập nhật `maps/co-do-hue/co-do-hue.assets.json`.
 - Nhân vật: áo dài + khăn đóng (`hue-player-*`).
 
 ## Cần kiểm chứng thêm (nội dung lịch sử)

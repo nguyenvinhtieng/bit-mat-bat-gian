@@ -213,7 +213,7 @@ const manifest = {
 };
 
 async function packPlayer() {
-  const f = path.join(SRC, 'common/player-sheet.png');
+  const f = path.join(SRC, 'maps/common/player-sheet.png');
   if (!exists(f)) return log('skip player (missing src)');
   const img = removeBackground(await loadRaw(f));
   const cells = sliceGrid(img, 4, 4);
@@ -243,8 +243,8 @@ async function packPlayer() {
       .composite(list.map((b, i) => ({ input: b, left: (i % 4) * FW, top: Math.floor(i / 4) * FH })))
       .png()
       .toBuffer();
-  await writeBoth('common/characters/player-atlas.png', await sheetOf(frames));
-  await writeBoth('common/characters/player-tint-atlas.png', await sheetOf(tintFrames));
+  await writeBoth('maps/common/characters/player-atlas.png', await sheetOf(frames));
+  await writeBoth('maps/common/characters/player-tint-atlas.png', await sheetOf(tintFrames));
   const dirs = ['down', 'left', 'right', 'up'];
   const atlas = { frames: {}, meta: { image: 'player-atlas.webp', size: { w: FW * 4, h: FH * 4 }, scale: '1' } };
   dirs.forEach((d, r) => {
@@ -257,16 +257,16 @@ async function packPlayer() {
         sourceSize: { w: FW, h: FH },
       };
   });
-  fs.writeFileSync(path.join(OUT, 'common/characters/player-atlas.json'), JSON.stringify(atlas, null, 1));
-  fs.writeFileSync(path.join(PUB, 'common/characters/player-atlas.json'), JSON.stringify(atlas));
+  fs.writeFileSync(path.join(OUT, 'maps/common/characters/player-atlas.json'), JSON.stringify(atlas, null, 1));
+  fs.writeFileSync(path.join(PUB, 'maps/common/characters/player-atlas.json'), JSON.stringify(atlas));
   fs.writeFileSync(
-    path.join(PUB, 'common/characters/player-tint-atlas.json'),
+    path.join(PUB, 'maps/common/characters/player-tint-atlas.json'),
     JSON.stringify({ ...atlas, meta: { ...atlas.meta, image: 'player-tint-atlas.webp' } }),
   );
   // Shadow (32x16 soft ellipse) — technical alpha mask, not illustrated art.
   const shadowSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="16"><defs><radialGradient id="g"><stop offset="0" stop-color="#000" stop-opacity="0.45"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs><ellipse cx="16" cy="8" rx="16" ry="8" fill="url(#g)"/></svg>`;
-  await writeBoth('common/characters/shadow.png', await sharp(Buffer.from(shadowSvg)).png().toBuffer());
-  manifest.textures.player = { atlas: 'common/characters/player-atlas', tint: 'common/characters/player-tint-atlas', frame: [FW, FH], anchor: [0.5, 1] };
+  await writeBoth('maps/common/characters/shadow.png', await sharp(Buffer.from(shadowSvg)).png().toBuffer());
+  manifest.textures.player = { atlas: 'maps/common/characters/player-atlas', tint: 'maps/common/characters/player-tint-atlas', frame: [FW, FH], anchor: [0.5, 1] };
   log('player atlas');
 }
 
@@ -278,7 +278,7 @@ const UI_NAMES = [
 // sheet order is fixed (4x3 grid); only these cells ship. task-marker is PNG-only (atlas input).
 const UI_SHIP = new Set(['task-marker', 'meeting-bell', 'clue', 'timer', 'notebook']);
 async function packUi() {
-  const f = path.join(SRC, 'common/ui-sheet.png');
+  const f = path.join(SRC, 'maps/common/ui-sheet.png');
   if (!exists(f)) return log('skip ui');
   const cells = sliceGrid(removeBackground(await loadRaw(f)), 4, 3);
   for (let i = 0; i < UI_NAMES.length; i++) {
@@ -286,8 +286,8 @@ async function packUi() {
     if (!cells[i] || !UI_SHIP.has(name)) continue;
     const out = Math.max(size, 64); // ship 64px (crisp at 2x for 32px slots)
     const webp = name !== 'task-marker';
-    await writeBoth(`common/ui/${name}.png`, await fitTo(cells[i], out, out, { align: 'center', pad: 1 }), { webp });
-    manifest.ui[name] = webp ? { file: `common/ui/${name}.webp`, size } : { size, atlas: 'hue-gameplay-0' };
+    await writeBoth(`maps/common/ui/${name}.png`, await fitTo(cells[i], out, out, { align: 'center', pad: 1 }), { webp });
+    manifest.ui[name] = webp ? { file: `maps/common/ui/${name}.webp`, size } : { size, atlas: 'hue-gameplay-0' };
   }
   log('ui icons');
 }
@@ -295,13 +295,13 @@ async function packUi() {
 const ROLES = ['historian', 'conservator', 'local_guide', 'archivist', 'forger', 'broker']; // sheet order (3x2)
 const ROLE_SHIP = new Set(['conservator', 'local_guide', 'forger']); // roles in ROLE_INFO
 async function packRoles() {
-  const f = path.join(SRC, 'common/role-icons.png');
+  const f = path.join(SRC, 'maps/common/role-icons.png');
   if (!exists(f)) return log('skip roles');
   const cells = sliceGrid(removeBackground(await loadRaw(f)), 3, 2);
   for (let i = 0; i < ROLES.length; i++) {
     if (!cells[i] || !ROLE_SHIP.has(ROLES[i])) continue;
-    await writeBoth(`common/ui/roles/${ROLES[i]}.png`, await fitTo(cells[i], 96, 96, { align: 'center' })); // 48dp @2x
-    manifest.roles[ROLES[i]] = { icon: `common/ui/roles/${ROLES[i]}.webp` };
+    await writeBoth(`maps/common/ui/roles/${ROLES[i]}.png`, await fitTo(cells[i], 96, 96, { align: 'center' })); // 48dp @2x
+    manifest.roles[ROLES[i]] = { icon: `maps/common/ui/roles/${ROLES[i]}.webp` };
   }
   log('role icons');
 }
@@ -401,7 +401,7 @@ async function packGameplayAtlas() {
     }
   }
   // task marker ring also lives in the gameplay atlas
-  const marker = path.join(OUT, 'common/ui/task-marker.png');
+  const marker = path.join(OUT, 'maps/common/ui/task-marker.png');
   if (exists(marker)) items.push({ key: 'task-marker', buf: fs.readFileSync(marker), w: 64, h: 64 });
   const a = await buildAtlas('hue-gameplay-0', items, 'maps/co-do-hue/atlas');
   manifest.atlases.push({ name: a.name, file: 'maps/co-do-hue/atlas/hue-gameplay-0', size: a.size });
@@ -430,9 +430,9 @@ await packTileset();
 await packGameplayAtlas();
 await packMeta();
 
-const mf = path.join(OUT, 'manifests/co-do-hue.assets.json');
+const mf = path.join(OUT, 'maps/co-do-hue/co-do-hue.assets.json');
 ensure(mf);
 fs.writeFileSync(mf, JSON.stringify(manifest, null, 2));
-ensure(path.join(PUB, 'manifests/x'));
-fs.writeFileSync(path.join(PUB, 'manifests/co-do-hue.assets.json'), JSON.stringify(manifest, null, 2));
+ensure(path.join(PUB, 'maps/co-do-hue/x'));
+fs.writeFileSync(path.join(PUB, 'maps/co-do-hue/co-do-hue.assets.json'), JSON.stringify(manifest, null, 2));
 log('manifest written');

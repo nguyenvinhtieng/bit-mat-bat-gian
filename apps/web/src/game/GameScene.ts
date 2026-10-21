@@ -14,7 +14,6 @@ import {
   areaAt,
   dirFromInput,
   dist,
-  LOBBY_GATE,
   getGrid,
   getLobbyGrid,
   canSeePoint,
@@ -95,7 +94,6 @@ type Avatar = {
 export class GameScene extends Phaser.Scene {
   private grid = getGrid();
   private lobbyGrid = getLobbyGrid();
-  private lobbyGate?: Phaser.GameObjects.Image;
   /** phase + ready ids last painted onto the nameplates/gate */
   private lobbyKey = '';
   private avatars = new Map<string, Avatar>();
@@ -152,15 +150,14 @@ export class GameScene extends Phaser.Scene {
     this.load.atlas('player-tint', `${A}/${pa.tint}.webp`, `${A}/${pa.tint}.json`);
     this.load.atlas('player-action', `${A}/${pa.action}.webp`, `${A}/${pa.action}.json`);
     this.load.atlas('player-action-tint', `${A}/${pa.actionTint}.webp`, `${A}/${pa.actionTint}.json`);
-    this.load.image('shadow', `${A}/common/characters/shadow.webp`);
-    this.load.image('lantern', `${A}/common/characters/lantern.webp`);
-    this.load.image('lantern-glow', `${A}/common/characters/lantern-glow.webp`);
+    this.load.image('shadow', `${A}/maps/common/characters/shadow.webp`);
+    this.load.image('lantern', `${A}/maps/common/characters/lantern.webp`);
+    this.load.image('lantern-glow', `${A}/maps/common/characters/lantern-glow.webp`);
     // 2x raster of a 208x108 SVG, shown at 1x so it stays crisp on hi-dpi
-    this.load.svg('lobby-gate', `${A}/common/props/lobby-gate.svg`, { width: 416, height: 216 });
-    this.load.image('body-marker', `${A}/common/ui/body-marker.webp`);
+    this.load.image('body-marker', `${A}/maps/common/ui/body-marker.webp`);
     if (this.skin.arrest) this.load.image('arrest-cuffs', `${A}/${this.skin.arrest.cuffs}.webp`);
-    for (const k of Object.keys(FX)) this.load.spritesheet(k, `${A}/common/ui/fx/${k}.webp`, { frameWidth: 256, frameHeight: 256 });
-    for (const k of ['spark', 'ink-drop', 'ink-splat']) this.load.image(k, `${A}/common/ui/fx/${k}.webp`);
+    for (const k of Object.keys(FX)) this.load.spritesheet(k, `${A}/maps/common/ui/fx/${k}.webp`, { frameWidth: 256, frameHeight: 256 });
+    for (const k of ['spark', 'ink-drop', 'ink-splat']) this.load.image(k, `${A}/maps/common/ui/fx/${k}.webp`);
   }
 
   create() {
@@ -168,7 +165,6 @@ export class GameScene extends Phaser.Scene {
     this.buildProps();
     this.buildStreetSigns();
     this.buildStations();
-    this.buildLobbyGate();
     // frame size / counts come from the atlas itself (48x64 x4 on the older maps, 64x88 x8 + idle on Sài Gòn)
     const idx = (tex: string, prefix: string) =>
       this.textures
@@ -582,7 +578,6 @@ export class GameScene extends Phaser.Scene {
     const s = useStore.getState();
     this.lobbyKey = this.lobbyKeyOf(s.room);
     const lobby = s.room?.phase === 'lobby';
-    this.lobbyGate?.setVisible(lobby);
     const killers = s.me?.killerIds ?? [];
     const ready = new Set(lobby ? s.room!.players.filter((p) => p.ready).map((p) => p.id) : []);
     for (const [id, av] of this.avatars) {
@@ -600,20 +595,6 @@ export class GameScene extends Phaser.Scene {
     g.fillRoundedRect(-w / 2, l.y - h + 2, w, h, h / 2);
     g.lineStyle(1.5, ready ? 0x6fe3a0 : 0xc89a4a, ready ? 0.95 : 0.55);
     g.strokeRoundedRect(-w / 2, l.y - h + 2, w, h, h / 2);
-  }
-
-  /** Closed gate on the courtyard's only exit while the lobby waits (LOBBY_GATE is solid in the lobby grid). */
-  private buildLobbyGate() {
-    const [gx, gy, gw, gh] = LOBBY_GATE;
-    const feet = (gy + gh) * TILE - 8;
-    this.lobbyGate = this.add
-      .image((gx + gw / 2) * TILE, feet, 'lobby-gate')
-      .setOrigin(0.5, 104 / 108)
-      .setDisplaySize(196, 102)
-      .setDepth(feet)
-      .setVisible(useStore.getState().room?.phase === 'lobby');
-    // whoever waits right behind it stays visible
-    this.tallProps.push(this.lobbyGate);
   }
 
   private makeAvatar(name: string, color: number): Avatar {

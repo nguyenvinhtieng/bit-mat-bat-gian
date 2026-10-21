@@ -16,7 +16,7 @@ export function EndScreen() {
       <div className="end-card">
         <div className="end-hero">
           <div className="end-rays" aria-hidden />
-          <img className="end-emblem" src={asset(`common/ui/end/victory-${end.winner}.webp`)} alt="" draggable={false} />
+          <img className="end-emblem" src={asset(`maps/common/ui/end/victory-${end.winner}.webp`)} alt="" draggable={false} />
           <div className="end-ribbon">
             <h1 className={end.winner}>{end.winner === 'crew' ? 'Người Dân thắng!' : `${skin.killerName.vi} thắng!`}</h1>
           </div>

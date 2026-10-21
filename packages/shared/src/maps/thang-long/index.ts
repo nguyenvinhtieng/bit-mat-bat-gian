@@ -4,7 +4,7 @@ import { TL_PROPS } from './props';
 
 /**
  * Public skin for map `thang-long` — "Hồ Gươm · Đêm Giao Thừa" (safe to ship to clients — no host truth).
- * Same common layout as Huế; asset keys match assets/manifests/thang-long.assets.json.
+ * Same common layout as Huế; asset keys match assets/maps/thang-long/thang-long.assets.json.
  */
 export const TL_SLUG = 'thang-long';
 export const TL_MAP_VERSION = 1;

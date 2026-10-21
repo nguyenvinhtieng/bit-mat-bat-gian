@@ -140,15 +140,9 @@ export function getGrid(): LayoutGrid {
  *  Two rows: the gate art (roof + stone step) reaches a tile into the courtyard, so players must stop in front of it. */
 export const LOBBY_GATE: Rect = [19, 6, 4, 2];
 
-let lobbyCached: LayoutGrid | null = null;
-/** The normal grid with LOBBY_GATE made solid — server and client prediction both use it while phase is 'lobby'. */
+/** The lobby gate was removed: the lobby uses the normal grid. */
 export function getLobbyGrid(): LayoutGrid {
-  if (lobbyCached) return lobbyCached;
-  const g = getGrid();
-  const solid = g.solid.slice();
-  const [x, y, rw, rh] = LOBBY_GATE;
-  for (let j = y; j < y + rh; j++) for (let i = x; i < x + rw; i++) solid[j * g.w + i] = 1;
-  return (lobbyCached = { ...g, solid });
+  return getGrid();
 }
 
 export function isSolidTile(g: LayoutGrid, tx: number, ty: number): boolean {

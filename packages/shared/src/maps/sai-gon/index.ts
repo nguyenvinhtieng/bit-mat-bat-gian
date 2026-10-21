@@ -5,7 +5,7 @@ import { SG_PROPS, SG_SIGNS } from './props';
 /**
  * Public skin for map `sai-gon` — "Hụi Sài Gòn · Phiên Hụi Chui Hẻm 42" (safe to ship to clients — no host truth).
  * Everyday Saigon comedy, no ghosts: a crew of CRAB ride drivers runs a secret hụi night, one "new driver" is an undercover cop.
- * Same common layout as Huế; asset keys match assets/manifests/sai-gon.assets.json (phase 3).
+ * Same common layout as Huế; asset keys match assets/maps/sai-gon/sai-gon.assets.json (phase 3).
  */
 export const SG_SLUG = 'sai-gon';
 export const SG_MAP_VERSION = 1;

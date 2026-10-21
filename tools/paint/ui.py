@@ -7,8 +7,8 @@ import lib
 from lib import Mat, hexc
 import props as PR
 ROOT = PR.ROOT
-PUB = os.path.join(ROOT, 'apps/web/public/assets/common/ui/meeting')
-SRC = os.path.join(ROOT, 'assets/common/ui/meeting')
+PUB = os.path.join(ROOT, 'apps/web/public/assets/maps/common/ui/meeting')
+SRC = os.path.join(ROOT, 'assets/maps/common/ui/meeting')
 os.makedirs(PUB, exist_ok=True); os.makedirs(SRC, exist_ok=True)
 
 def save(name, im, q=88):

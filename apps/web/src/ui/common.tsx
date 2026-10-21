@@ -67,7 +67,7 @@ export const EscHint = () => <kbd className="esc-hint">Esc</kbd>;
 /** Painted round close button (same art as the guide popup) used by every popup. */
 export const CloseButton = ({ onClick, label = 'Đóng', className = '' }: { onClick: () => void; label?: string; className?: string }) => (
   <button type="button" className={`x-btn ${className}`} onClick={onClick} aria-label={label} title={label}>
-    <img src={asset('common/ui/guide/btn-close.webp')} alt="" draggable={false} />
+    <img src={asset('maps/common/ui/guide/btn-close.webp')} alt="" draggable={false} />
   </button>
 );
 
@@ -102,11 +102,11 @@ export function Digits({ text }: { text: string | number }) {
 }
 
 export function RoleBadge({ role, size = 48 }: { role: RoleId; size?: number }) {
-  return <img className="role-icon" src={asset(`common/ui/roles/${ROLE_INFO[role].icon}.webp`)} width={size} height={size} alt={ROLE_INFO[role].name} />;
+  return <img className="role-icon" src={asset(`maps/common/ui/roles/${ROLE_INFO[role].icon}.webp`)} width={size} height={size} alt={ROLE_INFO[role].name} />;
 }
 
 export function Icon({ name, size = 24 }: { name: string; size?: number }) {
-  return <img src={asset(`common/ui/${name}.webp`)} width={size} height={size} alt="" className="ui-icon" />;
+  return <img src={asset(`maps/common/ui/${name}.webp`)} width={size} height={size} alt="" className="ui-icon" />;
 }
 
 export function Modal({ title, onClose, children, wide, className = '' }: { title: string; onClose?: () => void; children: React.ReactNode; wide?: boolean; className?: string }) {

@@ -1,46 +1,46 @@
 [
   {
-    "out": "assets/_src/common/ui/btn-kill.png",
+    "out": "assets/_src/maps/common/ui/btn-kill.png",
     "aspect": "1:1",
     "prompt": "Single round action button for a mobile game, centered, front view. A glossy deep crimson lacquer disc with a thick ornate gold-bronze rim with small Hue-style scroll notches, subtle inner bevel. In the centre a bold white-and-gold curved ceremonial dagger icon pointing diagonally, readable silhouette. The button fills about 90% of the canvas. Style: flat 2D cartoon game UI, soft dark-brown outline, clean vector-like shading, warm Hue imperial palette (lacquer red, gold ochre, jade green, dark wood). Absolutely no text, letters, numbers or watermark. Background must be perfectly flat solid pure magenta #FF00FF with no gradient or shadow on it, and no magenta anywhere inside the artwork."
   },
   {
-    "out": "assets/_src/common/ui/btn-report.png",
+    "out": "assets/_src/maps/common/ui/btn-report.png",
     "aspect": "1:1",
     "prompt": "Single round action button for a mobile game, centered, front view. A glossy amber-orange lacquer disc with a thick ornate gold-bronze rim with small Hue-style scroll notches, subtle inner bevel. In the centre a bold white megaphone icon emitting a red alarm burst (symbols only, no letters), readable silhouette. The button fills about 90% of the canvas. Style: flat 2D cartoon game UI, soft dark-brown outline, clean vector-like shading, warm Hue imperial palette (lacquer red, gold ochre, jade green, dark wood). Absolutely no text, letters, numbers or watermark. Background must be perfectly flat solid pure magenta #FF00FF with no gradient or shadow on it, and no magenta anywhere inside the artwork."
   },
   {
-    "out": "assets/_src/common/ui/fx-kill-slash.png",
+    "out": "assets/_src/maps/common/ui/fx-kill-slash.png",
     "aspect": "3:2",
     "prompt": "Sprite sheet with exactly 3 columns x 2 rows = 6 equal square cells, no borders or grid lines, the effect centered in each cell with comfortable margin, same center and scale logic in every frame. Animation of a fast diagonal blade slash impact: frame1 small thin white streak, frame2 long bright white-and-red crescent slash, frame3 full-size slash with red sparks, frame4 slash with burst of crimson and orange spark shards, frame5 fading slash with shards flying, frame6 thin red afterimage with a few drifting sparks. Same slash orientation in every frame. Style: flat 2D cartoon game UI, soft dark-brown outline, clean vector-like shading, warm Hue imperial palette (lacquer red, gold ochre, jade green, dark wood). Absolutely no text, letters, numbers or watermark. Background must be perfectly flat solid pure magenta #FF00FF with no gradient or shadow on it, and no magenta anywhere inside the artwork."
   },
   {
-    "out": "assets/_src/common/ui/fx-report-burst.png",
+    "out": "assets/_src/maps/common/ui/fx-report-burst.png",
     "aspect": "3:2",
     "prompt": "Sprite sheet with exactly 3 columns x 2 rows = 6 equal square cells, no borders or grid lines, the effect centered in each cell with comfortable margin, same center and scale logic in every frame. Animation of an alarm discovery burst: frame1 tiny glowing red exclamation-mark symbol, frame2 bigger symbol with a ring starting, frame3 large bold red-and-gold exclamation-mark symbol with radial speed lines, frame4 shockwave ring expanding around the symbol, frame5 ring larger and fading with sparkles, frame6 faint ring and sparkles nearly gone. Style: flat 2D cartoon game UI, soft dark-brown outline, clean vector-like shading, warm Hue imperial palette (lacquer red, gold ochre, jade green, dark wood). Absolutely no text, letters, numbers or watermark. Background must be perfectly flat solid pure magenta #FF00FF with no gradient or shadow on it, and no magenta anywhere inside the artwork."
   },
   {
-    "out": "assets/_src/common/ui/fx-witness.png",
+    "out": "assets/_src/maps/common/ui/fx-witness.png",
     "aspect": "3:2",
     "prompt": "Sprite sheet with exactly 3 columns x 2 rows = 6 equal square cells, no borders or grid lines, the effect centered in each cell with comfortable margin, same center and scale logic in every frame. Animation of a player witnessing something shocking: a round white speech bubble with a bold red exclamation-mark symbol inside, with short shock lines. frame1 bubble tiny, frame2 bubble pops bigger with jagged outline, frame3 full size with 6 shock lines around, frame4 slightly squashed bounce, frame5 full size slight wobble, frame6 fading. Style: flat 2D cartoon game UI, soft dark-brown outline, clean vector-like shading, warm Hue imperial palette (lacquer red, gold ochre, jade green, dark wood). Absolutely no text, letters, numbers or watermark. Background must be perfectly flat solid pure magenta #FF00FF with no gradient or shadow on it, and no magenta anywhere inside the artwork."
   },
   {
-    "out": "assets/_src/common/ui/frame-task-panel.png",
+    "out": "assets/_src/maps/common/ui/frame-task-panel.png",
     "aspect": "1:1",
     "prompt": "A square ornate UI panel border meant for 9-slice scaling: a dark lacquered wood frame with thin gold inlay lines, carved Hue-style cloud motifs only in the four corner brackets in gold, plain straight uniform edges between corners. Frame thickness about 12% of the canvas on each side. The ENTIRE interior inside the frame is flat solid magenta #FF00FF (to be cut out). Perfectly symmetric. Style: flat 2D cartoon game UI, soft dark-brown outline, clean vector-like shading, warm Hue imperial palette (lacquer red, gold ochre, jade green, dark wood). Absolutely no text, letters, numbers or watermark. Background must be perfectly flat solid pure magenta #FF00FF with no gradient or shadow on it, and no magenta anywhere inside the artwork."
   },
   {
-    "out": "assets/_src/common/ui/frame-modal.png",
+    "out": "assets/_src/maps/common/ui/frame-modal.png",
     "aspect": "1:1",
     "prompt": "A square ornate dialog window border meant for 9-slice scaling: rich dark red-brown lacquer frame with double gold line inlay, elaborate gold corner ornaments in Hue imperial style (lotus and cloud scrolls), plain straight uniform edges between corners (no ornament in the middle of any edge). Frame thickness about 10% of the canvas on each side. The ENTIRE interior inside the frame is flat solid magenta #FF00FF (to be cut out). Perfectly symmetric. Style: flat 2D cartoon game UI, soft dark-brown outline, clean vector-like shading, warm Hue imperial palette (lacquer red, gold ochre, jade green, dark wood). Absolutely no text, letters, numbers or watermark. Background must be perfectly flat solid pure magenta #FF00FF with no gradient or shadow on it, and no magenta anywhere inside the artwork."
   },
   {
-    "out": "assets/_src/common/ui/frame-chat.png",
+    "out": "assets/_src/maps/common/ui/frame-chat.png",
     "aspect": "1:1",
     "prompt": "A square chat-box border meant for 9-slice scaling: a warm carved bamboo-and-wood frame with thin jade green inner line and small brass corner studs shaped like tiny lotus buds, plain straight uniform edges between corners. Frame thickness about 9% of the canvas on each side. The ENTIRE interior inside the frame is flat solid magenta #FF00FF (to be cut out). Perfectly symmetric. Style: flat 2D cartoon game UI, soft dark-brown outline, clean vector-like shading, warm Hue imperial palette (lacquer red, gold ochre, jade green, dark wood). Absolutely no text, letters, numbers or watermark. Background must be perfectly flat solid pure magenta #FF00FF with no gradient or shadow on it, and no magenta anywhere inside the artwork."
   },
   {
-    "out": "assets/_src/common/ui/frame-area-door.png",
+    "out": "assets/_src/maps/common/ui/frame-area-door.png",
     "aspect": "21:9",
     "prompt": "A wide horizontal location nameplate shaped like the front gateway of a traditional Hue mandarin house (cong nha quan), front view, perfectly symmetric: curved dark-grey roof tiles with upturned ends on top, small gold ridge ornaments, two thick vermilion-red wooden pillars with gold bases on both sides, a carved wooden lintel beam, and in the centre a large EMPTY dark lacquered rectangular plaque with a thin gold border, completely blank to hold text later. Plaque occupies about 60% of width and 45% of height. Style: flat 2D cartoon game UI, soft dark-brown outline, clean vector-like shading, warm Hue imperial palette (lacquer red, gold ochre, jade green, dark wood). Absolutely no text, letters, numbers or watermark. Background must be perfectly flat solid pure magenta #FF00FF with no gradient or shadow on it, and no magenta anywhere inside the artwork."
   }

@@ -6,7 +6,7 @@ import fs from 'node:fs';
 const STYLE =
   'Style: flat 2D cartoon game UI, soft dark-brown outline, clean vector-like shading, warm Hue imperial palette (lacquer red, gold ochre, jade green, dark wood). ' +
   'Absolutely no text, letters, numbers or watermark. Background must be perfectly flat solid pure magenta #FF00FF with no gradient or shadow on it, and no magenta anywhere inside the artwork.';
-const D = 'assets/_src/common/ui/';
+const D = 'assets/_src/maps/common/ui/';
 const SHEET = (what) =>
   `Sprite sheet with exactly 3 columns x 2 rows = 6 equal square cells, no borders or grid lines, the effect centered in each cell with comfortable margin, same center and scale logic in every frame. ${what} `;
 

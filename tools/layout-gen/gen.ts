@@ -81,9 +81,9 @@ const tmj = {
   nextobjectid: objId,
 };
 
-write('common/layout/base.tmj', tmj);
-write('common/layout/spawns.json', { layoutVersion: LAYOUT_VERSION, spawns: SPAWNS, meeting: MEETING_POINT });
-write('common/layout/area-zones.json', {
+write('maps/common/layout/base.tmj', tmj);
+write('maps/common/layout/spawns.json', { layoutVersion: LAYOUT_VERSION, spawns: SPAWNS, meeting: MEETING_POINT });
+write('maps/common/layout/area-zones.json', {
   layoutVersion: LAYOUT_VERSION,
   tileSize: TILE,
   zones: AREA_ORDER.map((id) => ({ areaId: id, rects: AREA_RECTS[id].map(([x, y, w, h]) => ({ x: x * TILE, y: y * TILE, w: w * TILE, h: h * TILE })) })),

@@ -455,7 +455,7 @@ export function Hud() {
 
   const taskChip = me && (
     <button className="task-chip" onClick={() => setTasksOpen(true)} title={touch ? t('myTasks') : `${t('myTasks')} (T)`}>
-      <img src={asset('common/ui/notebook.webp')} alt="" draggable={false} />
+      <img src={asset('maps/common/ui/notebook.webp')} alt="" draggable={false} />
       <b>
         {me.completedTasks.length}/{me.tasks.length}
       </b>
@@ -509,7 +509,7 @@ export function Hud() {
                 t('ghost')
               ) : me.role === 'guardian' ? (
                 <>
-                  <img className={`shield-pip ${me.shield ? 'on' : 'off'}`} src={asset('common/ui/shield.webp')} alt="" draggable={false} />
+                  <img className={`shield-pip ${me.shield ? 'on' : 'off'}`} src={asset('maps/common/ui/shield.webp')} alt="" draggable={false} />
                   {me.shield ? t('shieldOn') : t('shieldOff')}
                 </>
               ) : (
@@ -599,7 +599,7 @@ export function Hud() {
               title={`${killLabel} (K)`}
               aria-label={killLabel}
             >
-              <img src={asset(`${skin.killButton?.icon ?? 'common/ui/btn-kill'}.webp`)} alt="" draggable={false} />
+              <img src={asset(`${skin.killButton?.icon ?? 'maps/common/ui/btn-kill'}.webp`)} alt="" draggable={false} />
               {cdLeft ? <CooldownRing readyAt={me!.killReadyAt ?? 0} /> : null}
               {cdLeft ? <span className="cd"><Digits text={cdLeft} /></span> : null}
               <kbd>K</kbd>
@@ -613,7 +613,7 @@ export function Hud() {
             title={`${t('report')} (L)`}
             aria-label={t('report')}
           >
-            <img src={asset('common/ui/btn-report.webp')} alt="" draggable={false} />
+            <img src={asset('maps/common/ui/btn-report.webp')} alt="" draggable={false} />
             <kbd>L</kbd>
             <em>{t('report')}</em>
           </button>}
@@ -627,7 +627,7 @@ export function Hud() {
               title={taskHere ? `${taskHere.title} (J)` : t('doTask')}
               aria-label={taskHere ? `${t('doTask')}: ${taskHere.title}` : t('doTask')}
             >
-              <img src={asset('common/ui/btn-task.webp')} alt="" draggable={false} />
+              <img src={asset('maps/common/ui/btn-task.webp')} alt="" draggable={false} />
               {/* at the ward spot J holds the fix pill instead */}
               {nearby?.kind !== 'fix' && <kbd>J</kbd>}
               <em>{t('doTask')}</em>
@@ -646,7 +646,7 @@ export function Hud() {
           title={`${nearby.title} (B)`}
           aria-label={nearby.title}
         >
-          <img src={asset('common/ui/btn-bell.webp')} alt="" draggable={false} />
+          <img src={asset('maps/common/ui/btn-bell.webp')} alt="" draggable={false} />
           <kbd>B</kbd>
           <em>{nearby.used ? t('used') : nearby.title}</em>
         </button>

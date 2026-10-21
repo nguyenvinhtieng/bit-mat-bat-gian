@@ -8,7 +8,7 @@ import { CloseButton, asset, useEscape } from './common';
 import { Guide, GuideButton } from './Guide';
 import { getVolume, setVolume, sfx } from './minigames/common/kit';
 
-const mui = (n: string) => asset(`common/ui/mobile/${n}.webp`);
+const mui = (n: string) => asset(`maps/common/ui/mobile/${n}.webp`);
 
 /** Settings cog on every screen (in game: top right, next to the alive counter): volume, language, guide, leave the room.
  *  `slug` picks the guide's map when there is no room yet (home screen). */
@@ -84,7 +84,7 @@ function GameSettingsModal({ onClose, slug }: { onClose: () => void; slug?: stri
 
             <div className="slider-row">
               <div className="slider-head">
-                <img src={asset('common/ui/home/globe.webp')} alt="" draggable={false} />
+                <img src={asset('maps/common/ui/home/globe.webp')} alt="" draggable={false} />
                 <div className="slider-text">
                   <strong>{t('language')}</strong>
                 </div>

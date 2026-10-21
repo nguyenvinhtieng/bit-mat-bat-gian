@@ -11,7 +11,7 @@ export function LangSwitch({ className = '' }: { className?: string }) {
   const { lang, setLang } = useLang();
   return (
     <div className={`lang-switch ${className}`} role="radiogroup" aria-label="Language / Ngôn ngữ">
-      <img className="lang-globe" src={asset('common/ui/home/globe.webp')} alt="" draggable={false} />
+      <img className="lang-globe" src={asset('maps/common/ui/home/globe.webp')} alt="" draggable={false} />
       <div className={`lang-track is-${lang}`}>
         <span className="lang-knob" aria-hidden />
         {OPTIONS.map((o) => (
