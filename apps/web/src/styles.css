@@ -773,7 +773,7 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 }
 .home-crest { position: absolute; left: 50%; top: calc(-1 * var(--b) - 58px); width: 280px; transform: translateX(-50%); pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
 .home-card h1 { text-align: center; padding: 0; margin-bottom: 4px; font-size: 2.3em; color: #ffd36b; text-shadow: 0 3px 0 #3a1206, 0 0 22px rgba(255, 180, 80, 0.35); }
-.home-logo { display: block; width: min(260px, 100%); height: auto; margin: 6px auto 0; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55)); }
+.home-logo { display: block; width: min(170px, 100%); height: auto; margin: 6px auto 0; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55)); }
 .home-tagline { margin: 8px auto 0; max-width: 28em; text-align: center; font-size: 0.92rem; line-height: 1.45; color: #e8dcc4; opacity: 0.92; }
 .home-card h1 small {
   display: flex; align-items: center; justify-content: center; gap: 10px;
@@ -878,12 +878,12 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
    Cố đô Huế — "Năm Canh Trước Bình Minh" mini-games (ui/minigames/*)
    ====================================================================== */
 :root { --han: 'Noto Serif TC', 'Songti TC', 'PMingLiU', 'SimSun', serif; --lacquer: #7a1f17; --gold: #f3c75a; }
-.minigame[class*='mg-task_'] {
+.minigame.mg-task {
   min-height: 0; padding: 12px;
   background: radial-gradient(ellipse at top, #5a2016 0%, #2a120c 70%), #2a120c;
   box-shadow: inset 0 0 0 2px #8a5f14, inset 0 0 0 5px #3a1a10;
 }
-.minigame[class*='mg-task_'] .minigame-inner { width: min(780px, 100%); padding: 12px 14px; }
+.minigame.mg-task .minigame-inner { width: min(780px, 100%); padding: 12px 14px; }
 .mg-col { display: flex; flex-direction: column; gap: 10px; align-items: center; user-select: none; -webkit-user-select: none; }
 .mg-col img { -webkit-user-drag: none; }
 .mg-prompt { display: flex; gap: 10px; align-items: flex-start; width: 100%; }
@@ -1431,7 +1431,7 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 .cine-text h1 { letter-spacing: 0.08em; }
 
 /* --- mini-game shell v2: lore · goal · how-to · status · hint (no timers) */
-.minigame[class*='mg-task_'] .minigame-inner {
+.minigame.mg-task .minigame-inner {
   width: min(820px, 100%); padding: 14px 16px 12px;
   background: linear-gradient(#fbf3de, #f1e4c4); border: 1px solid #c9a868;
   box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.35), 0 10px 28px rgba(0, 0, 0, 0.45);
@@ -1470,7 +1470,7 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 .modal.task-modal { width: min(940px, 96vw); max-height: 97vh; --b: 26px; }
 .task-modal header { padding: 0 6px 6px; }
 .task-modal .modal-content { padding: 8px 2px 0; }
-.task-modal .minigame[class*='mg-task_'] { padding: 8px; }
+.task-modal .minigame.mg-task { padding: 8px; }
 .task-modal .mg-col { gap: 8px; }
 .task-modal .gates { max-width: min(660px, 74vh); }
 .task-modal .moon-ring { width: min(300px, 38vh); }
@@ -1812,8 +1812,8 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
   .task-modal header { padding: 0 4px 2px; }
   .task-modal header h3 { font-size: 1em; }
   .task-modal .modal-content { padding: 4px 0 0; }
-  .task-modal .minigame[class*='mg-task_'] { padding: 4px; }
-  .task-modal .minigame[class*='mg-task_'] .minigame-inner { width: 100%; padding: 8px 10px; }
+  .task-modal .minigame.mg-task { padding: 4px; }
+  .task-modal .minigame.mg-task .minigame-inner { width: 100%; padding: 8px 10px; }
   /* one column: a single goal line on top (tap for lore + tips), the play area gets everything else */
   .task-modal .mg-col { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px; align-items: stretch; }
   .task-modal .mg-guide { flex: none; display: flex; flex-direction: column; gap: 4px; max-height: 40%; overflow-y: auto; scrollbar-width: thin; }
@@ -1832,8 +1832,8 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 @media (max-height: 560px) and (min-width: 600px) and (orientation: landscape) {
   /* definite height down the chain so the guide / play columns scroll inside instead of the whole modal */
   .task-modal .modal-content { display: flex; flex-direction: column; min-height: 0; }
-  .task-modal .minigame[class*='mg-task_'] { flex: 1 1 auto; min-height: 0; display: flex; align-items: stretch; }
-  .task-modal .minigame[class*='mg-task_'] .minigame-inner { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .task-modal .minigame.mg-task { flex: 1 1 auto; min-height: 0; display: flex; align-items: stretch; }
+  .task-modal .minigame.mg-task .minigame-inner { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 }
 @media (max-height: 460px) and (min-width: 600px) and (orientation: landscape) {
   .task-modal .mg-lore { display: none; }
@@ -1859,12 +1859,12 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 }
 
 /* ---- narrow portrait phones: task modal uses the full width, no sideways overflow ---- */
-.minigame[class*='mg-task_'] { grid-template-columns: minmax(0, 1fr); }
+.minigame.mg-task { grid-template-columns: minmax(0, 1fr); }
 @media (max-width: 480px) {
   .modal.task-modal { --b: 14px; width: 98vw; max-height: 98vh; }
   .task-modal .modal-content { padding: 6px 0 0; }
-  .task-modal .minigame[class*='mg-task_'] { padding: 4px; min-height: 0; }
-  .task-modal .minigame[class*='mg-task_'] .minigame-inner { padding: 8px; }
+  .task-modal .minigame.mg-task { padding: 4px; min-height: 0; }
+  .task-modal .minigame.mg-task .minigame-inner { padding: 8px; }
   .task-modal .mg-lore { font-size: 0.85em; }
 }
 @media (max-width: 480px) and (max-height: 700px) {
@@ -2254,7 +2254,7 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
   background: radial-gradient(ellipse at center, #3b261a 0%, var(--wood) 55%, #120b06 100%);
 }
 .preloader-card { width: min(440px, 100%); text-align: center; }
-.preloader-logo { width: 100%; height: auto; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6)); }
+.preloader-logo { width: min(200px, 100%); height: auto; margin: 0 auto; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6)); }
 .preloader-title { margin: 14px 0 10px; color: var(--paper); font-weight: 600; letter-spacing: 0.02em; }
 .preloader-bar {
   height: 14px; border-radius: 999px; overflow: hidden; border: 2px solid #5a3e2a;
@@ -2371,7 +2371,7 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
   .home-form { grid-area: form; }
   .home-crest { display: none; }
   .home-card h1 { font-size: 1.7em; margin-bottom: 2px; }
-  .home-logo { width: min(170px, 100%); margin-top: 0; }
+  .home-logo { width: min(110px, 100%); margin-top: 0; }
   .home-card h1 small, .home-card .tagline { display: none; }
   .home-card .field { margin: 0 0 2px; font-size: 0.78em; gap: 2px; }
   .home-card .field input, .home-card .code-input { border-width: 7px 14px; padding: 2px; font-size: 0.95rem; }
@@ -2409,7 +2409,7 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
   .home-card { display: block; width: min(620px, 100%); padding: 6px 14px 10px; }
   .home-brand { margin-bottom: 8px; }
   .home-card h1 { margin: 0; }
-  .home-logo { width: 150px; margin: 0 auto; }
+  .home-logo { width: 100px; margin: 0 auto; }
   /* name and map: one labelled row each, label column on the left */
   .home-id { display: grid; gap: 6px; }
   .home-card .home-id .field, .home-id .map-picker { display: grid; grid-template-columns: 92px minmax(0, 1fr); align-items: center; gap: 10px; margin: 0; font-size: 0.8em; }
@@ -2516,8 +2516,8 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
   .task-modal > header h3 { display: none; }
   .task-modal > header .x-btn { width: 30px; height: 30px; }
   .task-modal .modal-content { padding: 0; overflow: hidden; }
-  .task-modal .minigame[class*='mg-task_'] { padding: 0; border-radius: 6px; }
-  .task-modal .minigame[class*='mg-task_'] .minigame-inner { padding: 6px 40px 6px 10px; border-radius: 6px; }
+  .task-modal .minigame.mg-task { padding: 0; border-radius: 6px; }
+  .task-modal .minigame.mg-task .minigame-inner { padding: 6px 40px 6px 10px; border-radius: 6px; }
   .task-modal .mg-head { padding-bottom: 2px; }
 }
 
@@ -2916,12 +2916,12 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
 .join-ticket:focus-within { border-color: var(--ochre); box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6), 0 0 0 3px rgba(224, 169, 59, 0.25), 0 4px 10px rgba(0, 0, 0, 0.4); }
 .join-ticket-icon { display: grid; place-items: center; flex: none; width: 50px; color: var(--ochre); border-right: 2px dashed #5a3e2a; }
 .join-ticket-icon svg { width: 22px; height: 22px; }
-.home-card .join-ticket .code-input {
+.join-ticket .code-input {
   flex: 1; min-width: 0; width: auto; border: 0; border-image: none; background: none; padding: 0 12px; height: 100%;
   font-size: 1.15em; letter-spacing: 0.32em; color: #ffe2a0; filter: none;
 }
-.home-card .join-ticket .code-input::placeholder { color: #7d6650; letter-spacing: 0.2em; font-weight: 700; }
-.home-card .join-ticket .code-input:focus { filter: none; }
+.join-ticket .code-input::placeholder { color: #7d6650; letter-spacing: 0.2em; font-weight: 700; }
+.join-ticket .code-input:focus { filter: none; }
 .join-go {
   display: flex; align-items: center; gap: 6px; flex: none; padding: 0 18px; border: 0; cursor: pointer;
   font-weight: 900; letter-spacing: 0.04em; color: #8a7358; background: #2f1d12; transition: background 0.2s, color 0.2s, filter 0.2s;
@@ -3307,4 +3307,116 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
 @media (max-height: 560px) {
   .round-btn.inspect, .round-btn.package { width: 64px; height: 64px; }
   .round-glyph { font-size: 30px; }
+}
+
+/* ======================================================================
+   Cuốc Cuối mini-games (ui/minigames/game/prep.tsx) — paper card, CRAB green accents
+   ====================================================================== */
+.cc-row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; align-items: flex-start; width: 100%; }
+.cc-code { display: inline-block; font: 700 0.85em ui-monospace, Menlo, monospace; padding: 2px 6px; border-radius: 4px; background: #2b1a0e; color: #ffe08a; }
+.cc-slip { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 10px 12px; background: #fffaf0; border: 1px dashed #9a7a4a; border-radius: 6px; box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.12); transform: rotate(-1.5deg); }
+.cc-slip b { color: #7a1f17; }
+.cc-boxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; flex: 1; min-width: 240px; }
+.cc-box { display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; min-height: 74px; padding: 26px 8px 8px; border: 2px solid #8a5a2a; border-radius: 6px; cursor: pointer;
+  background: linear-gradient(90deg, transparent 46%, rgba(255, 255, 255, 0.35) 46% 54%, transparent 54%), linear-gradient(#c89a5c, #a8783e); box-shadow: 0 3px 0 #6a4220; }
+.cc-box:hover:not(:disabled) { transform: translateY(-2px); }
+.cc-box.sel { outline: 3px solid #2a8a5e; }
+.cc-seal { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 16px 28px; background: #7a1f17; border-radius: 999px; box-shadow: inset 0 0 0 4px #b5221a, 0 4px 10px rgba(0, 0, 0, 0.3); }
+.cc-piece { width: 64px; height: 64px; border-radius: 8px; border: 2px solid #f3c75a; background: #fbf3de; font-size: 34px; font-weight: 900; color: #7a1f17; cursor: pointer; display: grid; place-items: center; }
+.cc-piece span { display: inline-block; transition: transform 0.2s; }
+.cc-piece.ok { background: #e3f4ea; border-color: #2a8a5e; }
+.cc-chat { display: flex; flex-direction: column; gap: 6px; min-width: 220px; flex: 1; max-width: 340px; }
+.cc-chat p { margin: 0; padding: 6px 10px; border-radius: 12px 12px 12px 2px; background: #e9e1cf; font-size: 0.92em; }
+.cc-chat p.me { background: #d6efe1; }
+.cc-chat b { display: block; font-size: 0.75em; color: #6b4a2a; }
+.cc-cards { display: grid; grid-template-columns: repeat(2, minmax(130px, 1fr)); gap: 8px; flex: 1; min-width: 260px; }
+.cc-card { display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 8px 10px; background: #fffaf0; border: 1px solid #c9a868; border-left: 4px solid #2a8a5e; border-radius: 6px; cursor: pointer; font-size: 0.88em; color: #2b1a0e; }
+.cc-card:hover:not(:disabled) { background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); }
+.cc-grid { display: grid; gap: 3px; width: min(440px, 100%); touch-action: none; padding: 6px; background: #3a2a1a; border-radius: 8px; }
+.cc-cell { aspect-ratio: 1; border: 0; border-radius: 4px; background: #d9cfb8; font-weight: 800; color: #7a1f17; cursor: pointer; padding: 0; font-size: clamp(12px, 3vw, 18px); }
+.cc-cell.on { background: #ffd36b; box-shadow: inset 0 0 0 2px #e09a12; }
+.cc-cell.flood { background: #4a8ac0; cursor: not-allowed; }
+.cc-cell.dead { background: #5a4a3a; cursor: not-allowed; }
+.cc-gauge { position: relative; width: min(420px, 100%); height: 22px; border-radius: 999px; background: #e9e1cf; border: 2px solid #8a6a3a; overflow: hidden; }
+.cc-gauge .green { position: absolute; top: 0; bottom: 0; background: #57b884; }
+.cc-gauge .needle { position: absolute; top: -2px; bottom: -2px; width: 4px; margin-left: -2px; background: #b5221a; transition: left 0.2s; }
+.cc-straps { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.cc-strap { width: 52px; height: 52px; border-radius: 50%; border: 3px dashed #8a6a3a; background: #fbf3de; font-weight: 900; font-size: 1.2em; color: #2b1a0e; cursor: pointer; }
+.cc-strap.on { border-style: solid; border-color: #2a8a5e; background: #d6efe1; }
+.cc-strap:disabled:not(.on) { opacity: 0.45; cursor: not-allowed; }
+.cc-note { margin: 0; padding: 10px 12px 10px 28px; background: #fffaf0; border: 1px solid #c9a868; border-radius: 6px; max-width: 280px; font-size: 0.9em; line-height: 1.45; transform: rotate(-1deg); }
+.cc-pack { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 260px; }
+.cc-pack > b { font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.08em; color: #7a1f17; }
+.cc-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.cc-chip { padding: 5px 10px; border-radius: 999px; border: 1px solid #a8885a; background: #fbf3de; color: #2b1a0e; cursor: pointer; font-size: 0.88em; }
+.cc-chip.sel { background: #2a8a5e; border-color: #1f6a47; color: #fff; }
+.cc-stack { display: flex; flex-direction: column-reverse; gap: 2px; margin: 0; padding: 0; list-style: none; min-height: 24px; }
+.cc-stack li { padding: 3px 8px; background: #e3d4b0; border-radius: 3px; font-size: 0.82em; text-align: center; }
+.cc-msg { margin: 0; padding: 8px 12px; background: #d6efe1; border-radius: 12px 12px 12px 2px; max-width: 520px; font-size: 0.95em; }
+.cc-callers { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; width: 100%; }
+.cc-caller { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; text-align: left; background: #fffaf0; border: 1px solid #c9a868; border-radius: 8px; cursor: pointer; color: #2b1a0e; }
+.cc-caller span { font: 700 1.05em ui-monospace, Menlo, monospace; color: #1f6a47; }
+.cc-caller i { font-size: 0.85em; color: #6b4a2a; }
+.cc-display { font: 800 2em ui-monospace, Menlo, monospace; letter-spacing: 0.1em; padding: 6px 18px; background: #1d2a22; color: #7cf0a8; border-radius: 8px; box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5); }
+.cc-keypad { display: grid; grid-template-columns: repeat(3, 64px); gap: 8px; }
+.cc-keypad button { height: 52px; border-radius: 10px; border: 0; background: #3a2a1a; color: #fbf3de; font-size: 1.4em; font-weight: 800; cursor: pointer; box-shadow: 0 3px 0 #1a120a; }
+.cc-keypad button:active { transform: translateY(2px); box-shadow: 0 1px 0 #1a120a; }
+.cc-box:disabled, .cc-card:disabled, .cc-caller:disabled, .cc-chip:disabled { cursor: default; }
+@media (max-width: 560px) {
+  .cc-cards { grid-template-columns: 1fr; }
+  .cc-piece { width: 54px; height: 54px; font-size: 28px; }
+  .cc-keypad { grid-template-columns: repeat(3, 56px); }
+}
+/* short landscape phones: the route grid fits the height, the keypad goes wide */
+@media (max-height: 500px) {
+  .cc-grid { width: min(440px, 100%, calc((100dvh - 170px) * var(--ar, 1.4))); gap: 2px; padding: 4px; }
+  .cc-keypad { grid-template-columns: repeat(6, 48px); gap: 6px; }
+  .cc-keypad button { height: 40px; font-size: 1.15em; }
+  .cc-display { font-size: 1.4em; padding: 2px 14px; }
+  .cc-chip { padding: 3px 8px; font-size: 0.8em; }
+  .cc-piece { width: 50px; height: 50px; font-size: 26px; }
+}
+
+/* ---------- join by house number: corner button opens a popup with the code ticket */
+.code-open {
+  display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px 0 10px; border-radius: 999px; cursor: pointer;
+  border: 1px solid #8a5a2c; background: rgba(12, 7, 4, 0.7); backdrop-filter: blur(4px); color: #ffe2a0;
+  font: inherit; font-weight: 800; font-size: 0.88em; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45); transition: border-color 0.2s, filter 0.2s;
+}
+.code-open svg { width: 20px; height: 20px; color: var(--ochre); }
+.code-open:hover:not(:disabled) { border-color: var(--gold); filter: brightness(1.1); }
+.code-open:disabled { opacity: 0.6; cursor: default; }
+.code-pop { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); background: rgba(8, 4, 2, 0.75); backdrop-filter: blur(3px); animation: fade-in 0.15s ease-out; }
+.code-pop-card { width: min(440px, 100%); padding: 18px 22px 22px; border-radius: 14px; border: 1px solid #8a5a2c; background: radial-gradient(ellipse at 50% 0%, #3a1a10, #160c07 75%); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 220, 160, 0.1); }
+.code-pop-card .map-pop-head { margin-bottom: 12px; }
+.code-pop-hint { margin: 0 0 14px; color: #e8dcc4; font-size: 0.9em; line-height: 1.4; opacity: 0.9; }
+
+/* ---------- phones: no frame, the card fills the screen (the background art isn't worth the space) */
+@media (max-width: 560px), (max-height: 500px) {
+  .home { padding: 0; display: block; }
+  .home-bg, .home::before { display: none; }
+  .home-card {
+    width: 100%; min-height: 100%; margin: 0; box-sizing: border-box; border: 0; border-image: none; filter: none;
+    background: radial-gradient(ellipse at 50% 0%, #46201a, #160c07 70%);
+    /* equal top/bottom so the column sits dead centre; the top pad clears the fixed corner buttons */
+    padding: max(64px, calc(env(safe-area-inset-top) + 56px)) max(16px, env(safe-area-inset-right)) max(64px, calc(env(safe-area-inset-bottom) + 56px)) max(16px, env(safe-area-inset-left));
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .home-crest, .home-tagline { display: none; }
+  .home-brand { margin-bottom: 14px; }
+  .home-logo { width: min(130px, 34vw); }
+  .home-form { width: min(560px, 100%); margin: 0 auto; }
+  .home-card .home-id .field { font-size: 0.9em; grid-template-columns: auto minmax(0, 1fr); white-space: nowrap; }
+  .home-card .home-id .field input { height: 52px; font-size: 1.2em; }
+  .code-open { height: 32px; padding: 0 10px 0 8px; gap: 4px; font-size: 0.76em; }
+  .code-open svg { width: 16px; height: 16px; }
+  .home-lang { top: max(8px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right)); left: auto; transform: none; }
+  .code-pop { padding: 0; place-items: stretch; background: none; backdrop-filter: none; }
+  .code-pop-card {
+    width: 100%; border: 0; border-radius: 0; box-shadow: none; box-sizing: border-box;
+    padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  }
+}
+@media (max-height: 500px) {
+  .home-card { padding-top: max(48px, calc(env(safe-area-inset-top) + 44px)); padding-bottom: max(48px, calc(env(safe-area-inset-bottom) + 44px)); }
 }

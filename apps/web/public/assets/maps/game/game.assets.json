@@ -19,10 +19,10 @@
    "name": "stations-0",
    "file": "maps/game/atlas/stations-0",
    "size": [
-    1364,
+    1170,
     128
    ],
-   "generatedBy": "tools/paint/sg_minigames.py (procedural raster painting)"
+   "generatedBy": "tools/paint/cc_assets.py (procedural raster painting)"
   }
  ],
  "textures": {
@@ -665,7 +665,7 @@
  },
  "stations": [
   {
-   "key": "station-ca-phe-phin",
+   "key": "station-receive-package",
    "atlas": "stations-0",
    "size": [
     128,
@@ -681,7 +681,7 @@
    ]
   },
   {
-   "key": "station-chi-duong",
+   "key": "station-check-seal",
    "atlas": "stations-0",
    "size": [
     128,
@@ -697,7 +697,7 @@
    ]
   },
   {
-   "key": "station-com-tam",
+   "key": "station-decode-address",
    "atlas": "stations-0",
    "size": [
     128,
@@ -713,7 +713,7 @@
    ]
   },
   {
-   "key": "station-dem-tien",
+   "key": "station-plan-route",
    "atlas": "stations-0",
    "size": [
     128,
@@ -729,7 +729,7 @@
    ]
   },
   {
-   "key": "station-do-xang",
+   "key": "station-prepare-bike",
    "atlas": "stations-0",
    "size": [
     128,
@@ -745,7 +745,7 @@
    ]
   },
   {
-   "key": "station-khui-hui",
+   "key": "station-pack-disguise",
    "atlas": "stations-0",
    "size": [
     128,
@@ -761,7 +761,7 @@
    ]
   },
   {
-   "key": "station-so-hui",
+   "key": "station-confirm-recipient",
    "atlas": "stations-0",
    "size": [
     128,
@@ -777,39 +777,7 @@
    ]
   },
   {
-   "key": "station-tieng-rao",
-   "atlas": "stations-0",
-   "size": [
-    128,
-    128
-   ],
-   "display": [
-    52,
-    52
-   ],
-   "hitbox": [
-    96,
-    96
-   ]
-  },
-  {
-   "key": "station-va-vo",
-   "atlas": "stations-0",
-   "size": [
-    128,
-    128
-   ],
-   "display": [
-    52,
-    52
-   ],
-   "hitbox": [
-    96,
-    96
-   ]
-  },
-  {
-   "key": "station-xep-xe",
+   "key": "station-handoff-package",
    "atlas": "stations-0",
    "size": [
     128,
@@ -962,85 +930,69 @@
  "story": "phien-hui-chui",
  "minigames": {},
  "cards": {
-  "card-task_chi_duong": {
-   "file": "maps/game/cards/card-task_chi_duong",
+  "card-receive_package": {
+   "file": "maps/game/cards/card-receive_package",
    "size": [
     640,
     400
    ],
-   "generatedBy": "tools/paint/sg_meta.py"
+   "generatedBy": "tools/paint/cc_assets.py"
   },
-  "card-task_com_tam": {
-   "file": "maps/game/cards/card-task_com_tam",
+  "card-check_seal": {
+   "file": "maps/game/cards/card-check_seal",
    "size": [
     640,
     400
    ],
-   "generatedBy": "tools/paint/sg_meta.py"
+   "generatedBy": "tools/paint/cc_assets.py"
   },
-  "card-task_tieng_rao": {
-   "file": "maps/game/cards/card-task_tieng_rao",
+  "card-decode_address": {
+   "file": "maps/game/cards/card-decode_address",
    "size": [
     640,
     400
    ],
-   "generatedBy": "tools/paint/sg_meta.py"
+   "generatedBy": "tools/paint/cc_assets.py"
   },
-  "card-task_ca_phe_phin": {
-   "file": "maps/game/cards/card-task_ca_phe_phin",
+  "card-plan_route": {
+   "file": "maps/game/cards/card-plan_route",
    "size": [
     640,
     400
    ],
-   "generatedBy": "tools/paint/sg_meta.py"
+   "generatedBy": "tools/paint/cc_assets.py"
   },
-  "card-task_khui_hui": {
-   "file": "maps/game/cards/card-task_khui_hui",
+  "card-prepare_bike": {
+   "file": "maps/game/cards/card-prepare_bike",
    "size": [
     640,
     400
    ],
-   "generatedBy": "tools/paint/sg_meta.py"
+   "generatedBy": "tools/paint/cc_assets.py"
   },
-  "card-task_do_xang": {
-   "file": "maps/game/cards/card-task_do_xang",
+  "card-pack_disguise": {
+   "file": "maps/game/cards/card-pack_disguise",
    "size": [
     640,
     400
    ],
-   "generatedBy": "tools/paint/sg_meta.py"
+   "generatedBy": "tools/paint/cc_assets.py"
   },
-  "card-task_va_vo": {
-   "file": "maps/game/cards/card-task_va_vo",
+  "card-confirm_recipient": {
+   "file": "maps/game/cards/card-confirm_recipient",
    "size": [
     640,
     400
    ],
-   "generatedBy": "tools/paint/sg_meta.py"
+   "generatedBy": "tools/paint/cc_assets.py"
   },
-  "card-task_so_hui": {
-   "file": "maps/game/cards/card-task_so_hui",
+  "card-handoff_package": {
+   "file": "maps/game/cards/card-handoff_package",
    "size": [
     640,
     400
    ],
-   "generatedBy": "tools/paint/sg_meta.py"
-  },
-  "card-task_dem_tien": {
-   "file": "maps/game/cards/card-task_dem_tien",
-   "size": [
-    640,
-    400
-   ],
-   "generatedBy": "tools/paint/sg_meta.py"
-  },
-  "card-task_xep_xe": {
-   "file": "maps/game/cards/card-task_xep_xe",
-   "size": [
-    640,
-    400
-   ],
-   "generatedBy": "tools/paint/sg_meta.py"
+   "generatedBy": "tools/paint/cc_assets.py"
   }
  },
  "meta": {

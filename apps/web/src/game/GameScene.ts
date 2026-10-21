@@ -336,14 +336,8 @@ export class GameScene extends Phaser.Scene {
 
   /** The Last Ride package: a taped cardboard box. On the ground it pulses; carried, it rides above the carrier's head. */
   private buildPackage() {
-    const g = this.add.graphics();
-    g.fillStyle(0x000000, 0.28).fillEllipse(0, 4, 50, 14);
-    g.fillStyle(0xb9834a, 1).fillRect(-22, -34, 44, 36);
-    g.fillStyle(0xd9a466, 1).fillRect(-22, -42, 44, 10);
-    g.fillStyle(0x8c5f31, 1).fillRect(-22, -34, 44, 3);
-    g.fillStyle(0xe9e2c8, 0.9).fillRect(-4, -42, 8, 44);
-    g.fillStyle(0x2fae5b, 1).fillRect(-17, -24, 12, 9);
-    g.lineStyle(2, 0x5a3a1c, 1).strokeRect(-22, -42, 44, 44);
+    // painted by tools/paint/cc_assets.py into the stations atlas; feet sit near the bottom of the frame
+    const g = this.add.image(0, 0, 'map-stations', 'package').setOrigin(0.5, 0.9).setScale(0.9);
     this.pkgGlow = this.add.circle(0, -2, 34).setStrokeStyle(3, 0x4ee08a, 0.9);
     this.tweens.add({ targets: this.pkgGlow, scale: 1.6, alpha: 0, duration: 1200, repeat: -1 });
     this.pkg = this.add.container(0, 0, [this.pkgGlow, g]).setVisible(false);

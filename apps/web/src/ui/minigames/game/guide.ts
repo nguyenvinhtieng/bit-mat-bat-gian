@@ -1,46 +1,38 @@
 import type { GameTaskId } from '@hidden-truth/shared';
 
 type G = { goal: string; steps: string[] };
-/** Goal + how-to for each mini-game (vi / en). `{passenger}` etc. are filled from the task data. */
+/** Goal + how-to for each mini-game (vi / en). */
 export const GUIDE: Partial<Record<GameTaskId, { vi: G; en: G }>> = {
-  task_chi_duong: {
-    vi: { goal: 'Chở {passenger} tới nơi, theo đúng hướng khách chỉ.', steps: ['Đọc hết câu khách nói — khách hay đổi ý', 'Chọn hướng khách chốt sau cùng', 'Đủ 3 ngã rẽ là tới nơi'] },
-    en: { goal: 'Drive {passenger} home, the way they point.', steps: ['Read the whole line — passengers change their mind', 'Pick the turn they settle on last', 'Three junctions and you are there'] },
+  receive_package: {
+    vi: { goal: 'Nhận đúng thùng hàng ở quán dì Bảy.', steps: ['Đọc các mã trên phiếu nhận', 'Tìm thùng có tem khớp đủ mã', 'Chạm thùng để nhận'] },
+    en: { goal: 'Pick up the right box at Auntie Bảy’s.', steps: ['Read the codes on the slip', 'Find the box whose stickers match them all', 'Tap it to collect'] },
   },
-  task_com_tam: {
-    vi: { goal: 'Dọn đúng dĩa cơm tấm cho {customer}.', steps: ['Nhớ tờ order trước khi gió thổi bay', 'Chạm món để bỏ lên dĩa, chạm lần nữa để gỡ', 'Đủ món là dĩa tự giao'] },
-    en: { goal: 'Plate the right broken-rice dish for {customer}.', steps: ['Memorise the order before the wind takes it', 'Tap a dish to plate it, tap again to remove it', 'The plate goes out once it holds the full order'] },
+  check_seal: {
+    vi: { goal: 'Kiểm tra niêm phong mà không mở thùng.', steps: ['Mỗi mảnh niêm đang bị xoay lệch', 'Chạm mảnh để xoay ¼ vòng', 'Mọi mảnh thẳng đứng là xong'] },
+    en: { goal: 'Check the seal without opening the box.', steps: ['Each seal piece is turned askew', 'Tap a piece to turn it a quarter', 'Done when every piece stands upright'] },
   },
-  task_tieng_rao: {
-    vi: { goal: 'Nghe tiếng rao, báo hiệu cho cả hội.', steps: ['Thuộc ám hiệu: món nào là an toàn, món nào là có người lạ', 'Mỗi tiếng rao chỉ nghe được vài giây', 'Bấm An toàn hoặc Người lạ cho từng tiếng'] },
-    en: { goal: 'Read the street calls and signal the crew.', steps: ['Learn tonight’s code: which call means safe, which means stranger', 'Each call only lasts a few seconds', 'Answer Safe or Stranger for every call'] },
+  decode_address: {
+    vi: { goal: 'Ghép tin nhắn của khách thành địa chỉ.', steps: ['Đọc tin nhắn của Khách — bỏ qua người nói chen', 'So từng dòng trên thẻ địa chỉ', 'Chọn thẻ khớp cả bốn dòng'] },
+    en: { goal: 'Piece the customer’s messages into an address.', steps: ['Read the Customer’s messages — ignore anyone else', 'Compare every line on the cards', 'Pick the card that matches all four'] },
   },
-  task_ca_phe_phin: {
-    vi: { goal: 'Pha một ly cà phê sữa đá chuẩn quán cóc.', steps: ['Chờ phin nhỏ giọt cho hết', 'Nhấn giữ để rót sữa đặc', 'Thả tay khi sữa chạm vạch đỏ'] },
-    en: { goal: 'Brew a proper street-side iced milk coffee.', steps: ['Wait for the phin to finish dripping', 'Press and hold to pour condensed milk', 'Let go when the milk reaches the red line'] },
+  plan_route: {
+    vi: { goal: 'Vạch tuyến qua các điểm hẹn, né chốt và đường ngập.', steps: ['Bắt đầu ở chấm xanh', 'Kéo hoặc chạm từng ô kề nhau, qua điểm theo đúng số', 'Né ô ngập và hẻm cụt, kết thúc ở cờ'] },
+    en: { goal: 'Plot a route through the stops, around floods and checkpoints.', steps: ['Start at the green dot', 'Drag or tap neighbouring cells, hitting the stops in number order', 'Avoid floods and dead ends; finish at the flag'] },
   },
-  task_do_xang: {
-    vi: { goal: 'Đổ xăng tròn {target}, không dư không thiếu.', steps: ['Nhấn giữ cò bơm, số tiền chạy lên', 'Thả tay để dừng, nhích thêm được', 'Lố quá là phải đổ lại'] },
-    en: { goal: 'Pump exactly {target} of fuel.', steps: ['Hold the trigger and watch the money run', 'Let go to stop — you can top up', 'Go over and you start again'] },
+  prepare_bike: {
+    vi: { goal: 'Bơm lốp vừa đủ rồi chằng dây hàng.', steps: ['Bấm Bơm tới khi kim vào vùng xanh', 'Lố thì Xả hơi rồi bơm lại', 'Siết dây theo số 1 → hết'] },
+    en: { goal: 'Pump the tyre just right, then strap the load.', steps: ['Press Pump until the needle sits in the green', 'Overdid it? Let it out and start over', 'Tighten the straps 1 → last'] },
   },
-  task_va_vo: {
-    vi: { goal: 'Tìm và vá lỗ thủng trên ruột xe.', steps: ['Xoay ruột xe qua thau nước', 'Chỗ nào sủi bọt là có lỗ', 'Bấm Vá khi lỗ đang chìm trong nước'] },
-    en: { goal: 'Find and patch the hole in the inner tube.', steps: ['Turn the tube through the basin', 'Bubbles mean a hole', 'Press Patch while the hole is under water'] },
+  pack_disguise: {
+    vi: { goal: 'Ngụy trang kiện hàng theo ghi chú của khách.', steps: ['Chọn đúng thùng ngoài', 'Dán đúng nhãn', 'Lót các lớp theo thứ tự dưới → trên, rồi Đóng thùng'] },
+    en: { goal: 'Disguise the package as the customer’s note says.', steps: ['Pick the right outer box', 'Stick on the right label', 'Add the layers bottom → top, then Seal the box'] },
   },
-  task_so_hui: {
-    vi: { goal: 'Ghi đúng số tiền góp của từng người vào sổ hụi.', steps: ['Đọc tin nhắn trong nhóm Zalo', 'Coi chừng có người góp giùm bạn', 'Kéo số tiền vào đúng dòng tên — đủ dòng là sổ tự chốt'] },
-    en: { goal: 'Write each driver’s contribution in the hụi ledger.', steps: ['Read the group-chat messages', 'Watch out — someone may pay for a friend', 'Drag each amount onto the right name — the book closes itself'] },
+  confirm_recipient: {
+    vi: { goal: 'Gọi xác nhận đúng người nhận.', steps: ['Đọc tin nhắn: 4 số cuối và mật khẩu', 'Dò danh sách người gọi', 'Chọn người khớp cả hai — nhớ mã để bàn giao'] },
+    en: { goal: 'Confirm the real recipient.', steps: ['Read the message: last 4 digits and passphrase', 'Check the list of callers', 'Pick the one matching both — remember the code for the handoff'] },
   },
-  task_dem_tien: {
-    vi: { goal: 'Xếp tiền thành từng xấp rồi báo tổng.', steps: ['Mỗi mệnh giá một màu — nhìn màu là biết', 'Kéo từng tờ vào đúng xấp', 'Xếp xong tự bó thun — chọn tổng cộng'] },
-    en: { goal: 'Sort the money into stacks, then report the total.', steps: ['Each value has its own colour', 'Drag every note onto its stack', 'Stacks band themselves — then pick the total'] },
-  },
-  task_khui_hui: {
-    vi: { goal: 'Khui hụi: chọn người bỏ thăm cao nhất.', steps: ['Lật hết phong bì', 'Số viết đủ kiểu: đồng, nghìn, triệu — đọc kỹ', 'Chạm thăm cao nhất để khui trước khi hết giờ'] },
-    en: { goal: 'Open the hụi: pick the highest bid.', steps: ['Flip every envelope', 'Bids are written in đồng, nghìn or triệu — read closely', 'Tap the highest bid before time runs out'] },
-  },
-  task_xep_xe: {
-    vi: { goal: 'Xếp hết xe vào bãi giữ xe, né mấy cây cột.', steps: ['Chọn hoặc kéo xe vào ô', 'Bấm Xoay (phím R) để đổi hướng', 'Chạm xe đã đậu để dời lại'] },
-    en: { goal: 'Park every bike in the lot, around the pillars.', steps: ['Pick or drag a bike onto a cell', 'Press Rotate (R key) to turn it', 'Tap a parked bike to move it'] },
+  handoff_package: {
+    vi: { goal: 'Bàn giao kiện hàng — Cuốc Cuối.', steps: ['Mang kiện hàng tới điểm giao', 'Nhập mã nhận đã xác nhận', 'Đúng mã là cả hội thắng'] },
+    en: { goal: 'Hand off the package — the Last Ride.', steps: ['Carry the package to the drop point', 'Key in the verified receiving code', 'Right code and the crew wins'] },
   },
 };

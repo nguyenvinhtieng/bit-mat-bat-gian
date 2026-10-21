@@ -1,34 +1,26 @@
 import type { TaskData } from '@hidden-truth/shared';
-import { ChiDuong, TiengRao } from './hem';
-import { ComTam, CaPhePhin } from './quan';
-import { DoXang, VaVo } from './tiem';
-import { SoHui, DemTien, KhuiHui } from './hui';
-import { XepXe } from './bai';
+import { ReceivePackage, CheckSeal, DecodeAddress, PlanRoute, PrepareBike, PackDisguise, ConfirmRecipient, HandoffPackage } from './prep';
 import type { Submit } from '../common/kit';
 
-/** One mini-game per task station (map sai-gon, "Hụi Sài Gòn · Hẻm 42"). */
+/** One mini-game per station (map game, "Hẻm 42: Cuốc Cuối"). */
 export function GameMinigame({ task, submit }: { task: TaskData; submit: Submit }) {
   switch (task.taskId) {
-    case 'task_chi_duong':
-      return <ChiDuong task={task} submit={submit} />;
-    case 'task_tieng_rao':
-      return <TiengRao task={task} submit={submit} />;
-    case 'task_com_tam':
-      return <ComTam task={task} submit={submit} />;
-    case 'task_ca_phe_phin':
-      return <CaPhePhin task={task} submit={submit} />;
-    case 'task_do_xang':
-      return <DoXang task={task} submit={submit} />;
-    case 'task_va_vo':
-      return <VaVo task={task} submit={submit} />;
-    case 'task_so_hui':
-      return <SoHui task={task} submit={submit} />;
-    case 'task_dem_tien':
-      return <DemTien task={task} submit={submit} />;
-    case 'task_khui_hui':
-      return <KhuiHui task={task} submit={submit} />;
-    case 'task_xep_xe':
-      return <XepXe task={task} submit={submit} />;
+    case 'receive_package':
+      return <ReceivePackage task={task} submit={submit} />;
+    case 'check_seal':
+      return <CheckSeal task={task} submit={submit} />;
+    case 'decode_address':
+      return <DecodeAddress task={task} submit={submit} />;
+    case 'plan_route':
+      return <PlanRoute task={task} submit={submit} />;
+    case 'prepare_bike':
+      return <PrepareBike task={task} submit={submit} />;
+    case 'pack_disguise':
+      return <PackDisguise task={task} submit={submit} />;
+    case 'confirm_recipient':
+      return <ConfirmRecipient task={task} submit={submit} />;
+    case 'handoff_package':
+      return <HandoffPackage task={task} submit={submit} />;
     default:
       return null;
   }

@@ -81,7 +81,7 @@ export function TaskModal() {
 
   return (
     <Modal title={title} onClose={close} wide className="task-modal">
-      <div className={`minigame mg-${task.taskId}`}>
+      <div className={`minigame mg-task mg-${task.taskId}`}>
         <div className="minigame-inner">
           <Minigame key={attempt} task={task} submit={submit} />
         </div>

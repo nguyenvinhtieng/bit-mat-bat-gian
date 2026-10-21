@@ -1,99 +1,81 @@
 {
- "mapVersion": 1,
+ "mapVersion": 2,
  "hitbox": [
   96,
   96
  ],
  "stations": [
   {
-   "id": "task_chi_duong",
-   "area": "courtyard_checkin",
-   "x": 826,
-   "y": 91,
-   "title": "Chạy cuốc theo khách chỉ đường",
-   "titleEn": "Follow the passenger’s directions",
-   "icon": "station-chi-duong"
-  },
-  {
-   "id": "task_com_tam",
-   "area": "exhibition",
-   "x": 307,
-   "y": 605,
-   "title": "Giao cơm tấm",
-   "titleEn": "Deliver the broken-rice plate",
-   "icon": "station-com-tam"
-  },
-  {
-   "id": "task_tieng_rao",
-   "area": "corridor",
-   "x": 504,
-   "y": 1032,
-   "title": "Nghe rao canh chừng",
-   "titleEn": "Listen to the street calls",
-   "icon": "station-tieng-rao"
-  },
-  {
-   "id": "task_ca_phe_phin",
-   "area": "coordination",
-   "x": 1646,
-   "y": 418,
-   "title": "Pha cà phê sữa đá",
-   "titleEn": "Brew an iced milk coffee",
-   "icon": "station-ca-phe-phin"
-  },
-  {
-   "id": "task_khui_hui",
-   "area": "coordination",
-   "x": 1891,
-   "y": 835,
-   "title": "Bỏ thăm khui hụi",
-   "titleEn": "Open the hụi bids",
-   "icon": "station-khui-hui"
-  },
-  {
-   "id": "task_do_xang",
-   "area": "editing",
-   "x": 1315,
-   "y": 1032,
-   "title": "Đổ xăng tròn 50",
-   "titleEn": "Fill up exactly 50k",
-   "icon": "station-do-xang"
-  },
-  {
-   "id": "task_va_vo",
-   "area": "editing",
-   "x": 701,
-   "y": 1032,
-   "title": "Vá vỏ xe",
-   "titleEn": "Patch the inner tube",
-   "icon": "station-va-vo"
-  },
-  {
-   "id": "task_so_hui",
+   "id": "receive_package",
    "area": "archive",
    "x": 605,
    "y": 1310,
-   "title": "Ghi sổ hụi",
-   "titleEn": "Write up the hụi ledger",
-   "icon": "station-so-hui"
+   "title": "Nhận kiện hàng bí ẩn",
+   "titleEn": "Receive the mystery package",
+   "icon": "station-receive-package"
   },
   {
-   "id": "task_dem_tien",
+   "id": "check_seal",
    "area": "archive",
    "x": 216,
    "y": 1373,
-   "title": "Đếm tiền bó thun",
-   "titleEn": "Count the rubber-banded cash",
-   "icon": "station-dem-tien"
+   "title": "Kiểm tra niêm phong",
+   "titleEn": "Check the seal",
+   "icon": "station-check-seal"
   },
   {
-   "id": "task_xep_xe",
+   "id": "pack_disguise",
+   "area": "archive",
+   "x": 408,
+   "y": 1416,
+   "title": "Ngụy trang kiện hàng",
+   "titleEn": "Disguise the package",
+   "icon": "station-pack-disguise"
+  },
+  {
+   "id": "decode_address",
+   "area": "coordination",
+   "x": 1646,
+   "y": 418,
+   "title": "Giải mã địa chỉ giao",
+   "titleEn": "Decode the drop-off address",
+   "icon": "station-decode-address"
+  },
+  {
+   "id": "confirm_recipient",
+   "area": "coordination",
+   "x": 1891,
+   "y": 835,
+   "title": "Xác minh người nhận",
+   "titleEn": "Verify the recipient",
+   "icon": "station-confirm-recipient"
+  },
+  {
+   "id": "prepare_bike",
+   "area": "editing",
+   "x": 701,
+   "y": 1032,
+   "title": "Chuẩn bị xe chở hàng",
+   "titleEn": "Prepare the delivery bike",
+   "icon": "station-prepare-bike"
+  },
+  {
+   "id": "plan_route",
    "area": "artifact_storage",
    "x": 1795,
    "y": 1459,
-   "title": "Xếp xe bãi giữ xe",
-   "titleEn": "Pack the bike park",
-   "icon": "station-xep-xe"
+   "title": "Chọn đường tránh kẹt xe, ngập",
+   "titleEn": "Plan a route around jams and floods",
+   "icon": "station-plan-route"
+  },
+  {
+   "id": "handoff_package",
+   "area": "corridor",
+   "x": 1656,
+   "y": 1032,
+   "title": "Bàn giao Cuốc Cuối",
+   "titleEn": "Hand off the Last Ride",
+   "icon": "station-handoff-package"
   }
  ]
 }

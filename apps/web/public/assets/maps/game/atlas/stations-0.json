@@ -1,6 +1,6 @@
 {
  "frames": {
-  "station-ca-phe-phin": {
+  "station-receive-package": {
    "frame": {
     "x": 0,
     "y": 0,
@@ -20,7 +20,7 @@
     "h": 128
    }
   },
-  "station-chi-duong": {
+  "station-check-seal": {
    "frame": {
     "x": 130,
     "y": 0,
@@ -40,7 +40,7 @@
     "h": 128
    }
   },
-  "station-com-tam": {
+  "station-decode-address": {
    "frame": {
     "x": 260,
     "y": 0,
@@ -60,7 +60,7 @@
     "h": 128
    }
   },
-  "station-dem-tien": {
+  "station-plan-route": {
    "frame": {
     "x": 390,
     "y": 0,
@@ -80,7 +80,7 @@
     "h": 128
    }
   },
-  "station-do-xang": {
+  "station-prepare-bike": {
    "frame": {
     "x": 520,
     "y": 0,
@@ -100,7 +100,7 @@
     "h": 128
    }
   },
-  "station-khui-hui": {
+  "station-pack-disguise": {
    "frame": {
     "x": 650,
     "y": 0,
@@ -120,7 +120,7 @@
     "h": 128
    }
   },
-  "station-so-hui": {
+  "station-confirm-recipient": {
    "frame": {
     "x": 780,
     "y": 0,
@@ -140,7 +140,7 @@
     "h": 128
    }
   },
-  "station-tieng-rao": {
+  "station-handoff-package": {
    "frame": {
     "x": 910,
     "y": 0,
@@ -160,49 +160,29 @@
     "h": 128
    }
   },
-  "station-va-vo": {
+  "package": {
    "frame": {
     "x": 1040,
     "y": 0,
-    "w": 128,
-    "h": 128
+    "w": 64,
+    "h": 64
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 128,
-    "h": 128
+    "w": 64,
+    "h": 64
    },
    "sourceSize": {
-    "w": 128,
-    "h": 128
-   }
-  },
-  "station-xep-xe": {
-   "frame": {
-    "x": 1170,
-    "y": 0,
-    "w": 128,
-    "h": 128
-   },
-   "rotated": false,
-   "trimmed": false,
-   "spriteSourceSize": {
-    "x": 0,
-    "y": 0,
-    "w": 128,
-    "h": 128
-   },
-   "sourceSize": {
-    "w": 128,
-    "h": 128
+    "w": 64,
+    "h": 64
    }
   },
   "task-marker": {
    "frame": {
-    "x": 1300,
+    "x": 1106,
     "y": 0,
     "w": 64,
     "h": 64
@@ -222,11 +202,11 @@
   }
  },
  "meta": {
-  "app": "tools/paint/sg_minigames.py",
+  "app": "tools/paint/cc_assets.py",
   "image": "stations-0.webp",
   "format": "RGBA8888",
   "size": {
-   "w": 1364,
+   "w": 1170,
    "h": 128
   },
   "scale": "1"

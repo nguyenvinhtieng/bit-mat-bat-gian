@@ -21,6 +21,7 @@ export function Home() {
   const joinMatch = /^\/join\/([A-Za-z0-9]{4,8})/.exec(location.pathname);
   const [invited, setInvited] = useState(!!joinMatch);
   const [code, setCode] = useState(joinMatch?.[1]?.toUpperCase() ?? '');
+  const [codeOpen, setCodeOpen] = useState(false);
   const toast = useStore((s) => s.toast);
 
   useEffect(() => {
@@ -47,13 +48,19 @@ export function Home() {
     <div className="home">
       <div className="home-bg on" style={{ backgroundImage: `url(${bg})` }} />
       <div className="home-lang home-corner">
+        {!invited && (
+          <button className="code-open" disabled={busy} onClick={() => setCodeOpen(true)}>
+            <Icon d={HOUSE} />
+            <span>{t('joinCodeOpen')}</span>
+          </button>
+        )}
         <GameSettings className="corner-settings" slug={DEFAULT_MAP_SLUG} />
       </div>
       <div className="home-card">
         <div className="home-brand">
           <img className="home-crest" src={home('home-crest')} alt="" draggable={false} />
           <h1>
-            <img className="home-logo" src="/brand/logo.webp" alt="Công An Chìm — The Hidden Police" width={1200} height={392} draggable={false} />
+            <img className="home-logo" src="/brand/logo.webp" alt="Công An Chìm — The Hidden Police" width={512} height={512} draggable={false} />
           </h1>
           <p className="home-tagline">{t('appTagline')}</p>
         </div>
@@ -138,27 +145,6 @@ export function Home() {
                     </span>
                   </button>
                 </div>
-                <div className="or-sep">
-                  <span>{t('joinCodeHint')}</span>
-                </div>
-                <div className={`join-ticket ${code.length >= 4 ? 'ready' : ''}`}>
-                  <span className="join-ticket-icon" aria-hidden>
-                    <Icon d="M10.4 12.6 21 2M15.5 7.5l3 3L22 7l-3-3M12.5 15.5a5 5 0 1 1-10 0 5 5 0 0 1 10 0z" />
-                  </span>
-                  <input
-                    className="code-input"
-                    value={code}
-                    maxLength={8}
-                    placeholder={t('roomCodePh')}
-                    aria-label={t('roomCodePh')}
-                    onChange={(e) => setCode(e.target.value.toUpperCase())}
-                    onKeyDown={(e) => e.key === 'Enter' && !busy && code.length >= 4 && joinRoom(code, saveName())}
-                  />
-                  <button className="join-go" disabled={busy || code.length < 4} onClick={() => joinRoom(code, saveName())}>
-                    {connecting === 'join' ? <i className="spinner" aria-hidden /> : t('joinGo')}
-                    <Icon d="M5 12h14M13 6l6 6-6 6" />
-                  </button>
-                </div>
               </>
             )}
           </div>
@@ -177,6 +163,46 @@ export function Home() {
         </div>
       </div>
       {connecting === 'find' && <FindingOverlay />}
+      {codeOpen && !invited && (
+        <div className="code-pop" role="dialog" aria-modal="true" aria-label={t('joinCodeTitle')} onClick={(e) => e.target === e.currentTarget && setCodeOpen(false)}>
+          <div className="code-pop-card">
+            <div className="map-pop-head">
+              <span>{t('joinCodeTitle')}</span>
+              <button className="map-pop-x" aria-label="✕" onClick={() => setCodeOpen(false)}>
+                ✕
+              </button>
+            </div>
+            <p className="code-pop-hint">{t('joinCodeHint')}</p>
+            <div className={`join-ticket ${code.length >= 4 ? 'ready' : ''}`}>
+              <span className="join-ticket-icon" aria-hidden>
+                <Icon d={HOUSE} />
+              </span>
+              <input
+                className="code-input"
+                autoFocus
+                value={code}
+                maxLength={8}
+                placeholder={t('roomCodePh')}
+                aria-label={t('roomCodePh')}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') setCodeOpen(false);
+                  else if (e.key === 'Enter' && !busy && code.length >= 4) joinRoom(code, saveName());
+                }}
+              />
+              <button className="join-go" disabled={busy || code.length < 4} onClick={() => joinRoom(code, saveName())}>
+                {connecting === 'join' ? <i className="spinner" aria-hidden /> : t('joinGo')}
+                <Icon d="M5 12h14M13 6l6 6-6 6" />
+              </button>
+            </div>
+            {error && !connecting && (
+              <p className="home-status error" role="alert">
+                {error}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -217,6 +243,8 @@ function FindingOverlay() {
     </div>
   );
 }
+
+const HOUSE = 'M3 11.5 12 4l9 7.5M5.5 9.5V20h13V9.5M10 20v-5.5h4V20';
 
 function Icon({ d }: { d: string }) {
   return (
