@@ -153,7 +153,7 @@ Nếu map hiện tại khác các địa điểm trên, **ưu tiên tận dụng
 ### Checklist triển khai
 
 - [ ] Role bí mật: `driver`, `undercover`, `veteran_driver`.
-- [ ] Cảnh sát có thể bắt giữ từng người; người bị bắt không làm task/vote; có hiệu ứng bắt và cooldown.
+- [ ] Cảnh sát có thể bắt giữ từng người; người bị bắt không vote, chỉ "gọi đàn em" làm nốt task của mình (không cầm/bàn giao hàng); có hiệu ứng bắt và cooldown.
 - [ ] Cảnh sát có thể làm task giả nhưng không cộng tiến độ.
 - [ ] Lão Làng soi tối đa 3 task gần nhất của 1 người, chỉ một lần/trận, không đọc role.
 - [ ] Task chuẩn bị đều liên quan tới kiện hàng 50 triệu và có minigame cụ thể.

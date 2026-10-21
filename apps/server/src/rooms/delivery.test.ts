@@ -1,42 +1,77 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { GAME, PREP_TASK_IDS, prepPlan } from '@hidden-truth/shared';
+import { GAME, PREP_TASK_IDS, dealTasks } from '@hidden-truth/shared';
 import { ArrestHold, Delivery, recentActivities, type Activity } from './delivery';
 
 const HOME = { x: 100, y: 100 };
-const fresh = (drivers = 3, turns = 1) => {
+/** three drivers a/b/c (counted) and the cop k (fake list) */
+const fresh = (per = 2) => {
   const d = new Delivery();
-  d.reset(prepPlan(drivers, turns), HOME);
+  d.reset(dealTasks(['a', 'b', 'c', 'k'], per), ['a', 'b', 'c'], HOME);
   return d;
 };
+const finishAll = (d: Delivery, id: string) => {
+  for (const t of d.tasksOf(id)) d.complete(id, t.id);
+};
 
-test('prep plan: every prep task at least once, total = max(7, turns × drivers)', () => {
-  const sum = (p: Record<string, number>) => Object.values(p).reduce((a, b) => a + b, 0);
-  assert.equal(sum(prepPlan(3, 2)), 7);
-  assert.equal(sum(prepPlan(5, 2)), 10);
-  assert.equal(sum(prepPlan(9, 2)), 18);
-  for (const id of PREP_TASK_IDS) assert.ok(prepPlan(3, 1)[id] >= 1, id);
+test('deal: every player gets their own distinct stations, spread across the map', () => {
+  const ids = ['a', 'b', 'c', 'd', 'e'];
+  const deal = dealTasks(ids, 3);
+  for (const id of ids) {
+    assert.equal(deal[id].length, 3);
+    assert.equal(new Set(deal[id]).size, 3, `${id}: no repeats`);
+  }
+  const load = new Map<string, number>();
+  for (const id of ids) for (const t of deal[id]) load.set(t, (load.get(t) ?? 0) + 1);
+  const counts = PREP_TASK_IDS.map((t) => load.get(t) ?? 0);
+  assert.ok(Math.max(...counts) - Math.min(...counts) <= 1, `balanced: ${counts}`);
+  assert.equal(dealTasks(['a'], 99).a.length, PREP_TASK_IDS.length, 'capped at the station count');
+  assert.equal(dealTasks(['a'], 0).a.length, 1, 'at least one');
 });
 
-test('only real (driver) completions advance preparation, each turn once', () => {
+test('a player can only open and finish stations on their own list', () => {
   const d = fresh();
-  assert.equal(d.complete('check_seal', false), false, 'undercover fake task');
-  assert.equal(d.done, 0);
-  assert.equal(d.complete('check_seal', true), true);
-  assert.equal(d.complete('check_seal', true), false, 'station already finished');
+  const [mine] = d.tasksOf('a');
+  const other = PREP_TASK_IDS.find((t) => !d.tasksOf('a').some((x) => x.id === t))!;
+  assert.equal(d.canOpen('a', other), false);
+  assert.equal(d.complete('a', other), false);
+  assert.equal(d.canOpen('a', mine.id), true);
+  assert.equal(d.complete('a', mine.id), true);
+  assert.equal(d.complete('a', mine.id), false, 'already done');
+  assert.equal(d.canOpen('a', mine.id), false);
   assert.equal(d.done, 1);
-  assert.equal(d.target, 7);
+  assert.equal(d.target, 6);
 });
 
-test('handoff stays locked until preparation reaches 100%', () => {
+test('the cop ticks off a fake list that never moves the bar', () => {
   const d = fresh();
-  for (const id of PREP_TASK_IDS.slice(0, -1)) d.complete(id, true);
+  finishAll(d, 'k');
+  assert.ok(d.tasksOf('k').every((t) => t.done));
+  assert.equal(d.done, 0);
+});
+
+test('handoff opens only when every driver finished their list', () => {
+  const d = fresh();
+  finishAll(d, 'a');
+  finishAll(d, 'b');
   assert.equal(d.handoffOpen, false);
-  assert.equal(d.canOpen('handoff_package'), false);
-  d.complete('confirm_recipient', true);
+  assert.equal(d.canOpen('a', 'handoff_package'), false);
+  finishAll(d, 'c');
   assert.equal(d.handoffOpen, true);
-  assert.equal(d.canOpen('handoff_package'), true);
-  assert.equal(d.canOpen('check_seal'), false, 'finished prep stations close');
+  assert.equal(d.canOpen('a', 'handoff_package'), true);
+});
+
+test('a driver who leaves hands their unfinished stations to the others', () => {
+  const d = fresh(3);
+  const [first] = d.tasksOf('a');
+  d.complete('a', first.id);
+  const moved = d.reassign('a', ['b', 'c']);
+  assert.equal(moved.length, 2);
+  assert.equal(d.target, 9, 'nothing lost, their finished one stays counted');
+  assert.equal(d.tasksOf('b').length + d.tasksOf('c').length, 8);
+  finishAll(d, 'b');
+  finishAll(d, 'c');
+  assert.equal(d.handoffOpen, true);
 });
 
 test('package: pick up in range, follow nobody else, drop on arrest, pick up again', () => {
@@ -56,7 +91,7 @@ test('package: pick up in range, follow nobody else, drop on arrest, pick up aga
 
 test('a dropped package keeps preparation progress', () => {
   const d = fresh();
-  d.complete('receive_package', true);
+  d.complete('a', d.tasksOf('a')[0].id);
   d.pick('a', HOME);
   d.onGone('a', HOME);
   assert.equal(d.done, 1);

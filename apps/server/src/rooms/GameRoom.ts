@@ -21,7 +21,7 @@ import {
   getLobbyGrid,
   canSeePoint,
   MIN_PLAYERS,
-  prepPlan,
+  dealTasks,
   stepMovement,
   type ArrestHoldMsg,
   type ChatMsg,
@@ -176,6 +176,7 @@ export class GameRoom extends Room<GameState> {
       p.connected = false;
       p.alive = false; // counter catches up at the next vote — syncing now would reveal the leaver's side
       this.dropPackage(p.id, p);
+      this.handOverTasks(p.id);
     }
     if (!kicked) this.system(`${p.name} đã rời phòng.`);
     if (!this.keepOnlineHost()) return;
@@ -235,10 +236,10 @@ export class GameRoom extends Room<GameState> {
       this.system(`${prev} đã đổi tên thành ${name}.`);
     });
 
-    this.onMessage('configure', (client, msg: { turnsPerDriver?: number; timeMin?: number }) => {
+    this.onMessage('configure', (client, msg: { tasksPerPlayer?: number; timeMin?: number }) => {
       if (client.sessionId !== this.state.hostId || this.state.phase !== 'lobby') return;
-      if (Number.isFinite(msg?.turnsPerDriver)) {
-        this.state.turnsPerDriver = Math.max(GAME.turnsPerDriverMin, Math.min(GAME.turnsPerDriverMax, Math.floor(msg.turnsPerDriver!)));
+      if (Number.isFinite(msg?.tasksPerPlayer)) {
+        this.state.tasksPerPlayer = Math.max(GAME.tasksPerPlayerMin, Math.min(GAME.tasksPerPlayerMax, Math.floor(msg.tasksPerPlayer!)));
       }
       if (Number.isFinite(msg?.timeMin)) {
         this.state.nightMin = Math.max(GAME.timeMinMin, Math.min(GAME.timeMinMax, Math.floor(msg.timeMin!)));
@@ -446,7 +447,10 @@ export class GameRoom extends Room<GameState> {
       p.body = false;
     });
     this.handoffCode = String(Math.floor(1000 + Math.random() * 9000));
-    this.delivery.reset(prepPlan(n - 1, this.state.turnsPerDriver), this.skin.delivery.packageHome);
+    // everyone gets a personal list (the cop's is cover); only the drivers' lists fill the bar
+    const deal = dealTasks(players.map((p) => p.id), this.state.tasksPerPlayer);
+    const drivers = players.filter((p) => this.secrets.get(p.id)!.faction === 'crew').map((p) => p.id);
+    this.delivery.reset(deal, drivers, this.skin.delivery.packageHome);
     this.hold.clear();
     this.syncDelivery();
     this.state.nightStartAt = dusk;
@@ -658,7 +662,7 @@ export class GameRoom extends Room<GameState> {
     this.state.meetingReason = '';
     this.state.nightStartAt = 0;
     this.state.nightPausedAt = 0;
-    this.delivery.reset(prepPlan(0, 0), this.skin.delivery.packageHome);
+    this.delivery.reset({}, [], this.skin.delivery.packageHome);
     this.hold.clear();
     this.syncDelivery();
     for (const [id, p] of this.state.players) {
@@ -825,14 +829,15 @@ export class GameRoom extends Room<GameState> {
   private syncDelivery() {
     const st = this.state;
     const d = this.delivery;
+    const totals = d.stationTotals();
     for (const id of PREP_TASK_IDS) {
       let row = st.stations.get(id);
       if (!row) {
         row = new StationState();
         st.stations.set(id, row);
       }
-      row.need = d.need.get(id) ?? 0;
-      row.done = d.doneBy.get(id) ?? 0;
+      row.need = totals.get(id)!.need;
+      row.done = totals.get(id)!.done;
     }
     st.progress = d.done;
     st.progressTarget = Math.max(1, d.target);
@@ -877,13 +882,15 @@ export class GameRoom extends Room<GameState> {
     const p = this.state.players.get(client.sessionId);
     const s = this.secrets.get(client.sessionId);
     const st = this.station(taskId);
-    // arrested drivers are spectators: no tasks
-    if (!p || !s || !st || this.state.phase !== 'explore' || !p.alive) return;
+    if (!p || !s || !st || this.state.phase !== 'explore' || !this.canWork(p, s, taskId)) return;
     if (!this.near(p, st.x, st.y)) return client.send('toast', { text: 'Bạn cần đứng gần điểm nhiệm vụ.', kind: 'warn' });
     if (taskId === 'handoff_package') {
       if (!this.delivery.handoffOpen) return client.send('toast', { text: 'Chưa chuẩn bị xong — bàn giao còn khoá.', kind: 'info' });
       if (this.delivery.carrier !== p.id) return client.send('toast', { text: 'Bạn cần cầm kiện hàng tới đây.', kind: 'info' });
-    } else if (!this.delivery.canOpen(taskId)) return client.send('toast', { text: 'Trạm này đã xong phần chuẩn bị.', kind: 'info' });
+    } else if (!this.delivery.canOpen(p.id, taskId)) {
+      const mine = this.delivery.tasksOf(p.id).some((j) => j.id === taskId);
+      return client.send('toast', { text: mine ? 'Bạn đã xong trạm này rồi.' : 'Trạm này không có trong danh sách của bạn.', kind: 'info' });
+    }
     const built = this.content.buildTask(taskId, { handoffCode: this.handoffCode });
     if (!built) return;
     s.pending = { expected: built.expected, openedAt: Date.now(), reward: built.fact, done: built.done, taskId, minMs: built.minMs };
@@ -893,7 +900,7 @@ export class GameRoom extends Room<GameState> {
   private submitTask(client: Client, msg: { taskId: TaskId; answer: unknown }) {
     const p = this.state.players.get(client.sessionId);
     const s = this.secrets.get(client.sessionId);
-    if (!p || !s || !p.alive || this.state.phase !== 'explore' || !s.pending || s.pending.taskId !== msg?.taskId) return;
+    if (!p || !s || this.state.phase !== 'explore' || !s.pending || s.pending.taskId !== msg?.taskId || !this.canWork(p, s, msg.taskId)) return;
     const { taskId, reward, done } = s.pending;
     const st = this.station(taskId)!;
     if (!this.near(p, st.x, st.y)) return client.send('toast', { text: 'Bạn đã rời khỏi điểm nhiệm vụ.', kind: 'warn' });
@@ -919,11 +926,8 @@ export class GameRoom extends Room<GameState> {
       return;
     }
 
-    // the cop's fake work is logged like anyone's but never moves the bar
-    if (s.faction === 'crew' && !this.delivery.complete(taskId, true)) {
-      client.send('task:close', {});
-      return client.send('toast', { text: 'Người khác vừa làm xong trạm này trước bạn.', kind: 'info' });
-    }
+    // the cop ticks off a fake list: logged like anyone's but never moves the bar
+    if (!this.delivery.complete(p.id, taskId)) return client.send('task:close', {});
     s.log.push({ taskId, at: now, status: 'done' });
     s.done++;
     p.tasksDone = s.done;
@@ -931,6 +935,25 @@ export class GameRoom extends Room<GameState> {
     this.syncDelivery();
     this.sendPrivate(client.sessionId);
     this.checkWin();
+  }
+
+  /**
+   * Free players do everything; an arrested driver still has one phone call — the "runner" they send
+   * (unseen by free players) may finish their own prep list, but never touch the package or the handoff.
+   */
+  private canWork(p: Player, s: Secret, taskId: TaskId) {
+    return p.alive || (s.faction === 'crew' && p.connected && taskId !== 'handoff_package');
+  }
+
+  /** a driver left mid-game: nobody can finish their list, so it goes to the drivers still online */
+  private handOverTasks(id: string) {
+    if (this.secrets.get(id)?.faction !== 'crew') return;
+    const heirs = [...this.state.players.values()].filter((x) => x.connected && x.id !== id && this.secrets.get(x.id)?.faction === 'crew').map((x) => x.id);
+    const got = this.delivery.reassign(id, heirs);
+    if (!got.length) return;
+    this.syncDelivery();
+    for (const x of new Set(got)) this.sendPrivate(x);
+    this.system(`Phần chuẩn bị còn dở của ${this.state.players.get(id)?.name ?? ''} đã được chia cho anh em còn lại.`);
   }
 
   // ---------------------------------------------------------------- utils
@@ -942,6 +965,7 @@ export class GameRoom extends Room<GameState> {
       role: s.role,
       faction: s.faction,
       objective: s.objective,
+      tasks: this.delivery.tasksOf(id).map((j) => ({ id: j.id, done: j.done })),
     };
     if (s.faction === 'killer') {
       info.arrestReadyAt = s.arrestReadyAt;

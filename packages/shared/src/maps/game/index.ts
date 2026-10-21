@@ -123,7 +123,7 @@ export const GAME_SKIN: MapSkin = {
   phrases: {
     kill: { vi: 'Bắt giữ', en: 'Arrest' },
     killBanner: { vi: 'Bị bắt giữ!', en: 'Arrested!' },
-    ghost: { vi: 'Ngồi khu tạm giữ — chỉ được xem', en: 'In the holding room — watching only' },
+    ghost: { vi: 'Ngồi khu tạm giữ — gọi đàn em làm nốt', en: 'In the holding room — your runner finishes up' },
     body: { vi: 'Xe CRAB bỏ lại', en: 'Abandoned CRAB bike' },
     bodyFound: { vi: 'Ủa xe ai đậu đây?', en: 'Wait, whose bike is this?' },
     meetingTitle: { vi: 'Ai là cảnh sát chìm?', en: 'Who’s the undercover cop?' },

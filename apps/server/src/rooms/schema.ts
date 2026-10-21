@@ -27,7 +27,7 @@ export class Player extends Schema {
   @type('boolean') micOn = false;
 }
 
-/** One preparation station: how many turns it needs and how many real drivers finished. */
+/** One preparation station: how many drivers have it on their list and how many finished it. */
 export class StationState extends Schema {
   @type('uint8') need = 0;
   @type('uint8') done = 0;
@@ -61,7 +61,8 @@ export class GameState extends Schema {
   @type('float64') nightPausedAt = 0;
   /** countdown length in minutes (host-adjustable) */
   @type('uint8') nightMin = 8;
-  @type('uint8') turnsPerDriver = 2;
+  /** prep stations dealt to each player (host-adjustable) */
+  @type('uint8') tasksPerPlayer = 3;
   /** living players per faction — counts only, never who */
   @type('uint8') crewAlive = 0;
   @type('uint8') killersAlive = 0;

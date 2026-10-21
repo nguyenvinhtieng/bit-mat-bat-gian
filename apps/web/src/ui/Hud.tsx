@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { sfx } from './minigames/common/kit';
-import { AREA_RECTS, GAME, PREP_TASK_IDS, LAYOUT_H, LAYOUT_W, TILE, type AreaId, type TaskId } from '@hidden-truth/shared';
+import { AREA_RECTS, GAME, LAYOUT_H, LAYOUT_W, TILE, type AreaId, type TaskId } from '@hidden-truth/shared';
 
 function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''; pending: Set<AreaId>; pos: { x: number; y: number } | null; big?: boolean; onClick?: () => void }) {
   const skin = useSkin();
@@ -114,9 +114,8 @@ function CarryNotice() {
   );
 }
 
-/** One countdown (paused during meetings); the fictional clock runs 23:42 -> 05:00 over it. */
+/** One countdown before daybreak (paused during meetings): only the time left is shown. */
 function useClock() {
-  const skin = useSkin();
   const room = useStore((s) => s.room)!;
   const offset = useStore((s) => s.timeOffset);
   const [now, setNow] = useState(Date.now());
@@ -127,30 +126,17 @@ function useClock() {
   if (!room.nightStartAt) return null;
   const total = room.nightMin * 60_000;
   const elapsed = Math.min(total, Math.max(0, (room.nightPausedAt || now + offset) - room.nightStartAt));
-  const { startMin, endMin } = skin.story.clock;
-  const mins = startMin + Math.floor((elapsed / total) * (endMin - startMin));
-  const h = Math.floor(mins / 60) % 24;
   const left = Math.ceil((total - elapsed) / 1000);
-  return {
-    frac: elapsed / total,
-    clock: `${String(h).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`,
-    left,
-    last: left <= 60,
-    paused: !!room.nightPausedAt,
-  };
+  return { left, last: left <= 60, paused: !!room.nightPausedAt };
 }
 
-/** "05:00 · còn lại mm:ss" pill; on touch screens it sits in the right column under the role card. */
+/** "còn lại mm:ss" pill; on touch screens it sits in the right column under the role card. */
 function NightClock({ night }: { night: NonNullable<ReturnType<typeof useClock>> }) {
   const skin = useSkin();
   const t = useT();
   return (
     <div className="night-clock" title={t('nightTitle')}>
       <img src={asset(`${skin.art.clockIcon}.webp`)} width={26} height={26} alt="" />
-      <span className="nc-canh">
-        <Digits text={night.clock} />
-      </span>
-      <i className="nc-sep" aria-hidden />
       {night.paused ? (
         <span className="nc-left">{t('nightPaused')}</span>
       ) : (
@@ -162,34 +148,14 @@ function NightClock({ night }: { night: NonNullable<ReturnType<typeof useClock>>
   );
 }
 
-/** Touch screens: the clock on its own, with the same last-minute / paused styling as the top strip. */
-function NightClockDock() {
+/** Top-right corner (desktop and touch): time left, then the crew's shared preparation bar under it. */
+function NightBar({ pct, progress, target, open }: { pct: number; progress: number; target: number; open: boolean }) {
   const night = useClock();
+  const t = useT();
   if (!night) return null;
   return (
     <div className={`night-wrap ${night.last ? 'last' : ''} ${night.paused ? 'paused' : ''}`}>
       <NightClock night={night} />
-    </div>
-  );
-}
-
-function NightBar({ pct, progress, target, open }: { pct: number; progress: number; target: number; open: boolean }) {
-  const skin = useSkin();
-  const night = useClock();
-  const t = useT();
-  const touch = isTouchDevice();
-  if (!night) return null;
-  return (
-    <div className={`night-wrap ${night.last ? 'last' : ''} ${night.paused ? 'paused' : ''}`}>
-      <div className="nw-row">
-        {!touch && <NightClock night={night} />}
-        <div className="night-bar single" title={t('nightLeftTitle')}>
-          <div className={`nb-seg ${night.frac >= 1 ? 'done' : 'cur'}`}>
-            <i style={{ width: `${night.frac * 100}%` }} />
-          </div>
-          <img className="nb-moon" src={asset(`${skin.art.nightMarker}.webp`)} alt="" style={{ left: `${night.frac * 100}%` }} />
-        </div>
-      </div>
       <div className={`progress ${open ? 'open' : ''}`} title={t('progress')}>
         <div className="fill" style={{ width: `${pct}%` }} />
         <span>
@@ -383,15 +349,17 @@ export function Hud() {
     if (!exploring) setMapOpen(false);
   }, [exploring]);
 
-  /** prep stations with turns left, and the handoff point once it opens */
-  const rows = [...PREP_TASK_IDS, 'handoff_package' as const].map((id: TaskId) => {
+  /** my own prep list (the cop's is cover), then the handoff point once it opens — arrested runners never hand off */
+  const mineList: { id: TaskId; done: boolean }[] = [...(me?.tasks ?? [])];
+  if (alive) mineList.push({ id: 'handoff_package', done: room.packageState === 'delivered' });
+  const rows = mineList.map(({ id, done }, i) => {
     const st = skin.stations.find((x) => x.id === id)!;
-    const c = room.stations[id];
     const handoff = id === 'handoff_package';
-    const done = handoff ? room.packageState === 'delivered' : !!c && c.done >= c.need;
     const locked = handoff && !room.handoffOpen;
-    return { id, st, need: c?.need ?? 1, got: c?.done ?? 0, done, locked, handoff };
+    return { key: `${id}-${i}`, id, st, done, locked, handoff };
   });
+  const myDone = me?.tasks?.filter((j) => j.done).length ?? 0;
+  const myTotal = me?.tasks?.length ?? 0;
   const pendingAreas = new Set<AreaId>(rows.filter((r) => !r.done && !r.locked).map((r) => r.st.area));
 
   const touch = isTouchDevice();
@@ -400,16 +368,10 @@ export function Hud() {
       {rows.map((r) => {
         const here = r.st.area === area && !r.done && !r.locked;
         return (
-          <li key={r.id} className={`${r.done ? 'done' : ''} ${here ? 'here' : ''} ${r.locked ? 'locked' : ''}`}>
+          <li key={r.key} className={`${r.done ? 'done' : ''} ${here ? 'here' : ''} ${r.locked ? 'locked' : ''}`}>
             <i className="tick">{r.done ? '✔' : r.locked ? '🔒' : ''}</i>
             <span>
               {en ? r.st.titleEn : r.st.title}
-              {!r.handoff && r.need > 1 && (
-                <b className="task-turns">
-                  {' '}
-                  {Math.min(r.got, r.need)}/{r.need}
-                </b>
-              )}
               <small className="task-where">📍 {en ? skin.areas[r.st.area].nameEn : skin.areas[r.st.area].name}</small>
             </span>
           </li>
@@ -422,7 +384,7 @@ export function Hud() {
     <button className="task-chip" onClick={() => setTasksOpen(true)} title={touch ? t('myTasks') : `${t('myTasks')} (T)`}>
       <img src={asset('maps/common/ui/notebook.webp')} alt="" draggable={false} />
       <b>
-        {room.progress}/{room.progressTarget}
+        {myDone}/{myTotal}
       </b>
       {!touch && <kbd className="task-chip-key">T</kbd>}
     </button>
@@ -430,7 +392,7 @@ export function Hud() {
 
   const meter = (
     <div className="task-meter">
-      <div style={{ width: `${pct}%` }} />
+      <div style={{ width: `${Math.round((myDone / Math.max(1, myTotal)) * 100)}%` }} />
     </div>
   );
 
@@ -442,14 +404,13 @@ export function Hud() {
           {room.phase === 'explore' && <CarryNotice />}
         </div>
       )}
-      {/* top centre: the (small) location plate on top, countdown + preparation under it */}
+      {/* top centre: the (small) location plate */}
       <div className="hud-top">
         {area && (
           <div className="area-name" key={area}>
             <span>{skin.areas[area].name}</span>
           </div>
         )}
-        {inGame && room.phase !== 'ended' && <NightBar pct={pct} progress={room.progress} target={room.progressTarget} open={room.handoffOpen} />}
         {inGame && left != null && (
           <div className="hud-status">
             <span className="timer">
@@ -495,7 +456,7 @@ export function Hud() {
               <button className="task-head" onClick={() => setTasksOpen(false)} aria-expanded title={`${t('hide')} (T)`}>
                 <span className="task-head-title">{t('myTasks')}</span>
                 <b className="task-count">
-                  {room.progress}/{room.progressTarget}
+                  {myDone}/{myTotal}
                 </b>
                 <span className="task-toggle" aria-hidden>
                   <kbd>T</kbd>
@@ -509,11 +470,11 @@ export function Hud() {
           )}
         </div>
       )}
-      {/* touch: right column under the role card — clock, then the prep chip */}
-      {inGame && touch && room.phase !== 'ended' && (
-        <div className="task-chip-dock">
-          <NightClockDock />
-          {me && room.phase === 'explore' && taskChip}
+      {/* top right, under the cog / voice buttons: time left + preparation (touch: then the prep chip) */}
+      {inGame && room.phase !== 'ended' && (
+        <div className="hud-right-dock">
+          <NightBar pct={pct} progress={room.progress} target={room.progressTarget} open={room.handoffOpen} />
+          {touch && me && room.phase === 'explore' && taskChip}
         </div>
       )}
       {me && inGame && room.phase === 'explore' && touch && tasksOpen && !taskOpen && (
@@ -522,7 +483,7 @@ export function Hud() {
             <div className="task-pop-head">
               <span className="task-head-title">{t('myTasks')}</span>
               <b className="task-count">
-                {room.progress}/{room.progressTarget}
+                {myDone}/{myTotal}
               </b>
               <CloseButton className="task-pop-x" onClick={() => setTasksOpen(false)} label={t('close')} />
             </div>

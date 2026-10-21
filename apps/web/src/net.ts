@@ -1,5 +1,5 @@
 import { Client, type Room } from 'colyseus.js';
-import { PLAYER_COLORS, ROOM_NAME, type ArrestHoldMsg, type ClientMessages, type Cinematic, type InspectResult } from '@hidden-truth/shared';
+import { GAME, PLAYER_COLORS, ROOM_NAME, type ArrestHoldMsg, type ClientMessages, type Cinematic, type InspectResult } from '@hidden-truth/shared';
 import { useStore, type Connecting, type RoomView } from './store';
 
 function endpoint(): string {
@@ -84,7 +84,7 @@ function snapshot(state: any): RoomView {
     packageCarrier: state.packageCarrier ?? '',
     packageX: state.packageX ?? 0,
     packageY: state.packageY ?? 0,
-    turnsPerDriver: state.turnsPerDriver ?? 2,
+    tasksPerPlayer: state.tasksPerPlayer ?? GAME.tasksPerPlayerDefault,
     nightMin: state.nightMin ?? 8,
     crewAlive: state.crewAlive ?? 0,
     killersAlive: state.killersAlive ?? 0,

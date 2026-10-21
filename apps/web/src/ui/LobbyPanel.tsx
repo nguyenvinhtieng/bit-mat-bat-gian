@@ -89,7 +89,7 @@ export function LobbyPanel() {
             <img src={asset('maps/common/ui/settings.webp')} alt="" draggable={false} />
             <span>{t('settings')}</span>
             <small>
-              {room.turnsPerDriver}× · {room.nightMin}′
+              {room.tasksPerPlayer}× · {room.nightMin}′
             </small>
           </button>
         </aside>
@@ -249,14 +249,14 @@ function SettingsModal(props: { isHost: boolean; onClose: () => void }) {
   const room = useStore((s) => s.room)!;
   const t = useT();
   const { isHost, onClose } = props;
-  const [draft, setDraft] = useState({ turns: room.turnsPerDriver, timeMin: room.nightMin, isPublic: room.isPublic });
+  const [draft, setDraft] = useState({ turns: room.tasksPerPlayer, timeMin: room.nightMin, isPublic: room.isPublic });
   // guests just watch the live values; only the host edits a draft
-  const { turns, timeMin, isPublic } = isHost ? draft : { turns: room.turnsPerDriver, timeMin: room.nightMin, isPublic: room.isPublic };
+  const { turns, timeMin, isPublic } = isHost ? draft : { turns: room.tasksPerPlayer, timeMin: room.nightMin, isPublic: room.isPublic };
   const edit = (patch: Partial<typeof draft>) => setDraft((d) => ({ ...d, ...patch }));
 
   const save = () => {
-    const msg: { turnsPerDriver?: number; timeMin?: number } = {};
-    if (turns !== room.turnsPerDriver) msg.turnsPerDriver = turns;
+    const msg: { tasksPerPlayer?: number; timeMin?: number } = {};
+    if (turns !== room.tasksPerPlayer) msg.tasksPerPlayer = turns;
     if (timeMin !== room.nightMin) msg.timeMin = timeMin;
     if (Object.keys(msg).length) send('configure', msg);
     if (isPublic !== room.isPublic) send('host:visibility', { public: isPublic });
@@ -277,8 +277,8 @@ function SettingsModal(props: { isHost: boolean; onClose: () => void }) {
           <SliderRow
             icon="maps/common/ui/clue.webp"
             label={t('tasksPer')}
-            min={GAME.turnsPerDriverMin}
-            max={GAME.turnsPerDriverMax}
+            min={GAME.tasksPerPlayerMin}
+            max={GAME.tasksPerPlayerMax}
             value={turns}
             disabled={!isHost}
             onChange={(v) => edit({ turns: v })}

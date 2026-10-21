@@ -45,7 +45,8 @@ export type RoomView = {
   packageCarrier: string;
   packageX: number;
   packageY: number;
-  turnsPerDriver: number;
+  /** prep stations dealt to each player */
+  tasksPerPlayer: number;
   /** countdown length (min) */
   nightMin: number;
   crewAlive: number;

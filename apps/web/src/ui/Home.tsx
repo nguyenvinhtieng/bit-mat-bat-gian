@@ -42,11 +42,23 @@ export function Home() {
     return n;
   };
 
+  const leaveInvite = () => {
+    history.replaceState(null, '', '/');
+    setInvited(false);
+    setCode('');
+  };
+
   const bg = asset(mapArt(DEFAULT_MAP_SLUG, 'home-bg'));
 
   return (
     <div className="home">
       <div className="home-bg on" style={{ backgroundImage: `url(${bg})` }} />
+      {invited && (
+        <button className="home-back" disabled={busy} onClick={leaveInvite} aria-label={t('backHome')}>
+          <Icon d="M19 12H5M11 6l-6 6 6 6" />
+          <span>{t('backHome')}</span>
+        </button>
+      )}
       <div className="home-lang home-corner">
         {!invited && (
           <button className="code-open" disabled={busy} onClick={() => setCodeOpen(true)}>
@@ -57,6 +69,17 @@ export function Home() {
         <GameSettings className="corner-settings" slug={DEFAULT_MAP_SLUG} />
       </div>
       <div className="home-card">
+        {invited && (
+          <div className="invite-ticket">
+            <span className="join-ticket-icon" aria-hidden>
+              <Icon d="M10.4 12.6 21 2M15.5 7.5l3 3L22 7l-3-3M12.5 15.5a5 5 0 1 1-10 0 5 5 0 0 1 10 0z" />
+            </span>
+            <span className="invite-ticket-text">
+              <small>{t('invitedTo')}</small>
+              <b>{code}</b>
+            </span>
+          </div>
+        )}
         <div className="home-brand">
           <img className="home-crest" src={home('home-crest')} alt="" draggable={false} />
           <h1>
@@ -99,15 +122,6 @@ export function Home() {
           <div className="home-actions">
             {invited ? (
               <>
-                <div className="invite-ticket">
-                  <span className="join-ticket-icon" aria-hidden>
-                    <Icon d="M10.4 12.6 21 2M15.5 7.5l3 3L22 7l-3-3M12.5 15.5a5 5 0 1 1-10 0 5 5 0 0 1 10 0z" />
-                  </span>
-                  <span className="invite-ticket-text">
-                    <small>{t('invitedTo')}</small>
-                    <b>{code}</b>
-                  </span>
-                </div>
                 <button className={`cta cta-join ${connecting === 'join' ? 'loading' : ''}`} disabled={busy || code.length < 4} onClick={() => joinRoom(code, saveName())}>
                   <span className="cta-icon" aria-hidden>
                     <Icon d="M5 12h14M13 6l6 6-6 6" />
@@ -115,13 +129,6 @@ export function Home() {
                   <span className="cta-text">
                     <b>{connecting === 'join' ? t('joiningRoom') : t('joinRoom')}</b>
                   </span>
-                </button>
-                <div className="or-sep">
-                  <span>{t('or')}</span>
-                </div>
-                <button className="invite-alt" disabled={busy} onClick={() => createRoom(saveName())}>
-                  <Icon d="M12 5v14M5 12h14" />
-                  {connecting === 'create' ? t('creatingRoom') : t('createNewRoom')}
                 </button>
               </>
             ) : (

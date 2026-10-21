@@ -85,10 +85,10 @@ export type TaskId = (typeof TASK_IDS)[number];
 export type PrepTaskId = (typeof PREP_TASK_IDS)[number];
 
 export const GAME = {
-  /** preparation turns per driver (host-adjustable); total turns = max(7, turnsPerDriver × drivers) */
-  turnsPerDriverMin: 1,
-  turnsPerDriverMax: 3,
-  turnsPerDriverDefault: 2,
+  /** prep stations dealt to each player (host-adjustable, 1..all stations); every list is personal */
+  tasksPerPlayerMin: 1,
+  tasksPerPlayerMax: PREP_TASK_IDS.length,
+  tasksPerPlayerDefault: 3,
   /** arrest: hold this long next to the target (server-timed); cancelled if they step out of range */
   arrestRange: 84,
   arrestHoldSec: 1.5,
@@ -119,12 +119,17 @@ export const GAME = {
 };
 
 /**
- * Preparation turns for one game: every prep task at least once, then repeats round-robin
- * (in `PREP_TASK_IDS` order) until `max(7, turnsPerDriver × drivers)`.
+ * Personal prep lists for one game: each player gets `perPlayer` distinct stations, always picking
+ * the least-dealt ones (random tie-break) so the crew spreads out instead of walking around as one pack.
  */
-export const prepPlan = (drivers: number, turnsPerDriver: number): Record<PrepTaskId, number> => {
-  const total = Math.max(PREP_TASK_IDS.length, Math.floor(turnsPerDriver) * Math.max(0, drivers));
-  const plan = Object.fromEntries(PREP_TASK_IDS.map((id) => [id, 0])) as Record<PrepTaskId, number>;
-  for (let i = 0; i < total; i++) plan[PREP_TASK_IDS[i % PREP_TASK_IDS.length]]++;
-  return plan;
+export const dealTasks = (ids: readonly string[], perPlayer: number, rand = Math.random): Record<string, PrepTaskId[]> => {
+  const per = Math.max(GAME.tasksPerPlayerMin, Math.min(GAME.tasksPerPlayerMax, Math.floor(perPlayer) || 0));
+  const load = new Map<PrepTaskId, number>(PREP_TASK_IDS.map((t) => [t, 0]));
+  const out: Record<string, PrepTaskId[]> = {};
+  for (const id of ids) {
+    const pool = PREP_TASK_IDS.map((t) => ({ t, k: load.get(t)! + rand() * 0.5 })).sort((a, b) => a.k - b.k);
+    out[id] = pool.slice(0, per).map((x) => x.t);
+    for (const t of out[id]) load.set(t, load.get(t)! + 1);
+  }
+  return out;
 };

@@ -2,57 +2,92 @@ import { GAME, PREP_TASK_IDS, dist, type PrepTaskId, type Pt, type TaskId } from
 
 /**
  * Cuốc Cuối rules, free of Colyseus so they can be unit-tested:
- * shared preparation turns, the 50-million package, the arrest hold and the veteran's activity log.
+ * personal preparation lists, the 50-million package, the arrest hold and the veteran's activity log.
  * The room mirrors them into public state.
  */
 export type PackageState = 'home' | 'carried' | 'dropped' | 'delivered';
 
+export type Job = { id: PrepTaskId; done: boolean };
+
 export class Delivery {
-  need = new Map<PrepTaskId, number>();
-  doneBy = new Map<PrepTaskId, number>();
+  /** personal prep lists; only `counted` players (the drivers) feed the bar — the cop's list is cover */
+  jobs = new Map<string, Job[]>();
+  counted = new Set<string>();
   state: PackageState = 'home';
   carrier = '';
   x = 0;
   y = 0;
 
-  reset(plan: Record<PrepTaskId, number>, home: Pt) {
-    this.need.clear();
-    this.doneBy.clear();
-    for (const id of PREP_TASK_IDS) {
-      this.need.set(id, plan[id]);
-      this.doneBy.set(id, 0);
-    }
+  reset(deal: Record<string, readonly PrepTaskId[]>, counted: readonly string[], home: Pt) {
+    this.jobs.clear();
+    for (const [id, list] of Object.entries(deal)) this.jobs.set(id, list.map((t) => ({ id: t, done: false })));
+    this.counted = new Set(counted);
     this.state = 'home';
     this.carrier = '';
     this.x = home.x;
     this.y = home.y;
   }
 
+  tasksOf(id: string): readonly Job[] {
+    return this.jobs.get(id) ?? [];
+  }
+
+  private countedJobs() {
+    return [...this.counted].flatMap((id) => this.jobs.get(id) ?? []);
+  }
   get done() {
-    let n = 0;
-    for (const v of this.doneBy.values()) n += v;
-    return n;
+    return this.countedJobs().filter((j) => j.done).length;
   }
   get target() {
-    let n = 0;
-    for (const v of this.need.values()) n += v;
-    return n;
+    return this.countedJobs().length;
   }
   get handoffOpen() {
     return this.target > 0 && this.done >= this.target;
   }
 
-  /** a prep station with turns left, or the handoff once preparation is full */
-  canOpen(taskId: TaskId) {
-    if (taskId === 'handoff_package') return this.handoffOpen;
-    return (this.doneBy.get(taskId) ?? 0) < (this.need.get(taskId) ?? 0);
+  /** per station, over the drivers' lists: how many were dealt / finished (public, no names) */
+  stationTotals() {
+    const out = new Map<PrepTaskId, { need: number; done: number }>(PREP_TASK_IDS.map((t) => [t, { need: 0, done: 0 }]));
+    for (const j of this.countedJobs()) {
+      const row = out.get(j.id)!;
+      row.need++;
+      if (j.done) row.done++;
+    }
+    return out;
   }
 
-  /** `real` = a driver did it (the undercover's fake never counts). Returns true if a turn was used up. */
-  complete(taskId: TaskId, real: boolean) {
-    if (!real || taskId === 'handoff_package' || !this.canOpen(taskId)) return false;
-    this.doneBy.set(taskId, (this.doneBy.get(taskId) ?? 0) + 1);
+  /** one of this player's unfinished stations, or the handoff once preparation is full */
+  canOpen(id: string, taskId: TaskId) {
+    if (taskId === 'handoff_package') return this.handoffOpen;
+    return this.tasksOf(id).some((j) => j.id === taskId && !j.done);
+  }
+
+  /** ticks the station off this player's list. Returns true if it was on it and still open. */
+  complete(id: string, taskId: TaskId) {
+    const j = this.jobs.get(id)?.find((x) => x.id === taskId && !x.done);
+    if (!j) return false;
+    j.done = true;
     return true;
+  }
+
+  /**
+   * A driver left mid-game: their unfinished stations go to `to` (whoever has the fewest open ones,
+   * preferring someone who doesn't hold that station yet). Returns the receivers, one per moved station.
+   */
+  reassign(from: string, to: readonly string[]) {
+    const list = this.jobs.get(from);
+    const heirs = to.filter((x) => x !== from && this.jobs.has(x));
+    if (!list || !heirs.length) return [];
+    const open = (x: string) => this.tasksOf(x).filter((j) => !j.done).length;
+    const got: string[] = [];
+    for (const j of list.filter((x) => !x.done)) {
+      const free = heirs.filter((x) => !this.canOpen(x, j.id));
+      const pick = (free.length ? free : heirs).reduce((a, b) => (open(b) < open(a) ? b : a));
+      this.jobs.get(pick)!.push({ id: j.id, done: false });
+      got.push(pick);
+    }
+    this.jobs.set(from, list.filter((x) => x.done));
+    return got;
   }
 
   pick(id: string, at: Pt): 'ok' | 'far' | 'taken' | 'gone' {

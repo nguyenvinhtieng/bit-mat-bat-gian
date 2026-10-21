@@ -227,7 +227,7 @@ export class GameScene extends Phaser.Scene {
     this.unbind.push(
       useStore.subscribe(
         (s, prev) =>
-          (s.room?.stations !== prev.room?.stations || s.room?.handoffOpen !== prev.room?.handoffOpen || s.room?.packageState !== prev.room?.packageState || s.room?.phase !== prev.room?.phase) &&
+          (s.me?.tasks !== prev.me?.tasks || s.room?.handoffOpen !== prev.room?.handoffOpen || s.room?.packageState !== prev.room?.packageState || s.room?.phase !== prev.room?.phase) &&
           this.refreshStations(),
       ),
     );
@@ -522,13 +522,11 @@ export class GameScene extends Phaser.Scene {
     this.tapBadge.setPosition(s.ring.x, s.top - 6).setVisible(true);
   }
 
-  /** Highlight the stations that still need prep (and the handoff once open); finished / locked ones are dimmed. */
+  /** Highlight my unfinished stations (and the handoff once open); everyone else's / finished / locked ones are dimmed. */
   private refreshStations() {
     const r = useStore.getState().room;
-    const me = this.myView();
-    const open = (id: TaskId) => this.stationOpen(id);
     for (const [id, s] of this.stationSprites) {
-      const active = me?.alive !== false && r?.phase !== 'lobby' && open(id);
+      const active = r?.phase !== 'lobby' && this.canWork(id) && this.stationOpen(id);
       s.icon.setTint(active ? 0xffffff : 0x777777).setAlpha(active ? 1 : 0.55);
       s.ring.setVisible(active);
       for (const o of s.fx) (o as unknown as Phaser.GameObjects.Components.Visible).setVisible(active);
@@ -931,22 +929,30 @@ export class GameScene extends Phaser.Scene {
     return { dx, dy };
   }
 
-  /** prep station with turns left, or the handoff point once it has opened */
+  /** one of my unfinished prep stations, or the handoff point once it has opened */
   private stationOpen(id: TaskId) {
-    const r = useStore.getState().room;
+    const { room: r, me } = useStore.getState();
     if (!r) return false;
     if (id === 'handoff_package') return r.handoffOpen && r.packageState !== 'delivered';
-    const c = r.stations[id];
-    return !!c && c.done < c.need;
+    return !!me?.tasks?.some((j) => j.id === id && !j.done);
+  }
+
+  /** free players do everything; an arrested driver's runner may still finish their own prep list */
+  private canWork(id: TaskId) {
+    if (this.myView()?.alive !== false) return true;
+    return useStore.getState().me?.faction === 'crew' && id !== 'handoff_package';
   }
 
   private tryTask(id: TaskId) {
     const s = useStore.getState();
     if (s.room?.phase !== 'explore' || uiBlocksMovement()) return;
     const st = this.skin.stations.find((x) => x.id === id)!;
-    if (this.myView()?.alive === false) return s.toast({ text: 'Bạn đã bị bắt — chỉ có thể quan sát.', kind: 'info' });
+    if (!this.canWork(id)) return s.toast({ text: 'Bạn đã bị bắt — chỉ có thể quan sát.', kind: 'info' });
     if (id === 'handoff_package' && !s.room.handoffOpen) return s.toast({ text: 'Chưa chuẩn bị đủ 100% — bàn giao còn khoá.', kind: 'info' });
-    if (!this.stationOpen(id)) return s.toast({ text: `“${st.title}” đã xong phần chuẩn bị.`, kind: 'info' });
+    if (!this.stationOpen(id)) {
+      const mine = s.me?.tasks?.some((j) => j.id === id);
+      return s.toast({ text: mine ? `Bạn đã xong “${st.title}”.` : `“${st.title}” không có trong danh sách của bạn.`, kind: 'info' });
+    }
     if (dist(this.pred, st) > INTERACT_RADIUS) return s.toast({ text: `Lại gần “${st.title}” để làm nhiệm vụ.`, kind: 'info' });
     send('task:open', { taskId: id });
   }
@@ -987,9 +993,13 @@ export class GameScene extends Phaser.Scene {
     const s = useStore.getState();
     if (s.room?.phase !== 'explore') return null;
     const me = this.myView();
-    // arrested players only watch: no tasks, no reports, no package
-    if (me?.alive === false) return null;
     const r = s.room;
+    // arrested drivers only send their runner to their own prep stations: no reports, no package, no handoff
+    if (me?.alive === false) {
+      if (s.me?.faction !== 'crew') return null;
+      const st = this.skin.stations.find((x) => x.id !== 'handoff_package' && dist(this.pred, x) < INTERACT_RADIUS);
+      return st ? { kind: 'task', id: st.id, title: st.title, done: !this.stationOpen(st.id) } : null;
+    }
     const body = r.players.find((p) => p.body && dist(this.pred, { x: p.bodyX, y: p.bodyY }) <= GAME.reportRange);
     if (body) return { kind: 'report', title: `Báo xe bỏ lại của ${body.name}` };
     if ((r.packageState === 'home' || r.packageState === 'dropped') && dist(this.pred, { x: r.packageX, y: r.packageY }) <= GAME.packageRange)

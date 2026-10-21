@@ -8,7 +8,6 @@ import { Client, type Room } from 'colyseus.js';
 import {
   GAME,
   GAME_STATIONS,
-  PREP_TASK_IDS,
   type Pt,
   ROOM_NAME,
   SIM_DT,
@@ -178,7 +177,7 @@ async function main() {
   }
   await until(() => host.room.state.players.size === N, 3000, 'players joined');
 
-  host.room.send('configure', { turnsPerDriver: 1 });
+  host.room.send('configure', { tasksPerPlayer: 1 });
   for (const b of bots) b.room.send('ready', { ready: true });
   await sleep(200);
   host.room.send('start', {});
@@ -188,9 +187,8 @@ async function main() {
   const crew = bots.filter((b) => b.me!.faction === 'crew');
   if (!killer) throw new Error('no killer assigned');
 
-  // a crew member plays every prep station -> shared progress goes up; a wrong answer is rejected first
-  const worker = crew[0];
-  for (const tid of PREP_TASK_IDS) {
+  // every driver plays the stations on their own list -> shared progress goes up; a wrong answer is rejected first
+  for (const worker of crew) for (const { id: tid } of worker.me!.tasks) {
     const st = GAME_STATIONS.find((x) => x.id === tid)!;
     await walkTo(worker, st);
     worker.task = undefined;
@@ -210,7 +208,7 @@ async function main() {
     if (!worker.lastResult!.ok) throw new Error(`${tid}: correct answer rejected`);
     log('task done', tid, '-> progress', host.room.state.progress, '/', host.room.state.progressTarget);
   }
-  if (host.room.state.progress < PREP_TASK_IDS.length) throw new Error('progress did not increase');
+  if (host.room.state.progress < host.room.state.progressTarget) throw new Error('progress did not reach the target');
 
   // killer walks to a victim and kills (server validates range + cooldown)
   const victim = crew[crew.length - 1];

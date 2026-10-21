@@ -1,4 +1,4 @@
-import type { Faction, RoleId, TaskId } from './constants';
+import type { Faction, PrepTaskId, RoleId, TaskId } from './constants';
 
 /** Client -> server */
 export type InputMsg = { seq: number; dx: number; dy: number }[];
@@ -6,8 +6,8 @@ export type InputMsg = { seq: number; dx: number; dy: number }[];
 export type ClientMessages = {
   input: InputMsg;
   ready: { ready: boolean };
-  /** turnsPerDriver: prep turns per driver; timeMin: countdown length in minutes */
-  configure: { turnsPerDriver?: number; timeMin?: number };
+  /** tasksPerPlayer: prep stations dealt to each player; timeMin: countdown length in minutes */
+  configure: { tasksPerPlayer?: number; timeMin?: number };
   start: Record<string, never>;
   'task:open': { taskId: TaskId };
   'task:submit': { taskId: TaskId; answer: unknown };
@@ -47,6 +47,8 @@ export type PrivateInfo = {
   role: RoleId;
   faction: Faction;
   objective: string;
+  /** own prep list (the undercover's is fake cover) */
+  tasks: { id: PrepTaskId; done: boolean }[];
   /** undercover only: server time (ms) when the next arrest is available */
   arrestReadyAt?: number;
   /** undercover only: own session id (name renders red for them) */
