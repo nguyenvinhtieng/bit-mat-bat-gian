@@ -79,12 +79,11 @@ export function useDragDrop<T>(onDrop: (item: T, target: string) => void, onTap?
 }
 
 /**
- * Common frame for every mini-game: story line (from the server), the goal in one sentence,
- * a one-line tip and a status chip. No time limits anywhere — take your time.
+ * Common frame for every mini-game: one short action line + a status chip, the rest is play area.
+ * No time limits anywhere — take your time.
  */
-export function MgShell({ taskId, lore, status, children, hint, tone = 'info', vars }: {
+export function MgShell({ taskId, status, children, hint, tone = 'info', vars }: {
   taskId: TaskId;
-  lore: string;
   status?: React.ReactNode;
   children: React.ReactNode;
   hint?: React.ReactNode;
@@ -92,24 +91,16 @@ export function MgShell({ taskId, lore, status, children, hint, tone = 'info', v
   vars?: Record<string, string>;
 }) {
   const lang = useLang((s) => s.lang);
-  const g = GUIDE[taskId]?.[lang === 'en' ? 'en' : 'vi'] ?? { goal: '', steps: [] };
+  const goal = GUIDE[taskId]?.[lang === 'en' ? 'en' : 'vi'].goal ?? '';
   const fill = (t: string) => t.replace(/\{(\w+)\}/g, (_, k) => vars?.[k] ?? '');
-  // phones: only the goal line shows; tapping the header unfolds lore + tips
-  const [more, setMore] = useState(false);
   return (
     <div className="mg-col">
-      {/* guide / play wrappers are display: contents, except on short landscape screens (compact goal bar on top) */}
-      <div className={`mg-guide ${more ? 'more' : ''}`}>
-        <header className="mg-head" onClick={() => setMore((v) => !v)}>
-          <div className="mg-head-text">
-            <p className="mg-lore">{lore}</p>
-            <p className="mg-goal">
-              <b>{lang === 'en' ? 'Goal' : 'Mục tiêu'}</b> {fill(g.goal)}
-            </p>
-          </div>
+      {/* guide / play wrappers are display: contents, except on short landscape screens (goal bar on top) */}
+      <div className="mg-guide">
+        <header className="mg-head">
+          <p className="mg-goal">{fill(goal)}</p>
           {status && <div className="mg-status">{status}</div>}
         </header>
-        <p className="mg-tip">{g.steps.map(fill).join(' · ')}</p>
       </div>
       <div className="mg-play">{children}</div>
       <p className={`mg-hint ${tone}`} role="status">

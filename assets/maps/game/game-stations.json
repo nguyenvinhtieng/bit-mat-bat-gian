@@ -6,67 +6,103 @@
  ],
  "stations": [
   {
-   "id": "receive_package",
-   "area": "archive",
-   "x": 605,
-   "y": 1310,
-   "title": "Nhận kiện hàng bí ẩn",
-   "titleEn": "Receive the mystery package",
-   "icon": "station-receive-package"
+   "id": "pack_cooler",
+   "area": "exhibition",
+   "x": 120,
+   "y": 845,
+   "title": "Xếp đơn vào thùng giữ nhiệt",
+   "titleEn": "Pack the cooler box",
+   "icon": "icon"
   },
   {
-   "id": "check_seal",
-   "area": "archive",
-   "x": 216,
-   "y": 1373,
-   "title": "Kiểm tra niêm phong",
-   "titleEn": "Check the seal",
-   "icon": "station-check-seal"
+   "id": "dodge_sellers",
+   "area": "exhibition",
+   "x": 600,
+   "y": 466,
+   "title": "Né “tiếp thị dạo”",
+   "titleEn": "Dodge the street sellers",
+   "icon": "icon"
   },
   {
-   "id": "pack_disguise",
-   "area": "archive",
-   "x": 408,
-   "y": 1416,
-   "title": "Ngụy trang kiện hàng",
-   "titleEn": "Disguise the package",
-   "icon": "station-pack-disguise"
-  },
-  {
-   "id": "decode_address",
+   "id": "brew_coffee",
    "area": "coordination",
-   "x": 1646,
+   "x": 1416,
    "y": 418,
-   "title": "Giải mã địa chỉ giao",
-   "titleEn": "Decode the drop-off address",
-   "icon": "station-decode-address"
+   "title": "Pha cà phê sữa đá",
+   "titleEn": "Make an iced milk coffee",
+   "icon": "icon"
   },
   {
-   "id": "confirm_recipient",
+   "id": "wifi_hunt",
    "area": "coordination",
-   "x": 1891,
-   "y": 835,
-   "title": "Xác minh người nhận",
-   "titleEn": "Verify the recipient",
-   "icon": "station-confirm-recipient"
+   "x": 1896,
+   "y": 797,
+   "title": "Bắt wifi ké",
+   "titleEn": "Leech the Wi-Fi",
+   "icon": "icon"
   },
   {
-   "id": "prepare_bike",
+   "id": "pump_tyre",
+   "area": "editing",
+   "x": 1272,
+   "y": 946,
+   "title": "Bơm bánh xe",
+   "titleEn": "Pump the tyre",
+   "icon": "icon"
+  },
+  {
+   "id": "patch_tube",
    "area": "editing",
    "x": 701,
    "y": 1032,
-   "title": "Chuẩn bị xe chở hàng",
-   "titleEn": "Prepare the delivery bike",
-   "icon": "station-prepare-bike"
+   "title": "Vá ruột xe",
+   "titleEn": "Patch the inner tube",
+   "icon": "icon"
   },
   {
-   "id": "plan_route",
+   "id": "tape_box",
+   "area": "archive",
+   "x": 216,
+   "y": 1330,
+   "title": "Quấn băng keo thùng hàng",
+   "titleEn": "Tape up the box",
+   "icon": "icon"
+  },
+  {
+   "id": "stack_rack",
+   "area": "archive",
+   "x": 792,
+   "y": 1469,
+   "title": "Chất hàng lên baga",
+   "titleEn": "Stack the rear rack",
+   "icon": "icon"
+  },
+  {
+   "id": "unpark_bike",
    "area": "artifact_storage",
-   "x": 1795,
-   "y": 1459,
-   "title": "Chọn đường tránh kẹt xe, ngập",
-   "titleEn": "Plan a route around jams and floods",
-   "icon": "station-plan-route"
+   "x": 1800,
+   "y": 1469,
+   "title": "Rút xe ra khỏi bãi",
+   "titleEn": "Get the bike out",
+   "icon": "icon"
+  },
+  {
+   "id": "find_ticket",
+   "area": "artifact_storage",
+   "x": 1224,
+   "y": 1469,
+   "title": "Lục túi tìm vé xe",
+   "titleEn": "Find the parking ticket",
+   "icon": "icon"
+  },
+  {
+   "id": "dodge_potholes",
+   "area": "corridor",
+   "x": 1080,
+   "y": 797,
+   "title": "Né ổ gà vào hẻm",
+   "titleEn": "Dodge the potholes",
+   "icon": "icon"
   },
   {
    "id": "handoff_package",
@@ -75,7 +111,7 @@
    "y": 1032,
    "title": "Bàn giao Cuốc Cuối",
    "titleEn": "Hand off the Last Ride",
-   "icon": "station-handoff-package"
+   "icon": "icon"
   }
  ]
 }

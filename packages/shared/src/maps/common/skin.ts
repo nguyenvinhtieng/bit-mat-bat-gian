@@ -66,6 +66,8 @@ export type MapSkin = {
     ghostIcon: string;
     /** folder holding mini-game art: `${minigames}/<name>.webp` */
     minigames: string;
+    /** one folder per task with all of its art: `${tasks}/<taskId>/icon.svg` (station), `card.svg` (done card), mini-game sprites */
+    tasks?: string;
     /** per-task heritage card: `${cards}/<prefix>-card-<taskId>.webp` */
     cards: string;
     /** decor-atlas frame left where a player was taken out (+ `${body}-tint`, multiplied by their colour); default: the die pose */

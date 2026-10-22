@@ -342,78 +342,6 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e5b76d; outline-
   .home .home-card { align-content: center; padding-top: max(56px, calc(env(safe-area-inset-top) + 48px)); padding-inline: max(28px, env(safe-area-inset-left), calc((100% - 760px) / 2)); }
 }
 
-/* Lobby enamel board: jade shutters, brass edging and warm streetlight. */
-.lobby-dock { width: min(300px, calc(100vw - 72px)); }
-.lobby-panel {
-  --b: 0px; box-sizing: border-box; gap: 10px; padding: 16px;
-  border: 1px solid #a8b38a; border-image: none; border-radius: 14px;
-  background: radial-gradient(ellipse at top left, #31594a88, transparent 70%), #102a2bf5;
-  box-shadow: 0 12px 30px #0007, inset 0 0 0 4px #102a2b, inset 0 0 0 5px #b8a27455;
-  color: #f5eddb; scrollbar-color: #60917b transparent;
-}
-.lobby-panel::before, .lobby-panel::after { display: none; }
-.lobby-head { padding-bottom: 12px; border-bottom: 1px solid #aec5ab33; gap: 10px; }
-.lobby-thumb { width: 46px; height: 50px; border: 1px solid #cdb57a99; border-radius: 7px; }
-.lobby-head .room-code span { display: block; color: #b6c9b8; font-size: .66rem; letter-spacing: .08em; }
-.lobby-head .room-code strong { color: #f2dbab; font-size: 1.35rem; text-shadow: none; }
-.lobby-head > .btn.copy-link-btn { width: 36px; height: 36px; border-radius: 9px; background: #294a42; border: 1px solid #9cb69966; box-shadow: 0 2px 0 #071b1c; color: #ead5a7; }
-.lobby-icon { display: block; flex: none; width: 32px; height: 32px; overflow: visible; }
-.lobby-panel .btn.settings-btn {
-  min-height: 52px; padding: 8px 10px; gap: 10px; border: 1px solid #799b8266;
-  border-image: none; border-radius: 9px; background: linear-gradient(120deg, #31594b, #203e39);
-  box-shadow: inset 0 1px #d6e6bf16, 0 2px 0 #071b1c; filter: none;
-}
-.lobby-panel .btn.settings-btn:hover { background: linear-gradient(120deg, #426e59, #2a5046); border-color: #c1c492; }
-.lobby-panel .btn.settings-btn span { color: #f1e7ce; font-size: .85rem; letter-spacing: 0; }
-.lobby-panel .btn.settings-btn small { color: #d6dfc4; background: #0c2526; border: 1px solid #a5bb8e33; padding: 4px 7px; font-size: .68rem; }
-.lobby-tab {
-  box-sizing: border-box; width: 40px; height: 76px; padding: 6px 2px; gap: 7px;
-  background: linear-gradient(90deg, #23483e, #18362f); color: #eed9ae;
-  border: 1px solid #a8b38a; border-left: 0; border-radius: 0 12px 12px 0;
-  box-shadow: 4px 5px 12px #0004; filter: none;
-}
-.lobby-tab .lobby-icon { width: 25px; height: 25px; transition: transform .25s; }
-.lobby-dock.is-collapsed .lobby-tab .lobby-icon { transform: rotate(180deg); }
-.lobby-tab:hover { background: #355b49; }
-.lobby-tab.all-ready { background: #28634d; color: #e0f3cc; }
-.saigon-lobby-modal {
-  --b: 0px; box-sizing: border-box; border: 1px solid #a8b38a; border-image: none; border-radius: 18px;
-  padding: 8px; background: radial-gradient(ellipse at top left, #2c514744, transparent 65%), #10272a;
-  box-shadow: 0 24px 70px #0009, inset 0 0 0 4px #10272a, inset 0 0 0 5px #b8a27433; filter: none;
-}
-.saigon-lobby-modal > header { padding: 14px 12px; border-color: #aec5ab33; }
-.saigon-lobby-modal > header h3 { color: #f1dfb9; font-family: inherit; font-size: 1.05rem; letter-spacing: 0; }
-.saigon-lobby-modal .modal-content { padding: 14px 12px; min-height: 0; }
-.saigon-lobby-modal .x-btn { background: #24443d; border-color: #9ab58a66; }
-.saigon-lobby-modal .esc-hint { color: #a6bdad; }
-.saigon-lobby-modal .players-modal-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; }
-.saigon-lobby-modal .players-modal-list li { padding: 12px 10px; background: #1d3c36; border: 1px solid #78977d44; border-radius: 10px; }
-.saigon-lobby-modal .players-modal-list li.is-ready { background: #244c3b; border-color: #7db58c66; }
-.saigon-lobby-modal .players-modal-list .pdot { width: 22px; height: 22px; border: 3px solid #ead9ac; box-shadow: 0 2px 0 #071b1c; }
-.saigon-lobby-modal .ptag { background: #102b29; color: #c3d3b9; border: 1px solid #7f9a7144; }
-.saigon-lobby-modal .ptag.ready { background: #356148; color: #e1efc9; }
-.saigon-lobby-modal .kick-btn { background: #563b34; border-color: #ae786266; color: #f0cdb7; border-radius: 6px; }
-.lobby-settings > header > .lobby-icon { width: 38px; height: 38px; }
-.lobby-settings .slider-head > .lobby-icon { width: 28px; height: 28px; }
-.lobby-settings .slider-row { background: #091f21; border-color: #72967c55; }
-.lobby-settings .slider-ticks .on { color: #efd39c; }
-.lobby-settings .vis-toggle { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.lobby-settings .vis-toggle .btn {
-  display: flex; align-items: center; justify-content: center; min-width: 0;
-  min-height: 36px; padding: 6px 8px; border-radius: 8px;
-  white-space: nowrap; font-size: clamp(.7rem, 3vw, .85rem); line-height: 1.3;
-}
-.lobby-settings .modal-content > .btn.primary { border-radius: 9px; background: linear-gradient(#ead09a, #c7a567); color: #193d31; }
-@media (max-width: 600px), (max-height: 550px) {
-  .lobby-panel { padding: 12px; gap: 8px; max-height: calc(100dvh - 24px); }
-  .lobby-head { gap: 8px; padding-bottom: 9px; }
-  .lobby-panel .btn.settings-btn { min-height: 46px; padding: 6px 8px; }
-  .saigon-lobby-modal .modal-content { padding: 10px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .lobby-dock, .lobby-tab .lobby-icon { transition: none; }
-}
-
 /* arrested / voted-out notice: an enamel street plate under the amber lamp */
 .ghost-backdrop { background: radial-gradient(ellipse at 50% 30%, #0b2a2a99, #020c0ee6 70%); backdrop-filter: blur(6px); overflow-y: auto; place-items: safe center; }
 /* the seal hangs above the card: the backdrop scrolls instead of the card, so nothing clips it */
@@ -698,3 +626,6 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e5b76d; outline-
 }
 
 .round-btn .action-art { display: block; width: 100%; height: 100%; pointer-events: none; }
+/* Keep the report illustration circular in every button state and viewport. */
+.round-btn.report { border-radius: 50%; aspect-ratio: 1; }
+.round-btn.report .action-art { border-radius: 50%; clip-path: circle(48% at 50% 50%); }

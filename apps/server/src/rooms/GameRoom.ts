@@ -84,8 +84,6 @@ export class GameRoom extends Room<GameState> {
   private chatLog: ChatMsg[] = [];
   private lastActive = new Map<string, number>();
   private delivery = new Delivery();
-  /** this match's receiving code (confirm_recipient shows it, the handoff asks for it) */
-  private handoffCode = '';
   /** set once the room closes itself (nobody online) so late reconnect timeouts don't touch a dead room */
   private closing = false;
   /** sessions the server itself removed (host kick / AFK): their close is never "unexpected", so no seat is held */
@@ -471,7 +469,6 @@ export class GameRoom extends Room<GameState> {
       p.alive = true;
       p.body = false;
     });
-    this.handoffCode = String(Math.floor(1000 + Math.random() * 9000));
     // everyone gets a personal list (the cop's is cover); only the drivers' lists fill the bar
     const deal = dealTasks(players.map((p) => p.id), this.state.tasksPerPlayer);
     const drivers = players.filter((p) => this.secrets.get(p.id)!.faction === 'crew').map((p) => p.id);
@@ -875,7 +872,7 @@ export class GameRoom extends Room<GameState> {
       const mine = this.delivery.tasksOf(p.id).some((j) => j.id === taskId);
       return client.send('toast', { text: mine ? 'Bạn đã xong trạm này rồi.' : 'Trạm này không có trong danh sách của bạn.', kind: 'info' });
     }
-    const built = this.content.buildTask(taskId, { handoffCode: this.handoffCode });
+    const built = this.content.buildTask(taskId);
     if (!built) return;
     s.pending = { expected: built.expected, openedAt: Date.now(), reward: built.fact, done: built.done, taskId, minMs: built.minMs };
     client.send('task:data', built.data);

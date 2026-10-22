@@ -121,18 +121,18 @@ test('arrest hold: release cancels, a second start while holding is refused', ()
 
 test('veteran sees at most 3 latest activities, newest first, with relative time and no role info', () => {
   const log: Activity[] = [
-    { taskId: 'receive_package', at: 1_000, status: 'done' },
-    { taskId: 'check_seal', at: 2_000, status: 'failed' },
-    { taskId: 'check_seal', at: 3_000, status: 'done' },
-    { taskId: 'plan_route', at: 9_000, status: 'done' },
+    { taskId: 'pack_cooler', at: 1_000, status: 'done' },
+    { taskId: 'brew_coffee', at: 2_000, status: 'failed' },
+    { taskId: 'brew_coffee', at: 3_000, status: 'done' },
+    { taskId: 'tape_box', at: 9_000, status: 'done' },
   ];
   const r = recentActivities(log, 12_000, GAME.inspectEntries);
   assert.deepEqual(
     r.map((e) => [e.taskId, e.agoSec, e.status]),
     [
-      ['plan_route', 3, 'done'],
-      ['check_seal', 9, 'done'],
-      ['check_seal', 10, 'failed'],
+      ['tape_box', 3, 'done'],
+      ['brew_coffee', 9, 'done'],
+      ['brew_coffee', 10, 'failed'],
     ],
   );
   for (const e of r) assert.deepEqual(Object.keys(e).sort(), ['agoSec', 'status', 'taskId']);

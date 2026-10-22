@@ -8,7 +8,6 @@ import { Client, type Room } from 'colyseus.js';
 import {
   GAME,
   GAME_STATIONS,
-  type Pt,
   ROOM_NAME,
   SIM_DT,
   getGrid,
@@ -80,69 +79,68 @@ async function walkTo(b: Bot, target: Vec) {
   return Math.hypot(sp.x - target.x, sp.y - target.y);
 }
 
-const pk = (p: Pt) => `${p.x},${p.y}`;
-/** BFS through the free cells visiting each stop in order, never reusing a cell. */
-function solveRoute(d: Extract<TaskData, { taskId: 'plan_route' }>): Pt[] {
-  const blocked = new Set([...d.flooded, ...d.deadEnds].map(pk));
-  const out: Pt[] = [d.start];
-  const used = new Set([pk(d.start)]);
-  for (const goal of [...d.stops, d.end]) {
-    const from = out.at(-1)!;
-    const prev = new Map<string, Pt | null>([[pk(from), null]]);
-    const q = [from];
-    while (q.length) {
-      const c = q.shift()!;
-      if (c.x === goal.x && c.y === goal.y) break;
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const n = { x: c.x + dx, y: c.y + dy };
-        if (n.x < 0 || n.y < 0 || n.x >= d.w || n.y >= d.h || blocked.has(pk(n)) || used.has(pk(n)) || prev.has(pk(n))) continue;
-        prev.set(pk(n), c);
-        q.push(n);
+/** BFS over single-cell slides (what the client sends) until my bike reaches the right edge. */
+function solveLot(d: Extract<TaskData, { taskId: 'unpark_bike' }>) {
+  type Bike = (typeof d.bikes)[number];
+  const cells = (b: Bike) => Array.from({ length: b.len }, (_, k) => (b.dir === 'h' ? [b.x + k, b.y] : [b.x, b.y + k]));
+  const sig = (bs: Bike[]) => bs.map((b) => `${b.x},${b.y}`).join('|');
+  const q: { bs: Bike[]; moves: { id: string; d: number }[] }[] = [{ bs: d.bikes, moves: [] }];
+  const seen = new Set([sig(d.bikes)]);
+  while (q.length) {
+    const { bs, moves } = q.shift()!;
+    const me = bs.find((b) => b.mine)!;
+    if (me.x + me.len === d.w) return moves;
+    bs.forEach((b, i) => {
+      const taken = new Set(bs.flatMap((o, j) => (j === i ? [] : cells(o).map((c) => c.join(',')))));
+      for (const dd of [-1, 1]) {
+        const n = { ...b, x: b.dir === 'h' ? b.x + dd : b.x, y: b.dir === 'v' ? b.y + dd : b.y };
+        if (cells(n).some(([x, y]) => x < 0 || y < 0 || x >= d.w || y >= d.h || taken.has(`${x},${y}`))) continue;
+        const nbs = bs.map((o, j) => (j === i ? n : o));
+        if (seen.has(sig(nbs))) continue;
+        seen.add(sig(nbs));
+        q.push({ bs: nbs, moves: [...moves, { id: b.id, d: dd }] });
       }
-    }
-    const leg: Pt[] = [];
-    for (let c: Pt | null | undefined = goal; c && pk(c) !== pk(from); c = prev.get(pk(c))) leg.unshift(c);
-    for (const c of leg) used.add(pk(c));
-    out.push(...leg);
+    });
   }
-  return out;
+  return [];
 }
 
 /** Solve a mini-game from the client payload only (what a skilled player can see on screen). */
 function solve(t: TaskData): unknown {
   switch (t.taskId) {
-    case 'receive_package': {
-      const key = (c: string[]) => [...c].sort().join('|');
-      return t.boxes.find((b) => key(b.codes) === key(t.slip))!.id;
+    case 'pack_cooler': {
+      const free = [...t.slots];
+      return Object.fromEntries(t.items.map((it) => [it.id, free.splice(free.findIndex((s) => s.kind === it.need), 1)[0].id]));
     }
-    case 'check_seal':
-      return Object.fromEntries(t.pieces.map((p) => [p.id, (4 - p.rot) % 4]));
-    case 'decode_address': {
-      const said = t.messages.filter((m) => m.from === 'Khách').map((m) => m.text).join(' ');
-      const value = (l: string) => l.replace(/^(Hẻm|Gần|Nhà|Trước nhà có) /, '');
-      return t.cards.find((c) => c.lines.every((l) => said.includes(value(l))))!.id;
+    case 'dodge_sellers':
+      return { swiped: t.sellers.map((s) => s.id), paid: true };
+    case 'brew_coffee':
+      return { milk: (t.milk[0] + t.milk[1]) / 2, coffee: (t.coffee[0] + t.coffee[1]) / 2 };
+    case 'wifi_hunt':
+      return t.spot;
+    case 'pump_tyre':
+      return { strokes: Math.ceil(t.green[0] / t.perStroke) };
+    case 'patch_tube':
+      return { patched: t.leaks };
+    case 'tape_box':
+      return { laps: t.laps };
+    case 'stack_rack':
+      return { offsets: t.boxes.map(() => 0) };
+    case 'unpark_bike':
+      return { moves: solveLot(t) };
+    case 'find_ticket': {
+      const at = t.items.findIndex((i) => i.kind === 've-xe');
+      return { removed: t.items.slice(0, at).map((i) => i.id), ticket: t.items[at].id };
     }
-    case 'plan_route':
-      return solveRoute(t);
-    case 'prepare_bike':
-      return { pumps: Math.ceil(t.green[0] / t.perPump), order: [...t.straps].sort((a, b) => a.n - b.n).map((s) => s.id) };
-    case 'pack_disguise': {
-      const [boxLine, labelLine, layerLine] = t.note;
-      const byName = (xs: { id: string; name: string }[], n: string) => xs.find((x) => x.name === n.trim())!.id;
-      const box = byName(t.boxes, boxLine.replace(/^Thùng ngoài: /, '').replace(/\.$/, ''));
-      const label = byName(t.labels, labelLine.match(/“(.+)”/)![1]);
-      const layers = layerLine.replace(/^Lót từ dưới lên: /, '').replace(/\.$/, '').split(' → ').map((n) => byName(t.layers, n));
-      return { box, label, layers };
-    }
-    case 'confirm_recipient': {
-      const phrase = t.message.match(/“(.+)”/)![1];
-      return t.callers.find((c) => t.message.includes(c.code4) && c.phrase === phrase)!.id;
-    }
+    case 'dodge_potholes':
+      return { moves: t.obstacles.map((o) => ({ at: o.at - 200, lane: (o.lane + 1) % 3 })) };
     case 'handoff_package':
-      return { code: t.message.match(/\d{4}/)![0] };
+      return { rang: true, photo: 0, slid: true };
   }
 }
 
+/** how long a skilled player needs before submitting (the server rejects faster answers) */
+const waitFor = (t: TaskData) => (t.taskId === 'dodge_potholes' ? t.duration + 300 : MIN_MS);
 const MIN_MS = 3600;
 
 function wire(b: Bot) {
@@ -202,7 +200,7 @@ async function main() {
     worker.lastResult = undefined;
     worker.room.send('task:open', { taskId: tid });
     await until(() => worker.task, 4000, `task:data retry ${tid}`);
-    await sleep(MIN_MS);
+    await sleep(waitFor(worker.task!));
     worker.room.send('task:submit', { taskId: tid, answer: solve(worker.task!) });
     await until(() => worker.lastResult, 4000, `task result ${tid}`);
     if (!worker.lastResult!.ok) throw new Error(`${tid}: correct answer rejected`);

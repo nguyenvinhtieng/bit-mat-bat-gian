@@ -1,19 +1,22 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { TASK_IDS, type Pt, type TaskData } from '@hidden-truth/shared';
+import { TASK_IDS, type LotBike, type TaskData } from '@hidden-truth/shared';
 import { GAME_CONTENT } from './index';
 import type { Pending } from '../common/util';
 
-const CTX = { handoffCode: '4721' };
-
 /** Build a task and a Pending opened just long enough ago to pass the minimum solve time. */
 function open<T extends TaskData['taskId']>(taskId: T) {
-  const built = GAME_CONTENT.buildTask(taskId, CTX);
+  const built = GAME_CONTENT.buildTask(taskId);
   assert.ok(built, `buildTask(${taskId}) returned null`);
   const p: Pending = { taskId, expected: built.expected, openedAt: Date.now() - (built.minMs ?? 0) - 10, minMs: built.minMs };
   return { data: built.data as Extract<TaskData, { taskId: T }>, p, built };
 }
 const ok = (p: Pending, a: unknown) => GAME_CONTENT.verifyTask(p, a);
+
+function packCooler(d: Extract<TaskData, { taskId: 'pack_cooler' }>) {
+  const free = [...d.slots];
+  return Object.fromEntries(d.items.map((it) => [it.id, free.splice(free.findIndex((s) => s.kind === it.need), 1)[0].id]));
+}
 
 test('every task builds, has a story card + done line, and rejects garbage', () => {
   for (const id of TASK_IDS) {
@@ -26,111 +29,139 @@ test('every task builds, has a story card + done line, and rejects garbage', () 
 });
 
 test('answers are rejected when submitted too fast', () => {
-  const built = GAME_CONTENT.buildTask('receive_package', CTX)!;
-  const p: Pending = { taskId: 'receive_package', expected: built.expected, openedAt: Date.now(), minMs: built.minMs };
-  assert.equal(ok(p, built.expected), false);
+  const built = GAME_CONTENT.buildTask('pack_cooler')!;
+  const p: Pending = { taskId: 'pack_cooler', expected: built.expected, openedAt: Date.now(), minMs: built.minMs };
+  assert.equal(ok(p, packCooler(built.data as Extract<TaskData, { taskId: 'pack_cooler' }>)), false);
 });
 
-test('receive package: exactly one box matches the slip', () => {
-  for (let i = 0; i < 30; i++) {
-    const { data, p } = open('receive_package');
-    const key = (codes: string[]) => [...codes].sort().join('|');
-    const match = data.boxes.filter((b) => key(b.codes) === key(data.slip));
-    assert.equal(match.length, 1);
-    assert.equal(ok(p, match[0].id), true);
-    for (const b of data.boxes) if (b !== match[0]) assert.equal(ok(p, b.id), false);
-  }
+test('pack cooler: every item in a slot of its kind passes; a drink on the shelf fails', () => {
+  const { data, p } = open('pack_cooler');
+  const a = packCooler(data);
+  assert.equal(ok(p, a), true);
+  const cup = data.items.find((i) => i.need === 'cup')!;
+  const shelf = data.items.find((i) => i.need === 'shelf')!;
+  assert.equal(ok(p, { ...a, [cup.id]: a[shelf.id], [shelf.id]: a[cup.id] }), false);
+  assert.equal(ok(p, { ...a, [cup.id]: a[data.items.find((i) => i !== cup && i.need === 'cup')!.id] }), false); // two in one slot
 });
 
-test('check seal: turning every piece upright passes, one piece off fails', () => {
-  const { data, p } = open('check_seal');
-  assert.ok(data.pieces.some((x) => x.rot !== 0), 'something to fix');
-  const fix = Object.fromEntries(data.pieces.map((x) => [x.id, (4 - x.rot) % 4]));
-  assert.equal(ok(p, fix), true);
-  assert.equal(ok(p, { ...fix, [data.pieces[0].id]: fix[data.pieces[0].id] + 4 }), true, 'a full extra turn is fine');
-  assert.equal(ok(p, { ...fix, [data.pieces[0].id]: fix[data.pieces[0].id] + 1 }), false);
+test('dodge sellers: swipe all in order and pay the debt', () => {
+  const { data, p } = open('dodge_sellers');
+  const ids = data.sellers.map((s) => s.id);
+  assert.equal(ok(p, { swiped: ids, paid: true }), true);
+  assert.equal(ok(p, { swiped: ids, paid: false }), false);
+  assert.equal(ok(p, { swiped: ids.slice(1), paid: true }), false);
+  assert.equal(ok(p, { swiped: [...ids].reverse(), paid: true }), false);
 });
 
-test('decode address: the right card only; decoys differ from it', () => {
-  const { data, p } = open('decode_address');
-  assert.equal(data.cards.length, 4);
-  const right = data.cards.filter((c) => ok(p, c.id));
-  assert.equal(right.length, 1);
-  for (const c of data.cards) if (c !== right[0]) assert.notDeepEqual(c.lines, right[0].lines);
+test('brew coffee: both pours inside their bands', () => {
+  const { data, p } = open('brew_coffee');
+  const mid = ([lo, hi]: [number, number]) => (lo + hi) / 2;
+  assert.equal(ok(p, { milk: mid(data.milk), coffee: mid(data.coffee) }), true);
+  assert.equal(ok(p, { milk: data.milk[1] + 0.05, coffee: mid(data.coffee) }), false);
+  assert.equal(ok(p, { milk: mid(data.milk), coffee: 1 }), false);
 });
 
-const step = (a: Pt, b: Pt) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1;
-/** BFS through the free cells visiting stops in order (stops are on a valid path by construction). */
-function solveRoute(d: Extract<TaskData, { taskId: 'plan_route' }>): Pt[] {
-  const blocked = new Set([...d.flooded, ...d.deadEnds].map((q) => `${q.x},${q.y}`));
-  const legs = [d.start, ...d.stops, d.end];
-  const path: Pt[] = [d.start];
-  const used = new Set([`${d.start.x},${d.start.y}`]);
-  for (let i = 1; i < legs.length; i++) {
-    const goal = legs[i];
-    const prev = new Map<string, Pt | null>([[`${path.at(-1)!.x},${path.at(-1)!.y}`, null]]);
-    const q = [path.at(-1)!];
-    while (q.length) {
-      const c = q.shift()!;
-      if (c.x === goal.x && c.y === goal.y) break;
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const n = { x: c.x + dx, y: c.y + dy };
-        const k = `${n.x},${n.y}`;
-        if (n.x < 0 || n.y < 0 || n.x >= d.w || n.y >= d.h || blocked.has(k) || used.has(k) || prev.has(k)) continue;
-        prev.set(k, c);
-        q.push(n);
+test('wifi hunt: parking on the hot spot passes, far away fails', () => {
+  const { data, p } = open('wifi_hunt');
+  assert.equal(ok(p, data.spot), true);
+  assert.equal(ok(p, { x: data.spot.x + data.radius * 0.8, y: data.spot.y }), true);
+  assert.equal(ok(p, { x: data.spot.x > 0.5 ? 0 : 1, y: data.spot.y }), false);
+});
+
+test('pump tyre: stop in the green, over-pump fails', () => {
+  const { data, p } = open('pump_tyre');
+  const strokes = Math.ceil(data.green[0] / data.perStroke);
+  assert.equal(ok(p, { strokes }), true);
+  assert.equal(ok(p, { strokes: strokes + 3 }), false);
+  assert.equal(ok(p, { strokes: 1.5 }), false);
+});
+
+test('patch tube: exactly the leaks', () => {
+  const { data, p } = open('patch_tube');
+  assert.equal(ok(p, { patched: [...data.leaks].reverse() }), true);
+  assert.equal(ok(p, { patched: data.leaks.slice(0, 1) }), false);
+  assert.equal(ok(p, { patched: [...data.leaks, 7] }), false);
+});
+
+test('tape box: enough laps', () => {
+  const { data, p } = open('tape_box');
+  assert.equal(ok(p, { laps: data.laps }), true);
+  assert.equal(ok(p, { laps: data.laps - 1 }), false);
+});
+
+test('stack rack: centred drops pass, a box hanging past its support fails', () => {
+  const { data, p } = open('stack_rack');
+  assert.equal(ok(p, { offsets: data.boxes.map(() => 0) }), true);
+  assert.equal(ok(p, { offsets: data.boxes.map((_, i) => (i === 2 ? 200 : 0)) }), false);
+  assert.equal(ok(p, { offsets: [0, 0] }), false);
+});
+
+/** BFS over single-cell moves (what the client sends). */
+function solveLot(d: Extract<TaskData, { taskId: 'unpark_bike' }>) {
+  const occ = (bs: LotBike[], skip: number) => {
+    const s = new Set<string>();
+    bs.forEach((b, j) => {
+      if (j !== skip) for (let k = 0; k < b.len; k++) s.add(b.dir === 'h' ? `${b.x + k},${b.y}` : `${b.x},${b.y + k}`);
+    });
+    return s;
+  };
+  type Node = { bs: LotBike[]; moves: { id: string; d: number }[] };
+  const sig = (bs: LotBike[]) => bs.map((b) => `${b.x},${b.y}`).join('|');
+  const q: Node[] = [{ bs: d.bikes, moves: [] }];
+  const seen = new Set([sig(d.bikes)]);
+  while (q.length) {
+    const { bs, moves } = q.shift()!;
+    const me = bs.find((b) => b.mine)!;
+    if (me.x + me.len === d.w) return moves;
+    bs.forEach((b, i) => {
+      const o = occ(bs, i);
+      for (const dd of [-1, 1]) {
+        const n = { ...b, x: b.dir === 'h' ? b.x + dd : b.x, y: b.dir === 'v' ? b.y + dd : b.y };
+        const cells = Array.from({ length: n.len }, (_, k) => (n.dir === 'h' ? [n.x + k, n.y] : [n.x, n.y + k]));
+        if (cells.some(([x, y]) => x < 0 || y < 0 || x >= d.w || y >= d.h || o.has(`${x},${y}`))) continue;
+        const nbs = bs.map((x, j) => (j === i ? n : x));
+        if (seen.has(sig(nbs))) continue;
+        seen.add(sig(nbs));
+        q.push({ bs: nbs, moves: [...moves, { id: b.id, d: dd }] });
       }
-    }
-    const leg: Pt[] = [];
-    for (let c: Pt | null | undefined = goal; c && !(c.x === path.at(-1)!.x && c.y === path.at(-1)!.y); c = prev.get(`${c.x},${c.y}`)) leg.unshift(c);
-    for (const c of leg) used.add(`${c.x},${c.y}`);
-    path.push(...leg);
+    });
   }
-  return path;
+  return null;
 }
 
-test('plan route: a legal path through the stops passes; shortcuts through floods or skipping a stop fail', () => {
-  for (let i = 0; i < 20; i++) {
-    const { data, p } = open('plan_route');
-    assert.ok(data.stops.length >= 2);
-    const path = solveRoute(data);
-    assert.ok(path.every((c, j) => j === 0 || step(path[j - 1], c)));
-    assert.equal(ok(p, path), true, JSON.stringify({ data, path }));
-    assert.equal(ok(p, path.slice(0, -1)), false, 'must reach the end');
-    const flooded = data.flooded[0];
-    assert.equal(ok(p, [...path.slice(0, -1), flooded, path.at(-1)]), false, 'no flooded cells');
+test('unpark bike: always solvable; a move into another bike fails', () => {
+  for (let i = 0; i < 15; i++) {
+    const { data, p } = open('unpark_bike');
+    const moves = solveLot(data);
+    assert.ok(moves && moves.length >= 2, 'lot should need a few moves');
+    assert.equal(ok(p, { moves }), true);
+    assert.equal(ok(p, { moves: [] }), false);
+    const me = data.bikes.find((b) => b.mine)!;
+    assert.equal(ok(p, { moves: Array.from({ length: data.w }, () => ({ id: me.id, d: 1 })) }), false);
   }
 });
 
-test('prepare bike: pumps inside the green zone + straps in number order', () => {
-  const { data, p } = open('prepare_bike');
-  const pumps = Math.ceil(data.green[0] / data.perPump);
-  assert.ok(pumps * data.perPump <= data.green[1], 'a pump count lands in the green');
-  const order = [...data.straps].sort((a, b) => a.n - b.n).map((s) => s.id);
-  assert.equal(ok(p, { pumps, order }), true);
-  assert.equal(ok(p, { pumps: pumps + 50, order }), false, 'over-pumped');
-  assert.equal(ok(p, { pumps, order: [...order].reverse() }), false);
+test('find ticket: dig out everything above it, then take the ticket', () => {
+  const { data, p } = open('find_ticket');
+  const at = data.items.findIndex((i) => i.kind === 've-xe');
+  const above = data.items.slice(0, at).map((i) => i.id);
+  assert.equal(ok(p, { removed: above, ticket: data.items[at].id }), true);
+  assert.equal(ok(p, { removed: above.slice(1), ticket: data.items[at].id }), false);
+  assert.equal(ok(p, { removed: above, ticket: above[0] }), false);
 });
 
-test('pack disguise: box, label and layers must follow the note', () => {
-  const { p } = open('pack_disguise');
-  const exp = p.expected as { box: string; label: string; layers: string[] };
-  assert.equal(ok(p, exp), true);
-  assert.equal(ok(p, { ...exp, layers: [...exp.layers].reverse() }), false);
-  assert.equal(ok(p, { ...exp, label: 'nope' }), false);
+test('dodge potholes: changing lane before each hazard passes, staying put fails when one is in the middle lane', () => {
+  const { data, p } = open('dodge_potholes');
+  const moves = data.obstacles.map((o) => ({ at: o.at - 200, lane: (o.lane + 1) % 3 }));
+  assert.equal(ok(p, { moves }), true);
+  const hitsMiddle = data.obstacles.some((o) => o.lane === 1);
+  assert.equal(ok(p, { moves: [] }), !hitsMiddle);
+  assert.equal(ok(p, { moves: [{ at: 0, lane: 5 }] }), false);
 });
 
-test('confirm recipient: only the caller with both the code and the passphrase; the code is the handoff code', () => {
-  const { data, p } = open('confirm_recipient');
-  const right = data.callers.filter((c) => ok(p, c.id));
-  assert.equal(right.length, 1);
-  assert.equal(right[0].code4, CTX.handoffCode);
-  assert.ok(data.message.includes(CTX.handoffCode));
-});
-
-test('handoff: the verified code opens it, anything else fails', () => {
+test('handoff: ring, a centred photo and the slide', () => {
   const { data, p } = open('handoff_package');
-  assert.equal(data.digits, 4);
-  assert.equal(ok(p, { code: CTX.handoffCode }), true);
-  assert.equal(ok(p, { code: '0000' }), false);
+  assert.equal(ok(p, { rang: true, photo: 0, slid: true }), true);
+  assert.equal(ok(p, { rang: true, photo: data.tolerance + 5, slid: true }), false);
+  assert.equal(ok(p, { rang: false, photo: 0, slid: true }), false);
 });

@@ -22,12 +22,9 @@ export type Pending = { taskId: TaskId; expected: unknown; openedAt: number; rew
 export type Built = { data: TaskData; expected: unknown; minMs: number };
 
 /** Host-only content of one map. */
-/** Per-match secrets a task may need (e.g. the receiving code shared by confirm_recipient and the handoff). */
-export type TaskCtx = { handoffCode: string };
-
 export type MapContent = {
   /** one-liners for the meeting / loading screens */
   funFacts: readonly string[];
-  buildTask(taskId: TaskId, ctx: TaskCtx): (Built & { fact: Fact; done: string }) | null;
+  buildTask(taskId: TaskId): (Built & { fact: Fact; done: string }) | null;
   verifyTask(p: Pending, answer: unknown): boolean;
 };

@@ -41,7 +41,7 @@ export function TaskModal() {
       <Modal title={en ? 'Task complete' : 'Hoàn thành nhiệm vụ'} onClose={close} wide className="hcard-modal">
         <div className="hcard" onClick={close}>
           <figure className="hcard-art">
-            <img src={asset(`${skin.art.cards}/${skin.prefix}-${task.taskId}.webp`)} alt="" draggable={false} />
+            <img src={asset(skin.art.tasks ? `${skin.art.tasks}/${task.taskId}/card.svg` : `${skin.art.cards}/${skin.prefix}-${task.taskId}.webp`)} alt="" draggable={false} />
             <figcaption>{en ? skin.areas[st.area].nameEn : skin.areas[st.area].name}</figcaption>
             <span className="hcard-stamp" aria-hidden>
               <b>{en ? 'DONE' : 'ĐÃ XONG'}</b>

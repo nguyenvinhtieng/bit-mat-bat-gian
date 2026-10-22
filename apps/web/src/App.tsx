@@ -10,6 +10,7 @@ import { EndScreen } from './ui/EndScreen';
 import { Cinematic } from './ui/Cinematic';
 import { Toasts, asset } from './ui/common';
 import { Joystick } from './ui/Joystick';
+import { DevPanel } from './ui/DevPanel';
 import { useT } from './i18n';
 
 export function App() {
@@ -43,6 +44,7 @@ export function App() {
         <Cinematic />
       </div>
       <PingBadge />
+      {import.meta.env.DEV && <DevPanel />}
       <ReconnectBanner />
       <Toasts />
       <RotateGate />

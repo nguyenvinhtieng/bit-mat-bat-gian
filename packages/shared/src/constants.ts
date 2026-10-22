@@ -70,15 +70,22 @@ export const PLAYER_COLORS = [
   0xe8524a, 0x3f7fd9, 0x3fae5a, 0xf2c230, 0xa05bd6, 0xf08a2c, 0x35c0c0, 0xef6fb0, 0x8d6e4a, 0x6b7a8f, 0xb8d94a, 0xf4f0e6,
 ];
 
-/** Cuốc Cuối tasks: 7 preparation tasks feed `deliveryPreparation`; `handoff_package` ends the run. */
+/**
+ * Cuốc Cuối tasks: two stations per area (except the alley mouth), 11 preparation tasks feed
+ * `deliveryPreparation`; `handoff_package` ends the run. Ordered by area.
+ */
 export const PREP_TASK_IDS = [
-  'receive_package',
-  'check_seal',
-  'decode_address',
-  'plan_route',
-  'prepare_bike',
-  'pack_disguise',
-  'confirm_recipient',
+  'pack_cooler', // Dãy Quán Ăn
+  'dodge_sellers',
+  'brew_coffee', // Quán Nước
+  'wifi_hunt',
+  'pump_tyre', // Tiệm Sửa Xe
+  'patch_tube',
+  'tape_box', // Kho CRAB
+  'stack_rack',
+  'unpark_bike', // Bãi Giữ Xe
+  'find_ticket',
+  'dodge_potholes', // Hẻm Cuối
 ] as const;
 export const TASK_IDS = [...PREP_TASK_IDS, 'handoff_package'] as const;
 export type TaskId = (typeof TASK_IDS)[number];

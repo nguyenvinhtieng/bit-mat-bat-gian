@@ -284,6 +284,7 @@ export function Meeting() {
             </button>
           </header>
 
+          {!reveal && <div className="zl-meeting-notice"><span>ĐANG HỌP</span><p>{room.meetingReason || 'Cả nhóm đã có mặt'}<small>Trao đổi trong nhóm · Chọn người đáng nghi bên dưới</small></p></div>}
           {!reveal && (
             <button className="zl-pin" onClick={() => setPollOpen(true)}>
               <PollIcon />

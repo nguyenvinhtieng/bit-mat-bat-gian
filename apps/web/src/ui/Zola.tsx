@@ -62,9 +62,10 @@ export function Composer({ enabled = true, lockedHint = '' }: { enabled?: boolea
   const [text, setText] = useState('');
   const [touch] = useState(isTouchDevice);
   const submit = () => {
-    if (!text.trim()) return;
+    if (!text.trim()) return false;
     send('chat', { text });
     setText('');
+    return true;
   };
   return (
     <div className="zl-compose">
@@ -73,12 +74,13 @@ export function Composer({ enabled = true, lockedHint = '' }: { enabled?: boolea
         value={text}
         maxLength={240}
         disabled={!enabled}
-        placeholder={!enabled ? lockedHint : touch ? 'Nhập tin nhắn…' : `Nhập @, tin nhắn tới ${GROUP_NAME}`}
+        placeholder={!enabled ? lockedHint : touch ? 'Nhập tin nhắn…' : `Nhập tin nhắn tới ${GROUP_NAME}`}
         enterKeyHint="send"
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
           e.stopPropagation();
-          if (e.key === 'Enter') submit();
+          // Release focus after sending so movement keys reach the game again.
+          if (e.key === 'Enter' && submit()) e.currentTarget.blur();
         }}
       />
       <button className="zl-send" onClick={submit} disabled={!enabled || !text.trim()} aria-label="Gửi" title="Gửi">

@@ -26,15 +26,30 @@ export const GAME_AREAS: Record<AreaId, AreaSkin> = {
 export const GAME_TASK_IDS = TASK_IDS;
 export type GameTaskId = TaskId;
 
+/**
+ * Two stations per area (none at the alley mouth: that's the meeting spot), each tucked into a wall nook
+ * or corner so whoever works it is hard to see from the room — and easy to sneak up on.
+ * `icon` = file in the station's task folder (`${art.tasks}/<id>/<icon>.svg`).
+ */
 export const GAME_STATIONS: StationDef[] = [
-  { id: 'receive_package', area: 'archive', x: t(12.6), y: t(27.3), title: 'Nhận kiện hàng bí ẩn', titleEn: 'Receive the mystery package', icon: 'station-receive-package' },
-  { id: 'check_seal', area: 'archive', x: t(4.5), y: t(28.6), title: 'Kiểm tra niêm phong', titleEn: 'Check the seal', icon: 'station-check-seal' },
-  { id: 'pack_disguise', area: 'archive', x: t(8.5), y: t(29.5), title: 'Ngụy trang kiện hàng', titleEn: 'Disguise the package', icon: 'station-pack-disguise' },
-  { id: 'decode_address', area: 'coordination', x: t(34.3), y: t(8.7), title: 'Giải mã địa chỉ giao', titleEn: 'Decode the drop-off address', icon: 'station-decode-address' },
-  { id: 'confirm_recipient', area: 'coordination', x: t(39.4), y: t(17.4), title: 'Xác minh người nhận', titleEn: 'Verify the recipient', icon: 'station-confirm-recipient' },
-  { id: 'prepare_bike', area: 'editing', x: t(14.6), y: t(21.5), title: 'Chuẩn bị xe chở hàng', titleEn: 'Prepare the delivery bike', icon: 'station-prepare-bike' },
-  { id: 'plan_route', area: 'artifact_storage', x: t(37.4), y: t(30.4), title: 'Chọn đường tránh kẹt xe, ngập', titleEn: 'Plan a route around jams and floods', icon: 'station-plan-route' },
-  { id: 'handoff_package', area: 'corridor', x: t(34.5), y: t(21.5), title: 'Bàn giao Cuốc Cuối', titleEn: 'Hand off the Last Ride', icon: 'station-handoff-package' },
+  // Dãy Quán Ăn — góc dưới trái sau xe bánh mì · hốc trên phải sau lồng chim
+  { id: 'pack_cooler', area: 'exhibition', x: t(2.5), y: t(17.6), title: 'Xếp đơn vào thùng giữ nhiệt', titleEn: 'Pack the cooler box', icon: 'icon' },
+  { id: 'dodge_sellers', area: 'exhibition', x: t(12.5), y: t(9.7), title: 'Né “tiếp thị dạo”', titleEn: 'Dodge the street sellers', icon: 'icon' },
+  // Quán Nước — góc trên trái cạnh quầy pha phin · góc dưới phải sau ghế nhựa
+  { id: 'brew_coffee', area: 'coordination', x: t(29.5), y: t(8.7), title: 'Pha cà phê sữa đá', titleEn: 'Make an iced milk coffee', icon: 'icon' },
+  { id: 'wifi_hunt', area: 'coordination', x: t(39.5), y: t(16.6), title: 'Bắt wifi ké', titleEn: 'Leech the Wi-Fi', icon: 'icon' },
+  // Tiệm Sửa Xe — hốc trên phải · sát vách trái, chỗ thau vá xe
+  { id: 'pump_tyre', area: 'editing', x: t(26.5), y: t(19.7), title: 'Bơm bánh xe', titleEn: 'Pump the tyre', icon: 'icon' },
+  { id: 'patch_tube', area: 'editing', x: t(14.6), y: t(21.5), title: 'Vá ruột xe', titleEn: 'Patch the inner tube', icon: 'icon' },
+  // Kho CRAB — góc trên trái dưới kệ · hốc dưới phải giữa hai rương
+  { id: 'tape_box', area: 'archive', x: t(4.5), y: t(27.7), title: 'Quấn băng keo thùng hàng', titleEn: 'Tape up the box', icon: 'icon' },
+  { id: 'stack_rack', area: 'archive', x: t(16.5), y: t(30.6), title: 'Chất hàng lên baga', titleEn: 'Stack the rear rack', icon: 'icon' },
+  // Bãi Giữ Xe — góc dưới phải chỗ xe xếp · hốc cụt giữa đèn và lư
+  { id: 'unpark_bike', area: 'artifact_storage', x: t(37.5), y: t(30.6), title: 'Rút xe ra khỏi bãi', titleEn: 'Get the bike out', icon: 'icon' },
+  { id: 'find_ticket', area: 'artifact_storage', x: t(25.5), y: t(30.6), title: 'Lục túi tìm vé xe', titleEn: 'Find the parking ticket', icon: 'icon' },
+  // Hẻm Cuối — góc khuất sau cột điện hẻm giữa · điểm giao ở hẻm đông
+  { id: 'dodge_potholes', area: 'corridor', x: t(22.5), y: t(16.6), title: 'Né ổ gà vào hẻm', titleEn: 'Dodge the potholes', icon: 'icon' },
+  { id: 'handoff_package', area: 'corridor', x: t(34.5), y: t(21.5), title: 'Bàn giao Cuốc Cuối', titleEn: 'Hand off the Last Ride', icon: 'icon' },
 ];
 
 /** Where the 50-million box waits in the warehouse (feet position, px). */
@@ -88,6 +103,7 @@ export const GAME_SKIN: MapSkin = {
     nightMarker: `${DIR}/minigames/ui-xe-crab`,
     ghostIcon: `${DIR}/minigames/ui-tuong-trinh`,
     minigames: `${DIR}/minigames`,
+    tasks: `${DIR}/tasks`,
     cards: `${DIR}/cards`,
     body: 'body',
     ride: true,
@@ -95,7 +111,7 @@ export const GAME_SKIN: MapSkin = {
   roles: ROLES,
   killerName: { vi: 'Công An Chìm', en: 'Undercover Cop' },
   crewName: { vi: 'Hội Tài Xế', en: 'Driver Crew' },
-  emergency: { vi: 'Bóp còi xe ở đầu hẻm', en: 'Honk the bike horn' },
+  emergency: { vi: 'Nhắn Zola gọi họp', en: 'Call a meeting on Zola' },
   delivery: { packageHome: PACKAGE_HOME },
   labels: {
     mapTitle: { vi: 'Hẻm 42', en: 'Alley 42' },

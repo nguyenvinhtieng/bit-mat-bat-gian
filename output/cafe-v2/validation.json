@@ -1,0 +1,16 @@
+{
+  "frames": [
+    "prop-coordination-quay-ca-phe",
+    "decor-du-che",
+    "decor-long-chim",
+    "decor-ghe-nhua-do",
+    "decor-ghe-nhua-xanh",
+    "prop-coordination-binh-tra-da",
+    "decor-ban-inox"
+  ],
+  "changedPixels": 304091,
+  "nonTargetPixels": "unchanged",
+  "runtimeAtlas": "matches source",
+  "sharedTests": "25/25 passed",
+  "typecheck": "shared and web passed"
+}

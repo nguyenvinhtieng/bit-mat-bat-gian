@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { PLAYER_COLORS, mapSkin, playerArt } from '@hidden-truth/shared';
 import { colorHex, useStore } from '../store';
 import { asset, useEscape } from './common';
+import { GROUP_NAME, groupAvatar } from './Zola';
 
 const ROW = { down: 0, left: 1, right: 2, up: 3 } as const;
 const DURATION: Record<string, number> = { kill: 5700, report: 3600, emergency: 3300, witness: 1000 };
@@ -16,9 +17,7 @@ const BODY: PoseTrack = [[0, 'die-3']];
 const ARREST: PoseTrack = [0, 350, 700, 2200, 2700, 3200, 3650, 4050].map((ms, i) => [ms, `arrest-${i}`]);
 const PARKED: PoseTrack = [[0, 'parked-left']];
 const FINDER_STARTLE: PoseTrack = [[0, 'guard-0'], [1350, 'guard-1'], [1650, 'guard-2']];
-const BELL_RINGER: PoseTrack = [[0, 'guard-3'], [500, 'guard-1'], [780, 'guard-2'], [1100, 'guard-1'], [1380, 'guard-2'], [1700, 'guard-1'], [1980, 'guard-2'], [2350, 'guard-3']];
-const BELL_HITS = [800, 1400, 2000];
-const PROPS = ['cine-bell-frame', 'cine-bell', 'cine-bell-log', 'cine-seal', 'fx-bell-wave', 'fx-stamp-burst', 'fx-shock-lines'];
+const PROPS = ['cine-seal', 'fx-stamp-burst', 'fx-shock-lines'];
 
 const imgCache = new Map<string, Promise<HTMLImageElement>>();
 function loadImg(src: string) {
@@ -259,6 +258,26 @@ export function Cinematic() {
     </div>
   );
 
+  if (c.kind === 'emergency') return (
+    <div className="zola-alert" key={c.id} role="status" aria-live="assertive">
+      <div className="zola-alert-halo" aria-hidden="true" />
+      <section className="zola-alert-card">
+        <header><span className="zola-alert-brand">Zola</span><span>THÔNG BÁO NHÓM</span><small>vừa xong</small></header>
+        <div className="zola-alert-content">
+          <img className="zola-alert-phone" src={asset('maps/common/ui/meeting-zola.svg')} alt="" />
+          <div className="zola-alert-message">
+            <div className="zola-alert-group"><img src={groupAvatar} alt="" /><span>{GROUP_NAME}<small>Tin nhắn ưu tiên</small></span><i>!</i></div>
+            <span className="zola-alert-tag">MỌI NGƯỜI ƠI</span>
+            <h1>Họp khẩn!</h1>
+            <p><b>{c.actor.name}</b> vừa gọi cả nhóm.<br />Tạm dừng chuyến xe, vào nhóm bàn ngay!</p>
+            <div className="zola-alert-receipt"><span /> Đã thông báo đến cả nhóm</div>
+          </div>
+        </div>
+        <footer><span className="zola-alert-progress" /><span>Đang mở cuộc họp…</span><button onClick={() => set({ cinematic: null })}>Vào nhóm <span aria-hidden="true">→</span></button></footer>
+      </section>
+    </div>
+  );
+
   return (
     <div className={`cine cine-${c.kind} ${arrest && c.kind === 'kill' ? 'cine-arrest' : ''} ${c.youAre === 'victim' ? 'as-victim' : ''}`} key={c.id} onClick={() => set({ cinematic: null })}>
       <div className="cine-flash" />
@@ -311,27 +330,7 @@ export function Cinematic() {
                 <Fx name="fx-stamp-burst" className="cine-fx-stamp" ms={700} delay={1780} />
               </>
             )}
-            {c.kind === 'emergency' && (
-              <>
-                <div className="cine-pavilion">
-                  <img className="cine-bell-frame" src={asset('maps/common/ui/fx/cine-bell-frame.webp')} alt="" draggable={false} />
-                  <img className="cine-bell" src={asset('maps/common/ui/fx/cine-bell.webp')} alt="" draggable={false} />
-                  {BELL_HITS.map((d) => (
-                    <Fx key={d} name="fx-bell-wave" className="cine-fx-bellwave" ms={800} delay={d} />
-                  ))}
-                </div>
-                <div className="cine-log">
-                  <i className="rope l" />
-                  <i className="rope r" />
-                  <img src={asset('maps/common/ui/fx/cine-bell-log.webp')} alt="" draggable={false} />
-                </div>
-                <div className="cine-actor ringer">
-                  <div className="cine-flip">
-                    <PoseSprite color={c.actor.color} track={BELL_RINGER} />
-                  </div>
-                </div>
-              </>
-            )}
+
           </div>
         </div>
       </div>

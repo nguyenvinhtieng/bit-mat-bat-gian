@@ -19,9 +19,14 @@ import {
   mapSkin,
   playerArt,
   stepMovement,
+  type LayoutGrid,
   type SayMsg,
   type TaskId,
+  BODY_HH,
+  BODY_HW,
+  isSolidTile,
 } from '@hidden-truth/shared';
+import { useDev } from '../ui/DevPanel';
 import { arrest, onHeard, onRoom, onSay, room, send } from '../net';
 import { sfx } from '../ui/minigames/common/kit';
 import { setVoiceProbe } from '../voice';
@@ -95,6 +100,10 @@ type Avatar = {
 export class GameScene extends Phaser.Scene {
   private grid = getGrid();
   private lobbyGrid = getLobbyGrid();
+  /** dev overlay: solid-tile outlines + my collision box (DevPanel toggles) */
+  private devGfx?: Phaser.GameObjects.Graphics;
+  private devHitbox?: Phaser.GameObjects.Graphics;
+  private devGrid?: LayoutGrid;
   /** phase + ready ids last painted onto the nameplates/gate */
   private lobbyKey = '';
   private avatars = new Map<string, Avatar>();
@@ -145,6 +154,8 @@ export class GameScene extends Phaser.Scene {
     if (art.tileset) this.load.spritesheet('map-tiles', `${A}/${art.tileset.file}.webp`, { frameWidth: TILE, frameHeight: TILE });
     // station icons (+ the task-marker ring, maybe in its own atlas)
     this.load.atlas('map-stations', `${A}/${art.stations}.webp`, `${A}/${art.stations}.json`);
+    // per-task station icons (tasks/<taskId>/icon.svg) replace the atlas frames when the map has them
+    if (art.tasks) for (const st of this.skin.stations) this.load.svg(`task-icon-${st.id}`, `${A}/${art.tasks}/${st.id}/icon.svg`, { width: 128, height: 128 });
     if (art.marker) this.load.atlas('map-marker', `${A}/${art.marker}.webp`, `${A}/${art.marker}.json`);
     // painted (raster) props + room decor, and the pre-rendered floor/wall bake (tools/paint/*.py)
     this.load.atlas('map-decor', `${A}/${art.decor}.webp`, `${A}/${art.decor}.json`);
@@ -240,6 +251,13 @@ export class GameScene extends Phaser.Scene {
           this.refreshStations(),
       ),
     );
+    if (import.meta.env.DEV) {
+      // above props/avatars, under the fog (100000)
+      this.devGfx = this.add.graphics().setDepth(99990).setVisible(false);
+      this.devHitbox = this.add.graphics().setDepth(99991).setVisible(false);
+      this.unbind.push(useDev.subscribe(() => this.drawDevColliders()));
+      this.drawDevColliders();
+    }
     this.unbind.push(onHeard((at) => this.onHeard(at)) as unknown as () => void);
     this.unbind.push(onSay((m) => this.say(m)) as unknown as () => void);
     // proximity voice: how far / whether in sight each speaker is for us (same sight rule as the fog)
@@ -400,6 +418,21 @@ export class GameScene extends Phaser.Scene {
       const img = this.add.image(p.x, p.y, atlas, p.key).setOrigin(0.5, 1);
       img.setScale((p.scale ?? 1) / (atlas === 'map-decor' ? textureScale : 1));
       img.setDepth(p.wall ? -5 : p.y);
+      if (p.key === 'prop-courtyard-ban-inox') {
+        // A small phone rests on the existing painted steel table, beside the tea and notebook.
+        // Keep its perspective and scale tied to the prop rather than using a floating UI icon.
+        const phone = this.add.graphics({ x: p.x, y: p.y }).setDepth(p.y + 0.1);
+        const sx = img.displayWidth / 128, sy = img.displayHeight / 88;
+        phone.setScale(sx, sy);
+        phone.fillStyle(0x142f34).fillPoints([
+          { x: 20, y: -53 }, { x: 29, y: -55 }, { x: 33, y: -42 }, { x: 24, y: -40 },
+        ], true);
+        phone.fillStyle(0x70b6ad).fillPoints([
+          { x: 21.5, y: -51 }, { x: 28, y: -52.5 }, { x: 30.5, y: -44 }, { x: 24, y: -42.5 },
+        ], true);
+        phone.lineStyle(0.8, 0xe7f2d8).lineBetween(23, -48, 28, -49);
+        phone.lineBetween(24, -46, 28, -47);
+      }
       if (!p.wall && img.displayHeight >= 150) this.tallProps.push(img);
       if (!p.wall) this.propImgs.push(img);
     }
@@ -457,7 +490,9 @@ export class GameScene extends Phaser.Scene {
     const markerAtlas = this.skin.art.marker ? 'map-marker' : 'map-stations';
     for (const st of this.skin.stations) {
       const ring = this.add.image(st.x, st.y, markerAtlas, 'task-marker').setDisplaySize(84, 84).setDepth(-4).setAlpha(0.9);
-      const icon = this.add.image(st.x, st.y - 6, 'map-stations', st.icon).setDisplaySize(52, 52).setDepth(st.y - 20);
+      const icon = (this.skin.art.tasks ? this.add.image(st.x, st.y - 6, `task-icon-${st.id}`) : this.add.image(st.x, st.y - 6, 'map-stations', st.icon))
+        .setDisplaySize(52, 52)
+        .setDepth(st.y - 20);
       // the object standing on the station (bia, bàn khắc…) is the station: the floating icon would just cover it
       const prop = this.propImgs.find((img) => Math.abs(img.x - st.x) < 24 && img.y - st.y > -8 && img.y - st.y < 40);
       const hit = prop ?? icon;
@@ -988,6 +1023,33 @@ export class GameScene extends Phaser.Scene {
     return canSeePoint(this.grid, this.pred, { x, y }, GAME.sightRadius * this.vis);
   }
 
+  /** Dev: red outline on every solid tile edge that borders walkable floor, i.e. exactly where stepMovement stops you. */
+  private drawDevColliders() {
+    const gfx = this.devGfx;
+    if (!gfx) return;
+    const { showColliders, showHitbox } = useDev.getState();
+    gfx.setVisible(showColliders);
+    this.devHitbox?.setVisible(showHitbox);
+    if (!showColliders) return;
+    const g = this.moveGrid();
+    this.devGrid = g;
+    gfx.clear();
+    for (let ty = 0; ty < g.h; ty++)
+      for (let tx = 0; tx < g.w; tx++) {
+        if (!isSolidTile(g, tx, ty)) continue;
+        const x = tx * TILE, y = ty * TILE;
+        const up = !isSolidTile(g, tx, ty - 1), down = !isSolidTile(g, tx, ty + 1);
+        const left = !isSolidTile(g, tx - 1, ty), right = !isSolidTile(g, tx + 1, ty);
+        if (!(up || down || left || right)) continue;
+        gfx.fillStyle(0xff0000, 0.18).fillRect(x, y, TILE, TILE);
+        gfx.lineStyle(2, 0xff2020, 1);
+        if (up) gfx.lineBetween(x, y, x + TILE, y);
+        if (down) gfx.lineBetween(x, y + TILE, x + TILE, y + TILE);
+        if (left) gfx.lineBetween(x, y, x, y + TILE);
+        if (right) gfx.lineBetween(x + TILE, y, x + TILE, y + TILE);
+      }
+  }
+
   /** must match the server: the lobby gate is solid only while phase is 'lobby' */
   private moveGrid() {
     return useStore.getState().room?.phase === 'lobby' ? this.lobbyGrid : this.grid;
@@ -1150,6 +1212,10 @@ export class GameScene extends Phaser.Scene {
       r.send('input', this.outbox);
       this.outbox = [];
     }
+
+    if (this.devGfx?.visible && this.devGrid !== this.moveGrid()) this.drawDevColliders(); // lobby gate opens/closes
+    if (this.devHitbox?.visible)
+      this.devHitbox.clear().lineStyle(1, 0x00ffff, 1).strokeRect(this.pred.x - BODY_HW, this.pred.y - BODY_HH, BODY_HW * 2, BODY_HH * 2);
 
     // own avatar
     const mine = this.avatars.get(r.sessionId);
