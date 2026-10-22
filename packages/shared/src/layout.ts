@@ -29,6 +29,11 @@ export const AREA_RECTS: Record<AreaId, Rect[]> = {
 
 /** Furniture slots that block movement (tile rects). Skins decide which prop art sits on each slot. */
 export const FURNITURE_SLOTS: Record<string, Rect> = {
+  // Low walls and planters squeeze the outer alleys to one bike-width lane.
+  alley_west_left: [9, 20, 1, 4],
+  alley_west_right: [11, 20, 1, 4],
+  alley_east_left: [33, 20, 1, 4],
+  alley_east_right: [35, 20, 1, 4],
   meeting_table: [19, 3, 4, 2],
   exhibition_panel: [5, 11, 2, 1],
   editing_printer: [14, 20, 2, 1],

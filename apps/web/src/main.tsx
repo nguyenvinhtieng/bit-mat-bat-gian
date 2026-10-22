@@ -1,6 +1,8 @@
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import './styles.css';
+import './saigon-ui.css';
+import './zola.css';
 import { useStore } from './store';
 import * as net from './net';
 import { AssetGate } from './ui/Preloader';

@@ -2247,9 +2247,9 @@
     1,
     1,
     1,
-    0,
-    0,
+    1,
     0,
+    1,
     1,
     1,
     1,
@@ -2271,8 +2271,7 @@
     1,
     1,
     1,
-    0,
-    0,
+    1,
     0,
     1,
     1,
@@ -2289,9 +2288,10 @@
     1,
     1,
     1,
-    0,
-    0,
+    1,
+    1,
     0,
+    1,
     1,
     1,
     0,
@@ -2313,8 +2313,7 @@
     1,
     1,
     1,
-    0,
-    0,
+    1,
     0,
     1,
     1,
@@ -2331,9 +2330,10 @@
     1,
     1,
     1,
-    0,
-    0,
+    1,
+    1,
     0,
+    1,
     1,
     1,
     0,
@@ -2355,8 +2355,7 @@
     1,
     1,
     1,
-    0,
-    0,
+    1,
     0,
     1,
     1,
@@ -2373,9 +2372,10 @@
     1,
     1,
     1,
-    0,
-    0,
+    1,
+    1,
     0,
+    1,
     1,
     1,
     0,
@@ -2397,9 +2397,9 @@
     1,
     1,
     1,
-    0,
-    0,
+    1,
     0,
+    1,
     1,
     1,
     1,
@@ -2888,6 +2888,46 @@
    "objects": [
     {
      "id": 14,
+     "name": "alley_west_left",
+     "type": "blocker",
+     "x": 432,
+     "y": 960,
+     "width": 48,
+     "height": 192,
+     "visible": true
+    },
+    {
+     "id": 15,
+     "name": "alley_west_right",
+     "type": "blocker",
+     "x": 528,
+     "y": 960,
+     "width": 48,
+     "height": 192,
+     "visible": true
+    },
+    {
+     "id": 16,
+     "name": "alley_east_left",
+     "type": "blocker",
+     "x": 1584,
+     "y": 960,
+     "width": 48,
+     "height": 192,
+     "visible": true
+    },
+    {
+     "id": 17,
+     "name": "alley_east_right",
+     "type": "blocker",
+     "x": 1680,
+     "y": 960,
+     "width": 48,
+     "height": 192,
+     "visible": true
+    },
+    {
+     "id": 18,
      "name": "meeting_table",
      "type": "blocker",
      "x": 912,
@@ -2897,7 +2937,7 @@
      "visible": true
     },
     {
-     "id": 15,
+     "id": 19,
      "name": "exhibition_panel",
      "type": "blocker",
      "x": 240,
@@ -2907,7 +2947,7 @@
      "visible": true
     },
     {
-     "id": 16,
+     "id": 20,
      "name": "editing_printer",
      "type": "blocker",
      "x": 672,
@@ -2917,7 +2957,7 @@
      "visible": true
     },
     {
-     "id": 17,
+     "id": 21,
      "name": "editing_scanner",
      "type": "blocker",
      "x": 1248,
@@ -2927,7 +2967,7 @@
      "visible": true
     },
     {
-     "id": 18,
+     "id": 22,
      "name": "editing_desk",
      "type": "blocker",
      "x": 912,
@@ -2937,7 +2977,7 @@
      "visible": true
     },
     {
-     "id": 19,
+     "id": 23,
      "name": "archive_shelf",
      "type": "blocker",
      "x": 240,
@@ -2947,7 +2987,7 @@
      "visible": true
     },
     {
-     "id": 20,
+     "id": 24,
      "name": "storage_copy_stand",
      "type": "blocker",
      "x": 1536,
@@ -2957,7 +2997,7 @@
      "visible": true
     },
     {
-     "id": 21,
+     "id": 25,
      "name": "storage_crate",
      "type": "blocker",
      "x": 1248,
@@ -2967,7 +3007,7 @@
      "visible": true
     },
     {
-     "id": 22,
+     "id": 26,
      "name": "coord_whiteboard",
      "type": "blocker",
      "x": 1440,
@@ -2977,7 +3017,7 @@
      "visible": true
     },
     {
-     "id": 23,
+     "id": 27,
      "name": "coord_desk",
      "type": "blocker",
      "x": 1584,
@@ -2987,7 +3027,7 @@
      "visible": true
     },
     {
-     "id": 24,
+     "id": 28,
      "name": "courtyard_bench",
      "type": "blocker",
      "x": 1152,
@@ -2997,7 +3037,7 @@
      "visible": true
     },
     {
-     "id": 25,
+     "id": 29,
      "name": "decor_cy_urn_w",
      "type": "blocker",
      "x": 720,
@@ -3007,7 +3047,7 @@
      "visible": true
     },
     {
-     "id": 26,
+     "id": 30,
      "name": "decor_cy_urn_e",
      "type": "blocker",
      "x": 1248,
@@ -3017,7 +3057,7 @@
      "visible": true
     },
     {
-     "id": 27,
+     "id": 31,
      "name": "decor_cy_flag",
      "type": "blocker",
      "x": 768,
@@ -3027,7 +3067,7 @@
      "visible": true
     },
     {
-     "id": 28,
+     "id": 32,
      "name": "decor_ex_throne",
      "type": "blocker",
      "x": 288,
@@ -3037,7 +3077,7 @@
      "visible": true
     },
     {
-     "id": 29,
+     "id": 33,
      "name": "decor_ex_crane_w",
      "type": "blocker",
      "x": 240,
@@ -3047,7 +3087,7 @@
      "visible": true
     },
     {
-     "id": 30,
+     "id": 34,
      "name": "decor_ex_crane_e",
      "type": "blocker",
      "x": 432,
@@ -3057,7 +3097,7 @@
      "visible": true
     },
     {
-     "id": 31,
+     "id": 35,
      "name": "decor_ex_col_nw",
      "type": "blocker",
      "x": 144,
@@ -3067,7 +3107,7 @@
      "visible": true
     },
     {
-     "id": 32,
+     "id": 36,
      "name": "decor_ex_col_ne",
      "type": "blocker",
      "x": 528,
@@ -3077,7 +3117,7 @@
      "visible": true
     },
     {
-     "id": 33,
+     "id": 37,
      "name": "decor_ex_lamp_w",
      "type": "blocker",
      "x": 144,
@@ -3087,7 +3127,7 @@
      "visible": true
     },
     {
-     "id": 34,
+     "id": 38,
      "name": "decor_ex_lamp_e",
      "type": "blocker",
      "x": 528,
@@ -3097,7 +3137,7 @@
      "visible": true
     },
     {
-     "id": 35,
+     "id": 39,
      "name": "decor_ex_vase_w",
      "type": "blocker",
      "x": 96,
@@ -3107,7 +3147,7 @@
      "visible": true
     },
     {
-     "id": 36,
+     "id": 40,
      "name": "decor_ex_vase_e",
      "type": "blocker",
      "x": 576,
@@ -3117,7 +3157,7 @@
      "visible": true
     },
     {
-     "id": 37,
+     "id": 41,
      "name": "decor_co_plant_n",
      "type": "blocker",
      "x": 912,
@@ -3127,7 +3167,7 @@
      "visible": true
     },
     {
-     "id": 38,
+     "id": 42,
      "name": "decor_co_plant_s",
      "type": "blocker",
      "x": 1056,
@@ -3137,7 +3177,7 @@
      "visible": true
     },
     {
-     "id": 39,
+     "id": 43,
      "name": "decor_th_bench_w",
      "type": "blocker",
      "x": 1440,
@@ -3147,7 +3187,7 @@
      "visible": true
     },
     {
-     "id": 40,
+     "id": 44,
      "name": "decor_th_bench_e",
      "type": "blocker",
      "x": 1776,
@@ -3157,7 +3197,7 @@
      "visible": true
     },
     {
-     "id": 41,
+     "id": 45,
      "name": "decor_th_zither",
      "type": "blocker",
      "x": 1824,
@@ -3167,7 +3207,7 @@
      "visible": true
     },
     {
-     "id": 42,
+     "id": 46,
      "name": "decor_th_col_nw",
      "type": "blocker",
      "x": 1392,
@@ -3177,7 +3217,7 @@
      "visible": true
     },
     {
-     "id": 43,
+     "id": 47,
      "name": "decor_th_col_sw",
      "type": "blocker",
      "x": 1392,
@@ -3187,7 +3227,7 @@
      "visible": true
     },
     {
-     "id": 44,
+     "id": 48,
      "name": "decor_th_col_ne",
      "type": "blocker",
      "x": 1872,
@@ -3197,7 +3237,7 @@
      "visible": true
     },
     {
-     "id": 45,
+     "id": 49,
      "name": "decor_th_vase",
      "type": "blocker",
      "x": 1872,
@@ -3207,7 +3247,7 @@
      "visible": true
     },
     {
-     "id": 46,
+     "id": 50,
      "name": "decor_ob_shelf_w",
      "type": "blocker",
      "x": 816,
@@ -3217,7 +3257,7 @@
      "visible": true
     },
     {
-     "id": 47,
+     "id": 51,
      "name": "decor_ob_shelf_e",
      "type": "blocker",
      "x": 1104,
@@ -3227,7 +3267,7 @@
      "visible": true
     },
     {
-     "id": 48,
+     "id": 52,
      "name": "decor_ob_scope",
      "type": "blocker",
      "x": 1296,
@@ -3237,7 +3277,7 @@
      "visible": true
     },
     {
-     "id": 49,
+     "id": 53,
      "name": "decor_ob_globe",
      "type": "blocker",
      "x": 672,
@@ -3247,7 +3287,7 @@
      "visible": true
     },
     {
-     "id": 50,
+     "id": 54,
      "name": "decor_ob_sundial",
      "type": "blocker",
      "x": 672,
@@ -3257,7 +3297,7 @@
      "visible": true
     },
     {
-     "id": 51,
+     "id": 55,
      "name": "decor_ob_lamp",
      "type": "blocker",
      "x": 1296,
@@ -3267,7 +3307,7 @@
      "visible": true
     },
     {
-     "id": 52,
+     "id": 56,
      "name": "decor_ar_desk",
      "type": "blocker",
      "x": 720,
@@ -3277,7 +3317,7 @@
      "visible": true
     },
     {
-     "id": 53,
+     "id": 57,
      "name": "decor_ar_chest_e",
      "type": "blocker",
      "x": 816,
@@ -3287,7 +3327,7 @@
      "visible": true
     },
     {
-     "id": 54,
+     "id": 58,
      "name": "decor_ar_chest_m",
      "type": "blocker",
      "x": 480,
@@ -3297,7 +3337,7 @@
      "visible": true
     },
     {
-     "id": 55,
+     "id": 59,
      "name": "decor_ar_jar_w",
      "type": "blocker",
      "x": 192,
@@ -3307,7 +3347,7 @@
      "visible": true
     },
     {
-     "id": 56,
+     "id": 60,
      "name": "decor_ar_jar_e",
      "type": "blocker",
      "x": 864,
@@ -3317,7 +3357,7 @@
      "visible": true
     },
     {
-     "id": 57,
+     "id": 61,
      "name": "decor_ar_lamp",
      "type": "blocker",
      "x": 192,
@@ -3327,7 +3367,7 @@
      "visible": true
     },
     {
-     "id": 58,
+     "id": 62,
      "name": "decor_st_urn_m",
      "type": "blocker",
      "x": 1392,
@@ -3337,7 +3377,7 @@
      "visible": true
     },
     {
-     "id": 59,
+     "id": 63,
      "name": "decor_st_tree",
      "type": "blocker",
      "x": 1728,
@@ -3347,7 +3387,7 @@
      "visible": true
     },
     {
-     "id": 60,
+     "id": 64,
      "name": "decor_st_lantern_w",
      "type": "blocker",
      "x": 1152,
@@ -3357,7 +3397,7 @@
      "visible": true
     },
     {
-     "id": 61,
+     "id": 65,
      "name": "decor_st_lantern_n",
      "type": "blocker",
      "x": 1104,
@@ -3367,7 +3407,7 @@
      "visible": true
     },
     {
-     "id": 62,
+     "id": 66,
      "name": "decor_st_censer",
      "type": "blocker",
      "x": 1248,
@@ -3384,7 +3424,7 @@
    "type": "objectgroup",
    "objects": [
     {
-     "id": 63,
+     "id": 67,
      "name": "spawn_0",
      "type": "spawn",
      "x": 864,
@@ -3392,7 +3432,7 @@
      "point": true
     },
     {
-     "id": 64,
+     "id": 68,
      "name": "spawn_1",
      "type": "spawn",
      "x": 864,
@@ -3400,7 +3440,7 @@
      "point": true
     },
     {
-     "id": 65,
+     "id": 69,
      "name": "spawn_2",
      "type": "spawn",
      "x": 864,
@@ -3408,7 +3448,7 @@
      "point": true
     },
     {
-     "id": 66,
+     "id": 70,
      "name": "spawn_3",
      "type": "spawn",
      "x": 960,
@@ -3416,7 +3456,7 @@
      "point": true
     },
     {
-     "id": 67,
+     "id": 71,
      "name": "spawn_4",
      "type": "spawn",
      "x": 1056,
@@ -3424,7 +3464,7 @@
      "point": true
     },
     {
-     "id": 68,
+     "id": 72,
      "name": "spawn_5",
      "type": "spawn",
      "x": 1152,
@@ -3432,7 +3472,7 @@
      "point": true
     },
     {
-     "id": 69,
+     "id": 73,
      "name": "spawn_6",
      "type": "spawn",
      "x": 1152,
@@ -3440,7 +3480,7 @@
      "point": true
     },
     {
-     "id": 70,
+     "id": 74,
      "name": "spawn_7",
      "type": "spawn",
      "x": 1152,
@@ -3448,7 +3488,7 @@
      "point": true
     },
     {
-     "id": 71,
+     "id": 75,
      "name": "spawn_8",
      "type": "spawn",
      "x": 787,
@@ -3456,7 +3496,7 @@
      "point": true
     },
     {
-     "id": 72,
+     "id": 76,
      "name": "spawn_9",
      "type": "spawn",
      "x": 1229,
@@ -3464,7 +3504,7 @@
      "point": true
     },
     {
-     "id": 73,
+     "id": 77,
      "name": "meeting_table",
      "type": "meeting",
      "x": 1008,
@@ -3475,5 +3515,5 @@
   }
  ],
  "nextlayerid": 6,
- "nextobjectid": 74
+ "nextobjectid": 78
 }

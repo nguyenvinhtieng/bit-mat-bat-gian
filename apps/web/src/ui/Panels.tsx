@@ -121,9 +121,9 @@ export function IntroModal() {
                 {killer ? (
                   isTouchDevice() ? <>Lại gần mục tiêu và bấm nút {skin.killButton?.label.vi ?? 'Hạ gục'}. Nhiệm vụ của bạn chỉ là giả.</> : <>Lại gần mục tiêu và bấm <kbd>K</kbd>. Nhiệm vụ của bạn chỉ là giả.</>
                 ) : isTouchDevice() ? (
-                  <>Làm nhiệm vụ ở các vòng sáng vàng. Thấy thi thể thì bấm nút Báo cáo.</>
+                  <>Làm nhiệm vụ ở các vòng sáng vàng. Thấy {(skin.phrases?.body?.vi ?? 'thi thể').toLowerCase()} thì bấm nút Báo cáo.{me.role === 'veteran_driver' && <> Bấm nút Soi lịch sử để xem hoạt động của một người.</>}</>
                 ) : (
-                  <>Làm nhiệm vụ ở các vòng sáng vàng. Thấy thi thể thì bấm <kbd>L</kbd>.</>
+                  <>Làm nhiệm vụ ở các vòng sáng vàng. Thấy {(skin.phrases?.body?.vi ?? 'thi thể').toLowerCase()} thì bấm <kbd>L</kbd>.{me.role === 'veteran_driver' && <> Bấm <kbd>U</kbd> để soi một người.</>}</>
                 )}
               </p>
             </>

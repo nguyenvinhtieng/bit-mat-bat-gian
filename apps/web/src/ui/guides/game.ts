@@ -5,30 +5,30 @@ export const GAME_GUIDE: MapGuide = {
   storyH: l('Câu chuyện', 'Story'),
   story: {
     vi: [
-      'Hẻm 42, Sài Gòn, 23:42. Hội tài xế CRAB nhận Cuốc Cuối: một kiện hàng phải bàn giao trước khi trời sáng.',
-      'Cả hội chia nhau chuẩn bị — nhận hàng, kiểm niêm phong, giải địa chỉ, lên lộ trình, sửa xe, ngụy trang, xác nhận người nhận.',
-      'Nhưng trong hội có một Cảnh Sát Chìm — cùng áo, cùng nón, chẳng ai phân biệt được.',
-      'Chuẩn bị đủ 100%, mang kiện hàng tới điểm hẹn và bàn giao — hoặc lột mặt cảnh sát chìm trong buổi họp!',
+      'Hẻm 42, 23:42. Sài Gòn vừa tạnh mưa, quán nước cuối hẻm còn sáng một bóng đèn. Một khách lạ đặt Hội CRAB một cuốc đặc biệt: chở kiện hàng 50 triệu — không mở thùng, không hỏi người gửi, giao trước khi trời sáng.',
+      'Cả hội chia nhau chuẩn bị: nhận hàng ở kho, kiểm niêm phong, ngụy trang thùng, giải mã địa chỉ, xác minh người nhận, sửa xe và chọn đường né kẹt xe, ngập nước.',
+      'Đang làm dở thì điện thoại cả hội cùng rung: “Trong hội có công an chìm.” Cùng áo xanh, cùng nón bảo hiểm, không ai phân biệt được. Rồi từng người lần lượt biến mất, chỉ còn chiếc xe CRAB bỏ lại trong hẻm.',
+      'Chuẩn bị đủ 100% rồi mang kiện hàng tới Hẻm Cuối bàn giao — hoặc họp ở đầu hẻm, bỏ phiếu lật mặt kẻ trà trộn trước khi trời sáng.',
     ],
     en: [
-      'Alley 42, Saigon, 23:42. The CRAB crew takes the Last Ride: one package must be handed off before daybreak.',
-      'The crew splits the prep — receive the box, check the seal, decode the address, plan the route, fix the bike, pack the disguise, confirm the recipient.',
-      'But an Undercover Cop rides among them — same jacket, same helmet, impossible to tell apart.',
-      'Reach 100% prep, carry the package to the meeting point and hand it off — or expose the cop in a meeting!',
+      'Alley 42, 23:42. The rain over Saigon has just stopped; one bulb still burns at the drink stall at the end of the alley. A stranger books the CRAB crew for a special ride: a 50-million package — don’t open it, don’t ask who sent it, deliver before daybreak.',
+      'The crew splits the prep: pick up the box at the warehouse, check the seal, disguise it, decode the address, verify the recipient, fix the bike and plan a route around jams and floods.',
+      'Halfway through, every phone buzzes at once: “There’s an undercover cop in the crew.” Same green jacket, same helmet — no way to tell. Then, one by one, drivers vanish, leaving only an abandoned CRAB bike in the alley.',
+      'Reach 100% prep and carry the package to the Back Alley for the handoff — or meet at the alley mouth and vote out the infiltrator before daybreak.',
     ],
   },
   roles: {
     driver: l(
-      'Tài xế CRAB: làm nhiệm vụ chuẩn bị (mỗi lượt tính một lần, hỏng thì làm lại), mang kiện hàng đi bàn giao và bỏ phiếu khi họp.',
-      'CRAB driver: do prep tasks (each turn counts once, retry on failure), carry the package to the handoff and vote in meetings.',
+      'Làm các trạm của mình, đủ 100% thì mang kiện hàng tới Hẻm Cuối bàn giao. Họp và bỏ phiếu tìm công an chìm.',
+      'Finish your stations; at 100%, carry the package to the Back Alley. Meet and vote to find the cop.',
     ),
     veteran_driver: l(
-      'Tài xế lão làng: như tài xế thường, thêm 1 lần mỗi ván soi 3 hoạt động gần nhất của một người (việc, khu vực, thời gian, kết quả) — không thấy vai hay việc thật/giả.',
-      'Veteran driver: a regular driver who can, once per match, inspect a player\'s last 3 activities (task, area, time, result) — never their role or whether a task was fake.',
+      'Như tài xế thường, thêm 1 lần soi 3 hoạt động gần nhất của một người để bắt lỗi khai gian.',
+      'Like a driver, plus one look at a player’s last 3 activities to catch a lie.',
     ),
     undercover: l(
-      'Cảnh Sát Chìm: giữ nút bắt 1,5 giây khi đứng sát một tài xế để còng tay họ (hồi 35 giây, không bắt khi họp). Làm nhiệm vụ giả để trà trộn — chúng không cộng tiến độ. Thắng khi bắt hết hội hoặc hết giờ.',
-      'Undercover Cop: hold arrest for 1.5s next to a driver to cuff them (35s cooldown, never during meetings). Do fake tasks to blend in — they add no progress. Win by arresting everyone or running out the clock.',
+      'Lại gần tài xế và bắt giữ (hồi 35 giây). Làm nhiệm vụ giả để trà trộn. Thắng khi bắt hết hoặc trời sáng.',
+      'Get close and arrest a driver (35s cooldown). Fake tasks to blend in. Win by arresting all or reaching daybreak.',
     ),
   },
 };

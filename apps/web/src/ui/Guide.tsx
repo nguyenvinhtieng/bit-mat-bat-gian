@@ -2,10 +2,16 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ROLE_IDS, ROLE_INFO, mapSkin } from '@hidden-truth/shared';
 import { useLang } from '../i18n';
-import { RoleBadge, asset, useEscape, useSkin } from './common';
+import { RoleBadge, useEscape, useSkin } from './common';
 import { mapGuide } from './guides';
 
-const gui = (n: string) => asset(`maps/common/ui/guide/${n}.webp`);
+function GuideIcon({ kind }: { kind: 'story' | 'roles' | 'close' }) {
+  return <svg className="saigon-ui-icon" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {kind === 'story' ? <><path d="M4 4h6a3 3 0 0 1 3 3v14a4 4 0 0 0-4-2H4Zm16 0h-4a3 3 0 0 0-3 3v14a4 4 0 0 1 4-2h3Z" /><path d="M7 8h3m-3 4h3m6-4h1m-1 4h1" /></> : null}
+    {kind === 'roles' ? <><circle cx="9" cy="8" r="3" /><path d="M3 20v-3a6 6 0 0 1 12 0v3m2-15a3 3 0 0 1 0 6m1 3a5 5 0 0 1 3 5v1" /></> : null}
+    {kind === 'close' ? <path d="m6 6 12 12M18 6 6 18" /> : null}
+  </svg>;
+}
 
 const TXT = {
   vi: {
@@ -14,7 +20,6 @@ const TXT = {
     close: 'Đóng',
     tabs: { story: 'Câu chuyện', roles: 'Vai trò' },
     rolesH: '3 vai trò',
-    crew: 'Phe Người Dân',
   },
   en: {
     title: 'How to play',
@@ -22,7 +27,6 @@ const TXT = {
     close: 'Close',
     tabs: { story: 'Story', roles: 'Roles' },
     rolesH: '3 roles',
-    crew: 'Villager faction',
   },
 } as const;
 
@@ -43,17 +47,17 @@ export function Guide({ onClose, slug }: { onClose: () => void; slug?: string })
   // become the containing block of the fixed backdrop and push the popup off-centre.
   return createPortal(
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal wide guide-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal wide guide-modal saigon-guide" role="dialog" aria-modal="true" aria-label={tx.title} onClick={(e) => e.stopPropagation()}>
         <header className="guide-head">
-          <h3 className="guide-title">{tx.title}</h3>
+          <div><small className="guide-kicker">{lang === 'vi' ? 'HỒ SƠ HẺM 42' : 'ALLEY 42 DOSSIER'}</small><h3 className="guide-title">{tx.title}</h3></div>
           <button className="guide-close" aria-label={tx.close} title={tx.close} onClick={onClose}>
-            <img src={gui('btn-close')} alt="" draggable={false} />
+            <GuideIcon kind="close" />
           </button>
         </header>
         <div className="guide-tabs" role="tablist">
           {(['story', 'roles'] as Tab[]).map((k) => (
             <button key={k} role="tab" aria-selected={tab === k} className={`guide-tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>
-              <img src={gui(`tab-${k}`)} alt="" draggable={false} />
+              <GuideIcon kind={k} />
               <span>{tx.tabs[k]}</span>
             </button>
           ))}
@@ -93,7 +97,7 @@ export function Guide({ onClose, slug }: { onClose: () => void; slug?: string })
                         <RoleBadge role={id} size={48} />
                         <div>
                           <strong>{lang === 'vi' ? skin.roles[id].name : skin.roles[id].nameEn}</strong>
-                          <span className="guide-faction">{killer ? killerFaction : tx.crew}</span>
+                          <span className="guide-faction">{killer ? killerFaction : skin.crewName[lang]}</span>
                         </div>
                       </div>
                       <p>{what}</p>
@@ -110,13 +114,13 @@ export function Guide({ onClose, slug }: { onClose: () => void; slug?: string })
   );
 }
 
-/** Row button inside the settings popup (same painted icon as before). */
+/** Dossier entry inside the settings popup. */
 export function GuideButton({ onClick }: { onClick: () => void }) {
   const lang = useLang((s) => s.lang);
   return (
     <button type="button" className="settings-guide" onClick={onClick}>
-      <img src={gui('btn-guide')} alt="" draggable={false} />
-      <strong>{TXT[lang].btn}</strong>
+      <span className="settings-guide-icon"><GuideIcon kind="story" /></span>
+      <span className="settings-guide-copy"><strong>{TXT[lang].btn}</strong><small>{lang === 'vi' ? 'Cốt truyện · Vai trò · Cách chơi' : 'Story · Roles · How to play'}</small></span>
       <span className="settings-guide-arrow" aria-hidden>
         ›
       </span>

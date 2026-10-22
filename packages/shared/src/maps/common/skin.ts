@@ -17,6 +17,8 @@ export type PropPlacement = {
   y: number;
   /** render on the wall (behind players regardless of y) */
   wall?: boolean;
+  /** Visual scale only; collision footprint and world anchor remain unchanged. */
+  scale?: number;
 };
 
 export type StationDef = {
@@ -29,7 +31,8 @@ export type StationDef = {
   icon: string;
 };
 
-export type RoleSkin = { name: string; nameEn: string; short: string; desc: string };
+/** `tag`: one- or two-word label for the cramped phone HUD chip */
+export type RoleSkin = { name: string; nameEn: string; tag: L; short: string; desc: string };
 
 export type MapSkin = {
   slug: string;
@@ -72,7 +75,7 @@ export type MapSkin = {
   };
   /** Role names/descriptions flavoured for the map (icons stay common). */
   roles: Record<RoleId, RoleSkin>;
-  /** Traitor faction name (Cảnh Sát Chìm). */
+  /** Traitor faction name (Công An Chìm). */
   killerName: L;
   /** Crew faction name (Hội CRAB). */
   crewName: L;
@@ -138,4 +141,8 @@ export type MapSkin = {
   sfx?: { clock?: string };
 };
 
-export type StreetSign = { text: string; x: number; y: number; style: 'spray' | 'board' | 'sticker'; angle?: number };
+export type StreetSign = {
+  text: string; x: number; y: number; style: 'spray' | 'board' | 'sticker'; angle?: number;
+  /** Generated sign texture in this map's signs folder; dimensions are logical world pixels. */
+  art?: string; width?: number; height?: number;
+};

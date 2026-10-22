@@ -1,0 +1,257 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "height": 900,
+      "role": "driver",
+      "kind": "task",
+      "failures": []
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "role": "driver",
+      "kind": "emergency",
+      "failures": []
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "role": "driver",
+      "kind": "report",
+      "failures": []
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "role": "veteran_driver",
+      "kind": "task",
+      "failures": []
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "role": "veteran_driver",
+      "kind": "emergency",
+      "failures": []
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "role": "veteran_driver",
+      "kind": "report",
+      "failures": []
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "role": "undercover",
+      "kind": "task",
+      "failures": []
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "role": "undercover",
+      "kind": "emergency",
+      "failures": []
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "role": "undercover",
+      "kind": "report",
+      "failures": []
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "role": "driver",
+      "kind": "task",
+      "failures": []
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "role": "driver",
+      "kind": "emergency",
+      "failures": []
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "role": "driver",
+      "kind": "report",
+      "failures": []
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "role": "veteran_driver",
+      "kind": "task",
+      "failures": []
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "role": "veteran_driver",
+      "kind": "emergency",
+      "failures": []
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "role": "veteran_driver",
+      "kind": "report",
+      "failures": []
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "role": "undercover",
+      "kind": "task",
+      "failures": []
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "role": "undercover",
+      "kind": "emergency",
+      "failures": []
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "role": "undercover",
+      "kind": "report",
+      "failures": []
+    },
+    {
+      "width": 667,
+      "height": 375,
+      "role": "driver",
+      "kind": "task",
+      "failures": []
+    },
+    {
+      "width": 667,
+      "height": 375,
+      "role": "driver",
+      "kind": "emergency",
+      "failures": []
+    },
+    {
+      "width": 667,
+      "height": 375,
+      "role": "driver",
+      "kind": "report",
+      "failures": []
+    },
+    {
+      "width": 667,
+      "height": 375,
+      "role": "veteran_driver",
+      "kind": "task",
+      "failures": []
+    },
+    {
+      "width": 667,
+      "height": 375,
+      "role": "veteran_driver",
+      "kind": "emergency",
+      "failures": []
+    },
+    {
+      "width": 667,
+      "height": 375,
+      "role": "veteran_driver",
+      "kind": "report",
+      "failures": []
+    },
+    {
+      "width": 667,
+      "height": 375,
+      "role": "undercover",
+      "kind": "task",
+      "failures": []
+    },
+    {
+      "width": 667,
+      "height": 375,
+      "role": "undercover",
+      "kind": "emergency",
+      "failures": []
+    },
+    {
+      "width": 667,
+      "height": 375,
+      "role": "undercover",
+      "kind": "report",
+      "failures": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "role": "driver",
+      "kind": "task",
+      "failures": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "role": "driver",
+      "kind": "emergency",
+      "failures": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "role": "driver",
+      "kind": "report",
+      "failures": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "role": "veteran_driver",
+      "kind": "task",
+      "failures": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "role": "veteran_driver",
+      "kind": "emergency",
+      "failures": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "role": "veteran_driver",
+      "kind": "report",
+      "failures": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "role": "undercover",
+      "kind": "task",
+      "failures": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "role": "undercover",
+      "kind": "emergency",
+      "failures": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "role": "undercover",
+      "kind": "report",
+      "failures": []
+    }
+  ],
+  "errors": []
+}

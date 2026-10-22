@@ -19,9 +19,10 @@ import {
   mapSkin,
   playerArt,
   stepMovement,
+  type SayMsg,
   type TaskId,
 } from '@hidden-truth/shared';
-import { arrest, onHeard, onRoom, room, send } from '../net';
+import { arrest, onHeard, onRoom, onSay, room, send } from '../net';
 import { sfx } from '../ui/minigames/common/kit';
 import { setVoiceProbe } from '../voice';
 import { KILLER_NAME_COLOR, uiBlocksMovement, useStore, type Nearby } from '../store';
@@ -104,6 +105,8 @@ export class GameScene extends Phaser.Scene {
   private tapBadge?: Phaser.GameObjects.Container;
   private tapBadgeFor: TaskId | null = null;
   private bodies = new Map<string, Phaser.GameObjects.Container>();
+  /** speech bubbles over heads, one per speaker; they follow the avatar and hide when it leaves our sight */
+  private bubbles = new Map<string, Phaser.GameObjects.Container>();
   private arrestEffects = new Set<Phaser.GameObjects.Container>();
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   // prediction
@@ -146,6 +149,9 @@ export class GameScene extends Phaser.Scene {
     // painted (raster) props + room decor, and the pre-rendered floor/wall bake (tools/paint/*.py)
     this.load.atlas('map-decor', `${A}/${art.decor}.webp`, `${A}/${art.decor}.json`);
     this.load.image('map-floor', `${A}/${art.floorBake}.webp`);
+    for (const sg of this.skin.signs ?? []) {
+      if (sg.art) this.load.image(`street-sign-${sg.art}`, `${A}/maps/${this.skin.slug}/signs/${sg.art}.webp`);
+    }
     // costume follows the map (Huế: áo dài + khăn đóng…), common avatar otherwise
     const pa = playerArt(this.skin.slug);
     this.load.atlas('player', `${A}/${pa.atlas}.webp`, `${A}/${pa.atlas}.json`);
@@ -235,6 +241,7 @@ export class GameScene extends Phaser.Scene {
       ),
     );
     this.unbind.push(onHeard((at) => this.onHeard(at)) as unknown as () => void);
+    this.unbind.push(onSay((m) => this.say(m)) as unknown as () => void);
     // proximity voice: how far / whether in sight each speaker is for us (same sight rule as the fog)
     setVoiceProbe((id) => {
       const av = this.avatars.get(id);
@@ -263,15 +270,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   private fitZoom() {
-    const { width, height } = this.scale;
+    const { width, height } = this.game.canvas.getBoundingClientRect();
+    const density = this.scale.width / Math.max(1, width);
     const z = Phaser.Math.Clamp(Math.min(width / 960, height / 640), 0.7, 1.6);
-    this.cameras.main.setZoom(Math.round(z * 4) / 4 || 1);
+    this.cameras.main.setZoom((Math.round(z * 4) / 4 || 1) * density);
   }
 
   // ------------------------------------------------------------ world
   private buildMap() {
     if (this.textures.exists('map-floor')) {
-      this.add.image(0, 0, 'map-floor').setOrigin(0).setDepth(-10);
+      this.add.image(0, 0, 'map-floor').setOrigin(0).setDisplaySize(LAYOUT_W * TILE, LAYOUT_H * TILE).setDepth(-10);
       return;
     }
     const order = this.skin.art.tileset?.order;
@@ -386,11 +394,13 @@ export class GameScene extends Phaser.Scene {
 
   private buildProps() {
     const decor = this.textures.get('map-decor');
+    const textureScale = Number((decor.customData as { meta?: { textureScale?: number } }).meta?.textureScale) || 1;
     for (const p of this.skin.props) {
       const atlas = decor.has(p.key) ? 'map-decor' : 'map-stations';
       const img = this.add.image(p.x, p.y, atlas, p.key).setOrigin(0.5, 1);
+      img.setScale((p.scale ?? 1) / (atlas === 'map-decor' ? textureScale : 1));
       img.setDepth(p.wall ? -5 : p.y);
-      if (!p.wall && img.height >= 150) this.tallProps.push(img);
+      if (!p.wall && img.displayHeight >= 150) this.tallProps.push(img);
       if (!p.wall) this.propImgs.push(img);
     }
   }
@@ -398,6 +408,11 @@ export class GameScene extends Phaser.Scene {
   /** MapSkin.signs: wall writing over the bake (sprayed warnings with drips, tin boards, ad stickers). Depth -4: above the floor/walls, under everyone. */
   private buildStreetSigns() {
     for (const sg of this.skin.signs ?? []) {
+      if (sg.art) {
+        this.add.image(sg.x, sg.y, `street-sign-${sg.art}`)
+          .setDisplaySize(sg.width ?? 96, sg.height ?? 64).setAngle(sg.angle ?? 0).setDepth(-4);
+        continue;
+      }
       const font = "'Arial Black', 'Arial', sans-serif";
       const parts: Phaser.GameObjects.GameObject[] = [];
       if (sg.style === 'spray') {
@@ -649,6 +664,76 @@ export class GameScene extends Phaser.Scene {
     const av: Avatar = { c, base, tint, label, plate, lamp, glow, seed: Math.random() * 100, buf: [], dir: 0, moving: false, lastMoveAt: 0, name, alive: true, posedUntil: 0 };
     this.drawPlate(av, false);
     return av;
+  }
+
+  /** Paper speech bubble with a tail pointing at the speaker's nameplate; mine gets a jade rim. */
+  private say(m: SayMsg) {
+    if (!this.avatars.has(m.from)) return;
+    this.bubbles.get(m.from)?.destroy();
+    const TAIL = 8, R = 11;
+    const text = this.add
+      .text(0, -TAIL - 6, m.text, {
+        fontFamily: '"Be Vietnam Pro", system-ui, sans-serif',
+        fontSize: '14px',
+        fontStyle: '600',
+        color: '#182c2b',
+        align: 'center',
+        wordWrap: { width: 170, useAdvancedWrap: true },
+        maxLines: 3,
+      })
+      .setOrigin(0.5, 1)
+      .setResolution(2);
+    const w = Math.max(text.width + 22, 40);
+    const h = text.height + 12;
+    const top = -TAIL - h;
+    const g = this.add.graphics();
+    g.fillStyle(0x000000, 0.35).fillRoundedRect(-w / 2 + 1, top + 3, w, h, R);
+    g.fillStyle(0xf5eddb, 0.97).fillRoundedRect(-w / 2, top, w, h, R);
+    g.lineStyle(2, m.from === room?.sessionId ? 0x44b58a : 0x9e8051, 1).strokeRoundedRect(-w / 2, top, w, h, R);
+    g.fillStyle(0xf5eddb, 1).fillTriangle(-8, -TAIL - 1.5, 8, -TAIL - 1.5, 0, 0);
+    g.beginPath().moveTo(-8, -TAIL).lineTo(0, 0).lineTo(8, -TAIL).strokePath();
+    const b = this.add.container(0, 0, [g, text]).setDepth(m.from === room?.sessionId ? 100003 : 100002).setScale(0.3).setAlpha(0).setData('w', w).setData('h', TAIL + h);
+    this.bubbles.set(m.from, b);
+    this.placeBubble(m.from, b);
+    this.tweens.add({ targets: b, scale: 1, alpha: 1, duration: 220, ease: 'Back.Out' });
+    const life = Math.min(3200 + m.text.length * 60, 7000);
+    this.tweens.add({
+      targets: b,
+      alpha: 0,
+      scale: 0.9,
+      delay: life,
+      duration: 320,
+      onComplete: () => {
+        if (this.bubbles.get(m.from) === b) this.bubbles.delete(m.from);
+        b.destroy();
+      },
+    });
+  }
+
+  /** tail tip sits just above the nameplate, kept inside the view near map edges */
+  private placeBubble(id: string, b: Phaser.GameObjects.Container) {
+    const av = this.avatars.get(id);
+    if (!av) return false;
+    const cam = this.cameras.main;
+    const v = cam.worldView;
+    // ~48 CSS px clear of the top HUD strip (area banner, minimap, badges)
+    const inset = (48 * this.scale.displayScale.y) / cam.zoom;
+    const hw = (b.getData('w') as number) / 2 + 4;
+    b.x = Phaser.Math.Clamp(av.c.x, v.x + hw, Math.max(v.x + hw, v.right - hw));
+    b.y = Math.max(av.c.y + av.label.y - av.label.height - 5, v.y + inset + (b.getData('h') as number));
+    return true;
+  }
+
+  private updateBubbles(canSee: (x: number, y: number) => boolean) {
+    for (const [id, b] of this.bubbles) {
+      const av = this.avatars.get(id);
+      if (!av || !this.placeBubble(id, b)) {
+        b.destroy();
+        this.bubbles.delete(id);
+        continue;
+      }
+      b.setVisible(id === room?.sessionId || canSee(av.c.x, av.c.y));
+    }
   }
 
   private dropAvatar(av: Avatar) {
@@ -1133,6 +1218,7 @@ export class GameScene extends Phaser.Scene {
       this.updateLamp(av, mineAv ? this.myDir : av.dir, moving, !lobby, now);
     }
     this.updateFog(limited ? this.pred : null, limited);
+    this.updateBubbles(canSee);
 
     // UI bridge (only on change)
     const nearby = this.computeNearby();

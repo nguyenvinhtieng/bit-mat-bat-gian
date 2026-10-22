@@ -1,5 +1,5 @@
 import { TILE } from '../../constants';
-import type { StreetSign } from '../common/skin';
+import type { PropPlacement, StreetSign } from '../common/skin';
 
 const t = (v: number) => Math.round(v * TILE);
 
@@ -8,7 +8,11 @@ const t = (v: number) => Math.round(v * TILE);
  * Anchor = bottom-centre (x, y in px); `wall` = hung on a wall face (no y-sort lift). Same slots as Huế / Thăng Long.
  * Generated art: tools/paint/sg_props.py (phase 3).
  */
-export const GAME_PROPS: { key: string; x: number; y: number; wall?: boolean }[] = [
+export const GAME_PROPS: PropPlacement[] = [
+  // The sprite's 48px base matches each solid tile; keep the middle lane open.
+  ...[9, 11, 33, 35].flatMap((x) =>
+    [20, 21, 22, 23].map((y) => ({ key: 'decor-hem-barrier', x: t(x + 0.5), y: t(y + 1) })),
+  ),
   // Đầu hẻm — bàn inox họp hụi, hàng xe CRAB, cột điện
   { key: 'prop-courtyard-ban-inox', x: t(21), y: t(5.15) },
   { key: 'prop-courtyard-xe-crab-hang', x: t(25.5), y: t(2.05) },
@@ -22,7 +26,7 @@ export const GAME_PROPS: { key: string; x: number; y: number; wall?: boolean }[]
   { key: 'prop-corridor-cot-dien', x: t(19.5), y: t(8.6) },
   { key: 'prop-corridor-cot-dien', x: t(22.5), y: t(17.8) },
   // Bãi giữ xe — xe máy xếp
-  { key: 'prop-storage-xe-may-xep', x: t(37.4), y: t(30.4) + 16 },
+  { key: 'prop-storage-xe-may-xep', x: t(37.4), y: t(30.4) + 16, scale: 0.7 },
   // Quán cà phê cóc — quầy pha phin, bàn ghế nhựa
   { key: 'prop-coordination-quay-ca-phe', x: t(31.5), y: t(9.05) },
   { key: 'prop-coordination-ban-ghe-nhua', x: t(34.3), y: t(8.7) + 16 },
@@ -73,9 +77,9 @@ export const GAME_PROPS: { key: string; x: number; y: number; wall?: boolean }[]
   { key: 'decor-chau-bong-giay', x: t(18.5), y: t(27.0) },
   { key: 'decor-quat-may', x: t(4.5), y: t(27.0) },
   // Bãi giữ xe — xe máy đậu, cột chung cư, nón bảo hiểm
-  { key: 'prop-storage-xe-may', x: t(30), y: t(28.05) },
+  { key: 'prop-storage-xe-may', x: t(30), y: t(28.05), scale: 0.7 },
   { key: 'decor-cot-chung-cu', x: t(36.5), y: t(30.0) },
-  { key: 'decor-xe-crab', x: t(24.5), y: t(31.0) },
+  { key: 'decor-xe-crab', x: t(24.5), y: t(31.0), scale: 0.7 },
   { key: 'decor-cot-dien', x: t(23.5), y: t(27.0) },
   { key: 'decor-non-bao-hiem', x: t(26.5), y: t(31.0) },
   // hẻm life — đống rác under the "Cấm đổ rác" sign, ổ gà in the asphalt (floor decals: wall=true keeps them under players)
@@ -91,13 +95,9 @@ export const GAME_PROPS: { key: string; x: number; y: number; wall?: boolean }[]
 
 /** Street writing on the wall faces (see MapSkin.signs). */
 export const GAME_SIGNS: StreetSign[] = [
-  { text: 'CẤM ĐÁI BẬY', x: t(15.6), y: t(10.05), style: 'spray', angle: -3 },
-  { text: 'KHOAN CẮT BÊ TÔNG\n09xx.xxx.xxx', x: t(18.1), y: t(9.85), style: 'sticker', angle: 4 },
-  { text: 'CẤM ĐỔ RÁC', x: t(24.6), y: t(9.95), style: 'board' },
-  { text: 'ĐỔ RÁC LÀ CHÓ!', x: t(26.9), y: t(10.45), style: 'spray', angle: 5 },
-  { text: 'HÚT HẦM CẦU\n09xx.xxx.xxx', x: t(16.6), y: t(18.2), style: 'sticker', angle: -5 },
-  { text: 'HÚT HẦM CẦU\nGIÁ RẺ', x: t(24.4), y: t(18.0), style: 'sticker', angle: 3 },
-  { text: 'CHO THUÊ PHÒNG\nCÓ GÁC – GIỜ GIẤC TỰ DO', x: t(8.4), y: t(25.3), style: 'board' },
-  { text: 'BƠM VÁ XE', x: t(31.6), y: t(25.25), style: 'spray', angle: -2 },
-  { text: 'NHẬN CHUYỂN NHÀ\n09xx.xxx.xxx', x: t(35.2), y: t(25.15), style: 'sticker', angle: -4 },
+  { text: 'HÚT HẦM CẦU', art: 'drain', width: 92, height: 59, x: t(16.5), y: t(10), style: 'sticker', angle: -4 },
+  { text: 'CẤM ĐỔ RÁC · AI ĐỔ RÁC LÀM CHÓ', art: 'trash', width: 144, height: 84, x: t(27), y: t(9.9), style: 'spray', angle: 2 },
+  { text: 'HÚT HẦM CẦU', art: 'drain', width: 92, height: 59, x: t(16.6), y: t(18.2), style: 'sticker', angle: -5 },
+  { text: 'HẺM 47 · HẺM CỤT', art: 'dead-end', width: 90, height: 36, x: t(25.3), y: t(18.1), style: 'board', angle: -2 },
+  { text: 'NHẬN CHUYỂN NHÀ', art: 'moving', width: 80, height: 59, x: t(38), y: t(25.15), style: 'sticker', angle: -4 },
 ];

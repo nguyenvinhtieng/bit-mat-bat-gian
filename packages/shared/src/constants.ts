@@ -34,16 +34,16 @@ export type AreaId = (typeof AREA_IDS)[number];
 /** Hẻm 42 — Cuốc Cuối: one undercover cop hunts the CRAB drivers; one veteran driver can read a task log once. */
 export const ROLE_IDS = ['driver', 'veteran_driver', 'undercover'] as const;
 export type RoleId = (typeof ROLE_IDS)[number];
-/** internal faction ids: `crew` = Hội CRAB, `killer` = Cảnh sát (display names come from the skin) */
+/** internal faction ids: `crew` = Hội Tài Xế, `killer` = Công an (display names come from the skin) */
 export type Faction = 'crew' | 'killer';
 
 export const ROLE_INFO: Record<RoleId, { name: string; nameEn: string; faction: Faction; icon: string; short: string; desc: string }> = {
   driver: {
-    name: 'Tài Xế CRAB',
-    nameEn: 'CRAB Driver',
+    name: 'Tài Xế',
+    nameEn: 'Driver',
     faction: 'crew',
     icon: 'local_guide',
-    short: 'Chuẩn bị Cuốc Cuối, tìm cảnh sát chìm',
+    short: 'Chuẩn bị Cuốc Cuối, tìm công an chìm',
     desc: 'Làm các nhiệm vụ chuẩn bị chuyến hàng 50 triệu, quan sát người khác, họp và bỏ phiếu.',
   },
   veteran_driver: {
@@ -52,10 +52,10 @@ export const ROLE_INFO: Record<RoleId, { name: string; nameEn: string; faction: 
     faction: 'crew',
     icon: 'conservator',
     short: 'Soi lịch sử nhiệm vụ của một người (1 lần)',
-    desc: 'Tài xế CRAB thật. Một lần mỗi trận, xem tối đa 3 hoạt động nhiệm vụ gần nhất của một người.',
+    desc: 'Tài xế thật. Một lần mỗi trận, xem tối đa 3 hoạt động nhiệm vụ gần nhất của một người.',
   },
   undercover: {
-    name: 'Cảnh Sát Chìm — Tất Xanh',
+    name: 'Công An Chìm — Tất Xanh',
     nameEn: 'Undercover Cop — Green Socks',
     faction: 'killer',
     icon: 'forger',

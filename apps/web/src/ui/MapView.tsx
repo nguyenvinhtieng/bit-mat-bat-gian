@@ -16,8 +16,20 @@ const LABEL_AT: Partial<Record<AreaId, [number, number]>> = {
 /**
  * Full-screen map: the painted overview of the alley with area plaques, the shared prep stations
  * (numbered, pulsing until done), the handoff point once open, the package, the meeting point and my position.
+ * My own pending stations (`mine`) get a glowing pin + their room outlined; everyone else's are dimmed.
  */
-export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: { x: number; y: number } | null; onClose: () => void }) {
+export function MapView({
+  current,
+  pos,
+  mine,
+  onClose,
+}: {
+  current: AreaId | '';
+  pos: { x: number; y: number } | null;
+  /** my own list (personal done state), handoff included only once it is open */
+  mine: { id: TaskId; done: boolean }[];
+  onClose: () => void;
+}) {
   useEscape(onClose);
   const room = useStore((s) => s.room);
   const lang = useLang((s) => s.lang);
@@ -27,8 +39,10 @@ export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: 
   const tasks = ids.map((id, i) => {
     const c = room?.stations[id];
     const done = id === 'handoff_package' ? room?.packageState === 'delivered' : !!c && c.done >= c.need;
-    return { st: skin.stations.find((x) => x.id === id)!, n: i + 1, done };
+    const my = mine.find((m) => m.id === id);
+    return { st: skin.stations.find((x) => x.id === id)!, n: i + 1, done, mine: !!my && !my.done };
   });
+  const myAreas = [...new Set(tasks.filter((t) => t.mine).map((t) => t.st.area))];
   const name = (id: AreaId) => (en ? skin.areas[id].nameEn : skin.areas[id].name);
   const tx = (v: number) => v / TILE;
   const pkg = usePackageSpot();
@@ -59,6 +73,10 @@ export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: 
                   <stop offset="1" stopColor="#ffb02e" stopOpacity="0" />
                 </radialGradient>
               </defs>
+              {/* rooms holding my pending tasks */}
+              {myAreas.flatMap((a) =>
+                AREA_RECTS[a].map(([x, y, w, h], i) => <rect key={`${a}-${i}`} className="mv-mine-area" x={x + 0.08} y={y + 0.08} width={w - 0.16} height={h - 0.16} rx={0.3} />),
+              )}
               {/* current room outline */}
               {current &&
                 AREA_RECTS[current].map(([x, y, w, h], i) => (
@@ -69,15 +87,24 @@ export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: 
                 <circle r={0.75} />
                 <image href={asset('maps/common/ui/meeting-bell.webp')} x={-0.6} y={-0.6} width={1.2} height={1.2} />
               </g>
-              {tasks.map(({ st, n, done }) => (
-                <g key={st.id} className={`mv-task ${done ? 'done' : 'todo'}`} transform={`translate(${tx(st.x)} ${tx(st.y)})`}>
-                  {!done && <circle className="mv-halo" r={1.6} fill="url(#mv-glow)" />}
-                  <circle className="mv-pin" r={0.62} />
-                  <text className="mv-num" dy="0.05">
-                    {done ? '✓' : n}
-                  </text>
-                </g>
-              ))}
+              {/* others first so my pins draw on top */}
+              {[...tasks]
+                .sort((a, b) => Number(a.mine) - Number(b.mine))
+                .map(({ st, n, done, mine: my }) => (
+                  <g key={st.id} className={`mv-task ${done ? 'done' : 'todo'} ${my ? 'mine' : 'other'}`} transform={`translate(${tx(st.x)} ${tx(st.y)})`}>
+                    {my && <circle className="mv-halo" r={2.2} fill="url(#mv-glow)" />}
+                    {my && <circle className="mv-mine-ring" r={1.05} />}
+                    <circle className="mv-pin" r={my ? 0.78 : 0.55} />
+                    <text className="mv-num" dy="0.05">
+                      {done ? '✓' : n}
+                    </text>
+                    {my && (
+                      <text className="mv-me-label" y={-1.35}>
+                        {en ? 'Your task' : 'Việc của bạn'}
+                      </text>
+                    )}
+                  </g>
+                ))}
               {pkg && (
                 <g className="mv-ward" transform={`translate(${tx(pkg.x)} ${tx(pkg.y)})`}>
                   <circle className="mv-ward-pulse" r={1.8} />
@@ -116,8 +143,8 @@ export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: 
           <aside className="mapview-legend">
             <h4>{en ? 'Last Ride prep' : 'Chuẩn bị Cuốc Cuối'}</h4>
             <ol>
-              {tasks.map(({ st, n, done }) => (
-                <li key={st.id} className={`${done ? 'done' : ''} ${st.area === current && !done ? 'here' : ''}`}>
+              {tasks.map(({ st, n, done, mine: my }) => (
+                <li key={st.id} className={`${done ? 'done' : ''} ${my ? 'mine' : 'other'} ${st.area === current && my ? 'here' : ''}`}>
                   <b>{done ? '✓' : n}</b>
                   <span>{en ? st.titleEn : st.title}</span>
                 </li>
@@ -128,7 +155,10 @@ export function MapView({ current, pos, onClose }: { current: AreaId | ''; pos: 
                 <i className="k-me" /> {en ? 'You are here' : 'Vị trí của bạn'}
               </span>
               <span>
-                <i className="k-todo" /> {en ? 'Task to do' : 'Nhiệm vụ cần làm'}
+                <i className="k-todo" /> {en ? 'Your task' : 'Nhiệm vụ của bạn'}
+              </span>
+              <span>
+                <i className="k-other" /> {en ? "Others' task" : 'Nhiệm vụ người khác'}
               </span>
               <span>
                 <i className="k-bell" /> {en ? `${skin.emergency.en} (emergency)` : `${skin.emergency.vi} (họp khẩn)`}

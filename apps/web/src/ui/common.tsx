@@ -64,10 +64,10 @@ export const tapProps = (fn: () => void) => ({
 /** Small "Esc" hint shown next to close buttons. */
 export const EscHint = () => <kbd className="esc-hint">Esc</kbd>;
 
-/** Painted round close button (same art as the guide popup) used by every popup. */
+/** Shared close control for every popup. */
 export const CloseButton = ({ onClick, label = 'Đóng', className = '' }: { onClick: () => void; label?: string; className?: string }) => (
   <button type="button" className={`x-btn ${className}`} onClick={onClick} aria-label={label} title={label}>
-    <img src={asset('maps/common/ui/guide/btn-close.webp')} alt="" draggable={false} />
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
   </button>
 );
 

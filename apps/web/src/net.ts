@@ -1,5 +1,5 @@
 import { Client, type Room } from 'colyseus.js';
-import { GAME, PLAYER_COLORS, ROOM_NAME, type ArrestHoldMsg, type ClientMessages, type Cinematic, type InspectResult } from '@hidden-truth/shared';
+import { GAME, PLAYER_COLORS, ROOM_NAME, type ArrestHoldMsg, type ClientMessages, type Cinematic, type InspectResult, type SayMsg } from '@hidden-truth/shared';
 import { useStore, type Connecting, type RoomView } from './store';
 
 function endpoint(): string {
@@ -35,6 +35,14 @@ const heardListeners = new Set<Heard>();
 export function onHeard(cb: Heard) {
   heardListeners.add(cb);
   return () => heardListeners.delete(cb);
+}
+
+/** speech bubbles (GameScene draws them over the speaker's head) */
+type Say = (m: SayMsg) => void;
+const sayListeners = new Set<Say>();
+export function onSay(cb: Say) {
+  sayListeners.add(cb);
+  return () => sayListeners.delete(cb);
 }
 
 export function send<K extends keyof ClientMessages>(type: K, payload: ClientMessages[K]) {
@@ -145,7 +153,15 @@ function bind(r: Room) {
   });
   r.onMessage('intro', () => useStore.getState().set({ introOpen: true, introQuick: false }));
   r.onMessage('chat:history', (list) => useStore.getState().set({ chat: list }));
-  r.onMessage('chat', (m) => useStore.getState().set({ chat: [...useStore.getState().chat, m].slice(-200) }));
+  r.onMessage('chat', (m) => {
+    const s = useStore.getState();
+    s.set({ chat: [...s.chat, m].slice(-200) });
+    // in the lobby a board message also pops over the sender's head
+    if (!m.system && s.room?.phase === 'lobby') for (const cb of sayListeners) cb({ from: m.from, text: m.text });
+  });
+  r.onMessage('say', (m: SayMsg) => {
+    for (const cb of sayListeners) cb(m);
+  });
   r.onMessage('toast', (t) => useStore.getState().toast(t));
   r.onMessage('task:data', (task) => useStore.getState().set({ task, taskResult: null }));
   r.onMessage('task:result', (res: { ok: boolean; text: string; fact?: string; headline?: string }) => {

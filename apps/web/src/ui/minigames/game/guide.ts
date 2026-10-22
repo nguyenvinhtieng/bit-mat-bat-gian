@@ -4,8 +4,8 @@ type G = { goal: string; steps: string[] };
 /** Goal + how-to for each mini-game (vi / en). */
 export const GUIDE: Partial<Record<GameTaskId, { vi: G; en: G }>> = {
   receive_package: {
-    vi: { goal: 'Nhận đúng thùng hàng ở quán dì Bảy.', steps: ['Đọc các mã trên phiếu nhận', 'Tìm thùng có tem khớp đủ mã', 'Chạm thùng để nhận'] },
-    en: { goal: 'Pick up the right box at Auntie Bảy’s.', steps: ['Read the codes on the slip', 'Find the box whose stickers match them all', 'Tap it to collect'] },
+    vi: { goal: 'Nhận đúng thùng hàng ở quán nước.', steps: ['Đọc các mã trên phiếu nhận', 'Tìm thùng có tem khớp đủ mã', 'Chạm thùng để nhận'] },
+    en: { goal: 'Pick up the right box at the drink stall.', steps: ['Read the codes on the slip', 'Find the box whose stickers match them all', 'Tap it to collect'] },
   },
   check_seal: {
     vi: { goal: 'Kiểm tra niêm phong mà không mở thùng.', steps: ['Mỗi mảnh niêm đang bị xoay lệch', 'Chạm mảnh để xoay ¼ vòng', 'Mọi mảnh thẳng đứng là xong'] },

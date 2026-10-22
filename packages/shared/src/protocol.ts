@@ -22,6 +22,8 @@ export type ClientMessages = {
   report: Record<string, never>;
   emergency: Record<string, never>;
   chat: { text: string };
+  /** explore only: a short line shown as a speech bubble over your head (not logged on the board) */
+  say: { text: string };
   /** lobby only: change your own display name */
   rename: { name: string };
   /** target = player id, or 'skip' */
@@ -99,6 +101,12 @@ export type Pt = { x: number; y: number };
 
 /** Sent when a task is solved: success line + the story card. */
 export type TaskResultMsg = { ok: boolean; text: string; fact?: string; headline?: string };
+
+/** Server -> all: a speech bubble over `from`'s head */
+export type SayMsg = { from: string; text: string };
+export const SAY_MAX = 80;
+/** Max display-name length (keeps nameplates / HUD lists from overflowing) */
+export const NAME_MAX = 12;
 
 export type ChatMsg = { from: string; name: string; color: number; text: string; t: number; system?: boolean };
 

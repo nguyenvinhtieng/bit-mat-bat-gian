@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180"><rect x="2" y="2" width="236" height="176" rx="14" fill="#171b24" stroke="#373b47" stroke-width="4"/><g transform="translate(12 15)"><rect x="0" y="0" width="100" height="150" rx="7" fill="#94162b" stroke="#edbf55" stroke-width="3"/><svg xmlns="http://www.w3.org/2000/svg" x="8" y="17" width="84" height="112" viewBox="0 0 256 300">
+  <!-- Fictional game insignia. Edit this source, then run pack-arrest.mjs. -->
+  <defs>
+    <linearGradient id="gold" x2=".3" y2="1"><stop stop-color="#fff6b0"/><stop offset=".45" stop-color="#ffc938"/><stop offset="1" stop-color="#ba6a13"/></linearGradient>
+    <linearGradient id="red" x2=".5" y2="1"><stop stop-color="#dd2335"/><stop offset="1" stop-color="#820e22"/></linearGradient>
+  </defs>
+  <path d="M128 12 238 55 234 166Q231 232 128 287 25 232 22 166L18 55Z" fill="url(#gold)" stroke="#64320c" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M128 29 221 66 218 163Q216 221 128 267 40 221 38 163L35 66Z" fill="url(#red)" stroke="#ffe792" stroke-width="4"/>
+  <path d="m128 55 17 36 39 5-28 28 7 39-35-19-35 19 7-39-28-28 39-5Z" fill="url(#gold)" stroke="#974a0c" stroke-width="4" stroke-linejoin="round"/>
+  <path d="m128 55 0 63 17-27Zm56 41-56 22 28 6Zm-21 67-35-45v26Z" fill="#fff4a0" opacity=".7"/>
+  <g fill="url(#gold)" stroke="#9a4e10" stroke-width="3" stroke-linejoin="round">
+    <path d="M128 242Q87 224 71 177q44 8 57 65Z"/>
+    <path d="M128 242q41-18 57-65-44 8-57 65Z"/>
+    <path d="M128 245q-37-31 0-79 37 48 0 79Z"/>
+  </g>
+  <path d="M82 233q26-3 46 17 20-20 46-17" fill="none" stroke="#ffe184" stroke-width="5" stroke-linecap="round"/>
+</svg>
+</g><g transform="translate(128 15)"><rect x="0" y="0" width="100" height="150" rx="7" fill="#94162b" stroke="#edbf55" stroke-width="3"/></g></svg>

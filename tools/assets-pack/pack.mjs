@@ -295,6 +295,16 @@ async function packUi() {
 const ROLES = ['historian', 'conservator', 'local_guide', 'archivist', 'forger', 'broker']; // sheet order (3x2)
 const ROLE_SHIP = new Set(['conservator', 'local_guide', 'forger']); // roles in ROLE_INFO
 async function packRoles() {
+  // CRAB portraits: driver, veteran, undercover. Keep legacy filenames used by ROLE_INFO.
+  const portraits = path.join(SRC, 'maps/common/role-badges-crab.png');
+  if (exists(portraits)) {
+    const cells = sliceGrid(await loadRaw(portraits), 3, 1);
+    for (const [i, name] of ['local_guide', 'conservator', 'forger'].entries()) {
+      await writeBoth(`maps/common/ui/roles/${name}.png`, await fitTo(cells[i], 256, 256, { align: 'center' }));
+      manifest.roles[name] = { icon: `maps/common/ui/roles/${name}.webp` };
+    }
+    return log('CRAB role portraits');
+  }
   const f = path.join(SRC, 'maps/common/role-icons.png');
   if (!exists(f)) return log('skip roles');
   const cells = sliceGrid(removeBackground(await loadRaw(f)), 3, 2);

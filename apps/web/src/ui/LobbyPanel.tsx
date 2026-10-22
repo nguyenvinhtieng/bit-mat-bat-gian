@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { DEFAULT_MAP_SLUG, GAME, MAX_PLAYERS, MIN_PLAYERS, PLAYER_COLORS, mapArt, mapSkin } from '@hidden-truth/shared';
+import { GAME, MAX_PLAYERS, MIN_PLAYERS, PLAYER_COLORS, mapArt } from '@hidden-truth/shared';
 import { send } from '../net';
 import { colorHex, useStore } from '../store';
 import { CloseButton, Modal, asset } from './common';
 import { Chat } from './Chat';
 import { useT } from '../i18n';
+
+type LobbyIconName = 'players' | 'settings' | 'chevron' | 'clue' | 'clock' | 'globe';
+function LobbyIcon({ name }: { name: LobbyIconName }) {
+  return <svg className="lobby-icon" viewBox="0 0 32 32" aria-hidden="true"><use href={`${asset('maps/common/ui/saigon/lobby-icons.svg')}#${name}`} /></svg>;
+}
+
+// dev: the host alone can ready up and start, to test without 4 clients
+const DEV = import.meta.env.DEV;
 
 export function LobbyPanel() {
   const room = useStore((s) => s.room)!;
@@ -19,7 +27,7 @@ export function LobbyPanel() {
   const total = room.players.length;
   const [showSettings, setShowSettings] = useState(false);
   const [showPlayers, setShowPlayers] = useState(false);
-  const canStart = total >= MIN_PLAYERS;
+  const canStart = DEV || total >= MIN_PLAYERS;
   // the panel unmounts when the phase flips; the timeout only matters if the server refused (toast explains why)
   const [starting, setStarting] = useState(false);
   useEffect(() => {
@@ -34,9 +42,10 @@ export function LobbyPanel() {
   };
   // always open on entering the lobby so players see it exists; the tab folds it away
   const [panelOpen, setPanelOpen] = useState(true);
-  const [chatOpen, setChatOpen] = usePersisted('tht:lobbyChat', !isTouch());
+  // Each lobby entry uses the device default, independent of old saved toggles.
+  const [chatOpen, setChatOpen] = useState(() => !isTouch());
   const chat = useStore((s) => s.chat);
-  const [seen, setSeen] = useState(chat.length);
+  const [seen, setSeen] = useState(() => chat.at(-1));
   const [chatClosing, setChatClosing] = useState(false);
   const closeChat = () => {
     if (chatClosing) return;
@@ -47,17 +56,20 @@ export function LobbyPanel() {
     }, 140);
   };
   useEffect(() => {
-    if (chatOpen) setSeen(chat.length);
-  }, [chatOpen, chat.length]);
-  const unread = chat.slice(seen).filter((m) => !m.system && m.from !== sessionId).length;
+    if (chatOpen) setSeen(chat.at(-1));
+  }, [chatOpen, chat]);
+  const unreadMessages = chat.slice(seen ? chat.indexOf(seen) + 1 : 0).filter((m) => !m.system && m.from !== sessionId);
+  const unread = unreadMessages.length;
+  const latestMessage = unreadMessages.at(-1);
   const allReady = total > 0 && readyCount === total;
+  const startReady = DEV ? !!me?.ready : canStart && allReady;
 
   return (
     <>
       <div className={`lobby-dock ${panelOpen ? '' : 'is-collapsed'}`}>
-        <aside className="lobby-panel" aria-hidden={!panelOpen}>
+        <aside id="lobby-info" className="lobby-panel" aria-hidden={!panelOpen} inert={!panelOpen}>
           <div className="lobby-head">
-            <img className="lobby-thumb" src={asset(mapArt(DEFAULT_MAP_SLUG, 'thumb'))} alt="" />
+            <img className="lobby-thumb" src={asset(mapArt(room.mapSlug, 'thumb'))} alt="" />
             <div className="room-code">
               <span>{t('roomCode')}</span>
               <strong>{room.code}</strong>
@@ -77,16 +89,14 @@ export function LobbyPanel() {
             </button>
           </div>
           <button className="btn wide settings-btn players-btn" onClick={() => setShowPlayers(true)}>
-            <span className="players-btn-icon" aria-hidden>
-              👥
-            </span>
+            <LobbyIcon name="players" />
             <span>{t('players')}</span>
             <small>
               {total}/{MAX_PLAYERS}
             </small>
           </button>
           <button className="btn wide settings-btn" onClick={() => setShowSettings(true)}>
-            <img src={asset('maps/common/ui/settings.webp')} alt="" draggable={false} />
+            <LobbyIcon name="settings" />
             <span>{t('settings')}</span>
             <small>
               {room.tasksPerPlayer}× · {room.nightMin}′
@@ -99,8 +109,9 @@ export function LobbyPanel() {
           title={panelOpen ? t('panelHide') : t('panelShow')}
           aria-label={panelOpen ? t('panelHide') : t('panelShow')}
           aria-expanded={panelOpen}
+          aria-controls="lobby-info"
         >
-          <i className="lobby-tab-arrow" aria-hidden />
+          <LobbyIcon name="chevron" />
           <b>
             {readyCount}/{total}
           </b>
@@ -133,9 +144,9 @@ export function LobbyPanel() {
           </button>
           {isHost && (
             <button
-              className="ready-cta start-cta"
-              disabled={!canStart || !allReady || starting}
-              title={!canStart ? t('hint') : allReady ? undefined : t('waitReady')}
+              className={`ready-cta start-cta ${startReady ? 'is-go' : ''}`}
+              disabled={!startReady || starting}
+              title={!canStart ? t('hint') : startReady ? undefined : t('waitReady')}
               onClick={start}
             >
               <span className="ready-cta-icon" aria-hidden>
@@ -148,12 +159,20 @@ export function LobbyPanel() {
       </div>
       {chatOpen ? (
         <aside className={`lobby-chat ${chatClosing ? 'closing' : ''}`}>
-          <Chat compact title={t('chat')} onClose={closeChat} closeLabel={t('chatClose')} />
+          <Chat compact title={`Zola · ${t('chat')}`} onClose={closeChat} closeLabel={t('chatClose')} />
         </aside>
       ) : (
-        <button className="chat-fab" onClick={() => setChatOpen(true)} title={t('chat')} aria-label={t('chat')}>
-          <img src={asset('maps/common/ui/mobile/btn-chat.webp')} alt="" draggable={false} />
-          {unread > 0 && <b className="chat-badge">{unread > 9 ? '9+' : unread}</b>}
+        <button className="chat-fab" onClick={() => setChatOpen(true)} title={`Zola · ${t('chat')}`} aria-label={`Zola · ${t('chat')}${unread ? ` (${unread})` : ''}`}>
+          <span className="chat-fab-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><path d="M32 9C17 9 7 18 7 30c0 7 4 13 10 17l-3 9 13-6 5 1c15 0 25-9 25-21S47 9 32 9Z" /><text x="32" y="35" textAnchor="middle">Zola</text></svg>
+          </span>
+          <span className="chat-fab-label" aria-hidden="true">Zola</span>
+          {unread > 0 && <b className="chat-badge">{unread > 99 ? '99+' : unread}</b>}
+          {latestMessage && <span className="zola-notification" role="status" aria-live="polite">
+            <span className="zola-notification-app">Zola <span>●</span></span>
+            <strong>{latestMessage.name}</strong>
+            <span className="zola-notification-text">{latestMessage.text}</span>
+          </span>}
         </button>
       )}
       {showSettings && <SettingsModal isHost={isHost} onClose={() => setShowSettings(false)} />}
@@ -174,7 +193,7 @@ function PlayersModal({ isHost, onClose }: { isHost: boolean; onClose: () => voi
   };
   return (
     <>
-      <Modal title={`${t('players')} · ${room.players.length}/${MAX_PLAYERS}`} onClose={onClose} className="players-modal">
+      <Modal title={`${t('players')} · ${room.players.length}/${MAX_PLAYERS}`} onClose={onClose} className="players-modal saigon-lobby-modal">
         <ul className="player-list players-modal-list">
           {room.players.map((p) => (
             <li key={p.id} className={`${p.ready ? 'is-ready' : ''} ${p.connected ? '' : 'off'}`}>
@@ -205,7 +224,7 @@ function PlayersModal({ isHost, onClose }: { isHost: boolean; onClose: () => voi
       </Modal>
       {/* sibling, not child: the players modal's backdrop would otherwise sit under this one */}
       {kickTarget && (
-        <Modal title={t('kick')} onClose={() => setKickTarget(null)} className="kick-modal">
+        <Modal title={t('kick')} onClose={() => setKickTarget(null)} className="kick-modal saigon-lobby-modal">
           <p className="kick-warn">{t('kickConfirm').replace('{name}', kickTarget.name)}</p>
           <div className="exit-actions">
             <button type="button" className="btn ghost" onClick={() => setKickTarget(null)}>
@@ -222,27 +241,6 @@ function PlayersModal({ isHost, onClose }: { isHost: boolean; onClose: () => voi
 }
 
 const isTouch = () => typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches;
-
-/** Per-viewer UI toggle remembered across reloads (storage may be unavailable — then it just isn't remembered). */
-function usePersisted(key: string, fallback: boolean) {
-  const [v, setV] = useState(() => {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw == null ? fallback : raw === '1';
-    } catch {
-      return fallback;
-    }
-  });
-  const set = (next: boolean) => {
-    setV(next);
-    try {
-      localStorage.setItem(key, next ? '1' : '0');
-    } catch {
-      /* ignore */
-    }
-  };
-  return [v, set] as const;
-}
 
 /** Edits a local draft; nothing reaches the server until the host presses Save (× / backdrop = discard). */
 function SettingsModal(props: { isHost: boolean; onClose: () => void }) {
@@ -265,9 +263,9 @@ function SettingsModal(props: { isHost: boolean; onClose: () => void }) {
 
   return (
     <div className="modal-backdrop settings-backdrop" onClick={onClose}>
-      <div className="modal settings-modal" role="dialog" aria-label={t('settings')} onClick={(e) => e.stopPropagation()}>
+      <div className="modal settings-modal saigon-lobby-modal lobby-settings" role="dialog" aria-label={t('settings')} onClick={(e) => e.stopPropagation()}>
         <header>
-          <img className="settings-crest" src={asset('maps/common/ui/settings.webp')} alt="" draggable={false} />
+          <LobbyIcon name="settings" />
           <div>
             <h3>{t('settings')}</h3>
           </div>
@@ -275,7 +273,7 @@ function SettingsModal(props: { isHost: boolean; onClose: () => void }) {
         </header>
         <div className="modal-content">
           <SliderRow
-            icon="maps/common/ui/clue.webp"
+            icon="clue"
             label={t('tasksPer')}
             min={GAME.tasksPerPlayerMin}
             max={GAME.tasksPerPlayerMax}
@@ -284,7 +282,7 @@ function SettingsModal(props: { isHost: boolean; onClose: () => void }) {
             onChange={(v) => edit({ turns: v })}
           />
           <SliderRow
-            icon={`${mapSkin(room.mapSlug).art.nightMarker}.webp`}
+            icon="clock"
             label={t('nightLen')}
             min={GAME.timeMinMin}
             max={GAME.timeMinMax}
@@ -295,7 +293,7 @@ function SettingsModal(props: { isHost: boolean; onClose: () => void }) {
           />
           <div className={`slider-row ${isHost ? '' : 'is-disabled'}`}>
             <div className="slider-head">
-              <img src={asset('maps/common/ui/home/globe.webp')} alt="" draggable={false} />
+              <LobbyIcon name="globe" />
               <div className="slider-text">
                 <strong>{t('roomVisibility')}</strong>
               </div>
@@ -330,7 +328,7 @@ function SettingsModal(props: { isHost: boolean; onClose: () => void }) {
 }
 
 function SliderRow(props: {
-  icon: string;
+  icon: LobbyIconName;
   label: string;
   min: number;
   max: number;
@@ -346,7 +344,7 @@ function SliderRow(props: {
   return (
     <div className={`slider-row ${props.tone ?? ''} ${props.disabled ? 'is-disabled' : ''}`}>
       <div className="slider-head">
-        <img src={asset(props.icon)} alt="" draggable={false} />
+        <LobbyIcon name={props.icon} />
         <div className="slider-text">
           <strong>{props.label}</strong>
         </div>

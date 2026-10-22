@@ -12,7 +12,6 @@ for rel in ('assets/maps/co-do-hue/co-do-hue.assets.json', 'apps/web/public/asse
         d['props'][k] = {**(d['props'].get(k) or {}), 'atlas': 'hue-decor-0', 'size': [v['frame']['w'], v['frame']['h']], 'anchor': [0.5, 1]}
     d['cards'] = {f'hue-card-{t}': {'file': f'maps/co-do-hue/cards/hue-card-{t}', 'size': [640, 400], 'generatedBy': 'tools/paint/cards.py'} for t in
                   ['task_moon_phase', 'task_woodblock_print', 'task_ngo_mon_gates', 'task_court_ranks', 'task_nha_nhac', 'task_cuu_dinh', 'task_poem_wall', 'task_royal_seal', 'task_banh_beo']}
-    d['ui'].update({n: {'file': f'maps/common/ui/meeting/{n}', 'generatedBy': 'tools/paint/ui.py'} for n in ['meeting-bg', 'seal-eject', 'seal-skip', 'stamp-voted', 'den-cung-dinh', 'chuong-ngu-phung']})
     d['ui'].update({n: {'file': f'maps/common/ui/fx/{n}', 'generatedBy': 'tools/paint/fx.py', **({'frames': 8, 'frameSize': [256, 256]} if n.startswith('fx-') else {})} for n in
                     ['fx-kill-slash', 'fx-shield-block', 'fx-report-burst', 'fx-witness', 'spark', 'ink-drop', 'ink-splat', 'brush-stroke']})
     for k in list(d.get('minigames', {})):

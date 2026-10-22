@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { asset } from './common';
 
 const R = 56; // knob travel radius (px)
 const DEAD = 0.15; // fraction of R ignored
@@ -60,12 +59,9 @@ export function Joystick() {
         style={origin ? { left: origin.x, top: origin.y, bottom: 'auto' } : undefined}
         aria-hidden
       >
-        <img className="joy-base" src={asset('maps/common/ui/mobile/joy-base.webp')} alt="" draggable={false} />
-        <img
+        <span className="joy-base" />
+        <span
           className="joy-knob"
-          src={asset('maps/common/ui/mobile/joy-knob.webp')}
-          alt=""
-          draggable={false}
           style={{ transform: `translate(calc(-50% + ${knob.x}px), calc(-50% + ${knob.y}px))` }}
         />
       </div>

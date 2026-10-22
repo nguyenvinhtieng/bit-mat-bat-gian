@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DEFAULT_MAP_SLUG, mapArt } from '@hidden-truth/shared';
+import { DEFAULT_MAP_SLUG, NAME_MAX } from '@hidden-truth/shared';
 import { cancelFind, createRoom, findRoom, joinRoom, reconnect, roomExists } from '../net';
 import { useStore } from '../store';
 import { asset } from './common';
@@ -10,13 +10,12 @@ import { randomDevName } from '../devNames';
 const NAME_KEY = 'tht:name';
 /** dev: every tab gets a fresh themed name so multi-tab testing needs no typing */
 const DEV = import.meta.env.DEV;
-const home = (n: string) => asset(`maps/common/ui/home/${n}.webp`);
 
 export function Home() {
   const { connecting, error } = useStore();
   const busy = !!connecting && connecting !== 'reconnect';
   const t = useT();
-  const [name, setName] = useState(() => (DEV ? randomDevName() : (localStorage.getItem(NAME_KEY) ?? '')));
+  const [name, setName] = useState(() => (DEV ? randomDevName() : (localStorage.getItem(NAME_KEY) ?? '').slice(0, NAME_MAX)));
   const [autoName, setAutoName] = useState(DEV);
   const joinMatch = /^\/join\/([A-Za-z0-9]{4,8})/.exec(location.pathname);
   const [invited, setInvited] = useState(!!joinMatch);
@@ -37,7 +36,7 @@ export function Home() {
   }, []);
 
   const saveName = () => {
-    const n = name.trim().slice(0, 16);
+    const n = name.trim().slice(0, NAME_MAX);
     localStorage.setItem(NAME_KEY, n);
     return n;
   };
@@ -48,7 +47,7 @@ export function Home() {
     setCode('');
   };
 
-  const bg = asset(mapArt(DEFAULT_MAP_SLUG, 'home-bg'));
+  const bg = asset('maps/common/ui/saigon/saigon-chibi.webp');
 
   return (
     <div className="home">
@@ -62,7 +61,7 @@ export function Home() {
       <div className="home-lang home-corner">
         {!invited && (
           <button className="code-open" disabled={busy} onClick={() => setCodeOpen(true)}>
-            <Icon d={HOUSE} />
+            <Icon d={HASH} />
             <span>{t('joinCodeOpen')}</span>
           </button>
         )}
@@ -81,27 +80,30 @@ export function Home() {
           </div>
         )}
         <div className="home-brand">
-          <img className="home-crest" src={home('home-crest')} alt="" draggable={false} />
+          <span className="home-location">SÀI GÒN · HẺM 42</span>
           <h1>
-            <img className="home-logo" src="/brand/logo.webp" alt="Công An Chìm — The Hidden Police" width={512} height={512} draggable={false} />
+            <img className="home-logo" src="/brand/logo.webp" alt={t('appTagline')} width={512} height={512} draggable={false} />
           </h1>
-          <p className="home-tagline">{t('appTagline')}</p>
+          <p className="home-tagline"><span className="home-sign-number" aria-hidden="true">?</span><span>{t('appTagline')}</span></p>
         </div>
 
         <div className="home-form">
           <div className="home-id">
             <label className="field">
               {t('displayName')}
-              <span className="name-row">
+              <span className={DEV ? 'name-row has-dice' : 'name-row'}>
                 <input
                   value={name}
-                  maxLength={16}
+                  maxLength={NAME_MAX}
                   placeholder={t('namePlaceholder')}
                   onChange={(e) => {
                     setName(e.target.value);
                     setAutoName(false);
                   }}
                 />
+                <span className={name.length >= NAME_MAX ? 'name-count full' : 'name-count'} aria-live="polite">
+                  {name.length}/{NAME_MAX}
+                </span>
                 {DEV && (
                   <button
                     type="button"
@@ -173,20 +175,24 @@ export function Home() {
       {codeOpen && !invited && (
         <div className="code-pop" role="dialog" aria-modal="true" aria-label={t('joinCodeTitle')} onClick={(e) => e.target === e.currentTarget && setCodeOpen(false)}>
           <div className="code-pop-card">
-            <div className="map-pop-head">
-              <span>{t('joinCodeTitle')}</span>
+            <div className="code-pop-head">
+              <span className="code-pop-badge" aria-hidden>
+                <Icon d={HASH} />
+              </span>
+              <div className="code-pop-copy">
+                <h3>{t('joinCodeTitle')}</h3>
+                <p className="code-pop-hint">{t('joinCodeHint')}</p>
+              </div>
               <button className="map-pop-x" aria-label="✕" onClick={() => setCodeOpen(false)}>
                 ✕
               </button>
             </div>
-            <p className="code-pop-hint">{t('joinCodeHint')}</p>
-            <div className={`join-ticket ${code.length >= 4 ? 'ready' : ''}`}>
-              <span className="join-ticket-icon" aria-hidden>
-                <Icon d={HOUSE} />
-              </span>
+            <div className="code-pop-form">
               <input
-                className="code-input"
+                className="code-field"
                 autoFocus
+                autoComplete="off"
+                spellCheck={false}
                 value={code}
                 maxLength={8}
                 placeholder={t('roomCodePh')}
@@ -197,7 +203,7 @@ export function Home() {
                   else if (e.key === 'Enter' && !busy && code.length >= 4) joinRoom(code, saveName());
                 }}
               />
-              <button className="join-go" disabled={busy || code.length < 4} onClick={() => joinRoom(code, saveName())}>
+              <button className="code-submit" disabled={busy || code.length < 4} onClick={() => joinRoom(code, saveName())}>
                 {connecting === 'join' ? <i className="spinner" aria-hidden /> : t('joinGo')}
                 <Icon d="M5 12h14M13 6l6 6-6 6" />
               </button>
@@ -251,7 +257,7 @@ function FindingOverlay() {
   );
 }
 
-const HOUSE = 'M3 11.5 12 4l9 7.5M5.5 9.5V20h13V9.5M10 20v-5.5h4V20';
+const HASH = 'M5 9h14M5 15h14M10 3 8 21M16 3l-2 18';
 
 function Icon({ d }: { d: string }) {
   return (

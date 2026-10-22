@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { ActionArt } from './ActionArt';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { sfx } from './minigames/common/kit';
 import { AREA_RECTS, GAME, LAYOUT_H, LAYOUT_W, TILE, type AreaId, type TaskId } from '@hidden-truth/shared';
 
@@ -43,11 +44,12 @@ function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''
 import { arrest, send } from '../net';
 import { colorHex, uiBlocksMovement, useStore } from '../store';
 import { useLang, useT } from '../i18n';
-import { CloseButton, Digits, Icon, RoleBadge, asset, fmt, tapProps, useCountdown, usePackageSpot, useSkin } from './common';
+import { CloseButton, Digits, Icon, RoleBadge, asset, fmt, tapProps, useCountdown, useEscape, usePackageSpot, useSkin } from './common';
 import { MapView } from './MapView';
 import { GameSettings } from './GameSetting';
 import { VoiceControls } from './VoiceControls';
 import { isTouchDevice } from './Joystick';
+import { SayBox, SayButton } from './SayBox';
 
 /** Sweeping ring over a round button: fills clockwise from 0 to 100% while the cooldown runs (pure CSS animation, no re-render). */
 function CooldownRing({ readyAt }: { readyAt: number }) {
@@ -104,13 +106,18 @@ function useClock() {
   return { left, last: left <= 60, paused: !!room.nightPausedAt };
 }
 
-/** "còn lại mm:ss" pill; on touch screens it sits in the right column under the role card. */
-function NightClock({ night }: { night: NonNullable<ReturnType<typeof useClock>> }) {
-  const skin = useSkin();
+type Prep = { pct: number; progress: number; target: number; open: boolean };
+
+/** Dispatch clock: time left and the crew's shared preparation. */
+function NightClock({ night, prep }: { night: NonNullable<ReturnType<typeof useClock>>; prep: Prep }) {
   const t = useT();
+  const en = useLang((s) => s.lang) === 'en';
   return (
     <div className="night-clock" title={t('nightTitle')}>
-      <img src={asset(`${skin.art.clockIcon}.webp`)} width={26} height={26} alt="" />
+      <svg className="nc-icon" viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="8.5" />
+        {night.paused ? <path d="M10 9v6m4-6v6" /> : <path d="M12 7v5l3 2" />}
+      </svg>
       {night.paused ? (
         <span className="nc-left">{t('nightPaused')}</span>
       ) : (
@@ -118,24 +125,20 @@ function NightClock({ night }: { night: NonNullable<ReturnType<typeof useClock>>
           {t('nightLeft')} <b className="nc-time"><Digits text={fmt(night.left)} /></b>
         </span>
       )}
+      <span className={`nc-prep ${prep.open ? 'open' : ''}`} title={t('progress')}>
+        {prep.open ? (en ? 'Handoff open' : 'Mở bàn giao') : <Digits text={`${prep.progress}/${prep.target} · ${prep.pct}%`} />}
+      </span>
     </div>
   );
 }
 
-/** Top-right corner (desktop and touch): time left, then the crew's shared preparation bar under it. */
-function NightBar({ pct, progress, target, open }: { pct: number; progress: number; target: number; open: boolean }) {
+/** Top-right corner (desktop and touch): one pill with time left and preparation progress. */
+function NightBar(prep: Prep) {
   const night = useClock();
-  const t = useT();
   if (!night) return null;
   return (
     <div className={`night-wrap ${night.last ? 'last' : ''} ${night.paused ? 'paused' : ''}`}>
-      <NightClock night={night} />
-      <div className={`progress ${open ? 'open' : ''}`} title={t('progress')}>
-        <div className="fill" style={{ width: `${pct}%` }} />
-        <span>
-          {open ? t('handoffOpen') : `${t('progress')} · ${progress}/${target} (${pct}%)`}
-        </span>
-      </div>
+      <NightClock night={night} prep={prep} />
     </div>
   );
 }
@@ -164,9 +167,19 @@ function GhostNotice({ dead, crew }: { dead: boolean; crew: boolean }) {
     );
   return (
     <div className="modal-backdrop ghost-backdrop">
-      <div className="ghost-notice">
-        <img src={asset(`${skin.art.ghostIcon}.webp`)} width={120} height={120} alt="" />
+      <div className={`ghost-notice ${crew ? 'crew' : 'out'}`}>
+        <div className="ghost-seal" aria-hidden>
+          {crew ? (
+            <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />
+              <path d="M15 3a6 6 0 0 1 6 6M15 7a2 2 0 0 1 2 2" />
+            </svg>
+          ) : (
+            <img src={asset(`${skin.art.ghostIcon}.webp`)} width={40} height={40} alt="" />
+          )}
+        </div>
         <div className="ghost-body">
+          <small className="ghost-kicker">{t('ghostKicker')}</small>
           <h2>{crew ? t('ghostTitle') : t('ghostKillerTitle')}</h2>
           {crew ? (
             <>
@@ -198,58 +211,69 @@ export function InspectPanel() {
   const sessionId = useStore((s) => s.sessionId);
   const set = useStore((s) => s.set);
   const t = useT();
-  if (!open || !room) return null;
+  // inspection is an explore-phase action: never over the meeting
+  if (!open || !room || room.phase !== 'explore') return null;
   const close = () => set({ inspectOpen: false });
   const pickable = room.players.filter((p) => p.alive && p.id !== sessionId);
+  const done = result?.entries.filter((e) => e.status === 'done') ?? [];
+  const title = result ? t('inspectOf') : t('inspect');
   return (
     <div className="modal-backdrop" onClick={close}>
       <div className="modal inspect-panel" onClick={(e) => e.stopPropagation()}>
-        <CloseButton className="modal-x" onClick={close} label={t('close')} />
-        {result ? (
-          <>
-            <h2>
-              {t('inspectOf')} <b style={{ color: colorHex(result.color) }}>{result.target}</b>
-            </h2>
-            {result.entries.length === 0 ? (
+        <header className="inspect-head">
+          <span className="inspect-icon" aria-hidden>🔍</span>
+          <div className="inspect-title">
+            <small>{title}</small>
+            {result ? (
+              <h3>
+                <i className="dot" style={{ background: colorHex(result.color) }} />
+                {result.target}
+              </h3>
+            ) : (
+              <h3>{me?.inspectLeft ? t('inspectPick') : t('inspectUsed')}</h3>
+            )}
+          </div>
+          <CloseButton onClick={close} label={t('close')} />
+        </header>
+        <div className="inspect-body">
+          {result ? (
+            done.length === 0 ? (
               <p className="inspect-empty">{t('inspectNone')}</p>
             ) : (
-              <ul className="inspect-list">
-                {result.entries.map((e, i) => (
-                  <li key={i} className={e.status}>
-                    <i className="tick">{e.status === 'done' ? '✔' : '✖'}</i>
-                    <span>
+              <ol className="inspect-list">
+                {done.map((e, i) => (
+                  <li key={i}>
+                    <i className="tick">✔</i>
+                    <div className="inspect-entry">
                       <b>{e.title}</b>
                       <small>
-                        📍 {e.area} · {t('agoSec').replace('{n}', String(e.agoSec))} · {e.status === 'done' ? t('statusDone') : t('statusFailed')}
+                        <span>📍 {e.area}</span>
+                        <span>{t('agoSec').replace('{n}', String(e.agoSec))}</span>
                       </small>
-                    </span>
+                    </div>
                   </li>
                 ))}
-              </ul>
-            )}
-            <p className="inspect-note">{t('inspectNote')}</p>
-          </>
-        ) : me?.inspectLeft ? (
-          <>
-            <h2>{t('inspectPick')}</h2>
+              </ol>
+            )
+          ) : me?.inspectLeft ? (
             <div className="inspect-pick">
               {pickable.map((p) => (
-                <button key={p.id} className="btn ghost" {...tapProps(() => send('skill:inspect', { target: p.id }))}>
-                  <i className="dot" style={{ background: colorHex(p.color) }} /> {p.name}
+                <button key={p.id} className="inspect-pick-btn" style={{ '--pc': colorHex(p.color) } as CSSProperties} onClick={() => send('skill:inspect', { target: p.id })}>
+                  <i className="inspect-avatar">{p.name.slice(0, 1).toUpperCase()}</i>
+                  <span>{p.name}</span>
                 </button>
               ))}
             </div>
-          </>
-        ) : (
-          <p>{t('inspectUsed')}</p>
-        )}
+          ) : null}
+          {(result || me?.inspectLeft) && <p className="inspect-note">ⓘ {t('inspectNote')}</p>}
+        </div>
       </div>
     </div>
   );
 }
 
 /** One click requests an immediate arrest. */
-function ArrestButton({ ready, cdLeft, readyAt, label, icon }: { ready: boolean; cdLeft: number | null; readyAt: number; label: string; icon: string }) {
+function ArrestButton({ ready, cdLeft, readyAt, label }: { ready: boolean; cdLeft: number | null; readyAt: number; label: string }) {
   return (
     <button
       className={`round-btn kill slot-main ${ready ? 'ready' : 'idle'} ${cdLeft ? 'cooling' : ''}`}
@@ -259,7 +283,7 @@ function ArrestButton({ ready, cdLeft, readyAt, label, icon }: { ready: boolean;
       title={`${label} (K)`}
       aria-label={label}
     >
-      <img src={asset(`${icon}.webp`)} alt="" draggable={false} />
+      <ActionArt name="arrest" />
       {cdLeft ? <CooldownRing readyAt={readyAt} /> : null}
       {cdLeft ? <span className="cd"><Digits text={cdLeft} /></span> : null}
       <kbd>K</kbd>
@@ -297,8 +321,8 @@ export function Hud() {
   const taskHere = nearby?.kind === 'task' && !nearby.done ? nearby : null;
   const [mapOpen, setMapOpen] = useState(false);
   const taskOpen = useStore((s) => !!s.task);
-  // phones start with the prep list folded so the left thumb (joystick) has room
-  const [tasksOpen, setTasksOpen] = useState(() => !isTouchDevice());
+  // Keep the map clear until the player opens their task handset.
+  const [tasksOpen, setTasksOpen] = useState(false);
   const exploring = !!me && inGame && room.phase === 'explore';
   useEffect(() => {
     if (!exploring) return;
@@ -331,16 +355,32 @@ export function Hud() {
   const pendingAreas = new Set<AreaId>(rows.filter((r) => !r.done && !r.locked).map((r) => r.st.area));
 
   const touch = isTouchDevice();
+  useEscape(() => setTasksOpen(false), exploring && tasksOpen && !taskOpen);
   const taskItems = (
     <ul>
-      {rows.map((r) => {
+      {rows.map((r, index) => {
         const here = r.st.area === area && !r.done && !r.locked;
         return (
           <li key={r.key} className={`${r.done ? 'done' : ''} ${here ? 'here' : ''} ${r.locked ? 'locked' : ''}`}>
-            <i className="tick">{r.done ? '✔' : r.locked ? '🔒' : ''}</i>
-            <span>
-              {en ? r.st.titleEn : r.st.title}
-              <small className="task-where">📍 {en ? skin.areas[r.st.area].nameEn : skin.areas[r.st.area].name}</small>
+            <i className="tick" aria-hidden>{r.done ? '✓' : r.locked ? '−' : String(index + 1).padStart(2, '0')}</i>
+            <span className="dispatch-order">
+              <strong>{r.handoff ? (en ? `Pick up the order and deliver to ${skin.areas[r.st.area].nameEn}` : `Nhặt đơn hàng và giao tới ${skin.areas[r.st.area].name}`) : (en ? r.st.titleEn : r.st.title)}</strong>
+              <small className="task-where">{en ? skin.areas[r.st.area].nameEn : skin.areas[r.st.area].name}</small>
+              {r.handoff && !r.done && <small className="dispatch-hint">{en ? 'At the drop-off, enter the receiving code to finish.' : 'Tới điểm hẹn, nhập mã nhận để hoàn tất.'}</small>}
+              {(r.done || r.locked || here) && <small className="dispatch-state">{r.done ? (en ? 'Completed' : 'Hoàn tất') : r.locked ? (en ? 'Locked · finish preparation' : 'Đang khóa · hoàn tất chuẩn bị') : (en ? 'You are here' : 'Bạn đang ở đây')}</small>}
+              {!r.handoff && !r.done && (
+                <button
+                  type="button"
+                  className="dispatch-map-hint"
+                  onClick={() => {
+                    setTasksOpen(false);
+                    setMapOpen(true);
+                  }}
+                >
+                  {en ? 'Open map for directions' : 'Xem bản đồ để tìm đường'}
+                  {!touch && <span aria-hidden> · M</span>}
+                </button>
+              )}
             </span>
           </li>
         );
@@ -349,8 +389,9 @@ export function Hud() {
   );
 
   const taskChip = me && (
-    <button className="task-chip" onClick={() => setTasksOpen(true)} title={touch ? t('myTasks') : `${t('myTasks')} (T)`}>
-      <img src={asset('maps/common/ui/notebook.webp')} alt="" draggable={false} />
+    <button className="task-chip crab-task-chip" onClick={() => setTasksOpen(true)} aria-label={`${t('myTasks')}: ${myDone}/${myTotal}`} aria-expanded={tasksOpen} title={touch ? t('myTasks') : `${t('myTasks')} (T)`}>
+      <img src={asset('maps/common/ui/saigon/crab-dispatch.svg')} alt="" draggable={false} />
+      <span className="dispatch-chip-label">CRAB<small>{en ? 'Tasks' : 'Nhiệm vụ'}</small></span>
       <b>
         {myDone}/{myTotal}
       </b>
@@ -358,10 +399,32 @@ export function Hud() {
     </button>
   );
 
+  const dispatchBrand = (
+    <div className="dispatch-brand" aria-hidden>
+      <img src={asset('maps/common/ui/saigon/crab-dispatch.svg')} alt="" draggable={false} />
+      <span>CRAB<small>{en ? 'NIGHT DISPATCH' : 'ĐIỀU PHỐI CA ĐÊM'}</small></span>
+      <i className="dispatch-signal"><i /><i /><i /></i>
+    </div>
+  );
+
   const meter = (
-    <div className="task-meter">
+    <div className="task-meter" role="progressbar" aria-label={t('myTasks')} aria-valuemin={0} aria-valuemax={Math.max(1, myTotal)} aria-valuenow={myDone}>
       <div style={{ width: `${Math.round((myDone / Math.max(1, myTotal)) * 100)}%` }} />
     </div>
+  );
+
+  /** Veteran inspection stays next to the main task action. */
+  const inspectBtn = (slot: string) => (
+    <button
+      className={`round-btn inspect ${slot} ${me?.inspectLeft ? 'ready' : 'idle'}`}
+      {...tapProps(() => set({ inspectOpen: true }))}
+      title={`${t('inspect')} (U)`}
+      aria-label={t('inspect')}
+    >
+      <ActionArt name="inspect" />
+      <kbd>U</kbd>
+      <em>{me?.inspectLeft ? t('inspect') : t('used')}</em>
+    </button>
   );
 
   return (
@@ -374,7 +437,7 @@ export function Hud() {
       {/* top centre: the (small) location plate */}
       <div className="hud-top">
         {area && (
-          <div className="area-name" key={area}>
+          <div className="area-name" data-map={skin.slug} key={area}>
             <span>{skin.areas[area].name}</span>
           </div>
         )}
@@ -402,57 +465,40 @@ export function Hud() {
           <RoleBadge role={me.role} size={48} />
           <div>
             <strong>{skin.roles[me.role].name}</strong>
+            <b className="role-tag">{en ? skin.roles[me.role].tag.en : skin.roles[me.role].tag.vi}</b>
             <span className="faction">{killer ? t('killerFaction') : t('crewFaction')}</span>
             <span className="ability">{!alive ? t('ghost') : skin.roles[me.role].short}</span>
           </div>
         </button>
       )}
 
-      {mapOpen && <MapView current={area} pos={pos} onClose={() => setMapOpen(false)} />}
+      {mapOpen && <MapView current={area} pos={pos} mine={rows.filter((r) => !r.locked)} onClose={() => setMapOpen(false)} />}
 
       {me && inGame && room.phase === 'explore' && (
         <div className="hud-left">
           <button className="minimap-btn" onClick={() => setMapOpen(true)} title={`${t('map')} (M)`}>
             <MiniMap current={area} pending={pendingAreas} pos={pos} />
           </button>
-          {/* desktop when folded: just the notebook chip, so a closed list never blocks the view (phones: top right, below) */}
-          {touch ? null : !tasksOpen ? (
-            taskChip
-          ) : (
-            <div className="task-list open">
-              <button className="task-head" onClick={() => setTasksOpen(false)} aria-expanded title={`${t('hide')} (T)`}>
-                <span className="task-head-title">{t('myTasks')}</span>
-                <b className="task-count">
-                  {myDone}/{myTotal}
-                </b>
-                <span className="task-toggle" aria-hidden>
-                  <kbd>T</kbd>
-                  <i className="chev" />
-                </span>
-              </button>
-              {meter}
-              {killer && <p className="task-note">{t('fakeTasks')}</p>}
-              {taskItems}
-            </div>
-          )}
         </div>
       )}
-      {/* top right, under the cog / voice buttons: time left + preparation (touch: then the prep chip) */}
+      {/* Shared desktop/mobile dock: countdown and task handset below the settings. */}
       {inGame && room.phase !== 'ended' && (
         <div className="hud-right-dock">
           <NightBar pct={pct} progress={room.progress} target={room.progressTarget} open={room.handoffOpen} />
-          {touch && me && room.phase === 'explore' && taskChip}
+          {me && room.phase === 'explore' && taskChip}
         </div>
       )}
-      {me && inGame && room.phase === 'explore' && touch && tasksOpen && !taskOpen && (
+      {me && inGame && room.phase === 'explore' && tasksOpen && !taskOpen && (
         <div className="modal-backdrop task-pop-backdrop" onClick={() => setTasksOpen(false)}>
-          <div className="task-list task-pop open" onClick={(e) => e.stopPropagation()}>
-            <div className="task-pop-head">
-              <span className="task-head-title">{t('myTasks')}</span>
-              <b className="task-count">
-                {myDone}/{myTotal}
-              </b>
-              <CloseButton className="task-pop-x" onClick={() => setTasksOpen(false)} label={t('close')} />
+          <div className="task-list crab-dispatch task-pop open" role="dialog" aria-modal="true" aria-label={t('myTasks')} onClick={(e) => e.stopPropagation()}>
+            <div className="dispatch-top">
+              {dispatchBrand}
+              <div className="task-pop-head">
+                <b className="task-count">
+                  {myDone}/{myTotal}
+                </b>
+                <CloseButton className="task-pop-x" onClick={() => setTasksOpen(false)} label={t('close')} />
+              </div>
             </div>
             {meter}
             {killer && <p className="task-note">{t('fakeTasks')}</p>}
@@ -470,29 +516,28 @@ export function Hud() {
         </div>
       )}
 
-      {/* veteran: one inspection per game, in explore and in meetings */}
-      {veteran && alive && (room.phase === 'explore' || room.phase === 'meeting') && (
-        <button
-          className={`round-btn inspect ${me?.inspectLeft ? 'ready' : 'idle'}`}
-          {...tapProps(() => set({ inspectOpen: true }))}
-          title={`${t('inspect')} (U)`}
-          aria-label={t('inspect')}
-        >
-          <span className="round-glyph">🔎</span>
-          <kbd>U</kbd>
-          <em>{me?.inspectLeft ? t('inspect') : t('used')}</em>
-        </button>
-      )}
-
       {room.phase === 'explore' && alive && (
-        <div className="action-bar cluster">
+        <div className={`action-bar cluster role-${killer ? 'undercover' : veteran ? 'veteran' : 'driver'}`} role="group" aria-label={t('controls')}>
+          <SayButton />
+          {nearby?.kind === 'emergency' && (
+            <button
+              className={`round-btn bell slot-bell ${nearby.used ? 'idle' : 'ready'}`}
+              disabled={nearby.used}
+              {...tapProps(() => send('emergency', {}))}
+              title={`${nearby.title} (B)`}
+              aria-label={nearby.title}
+            >
+              <ActionArt name="bell" />
+              <kbd>B</kbd>
+              <em>{nearby.used ? t('used') : nearby.title}</em>
+            </button>
+          )}
           {killer && (
             <ArrestButton
               ready={!!arrestReady}
               cdLeft={cdLeft}
               readyAt={me?.arrestReadyAt ?? 0}
               label={killLabel}
-              icon={skin.killButton?.icon ?? 'maps/common/ui/btn-kill'}
             />
           )}
           <button
@@ -502,7 +547,7 @@ export function Hud() {
             title={`${t('report')} (L)`}
             aria-label={t('report')}
           >
-            <img src={asset('maps/common/ui/btn-report.webp')} alt="" draggable={false} />
+            <ActionArt name="report" />
             <kbd>L</kbd>
             <em>{t('report')}</em>
           </button>
@@ -514,11 +559,12 @@ export function Hud() {
               title={`${carrying ? t('dropPkg') : t('pickUp')} (G)`}
               aria-label={carrying ? t('dropPkg') : t('pickUp')}
             >
-              <span className="round-glyph">📦</span>
+              <ActionArt name="package" />
               <kbd>G</kbd>
               <em>{carrying ? t('dropPkg') : t('pickUp')}</em>
             </button>
           )}
+          {veteran && inspectBtn('slot-inspect')}
           {/* drivers: the main button, lit at an open station; the undercover: a small one that only pops in there */}
           {(!killer || taskHere) && (
             <button
@@ -529,28 +575,16 @@ export function Hud() {
               title={taskHere ? `${taskHere.title} (J)` : t('doTask')}
               aria-label={taskHere ? `${t('doTask')}: ${taskHere.title}` : t('doTask')}
             >
-              <img src={asset('maps/common/ui/btn-task.webp')} alt="" draggable={false} />
+              <ActionArt name="task" />
               <kbd>J</kbd>
               <em>{t('doTask')}</em>
             </button>
           )}
         </div>
       )}
+      {room.phase === 'explore' && alive && <SayBox />}
 
-      {/* tasks get an in-world "tap" badge over the station (GameScene) — the lit report button covers abandoned bikes; the horn gets its own art button */}
-      {nearby?.kind === 'emergency' && room.phase === 'explore' && (
-        <button
-          className={`round-btn bell ${nearby.used ? 'idle' : 'ready'}`}
-          disabled={nearby.used}
-          {...tapProps(() => send('emergency', {}))}
-          title={`${nearby.title} (B)`}
-          aria-label={nearby.title}
-        >
-          <img src={asset('maps/common/ui/btn-bell.webp')} alt="" draggable={false} />
-          <kbd>B</kbd>
-          <em>{nearby.used ? t('used') : nearby.title}</em>
-        </button>
-      )}
+
     </>
   );
 }

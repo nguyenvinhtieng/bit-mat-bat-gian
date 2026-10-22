@@ -20,6 +20,8 @@ import {
   getGrid,
   getLobbyGrid,
   canSeePoint,
+  SAY_MAX,
+  NAME_MAX,
   MIN_PLAYERS,
   dealTasks,
   stepMovement,
@@ -36,6 +38,9 @@ import {
 import { contentFor, type Pending } from '../content';
 import { Delivery, recentActivities, type Activity } from './delivery';
 import { GameState, Player, StationState } from './schema';
+
+/** dev: the host alone can ready up and start (no 4-player minimum, others needn't be ready) */
+const DEV = process.env.NODE_ENV !== 'production';
 
 type Secret = {
   role: RoleId;
@@ -68,13 +73,14 @@ const shuffle = <T>(arr: readonly T[]): T[] => {
 };
 const pick = <T>(arr: readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
-const cleanName = (raw: unknown) => (raw ?? '').toString().replace(/[<>]/g, '').trim().slice(0, 16);
+const cleanName = (raw: unknown) => (raw ?? '').toString().replace(/[<>]/g, '').trim().slice(0, NAME_MAX);
 
 export class GameRoom extends Room<GameState> {
   maxClients = MAX_PLAYERS;
   private secrets = new Map<string, Secret>();
   private moves = new Map<string, MoveState>();
   private lastChat = new Map<string, number>();
+  private lastSay = new Map<string, number>();
   private chatLog: ChatMsg[] = [];
   private lastActive = new Map<string, number>();
   private delivery = new Delivery();
@@ -169,7 +175,7 @@ export class GameRoom extends Room<GameState> {
       this.state.players.delete(client.sessionId);
       this.moves.delete(client.sessionId);
       // dropped below the minimum: nobody can stay ready for a game that can't start
-      if (this.state.players.size < MIN_PLAYERS) for (const x of this.state.players.values()) x.ready = false;
+      if (!DEV && this.state.players.size < MIN_PLAYERS) for (const x of this.state.players.values()) x.ready = false;
     } else {
       p.connected = false;
       p.alive = false; // counter catches up at the next vote — syncing now would reveal the leaver's side
@@ -219,7 +225,7 @@ export class GameRoom extends Room<GameState> {
       const p = this.state.players.get(client.sessionId);
       if (!p || this.state.phase !== 'lobby') return;
       const n = this.state.players.size;
-      if (msg?.ready && n < MIN_PLAYERS) return client.send('toast', { text: `Cần đủ ${MIN_PLAYERS} người mới sẵn sàng được (hiện có ${n}).`, kind: 'warn' });
+      if (!DEV && msg?.ready && n < MIN_PLAYERS) return client.send('toast', { text: `Cần đủ ${MIN_PLAYERS} người mới sẵn sàng được (hiện có ${n}).`, kind: 'warn' });
       p.ready = !!msg?.ready;
     });
 
@@ -247,6 +253,10 @@ export class GameRoom extends Room<GameState> {
     this.onMessage('start', (client) => {
       if (client.sessionId !== this.state.hostId || this.state.phase !== 'lobby') return;
       const n = this.state.players.size;
+      if (DEV) {
+        if (!this.state.players.get(client.sessionId)?.ready) return client.send('toast', { text: 'Bạn chưa sẵn sàng.', kind: 'warn' });
+        return this.startGame();
+      }
       if (n < MIN_PLAYERS) return client.send('toast', { text: `Cần ít nhất ${MIN_PLAYERS} người để bắt đầu (hiện có ${n}).`, kind: 'warn' });
       const waiting = [...this.state.players.values()].filter((p) => !p.ready).length;
       if (waiting) return client.send('toast', { text: `Còn ${waiting} người chưa sẵn sàng.`, kind: 'warn' });
@@ -287,6 +297,22 @@ export class GameRoom extends Room<GameState> {
       const text = String(msg?.text ?? '').trim().slice(0, 240);
       if (!text) return;
       this.pushChat({ from: p.id, name: p.name, color: p.color, text, t: now });
+    });
+
+    // speech bubble while exploring: only the speaker, ghosts and drivers who can see them get it (no peeking through walls)
+    this.onMessage('say', (client, msg: { text: string }) => {
+      const p = this.state.players.get(client.sessionId);
+      if (!p || !p.alive || this.state.phase !== 'explore') return;
+      const now = Date.now();
+      if (now - (this.lastSay.get(client.sessionId) ?? 0) < 800) return;
+      this.lastSay.set(client.sessionId, now);
+      const text = String(msg?.text ?? '').replace(/\s+/g, ' ').trim().slice(0, SAY_MAX);
+      if (!text) return;
+      for (const c of this.clients) {
+        const w = this.state.players.get(c.sessionId);
+        if (!w) continue;
+        if (w.id === p.id || !w.alive || canSeePoint(grid, w, p, GAME.sightRadius * 1.15)) c.send('say', { from: p.id, text });
+      }
     });
 
     this.onMessage('vote', (client, msg: { target: string }) => {

@@ -73,6 +73,8 @@ type Store = {
   room: RoomView | null;
   me: PrivateInfo | null;
   chat: ChatMsg[];
+  /** in-game speech-bubble composer is open */
+  sayOpen: boolean;
   toasts: (ToastMsg & { id: number })[];
   task: TaskData | null;
   taskResult: TaskResult | null;
@@ -111,6 +113,7 @@ export const useStore = create<Store>((set, get) => ({
   room: null,
   me: null,
   chat: [],
+  sayOpen: false,
   toasts: [],
   task: null,
   taskResult: null,

@@ -25,6 +25,21 @@ test('walls block movement', () => {
   assert.ok(p.y >= 1 * TILE + 7 - 0.01, `y=${p.y}`);
 });
 
+test('outer alleys have one-tile throats that riders can traverse both ways', () => {
+  const g = getGrid();
+  for (const x of [10, 34]) {
+    for (let y = 20; y < 24; y++) {
+      assert.equal(isSolidTile(g, x, y), false, `lane ${x},${y}`);
+      for (const dx of [-1, 1]) assert.equal(isSolidTile(g, x + dx, y), true, `wall ${x + dx},${y}`);
+    }
+    for (const dy of [-1, 1]) {
+      let p = { x: (x + 0.5) * TILE, y: (dy > 0 ? 19.5 : 24.5) * TILE };
+      for (let i = 0; i < 200; i++) p = stepMovement(g, p, { dx: 0, dy });
+      assert.ok(dy > 0 ? p.y > 24 * TILE : p.y < 20 * TILE, `blocked lane ${x}, direction ${dy}`);
+    }
+  }
+});
+
 test('analog input: speed is capped, direction is kept, keyboard diagonals unchanged', () => {
   const g = getGrid();
   const p0 = { x: SPAWNS[0].x, y: SPAWNS[0].y };

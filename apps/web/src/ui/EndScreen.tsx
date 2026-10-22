@@ -43,7 +43,7 @@ export function EndScreen() {
                   <b>{r.name}</b>
                   <span className="role-row-role">{skin.roles[r.role].name}</span>
                 </div>
-                {r.faction === 'killer' ? <em className="tag killer-tag">Kẻ gian</em> : <em className="tag crew-tag">{r.tasksDone} nhiệm vụ</em>}
+                {r.faction === 'killer' ? <em className="tag killer-tag">{skin.roles[r.role].tag.vi}</em> : <em className="tag crew-tag">{r.tasksDone} nhiệm vụ</em>}
               </div>
             ))}
           </div>

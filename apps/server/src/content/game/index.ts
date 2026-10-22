@@ -139,7 +139,7 @@ function buildAddress(): Built {
     { from: 'Khách', text: `Nhà ${right.door} đó.` },
     { from: 'Khách', text: `Trước nhà có ${right.extra}, dễ thấy lắm.` },
   ]);
-  messages.splice(randInt(1, messages.length), 0, { from: 'Dì Bảy', text: 'Nhà có cửa xanh? Trong hẻm này mười hai nhà cửa xanh!' });
+  messages.splice(randInt(1, messages.length), 0, { from: 'Chủ quán', text: 'Nhà có cửa xanh? Trong hẻm này mười hai nhà cửa xanh!' });
   return {
     data: {
       taskId: 'decode_address',
@@ -350,7 +350,7 @@ function buildHandoff(ctx: TaskCtx): Built {
     data: {
       taskId: 'handoff_package',
       prompt: 'Thùng đã tới điểm giao. Nhập mã nhận đã xác minh để bàn giao Cuốc Cuối.',
-      message: `Tin nhắn đã ghim ở quán dì Bảy: “Mã nhận ${ctx.handoffCode}. Giao xong nhớ đánh giá năm sao nha!”`,
+      message: `Tin nhắn đã ghim ở quán nước: “Mã nhận ${ctx.handoffCode}. Giao xong nhớ đánh giá năm sao nha!”`,
       digits: ctx.handoffCode.length,
     },
     expected: ctx.handoffCode,

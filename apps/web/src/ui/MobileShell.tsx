@@ -52,7 +52,8 @@ export function MobileShell() {
 
   // Android & co.: every tap outside fullscreen re-enters it (browsers require a user gesture).
   useEffect(() => {
-    if (!isTouch() || isStandalone() || !document.fullscreenEnabled) return;
+    // dev: no forced fullscreen, it gets in the way of mobile emulation on PC
+    if (import.meta.env.DEV || !isTouch() || isStandalone() || !document.fullscreenEnabled) return;
     const onTap = () => {
       if (!fsElement()) void enterFullscreen();
     };

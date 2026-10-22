@@ -16,10 +16,10 @@ export const GAME_AREAS: Record<AreaId, AreaSkin> = {
   courtyard_checkin: { name: 'Đầu Hẻm 42', nameEn: 'Alley 42 Mouth', floor: 'asphalt' },
   exhibition: { name: 'Dãy Quán Ăn', nameEn: 'Food Stall Row', floor: 'sidewalk' },
   corridor: { name: 'Hẻm Cuối', nameEn: 'The Back Alley', floor: 'asphalt' },
-  coordination: { name: 'Quán Nước Dì Bảy', nameEn: 'Aunt Bảy’s Drink Stall', floor: 'gach-bong' },
-  editing: { name: 'Tiệm Sửa Xe Chú Tám', nameEn: 'Uncle Tám’s Bike Shop', floor: 'concrete' },
+  coordination: { name: 'Quán Nước', nameEn: 'Drink Stall', floor: 'gach-bong' },
+  editing: { name: 'Tiệm Sửa Xe', nameEn: 'Bike Repair Shop', floor: 'concrete' },
   archive: { name: 'Kho CRAB', nameEn: 'CRAB Warehouse', floor: 'gach-bong' },
-  artifact_storage: { name: 'Bãi Giữ Xe · Bảng Đường', nameEn: 'Bike Park · Route Board', floor: 'concrete' },
+  artifact_storage: { name: 'Bãi Giữ Xe', nameEn: 'Bike Park', floor: 'concrete' },
 };
 
 /** Task ids played on this map (all of them: one map). */
@@ -42,30 +42,33 @@ export const PACKAGE_HOME = { x: t(17.5), y: t(27.5) };
 
 const ROLES: Record<RoleId, RoleSkin> = {
   driver: {
-    name: 'Tài Xế CRAB',
-    nameEn: 'CRAB Driver',
-    short: 'Chuẩn bị Cuốc Cuối, tìm cảnh sát chìm',
-    desc: 'Làm nhiệm vụ chuẩn bị chuyến hàng 50 triệu, quan sát người khác, họp và bỏ phiếu. Bạn không biết ai là cảnh sát. “Năm mươi triệu chia đều, ai làm biếng thì đừng có nhận phần!”',
+    name: 'Tài Xế',
+    nameEn: 'Driver',
+    tag: { vi: 'Tài Xế', en: 'Driver' },
+    short: 'Làm trạm, giao hàng, tìm công an chìm',
+    desc: 'Bạn là tài xế thật. Làm trạm, giao kiện hàng, bỏ phiếu tìm công an chìm.',
   },
   veteran_driver: {
     name: 'Tài Xế Lão Làng',
     nameEn: 'Veteran Driver',
-    short: 'Soi 3 hoạt động nhiệm vụ gần nhất của một người — 1 lần',
-    desc: 'Bạn là tài xế CRAB thật, thắng thua cùng hội. Một lần mỗi trận, chọn một người để xem tối đa 3 hoạt động nhiệm vụ gần nhất (không thấy role — cảnh sát làm task giả vẫn có log). “Chạy cuốc bao năm, nhìn cách cầm điện thoại là tao biết có mùi rồi!”',
+    tag: { vi: 'Lão Làng', en: 'Veteran' },
+    short: 'Soi 3 hoạt động gần nhất của một người — 1 lần',
+    desc: 'Bạn là tài xế thật. Thêm 1 lần soi 3 hoạt động gần nhất của một người — không thấy vai, chỉ thấy họ đã làm gì.',
   },
   undercover: {
-    name: 'Cảnh Sát Chìm — Tất Xanh',
+    name: 'Công An Chìm — Tất Xanh',
     nameEn: 'Undercover Cop — Green Socks',
-    short: 'Bắt giữ toàn bộ tài xế trước khi hàng được giao',
-    desc: 'Bạn mặc áo CRAB như mọi người. Làm task giả để có vỏ bọc (không cộng tiến độ). Đứng sát một người và GIỮ nút Bắt giữ 1,5 giây — người ở gần sẽ nghe tiếng còng. “Cho anh kiểm tra... à, cho em xin mã đơn với!”',
+    tag: { vi: 'Công An', en: 'Cop' },
+    short: 'Bắt hết tài xế, hoặc cầm chân tới sáng',
+    desc: 'Bạn trà trộn trong hội. Lại gần để bắt giữ, làm nhiệm vụ giả để giữ vỏ bọc. Đừng để hàng được giao.',
   },
 };
 
 export const GAME_ENDINGS = {
-  tasks: 'Kiện hàng đã tới tay người nhận. “Giao xong nhớ đánh giá tài xế năm sao nha anh!” — Hội CRAB chia nhau 50 triệu.',
-  vote: 'Lật mặt cảnh sát chìm! Cả hội hủy chuyến và giải tán trước khi bị bắt.',
-  killer: 'Tài xế cuối cùng bị còng — kiện hàng ở lại Hẻm 42. Cảnh sát chìm thắng.',
-  timeout: 'Trời sáng mà kiện hàng chưa giao — chuyến hàng bị hủy. Cảnh sát chìm thắng.',
+  tasks: 'Kiện hàng đã tới tay người nhận. “Giao xong nhớ đánh giá tài xế năm sao nha anh!” — cả hội chia nhau 50 triệu.',
+  vote: 'Công an chìm đã bị lật mặt — cả hội kịp hủy chuyến và giải tán trước khi bị bắt.',
+  killer: 'Tài xế cuối cùng đã bị còng — kiện hàng nằm lại Hẻm 42.',
+  timeout: 'Trời đã sáng mà kiện hàng vẫn chưa giao — chuyến hàng bị hủy.',
 };
 
 export const GAME_SKIN: MapSkin = {
@@ -90,8 +93,8 @@ export const GAME_SKIN: MapSkin = {
     ride: true,
   },
   roles: ROLES,
-  killerName: { vi: 'Cảnh Sát Chìm', en: 'Undercover Cop' },
-  crewName: { vi: 'Hội CRAB', en: 'CRAB Crew' },
+  killerName: { vi: 'Công An Chìm', en: 'Undercover Cop' },
+  crewName: { vi: 'Hội Tài Xế', en: 'Driver Crew' },
   emergency: { vi: 'Bóp còi xe ở đầu hẻm', en: 'Honk the bike horn' },
   delivery: { packageHome: PACKAGE_HOME },
   labels: {
@@ -104,20 +107,20 @@ export const GAME_SKIN: MapSkin = {
     title: 'Hẻm 42',
     subtitle: 'Cuốc Cuối',
     intro:
-      '23:42, Sài Gòn, mưa vừa tạnh. Hội tài xế CRAB nhận chuyến hàng 50 triệu: không mở thùng, không hỏi người gửi, giao trước khi trời sáng. Rồi điện thoại cả hội cùng rung: “Trong hội có công an chìm. Ổng đang giả làm tài xế CRAB.” Chuẩn bị Cuốc Cuối và bàn giao kiện hàng — hoặc lật mặt người trà trộn trước khi bị bắt hết.',
+      '23:42, Sài Gòn vừa tạnh mưa. Một khách lạ đặt Hội CRAB chở kiện hàng 50 triệu — không mở thùng, không hỏi người gửi, giao trước khi trời sáng. Đang chia việc thì điện thoại cả hội cùng rung: “Trong hội có công an chìm.” Chuẩn bị xong Cuốc Cuối và bàn giao kiện hàng, hoặc lật mặt kẻ trà trộn trước khi cả hội bị còng.',
     prelude: [
-      '23:42. Sài Gòn. Mưa vừa tạnh.',
-      'Quán nước dì Bảy vẫn sáng đèn ở cuối Hẻm 42.',
-      'Một vị khách giấu tên: 50 triệu cho một chuyến hàng.',
+      '23:42. Sài Gòn vừa tạnh mưa.',
+      'Cuối Hẻm 42, quán nước còn sáng một bóng đèn.',
+      'Một khách lạ đặt cuốc: 50 triệu cho một kiện hàng.',
       'Không mở thùng. Không hỏi người gửi. Giao trước khi trời sáng.',
-      '“Trong hội có công an chìm. Ổng đang giả làm tài xế CRAB.”',
+      'Rồi điện thoại cả hội cùng rung: “Trong hội có công an chìm.”',
     ],
     // 23:42 -> 05:00 on the fictional clock, whatever the countdown length
     clock: { startMin: 23 * 60 + 42, endMin: 24 * 60 + 5 * 60 },
     endings: GAME_ENDINGS,
     objective: {
-      crew: 'Hoàn tất chuẩn bị, mang kiện hàng tới Hẻm Cuối và bàn giao — hoặc bỏ phiếu đúng cảnh sát chìm.',
-      killer: 'Bắt giữ toàn bộ tài xế trước khi kiện hàng được bàn giao. Làm task giả để trà trộn.',
+      crew: 'Chuẩn bị đủ 100%, mang kiện hàng tới Hẻm Cuối bàn giao — hoặc bỏ phiếu loại đúng công an chìm.',
+      killer: 'Bắt hết tài xế, hoặc cầm chân tới khi trời sáng mà kiện hàng chưa được bàn giao.',
     },
   },
   phrases: {
@@ -126,8 +129,8 @@ export const GAME_SKIN: MapSkin = {
     ghost: { vi: 'Ngồi khu tạm giữ — gọi đàn em làm nốt', en: 'In the holding room — your runner finishes up' },
     body: { vi: 'Xe CRAB bỏ lại', en: 'Abandoned CRAB bike' },
     bodyFound: { vi: 'Ủa xe ai đậu đây?', en: 'Wait, whose bike is this?' },
-    meetingTitle: { vi: 'Ai là cảnh sát chìm?', en: 'Who’s the undercover cop?' },
-    ejectKiller: { vi: '{name} là cảnh sát chìm — tất xanh lộ rồi!', en: '{name} was the undercover cop — green socks!' },
+    meetingTitle: { vi: 'Ai là công an chìm?', en: 'Who’s the undercover cop?' },
+    ejectKiller: { vi: '{name} là công an chìm — tất xanh lộ rồi!', en: '{name} was the undercover cop — green socks!' },
     ejectInnocent: { vi: '{name} là tài xế thiệt. Oan quá trời!', en: '{name} was a real driver. So unfair!' },
     tie: { vi: 'Cả quán cãi nhau, không ai chịu trả tiền nước.', en: 'The whole stall argues — nobody pays for the drinks.' },
     progress: { vi: '📦 Chuẩn bị Cuốc Cuối', en: '📦 Last Ride prep' },

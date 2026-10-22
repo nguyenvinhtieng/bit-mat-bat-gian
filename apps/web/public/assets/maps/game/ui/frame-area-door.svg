@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="110" viewBox="0 0 640 110" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="enamel" x2="0" y2="1">
+      <stop stop-color="#204ca1"/>
+      <stop offset=".48" stop-color="#123783"/>
+      <stop offset="1" stop-color="#0b2564"/>
+    </linearGradient>
+  </defs>
+  <rect x="3" y="3" width="634" height="104" rx="3" fill="#081a47" stroke="#aab7cb" stroke-width="2"/>
+  <rect x="7" y="7" width="626" height="96" rx="1" fill="url(#enamel)" stroke="#f3f6ff" stroke-width="3"/>
+  <rect x="15" y="15" width="610" height="80" fill="none" stroke="#e9efff" stroke-width="2"/>
+  <path d="M18 18H622" stroke="#fff" opacity=".16"/>
+  <g fill="#cbd4df" stroke="#64738c" stroke-width="1">
+    <circle cx="25" cy="55" r="4"/>
+    <circle cx="615" cy="55" r="4"/>
+  </g>
+  <path d="M23 55h4m586 0h4" stroke="#6d7c93" stroke-width="1.5"/>
+</svg>
