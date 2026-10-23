@@ -12,12 +12,14 @@ import { Toasts, asset } from './ui/common';
 import { Joystick } from './ui/Joystick';
 import { DevPanel } from './ui/DevPanel';
 import { useT } from './i18n';
+import { useGameSounds } from './ui/useGameSounds';
 
 export function App() {
   const screen = useStore((s) => s.screen);
   const phase = useStore((s) => s.room?.phase);
   const mapSlug = useStore((s) => s.room?.mapSlug);
   const end = useStore((s) => s.end);
+  useGameSounds();
 
   if (screen === 'home' || !phase)
     return (

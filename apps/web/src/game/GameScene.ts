@@ -29,7 +29,7 @@ import {
 } from '@hidden-truth/shared';
 import { useDev } from '../ui/DevPanel';
 import { arrest, onHeard, onRoom, onSay, room, send } from '../net';
-import { sfx } from '../ui/minigames/common/kit';
+import { setEngines, sfx, type EngineMix } from '../ui/minigames/common/kit';
 import { setVoiceProbe } from '../voice';
 import { KILLER_NAME_COLOR, uiBlocksMovement, useStore, type Nearby } from '../store';
 
@@ -136,6 +136,7 @@ export class GameScene extends Phaser.Scene {
   private unbind: (() => void)[] = [];
   private lastNearbyKey = '';
   private lastArea = '';
+  private engineAt = 0;
   private fog?: Phaser.GameObjects.RenderTexture;
   private fogBrush?: Phaser.GameObjects.Image;
   /** wall shadows: hard black wedges behind every wall inside the light, drawn into the fog each frame */
@@ -277,6 +278,7 @@ export class GameScene extends Phaser.Scene {
       return { dist: dist(this.pred, at), seen: canSeePoint(this.grid, this.pred, at, radius), radius };
     });
     this.unbind.push(() => setVoiceProbe(null));
+    this.unbind.push(() => setEngines([]));
     this.events.once('shutdown', () => {
       this.unbind.forEach((u) => u());
       for (const pair of this.arrestEffects) pair.destroy();
@@ -1371,6 +1373,7 @@ export class GameScene extends Phaser.Scene {
       const moving = mineAv ? this.myMoving : now - av.lastMoveAt < 120;
       this.updateLamp(av, mineAv ? this.myDir : av.dir, moving, !lobby, now);
     }
+    if (now - this.engineAt > 100) (this.engineAt = now), this.updateEngines(r.sessionId, canSee, now);
     this.updateFog(limited ? this.pred : null, limited);
     this.updateBubbles(canSee);
 
@@ -1393,6 +1396,34 @@ export class GameScene extends Phaser.Scene {
       this.lastArea = area;
       useStore.getState().set({ area });
     }
+  }
+
+  /**
+   * Scooter engines: my own bike plus every living rider within earshot. Riding is quietly audible,
+   * idling is a murmur, and an open task pushes everything further down so the mini-game stays clear.
+   */
+  private updateEngines(myId: string, canSee: (x: number, y: number) => boolean, now: number) {
+    const s = useStore.getState();
+    const phase = s.room?.phase;
+    if (phase !== 'explore' && phase !== 'lobby') return setEngines([]);
+    const busy = s.task ? 0.3 : 1;
+    const hearing = GAME.sightRadius * 1.4;
+    const list: EngineMix[] = [];
+    for (const [id, av] of this.avatars) {
+      if (!av.alive) continue;
+      if (id === myId) {
+        const riding = this.myMoving && !s.task;
+        list.push({ id, level: s.task ? 0.04 : riding ? 1 : 0.12, rpm: riding ? 1 : 0 });
+        continue;
+      }
+      const near = 1 - dist(this.pred, { x: av.c.x, y: av.c.y }) / hearing;
+      if (near <= 0) continue;
+      const riding = now - av.lastMoveAt < 160;
+      // behind a wall it is muffled, not silent
+      const heard = near * near * (canSee(av.c.x, av.c.y) ? 1 : 0.4) * busy;
+      list.push({ id, level: heard * (riding ? 0.65 : 0.08), rpm: riding ? 0.9 : 0 });
+    }
+    setEngines(list);
   }
 
   /** Play an action-sheet row on an avatar for `ms`, then hand the sprites back to the walk cycle. */

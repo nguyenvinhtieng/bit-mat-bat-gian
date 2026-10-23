@@ -7,3 +7,4 @@ export * from './maps/game';
 export * from './maps/catalog';
 export * from './maps/registry';
 export * from './voice';
+export * from './quiet-shutter';

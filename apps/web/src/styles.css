@@ -3246,20 +3246,26 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
 @media (max-height: 500px) { .bike-discovery { gap: 3px; padding: 35px 12px; } .bike-discovery-scene { height: 32vh; } .bike-discovery-band.top { top: 0; } .bike-discovery-band.bottom { bottom: 0; } .bike-discovery-kicker { margin-bottom: 4px; padding: 2px 8px; } .bike-discovery-caption h1 { font-size: clamp(1.2rem, 5vw, 2rem); } .bike-discovery-caption p { margin: 5px 0 3px; font-size: .8rem; } .bike-discovery-next { font-size: .7rem; } }
 @media (prefers-reduced-motion: reduce) { .bike-discovery, .bike-discovery * { animation: none; } .bike-discovery-flash { display: none; } .bike-discovery-rays { opacity: .3; } }
 
-/* Completion never captures input: players can leave the station immediately. */
+/* Completion never captures input: players can leave the station immediately. Kept small and see-through so it never hides the game. */
 .task-done {
   position: fixed; z-index: 30; top: max(84px, calc(env(safe-area-inset-top) + 64px)); left: 50%;
-  transform: translateX(-50%); display: flex; align-items: center; gap: 10px;
-  width: max-content; max-width: calc(100vw - 32px); box-sizing: border-box; padding: 12px 20px;
-  border: 2px solid #a6d48f; border-radius: 12px; background: #173f3af2; color: #e5ffd2;
-  box-shadow: 0 4px 0 #102e2980; pointer-events: none; user-select: none;
+  transform: translateX(-50%); display: flex; align-items: center; gap: 6px;
+  width: max-content; max-width: calc(100vw - 32px); box-sizing: border-box; padding: 6px 12px;
+  border: 1px solid #a6d48f99; border-radius: 999px; background: #173f3a99; color: #e5ffd2;
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  box-shadow: 0 2px 6px #102e2940; pointer-events: none; user-select: none;
   animation: taskDoneCue 1s ease both;
 }
-.task-done svg { width: 32px; height: 32px; flex: none; color: #f6d187; }
-.task-done strong { font-size: 16px; }
+.task-done svg { width: 18px; height: 18px; flex: none; color: #f6d187; }
+.task-done strong { font-size: 13px; }
+@media (max-width: 600px), (max-height: 560px) {
+  .task-done { top: max(56px, calc(env(safe-area-inset-top) + 44px)); padding: 4px 10px; }
+  .task-done svg { width: 15px; height: 15px; }
+  .task-done strong { font-size: 12px; }
+}
 @keyframes taskDoneCue {
   0% { opacity: 0; translate: 0 8px; }
-  15%, 75% { opacity: 1; translate: 0 0; }
+  15%, 75% { opacity: .85; translate: 0 0; }
   100% { opacity: 0; translate: 0 -6px; }
 }
 @media (prefers-reduced-motion: reduce) { .task-done { animation: none; } }

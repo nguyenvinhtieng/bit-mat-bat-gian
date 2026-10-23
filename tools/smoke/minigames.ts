@@ -129,23 +129,32 @@ async function interact(task: any) {
     }
     case 'stuck_shutter': {
       const handle = page.getByRole('slider', { name: 'Tay nắm cửa cuốn' });
-      for (const [i, jam] of task.jams.entries()) {
-        await handle.focus();
-        while (Number(await handle.getAttribute('aria-valuenow')) < Math.round(jam * 100)) await page.keyboard.press('ArrowUp');
-        const bolt = page.locator('.ck-bolt');
-        if (i === 0) {
-          // drag the oil can onto the first bolt
-          const can = (await page.locator('.ck-oilcan').boundingBox())!, b = (await bolt.boundingBox())!;
-          await page.mouse.move(can.x + can.width / 2, can.y + can.height / 2); await page.mouse.down();
-          await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 12 }); await page.mouse.up();
-        } else {
-          await bolt.focus();
-          for (let d = 0; d < task.turnDeg; d += 45) await page.keyboard.press('ArrowRight');
+      const scene = page.locator('.ck-quiet-scene');
+      const grip = (await handle.boundingBox())!, frame = (await page.locator('.ck-shutter-frame').boundingBox())!;
+      const x = grip.x + grip.width / 2, y = grip.y + grip.height / 2;
+      await page.mouse.move(x, y); await page.mouse.down();
+      try {
+        for (let step = 1; step <= 60 && await scene.getAttribute('data-alarm') !== 'true'; step++) {
+          await page.mouse.move(x, y - frame.height * .87 * step / 50);
+          await page.waitForTimeout(16);
         }
-        assert.equal(await bolt.count(), 0, 'bolt freed');
+      } finally {
+        await page.mouse.up();
       }
+      assert.equal(await scene.getAttribute('data-alarm'), 'true', 'fast pulling wakes the neighbor');
+      assert.equal(await page.evaluate(() => (window as any).answers.length), 0, 'alarm cannot submit a solution');
+      const loud = Number(await scene.getAttribute('data-noise'));
+      await page.screenshot({ path: `${out}/${page.viewportSize()!.width > 480 ? 'desktop' : 'mobile'}-stuck_shutter-alarm.png`, fullPage: true });
+      await until(async () => await scene.getAttribute('data-alarm') === 'false');
+      assert.ok(Number(await scene.getAttribute('data-noise')) < loud, 'waiting cools the noise');
       await handle.focus();
-      while (Number(await handle.getAttribute('aria-valuenow')) < 100) await page.keyboard.press('ArrowUp');
+      await page.keyboard.down('ArrowUp');
+      try {
+        await until(async () => (await page.evaluate(() => (window as any).answers.length)) > 0, 12000);
+      } finally {
+        await page.keyboard.up('ArrowUp');
+      }
+      assert.equal(Number(await handle.getAttribute('aria-valuenow')), 100, 'quiet lift opens the door');
       break;
     }
     case 'tune_antenna':

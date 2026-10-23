@@ -1,5 +1,5 @@
 /** Kho CRAB: pack and seal the box (drag each step) · stack the rear rack (tap-to-drop timing). */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MgShell, sfx, useShake, type Tone } from '../../common/kit';
 import { useT } from '../art';
 import { taskArt, useFrame, useOnce, type P } from './shared';
@@ -21,7 +21,8 @@ export function TapeBox({ task, submit }: P<'tape_box'>) {
   const labels = [t('Gấp nắp trái', 'Fold left flap'), t('Gấp nắp phải', 'Fold right flap'), t('Dán đường ráp nắp', 'Seal the seam'), t('Dán dải ngang', 'Apply cross strip')];
   const finish = () => {
     if (sent || step >= 4) return;
-    sfx.scrape();
+    if (step < 2) sfx.fold();
+    else sfx.tape();
     drag.current = null;
     value.current = 0;
     setProgress(0);
@@ -33,6 +34,7 @@ export function TapeBox({ task, submit }: P<'tape_box'>) {
     return { x: (e.clientX - r.left) / r.width * 360, y: (e.clientY - r.top) / r.height * 300 };
   };
   const target = paths[step];
+  const angle = target ? Math.atan2(target.endY - target.y, target.endX - target.x) * 180 / Math.PI : 0;
   return <MgShell bare taskId={task.taskId} status={`${step}/4`} hint={sent ? t('Đã gói kín, sẵn sàng giao!', 'Sealed and ready to deliver!') : ''} tone={sent ? 'ok' : 'info'}>
     <svg className="ck-pack" viewBox="0 0 360 300" aria-label={t('Bàn gói thùng hàng', 'Packing workbench')}
       onPointerDown={e => {
@@ -68,10 +70,11 @@ export function TapeBox({ task, submit }: P<'tape_box'>) {
       {step >= 3 && <path d={`M80 168H${step > 3 ? 280 : 80 + progress * 200}`} stroke="#f6d58dcf" strokeWidth="24" />}
       {target && <g>
         <path d={`M${target.x} ${target.y}L${target.endX} ${target.endY}`} stroke="#fff3bd" strokeWidth="3" strokeDasharray="5 6" />
-        <circle cx={target.endX} cy={target.endY} r="13" fill="#264c43" stroke="#fff3bd" /><text x={target.endX} y={target.endY + 5} textAnchor="middle" fill="#fff3bd">↓</text>
+        <g transform={`translate(${target.endX} ${target.endY})`}><circle r="13" fill="#264c43" stroke="#fff3bd" /><path d="M-6 0H6M1 -5L6 0 1 5" transform={`rotate(${angle})`} fill="none" stroke="#fff3bd" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></g>
         <g transform={`translate(${target.x + (target.endX - target.x) * progress} ${target.y + (target.endY - target.y) * progress})`}>
           <circle r="22" fill={step >= 2 ? '#e9b54a' : '#fff0cb'} stroke="#6a492d" strokeWidth="3" />
-          {step >= 2 ? <circle r="10" fill="#264c43" /> : <text textAnchor="middle" y="6" fill="#593c29">↔</text>}
+          {step >= 2 && <circle r="10" fill="#264c43" />}
+          <path d="M-8 0H8M2 -6L8 0 2 6" transform={`rotate(${angle})`} fill="none" stroke={step >= 2 ? '#fff3bd' : '#593c29'} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         </g>
       </g>}
       <text x="180" y="282" textAnchor="middle" fill="#fff0cb" fontSize="12">CRAB · {t('ĐÓNG GÓI', 'PACKING')}</text>
@@ -87,14 +90,13 @@ const stagePct = (px: number) => `${px / STAGE_W * 100}%`;
 /** stage units → CSS length; `--u` (px per unit) is sized to the play area in CSS */
 const su = (n: number) => `calc(var(--u) * ${n})`;
 /** height above the rack floor, offset by the baga line (`--base`, taller on portrait stages) */
-const sb = (i: number) => `calc(var(--u) * (var(--base, 92) + var(--step, 46) * ${i}))`;
+const sb = (i: number) => `calc(var(--u) * (var(--base) + var(--step) * ${i}))`;
 
 export function StackRack({ task, submit }: P<'stack_rack'>) {
   const t = useT();
   const [sent, send] = useOnce(submit);
   const [stack, setStack] = useState<number[]>([]); // absolute x of each dropped box (0 = rack centre)
-  const [time, setTime] = useState(0);
-  const [started, setStarted] = useState(false);
+  const [time, setTime] = useState(() => Math.PI / (2 * 0.0022)); // start mid-swing, already moving
   const dropAt = useRef(0);
   const [hint, setHint] = useState<[string, Tone]>(['', 'info']);
   const [shake, doShake] = useShake();
@@ -105,20 +107,19 @@ export function StackRack({ task, submit }: P<'stack_rack'>) {
   const belowX = n ? stack[n - 1] : 0;
   const belowW = n ? task.boxes[n - 1].w : task.base;
   const safe = !!cur && Math.abs(x - belowX) <= Math.min(belowW, cur.w) / 2;
-  useFrame(started && !!cur && !sent, (dt) => setTime((v) => v + dt));
+  useFrame(!!cur && !sent, (dt) => setTime((v) => v + dt));
 
   const drop = () => {
-    if (!cur || sent || !started || performance.now() - dropAt.current < 250) return;
+    if (!cur || sent || performance.now() - dropAt.current < 250) return;
     dropAt.current = performance.now();
     if (Math.abs(x - belowX) > Math.min(belowW, cur.w) / 2) {
       sfx.bad();
       doShake();
       setStack([]);
-      setStarted(false);
-      setTime(0);
+      setTime(Math.PI / (2 * 0.0022));
       return setHint([n === 3 ? t('Sầu riêng rớt! Cả hẻm ngửi thấy luôn. Chất lại!', 'The durian fell! The whole alley can smell it. Again!') : t('Đổ hết rồi! Chất lại từ đầu.', 'It all toppled! Start over.'), 'bad']);
     }
-    sfx.stamp();
+    sfx.thunk();
     const next = [...stack, x];
     setStack(next);
     setTime(Math.PI / (2 * (0.0022 + next.length * 0.0006)));
@@ -128,11 +129,29 @@ export function StackRack({ task, submit }: P<'stack_rack'>) {
       send({ offsets: next.map((v, i) => v - (i ? next[i - 1] : 0)) });
     }
   };
+  // a tap anywhere inside the popup (or Space / Enter) drops — on phones the rack alone is a small target
+  const rack = useRef<HTMLDivElement>(null);
+  const tap = useRef(() => {});
+  tap.current = drop;
+  useEffect(() => {
+    const area = rack.current?.closest<HTMLElement>('.task-screen') ?? rack.current;
+    if (!area) return;
+    const onDown = (e: PointerEvent) => {
+      if ((e.pointerType === 'mouse' && e.button !== 0) || (e.target as Element).closest('button')) return;
+      tap.current();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); tap.current(); }
+    };
+    area.addEventListener('pointerdown', onDown);
+    window.addEventListener('keydown', onKey);
+    return () => { area.removeEventListener('pointerdown', onDown); window.removeEventListener('keydown', onKey); };
+  }, []);
 
   return (
     <MgShell bare taskId={task.taskId} status={`${n}/${task.boxes.length}`} hint={hint[0]} tone={hint[1]}>
-      <div className={`ck-rack ${shake}`} onPointerDown={drop}>
-        {cur && started && <div aria-hidden style={{ position: 'absolute', width: stagePct(cur.w), boxSizing: 'border-box', height: 'calc(var(--u) * (var(--step, 46) - 2))', left: stagePct(STAGE_W / 2 + x - cur.w / 2), bottom: sb(n), border: `2px dashed ${safe ? '#327e59' : '#b75a3c'}`, borderRadius: 4, background: safe ? '#5da67830' : '#b75a3c20' }} />}
+      <div ref={rack} className={`ck-rack ${shake}`}>
+        {cur && <div aria-hidden style={{ position: 'absolute', width: stagePct(cur.w), boxSizing: 'border-box', height: 'calc(var(--u) * (var(--step) - 2))', left: stagePct(STAGE_W / 2 + x - cur.w / 2), bottom: sb(n), border: `2px dashed ${safe ? '#327e59' : '#b75a3c'}`, borderRadius: 4, background: safe ? '#5da67830' : '#b75a3c20' }} />}
         {cur && (
           <div className="ck-crate swing" style={{ width: stagePct(cur.w), boxSizing: 'border-box', left: stagePct(STAGE_W / 2 + x - cur.w / 2), top: su(8) }}>
             <img src={taskArt(task.taskId, cur.kind)} alt="" draggable={false} />
@@ -147,9 +166,6 @@ export function StackRack({ task, submit }: P<'stack_rack'>) {
         ))}
         <div className="ck-baga" style={{ width: stagePct(task.base), left: stagePct(STAGE_W / 2 - task.base / 2) }} />
         <img className="ck-bike" src={taskArt(task.taskId, 'bike')} alt="" draggable={false} />
-      </div>
-      <div className="ck-swipe-row">
-        {!started ? <button className="go" disabled={sent} onClick={() => { setTime(Math.PI / (2 * speed)); setStarted(true); }}>{t('Bắt đầu chất hàng', 'Start stacking')}</button> : <button className="go" disabled={sent || !cur} onClick={drop}>{t('Thả thùng', 'Drop box')} ↓</button>}
       </div>
     </MgShell>
   );
@@ -172,7 +188,7 @@ export function ConnectWires({ task, submit }: P<'connect_wires'>) {
     if (sent || connected.includes(from)) return;
     if (from !== to) { sfx.bad(); setBad(true); setSelected(null); setCursor(null); return; }
     const next = [...connected, from];
-    sfx.scrape(); setBad(false); setConnected(next); setSelected(null); setCursor(null);
+    sfx.plug(); setBad(false); setConnected(next); setSelected(null); setCursor(null);
     if (next.length === 4) send({ connections: next.map(color => ({ from: color, to: color })) });
   };
   const position = (e: React.PointerEvent<SVGSVGElement>) => {
@@ -217,9 +233,9 @@ export function ConnectWires({ task, submit }: P<'connect_wires'>) {
       {[140, 200, 260].map(x => <path key={x} d={`M${x} 60V280`} stroke="#274d42" strokeWidth="8" />)}
       {connected.map(color => {
         const sy = y(task.left.indexOf(color)), ey = y(task.right.indexOf(color));
-        return <g key={color} fill="none" strokeLinecap="round"><path d={`M74 ${sy}C170 ${sy} 230 ${ey} 326 ${ey}`} stroke="#102c28" strokeWidth="13" /><path d={`M74 ${sy}C170 ${sy} 230 ${ey} 326 ${ey}`} stroke={colors[color]} strokeWidth="8" /></g>;
+        return <g key={color} fill="none" strokeLinecap="round"><path d={`M74 ${sy}L326 ${ey}`} stroke="#102c28" strokeWidth="13" /><path d={`M74 ${sy}L326 ${ey}`} stroke={colors[color]} strokeWidth="8" /></g>;
       })}
-      {selected && cursor && <path d={`M${selected.side === 'left' ? 74 : 326} ${y((selected.side === 'left' ? task.left : task.right).indexOf(selected.color))}Q200 ${cursor.y} ${cursor.x} ${cursor.y}`} stroke={colors[selected.color]} strokeWidth="8" fill="none" strokeLinecap="round" pointerEvents="none" />}
+      {selected && cursor && <path d={`M${selected.side === 'left' ? 74 : 326} ${y((selected.side === 'left' ? task.left : task.right).indexOf(selected.color))}L${cursor.x} ${cursor.y}`} stroke={colors[selected.color]} strokeWidth="8" fill="none" strokeLinecap="round" pointerEvents="none" />}
       {task.left.map((color, i) => terminal(color, 'left', i))}
       {task.right.map((color, i) => terminal(color, 'right', i))}
     </svg>

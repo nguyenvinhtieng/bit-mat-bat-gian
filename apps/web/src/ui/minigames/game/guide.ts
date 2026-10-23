@@ -5,7 +5,7 @@ type G = { goal: string };
 export const GUIDE: Partial<Record<GameTaskId, { vi: G; en: G }>> = {
   connect_wires: { vi: { goal: 'Kéo bốn đầu dây vào cọc cùng màu' }, en: { goal: 'Drag four wires to matching terminals' } },
   untangle_charger: { vi: { goal: 'Kéo đầu cáp qua chốt rồi cắm sạc' }, en: { goal: 'Free the cable, then plug it in' } },
-  stuck_shutter: { vi: { goal: 'Kéo cửa lên · nhỏ dầu hoặc vặn chốt rỉ' }, en: { goal: 'Pull up · oil or twist each rusty bolt' } },
+  stuck_shutter: { vi: { goal: 'Kéo chậm · giữ yên lặng' }, en: { goal: 'Pull slowly · keep quiet' } },
   tune_antenna: { vi: { goal: 'Xoay hai anten · giữ khi hình rõ' }, en: { goal: 'Rotate both antennas · hold a clear picture' } },
   water_pipes: { vi: { goal: 'Xoay bốn đoạn ống · nối vòi tới bồn' }, en: { goal: 'Rotate four pipes · connect tap to basin' } },
   pack_cooler: { vi: { goal: 'Kéo từng món vào thùng' }, en: { goal: 'Drag each item into the box' } },

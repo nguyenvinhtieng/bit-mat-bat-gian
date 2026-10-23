@@ -204,13 +204,13 @@ export function Cinematic() {
     if (c?.kind !== 'report' && c?.kind !== 'emergency') return;
     // Use the shared audio bus so the player's volume/mute setting is respected.
     const cues = c.kind === 'report'
-      ? [setTimeout(sfx.drum, 100), setTimeout(sfx.bad, 280), setTimeout(sfx.drum, 780)]
-      : [setTimeout(sfx.senh, 100), setTimeout(sfx.drum, 280), setTimeout(() => sfx.sao(880), 650)];
+      ? [setTimeout(sfx.report, 100)]
+      : [setTimeout(sfx.meeting, 100)];
     return () => cues.forEach(clearTimeout);
   }, [c?.id, c?.kind]);
   // warm the pose sheets so the first kill does not start on a blank canvas
   useEffect(() => {
-    loadImg(asset('maps/game/ui/abandoned-bike.png'));
+    loadImg(asset('maps/game/ui/abandoned-bike.webp'));
     const a = playerArt(slug);
     loadImg(asset(`${a.action}.webp`));
     loadImg(asset(`${a.actionTint}.webp`));
@@ -279,7 +279,7 @@ export function Cinematic() {
       <div className="bike-discovery-scene" aria-hidden="true">
         <div className="bike-discovery-light" />
         <div className="bike-discovery-ground" />
-        <img className="bike-discovery-sprite" src={asset('maps/game/ui/abandoned-bike.png')} alt="" draggable={false} />
+        <img className="bike-discovery-sprite" src={asset('maps/game/ui/abandoned-bike.webp')} alt="" draggable={false} />
         <span className="bike-discovery-marker">!</span>
       </div>
       <div className="bike-discovery-caption">

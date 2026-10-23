@@ -5,15 +5,6 @@
   "packageManager": "pnpm@11.1.1",
   "scripts": {
     "layout:gen": "tsx tools/layout-gen/gen.ts",
-    "assets:pack": "node tools/assets-pack/pack.mjs",
-    "assets:pack-ui": "node tools/assets-pack/pack-ui-fx.mjs",
-    "assets:ui-art": "node tools/ui-art/draw-ui.mjs",
-    "assets:fx": "node tools/ui-art/draw-fx.mjs",
-    "assets:guide": "node tools/ui-art/draw-guide.mjs",
-    "assets:mobile": "node tools/ui-art/draw-mobile.mjs",
-    "assets:chars": "node tools/char-art/draw-characters.mjs",
-    "assets:hue-bansoc": "node tools/ui-art/draw-hue-bansoc.mjs",
-    "assets:check": "node tools/assets-pack/check.mjs",
     "prepare:data": "pnpm layout:gen",
     "dev": "pnpm prepare:data && pnpm -r --parallel --filter \"./apps/**\" dev",
     "dev:server": "pnpm --filter @hidden-truth/server dev",
@@ -24,7 +15,6 @@
     "test": "pnpm --filter @hidden-truth/shared --filter @hidden-truth/server test",
     "smoke": "tsx tools/smoke/bots.ts",
     "screenshot": "tsx tools/smoke/screenshot.ts",
-    "assets:paint": "tsx tools/paint/export-layout.ts && python3 tools/paint/floor.py && python3 tools/paint/props.py && python3 tools/paint/preview.py && python3 tools/paint/cards.py && python3 tools/paint/ui.py && python3 tools/paint/settings_ui.py && python3 tools/paint/end_ui.py && python3 tools/paint/fx.py && python3 tools/paint/minigames.py && python3 tools/paint/manifest.py",
     "shots": "node tools/smoke/visual.mjs",
     "shots:fx": "node tools/smoke/fx-shots.mjs"
   },

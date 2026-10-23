@@ -3,6 +3,7 @@
  * Hands-on mini-games (drag, swipe, hold, tap timing): the server deals each round's setup and checks
  * that the play the client reports fits it. buildTask() returns the client payload + what to verify.
  */
+import { replayQuietShutter, isQuietShutterComplete, type QuietShutterConfig } from '@hidden-truth/shared';
 import type { CoolerItem, LotBike, Pothole, RackBox, TaskData, TaskId } from '@hidden-truth/shared';
 
 import { pick, rid, sample, shuffle, type Built, type Fact, type MapContent, type Pending } from '../common/util';
@@ -23,7 +24,7 @@ export const TASK_FACTS: Record<TaskId, Fact> = {
   },
   stuck_shutter: {
     headline: '“Kéo nhẹ thôi! Cửa này có bí quyết.”',
-    text: 'Cửa cuốn tiệm quen rỉ sét, cứ tới đoạn đó là chốt kẹt cứng. Nhỏ chút dầu hoặc vặn lỏng con ốc rồi kéo tiếp — buông tay là cửa tụt xuống lại.',
+    text: 'Cửa cuốn cũ réo lên nếu kéo quá nhanh. Nâng từng nhịp thật nhẹ, nghỉ khi tiếng động tăng để hàng xóm trong hẻm vẫn ngủ yên.',
   },
   tune_antenna: {
     headline: '“Đứng yên đó! Đang rõ rồi!”',
@@ -76,7 +77,7 @@ export const TASK_DONE: Record<TaskId, string> = {
   connect_wires: 'Đủ bốn mạch! Đèn tiệm sáng trở lại.',
   pack_cooler: 'Đủ món, không đổ giọt nào. Ớt vẫn để riêng!',
   untangle_charger: 'Cắm sạc rồi! Đủ pin nhận thêm một cuốc.',
-  stuck_shutter: 'Rè rè… cửa mở! Cả hẻm nghe thấy luôn.',
+  stuck_shutter: 'Cửa mở rồi… cả hẻm vẫn ngủ ngon.',
   tune_antenna: 'Hình nét căng! Đừng ai đụng anten nha.',
   water_pipes: 'Nước chảy rồi! Rửa tay sạch, chạy cuốc tiếp.',
   brew_coffee: 'Ly cà phê sữa đá chuẩn vị quán cóc!',
@@ -161,20 +162,16 @@ function verifyCharger(pegs: string[], a: unknown) {
   return a.released.length === pegs.length && pegs.every((id, i) => (a.released as unknown[])[i] === id);
 }
 function buildShutter(): Built {
-  const jams = [round(rand(0.25, 0.4), 2), round(rand(0.58, 0.75), 2)];
-  // each jam shows a rusty bolt somewhere on the door; it never sits under the oil can (bottom-left)
-  const bolts = jams.map(() => ({ x: round(rand(0.3, 0.85), 2), y: round(rand(0.18, 0.62), 2) }));
-  const turnDeg = 360;
+  const config: QuietShutterConfig = { quietSpeed: .12, noiseGain: 3, cooldownRate: .30, alarmMs: 1400 };
   return {
-    data: { taskId: 'stuck_shutter', prompt: 'Kéo cửa lên. Gặp chốt rỉ: nhỏ dầu hoặc vặn ốc một vòng, rồi kéo tiếp. Buông tay là cửa tụt.', jams, bolts, turnDeg },
-    expected: { jams, turnDeg }, minMs: 3000,
+    data: { taskId: 'stuck_shutter', prompt: 'Kéo chậm, giữ yên khi ồn.', ...config },
+    expected: config, minMs: 3000,
   };
 }
-function verifyShutter(e: { jams: number[]; turnDeg: number }, a: unknown) {
-  if (!isObj(a) || a.lift !== 1 || !Array.isArray(a.cleared) || !Array.isArray(a.freed)) return false;
-  const cleared: unknown[] = a.cleared, freed: unknown[] = a.freed;
-  return cleared.length === e.jams.length && freed.length === e.jams.length
-    && e.jams.every((_, i) => cleared[i] === i && (freed[i] === 'oil' || (isNum(freed[i]) && (freed[i] as number) >= e.turnDeg && (freed[i] as number) <= 7200)));
+function verifyShutter(config: QuietShutterConfig, a: unknown) {
+  if (!isObj(a)) return false;
+  const state = replayQuietShutter(a.samples, config);
+  return state !== null && isQuietShutterComplete(state);
 }
 function buildAntenna(): Built {
   const target: [number, number] = [randInt(25, 65), randInt(115, 155)];
