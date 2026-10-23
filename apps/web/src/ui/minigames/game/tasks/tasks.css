@@ -670,3 +670,17 @@
 }
 /* wifi_hunt: the Wi-Fi glyph lights arc by arc with the signal bars */
 .ck-wifi-symbol .off { opacity: .22; }
+
+/* Coffee counter artwork leaves the centre clear for the live pour meter. */
+.task-screen .mg-bare .ck-coffee.ck-coffee-scene,
+.ck-coffee.ck-coffee-scene { width: min(720px, 100%, calc((100cqh - 90px) * 1.5)); height: auto; aspect-ratio: 3 / 2; flex: none; isolation: isolate; border-radius: 20px; box-shadow: 0 8px 24px #173f3a30; }
+.ck-coffee-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; pointer-events: none; }
+.task-screen .mg-bare .ck-coffee-scene .ck-glass,
+.ck-coffee-scene .ck-glass { position: absolute; bottom: 16%; height: 55%; width: 23%; max-height: none; box-sizing: border-box; border: 3px solid #d4eee2; border-bottom-width: 10px; border-radius: 10px 10px 22px 22px; background: linear-gradient(90deg, #d5efe43d, #fffdf041 24%, #eafaf011 60%, #adcac85c); box-shadow: inset 7px 0 0 #ffffff38, inset -6px 0 #3c655329, 0 5px 0 #3b443b70, 4px 10px 12px #39291840; }
+.ck-coffee-scene .ck-glass::after { z-index: 4; inset: 8px 7px; border-left: 3px solid #ffffff85; border-right: 1px solid #ffffff66; border-radius: 0 0 12px 12px; }
+.ck-coffee-scene .ck-band { z-index: 3; border-color: #ffdc81; background: #ffdc812f; filter: drop-shadow(0 1px 1px #35251c); }
+.ck-coffee-scene .ck-band.coffee { border-color: #b4ffd0; background: #b4ffd025; }
+.ck-coffee-scene .ck-stream { z-index: 2; width: 6px; margin-left: -3px; box-shadow: 1px 0 0 #ffffff55; }
+.ck-coffee-scene .ck-pourer { top: 0; left: 44%; width: 19%; height: 27%; object-fit: contain; transform: rotate(-12deg); transform-origin: 35% 80%; filter: drop-shadow(3px 5px 3px #30271944); transition: transform .2s ease; }
+.ck-coffee-scene.is-pouring .ck-pourer { transform: rotate(-32deg); }
+@media (prefers-reduced-motion: reduce) { .ck-coffee-scene .ck-pourer { transition: none; } }

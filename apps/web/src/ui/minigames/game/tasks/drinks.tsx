@@ -1,5 +1,6 @@
 /** Quán Nước: iced milk coffee (hold to pour) · leech the Wi-Fi (drag the phone around). */
 import { useEffect, useRef, useState } from 'react';
+import { asset } from '../../../common';
 import { MgShell, sfx, useShake, type Tone } from '../../common/kit';
 import { useT } from '../art';
 import { rel, taskArt, useFrame, useOnce, type P } from './shared';
@@ -55,7 +56,8 @@ export function BrewCoffee({ task, submit }: P<'brew_coffee'>) {
 
   return (
     <MgShell bare taskId={task.taskId} status={phase === 'milk' ? t('Sữa', 'Milk') : t('Cà phê', 'Coffee')} hint={hint[0]} tone={hint[1]}>
-      <div className="ck-coffee">
+      <div className={`ck-coffee ck-coffee-scene ${pouring ? 'is-pouring' : ''}`}>
+        <img className="ck-coffee-backdrop" src={asset('maps/game/tasks/brew_coffee/counter.webp')} alt="" draggable={false} />
         <div className={`ck-glass ${shake}`} role="meter"
           aria-label={phase === 'milk' ? t('Mức sữa', 'Milk level') : t('Mức cà phê', 'Coffee level')}
           aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(level * 100)}
@@ -63,7 +65,7 @@ export function BrewCoffee({ task, submit }: P<'brew_coffee'>) {
           <div className="ck-liquid milk" style={{ height: pct(phase === 'milk' ? level : milk) }} />
           {phase === 'coffee' && <div className="ck-liquid coffee" style={{ bottom: pct(milk), height: pct(level - milk) }} />}
           <div className={`ck-band ${phase}`} style={{ bottom: pct(band[0]), height: pct(band[1] - band[0]) }} />
-          {pouring && <div className={`ck-stream ${phase}`} />}
+          {pouring && <div className={`ck-stream ${phase}`} style={{ bottom: pct(level) }} />}
         </div>
         <img className="ck-pourer" src={taskArt(task.taskId, phase === 'milk' ? 'milk' : 'phin')} alt="" draggable={false} />
       </div>
