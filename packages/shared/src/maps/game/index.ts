@@ -27,26 +27,29 @@ export const GAME_TASK_IDS = TASK_IDS;
 export type GameTaskId = TaskId;
 
 /**
- * Two stations per area (none at the alley mouth: that's the meeting spot), each tucked into a wall nook
+ * Stations sit beside everyday props (none at the alley mouth: that's the meeting spot), tucked into a wall nook
  * or corner so whoever works it is hard to see from the room — and easy to sneak up on.
  * `icon` = file in the station's task folder (`${art.tasks}/<id>/<icon>.svg`).
  */
 export const GAME_STATIONS: StationDef[] = [
   // Dãy Quán Ăn — góc dưới trái sau xe bánh mì · hốc trên phải sau lồng chim
   { id: 'pack_cooler', area: 'exhibition', x: t(2.5), y: t(17.6), title: 'Xếp đơn vào thùng giữ nhiệt', titleEn: 'Pack the cooler box', icon: 'icon' },
-  { id: 'dodge_sellers', area: 'exhibition', x: t(12.5), y: t(9.7), title: 'Né “tiếp thị dạo”', titleEn: 'Dodge the street sellers', icon: 'icon' },
+  { id: 'water_pipes', area: 'exhibition', x: t(12.5), y: t(9.7), title: 'Mở van nước rửa tay', titleEn: 'Fix the handwashing tap', icon: 'icon' },
   // Quán Nước — góc trên trái cạnh quầy pha phin · góc dưới phải sau ghế nhựa
   { id: 'brew_coffee', area: 'coordination', x: t(29.5), y: t(8.7), title: 'Pha cà phê sữa đá', titleEn: 'Make an iced milk coffee', icon: 'icon' },
   { id: 'wifi_hunt', area: 'coordination', x: t(39.5), y: t(16.6), title: 'Bắt wifi ké', titleEn: 'Leech the Wi-Fi', icon: 'icon' },
+  { id: 'tune_antenna', area: 'coordination', x: t(37.5), y: t(8.7), title: 'Chỉnh anten tivi quán cóc', titleEn: 'Tune the stall TV aerial', icon: 'icon' },
   // Tiệm Sửa Xe — hốc trên phải · sát vách trái, chỗ thau vá xe
   { id: 'pump_tyre', area: 'editing', x: t(26.5), y: t(19.7), title: 'Bơm bánh xe', titleEn: 'Pump the tyre', icon: 'icon' },
+  { id: 'connect_wires', area: 'editing', x: t(20.5), y: t(24.7), title: 'Nối dây hộp điện', titleEn: 'Reconnect the junction box', icon: 'icon' },
   { id: 'patch_tube', area: 'editing', x: t(14.6), y: t(21.5), title: 'Vá ruột xe', titleEn: 'Patch the inner tube', icon: 'icon' },
   // Kho CRAB — góc trên trái dưới kệ · hốc dưới phải giữa hai rương
   { id: 'tape_box', area: 'archive', x: t(4.5), y: t(27.7), title: 'Quấn băng keo thùng hàng', titleEn: 'Tape up the box', icon: 'icon' },
   { id: 'stack_rack', area: 'archive', x: t(16.5), y: t(30.6), title: 'Chất hàng lên baga', titleEn: 'Stack the rear rack', icon: 'icon' },
+  { id: 'untangle_charger', area: 'archive', x: t(5.5), y: t(30.6), title: 'Gỡ dây sạc điện thoại', titleEn: 'Untangle the phone charger', icon: 'icon' },
   // Bãi Giữ Xe — góc dưới phải chỗ xe xếp · hốc cụt giữa đèn và lư
   { id: 'unpark_bike', area: 'artifact_storage', x: t(37.5), y: t(30.6), title: 'Rút xe ra khỏi bãi', titleEn: 'Get the bike out', icon: 'icon' },
-  { id: 'find_ticket', area: 'artifact_storage', x: t(25.5), y: t(30.6), title: 'Lục túi tìm vé xe', titleEn: 'Find the parking ticket', icon: 'icon' },
+  { id: 'stuck_shutter', area: 'artifact_storage', x: t(25.5), y: t(30.6), title: 'Kéo cửa cuốn kẹt', titleEn: 'Unstick the roller shutter', icon: 'icon' },
   // Hẻm Cuối — góc khuất sau cột điện hẻm giữa · điểm giao ở hẻm đông
   { id: 'dodge_potholes', area: 'corridor', x: t(22.5), y: t(16.6), title: 'Né ổ gà vào hẻm', titleEn: 'Dodge the potholes', icon: 'icon' },
   { id: 'handoff_package', area: 'corridor', x: t(34.5), y: t(21.5), title: 'Bàn giao Cuốc Cuối', titleEn: 'Hand off the Last Ride', icon: 'icon' },
@@ -125,11 +128,11 @@ export const GAME_SKIN: MapSkin = {
     intro:
       '23:42, Sài Gòn vừa tạnh mưa. Một khách lạ đặt Hội CRAB chở kiện hàng 50 triệu — không mở thùng, không hỏi người gửi, giao trước khi trời sáng. Đang chia việc thì điện thoại cả hội cùng rung: “Trong hội có công an chìm.” Chuẩn bị xong Cuốc Cuối và bàn giao kiện hàng, hoặc lật mặt kẻ trà trộn trước khi cả hội bị còng.',
     prelude: [
-      '23:42. Sài Gòn vừa tạnh mưa.',
-      'Cuối Hẻm 42, quán nước còn sáng một bóng đèn.',
-      'Một khách lạ đặt cuốc: 50 triệu cho một kiện hàng.',
-      'Không mở thùng. Không hỏi người gửi. Giao trước khi trời sáng.',
-      'Rồi điện thoại cả hội cùng rung: “Trong hội có công an chìm.”',
+      'Đêm nay, Hội Tài Xế CRAB ở Hẻm 42 nhận một cuốc đặc biệt:',
+      'giao một kiện hàng cấm trị giá 50 triệu trước khi trời sáng.',
+      'Nhưng có tin mật báo về: một công an chìm đã trà trộn vào hội.',
+      'Hãy cùng nhau chuẩn bị và giao hàng trót lọt,',
+      'hoặc tìm ra ai là công an chìm — trước khi cả hội bị còng tay.',
     ],
     // 23:42 -> 05:00 on the fictional clock, whatever the countdown length
     clock: { startMin: 23 * 60 + 42, endMin: 24 * 60 + 5 * 60 },

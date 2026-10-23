@@ -6,8 +6,10 @@ import { sfx, type Submit } from '../../common/kit';
 export type T<K extends TaskData['taskId']> = Extract<TaskData, { taskId: K }>;
 export type P<K extends TaskData['taskId']> = { task: T<K>; submit: Submit };
 
-/** A sprite from the task's own art folder: tasks/<taskId>/<name>.svg (placeholders, redrawn later). */
-export const taskArt = (taskId: TaskData['taskId'], name: string) => asset(`${GAME_SKIN.art.tasks}/${taskId}/${name}.svg`);
+/** Named SVG views crop the transparent, shared material-shaded sprite atlas. */
+export const taskArt = (taskId: TaskData['taskId'], name: string) => (taskId === 'dodge_potholes' || (taskId === 'patch_tube' && name === 'patch'))
+  ? asset(`${GAME_SKIN.art.tasks}/${taskId}/${name}.svg`)
+  : asset(`${GAME_SKIN.art.tasks}/sprites.svg#${taskId}-${name}`);
 
 /** the server refuses answers faster than a person could play (≤ 3 s for every game but the potholes run) */
 const MIN_PLAY_MS = 3100;

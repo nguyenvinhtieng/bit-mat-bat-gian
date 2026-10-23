@@ -61,11 +61,10 @@ export function DodgePotholes({ task, submit }: P<'dodge_potholes'>) {
   });
 
   const r = run.current;
-  const upcoming = task.obstacles.find((o) => o.at > r.t && o.at - r.t < LEAD_MS);
   const swipe = useRef<number | null>(null);
   const laneX = (l: number) => `${((l + 0.5) / task.lanes) * 100}%`;
   return (
-    <MgShell taskId={task.taskId} status={`${Math.min(100, Math.round((r.t / task.duration) * 100))}%`} hint={hint[0]} tone={hint[1]}>
+    <MgShell bare taskId={task.taskId} hint={hint[0]} tone={hint[1]}>
       <div
         ref={box}
         className={`ck-alley ${running ? 'is-running' : ''} ${shake}`}
@@ -103,7 +102,6 @@ export function DodgePotholes({ task, submit }: P<'dodge_potholes'>) {
       </div>
       <div className="ck-alley-controls">
         <button type="button" aria-label={t('Sang trái', 'Steer left')} disabled={!running || sent} onClick={() => steer(-1)}>←</button>
-        <span className="ck-note" role="status">{sent ? t('Đến nơi!', 'Arrived!') : running && upcoming ? t(`Chướng ngại làn ${upcoming.lane + 1}`, `Obstacle in lane ${upcoming.lane + 1}`) : t('Vuốt hoặc ← →', 'Swipe or ← →')}</span>
         <button type="button" aria-label={t('Sang phải', 'Steer right')} disabled={!running || sent} onClick={() => steer(1)}>→</button>
       </div>
     </MgShell>
@@ -187,7 +185,7 @@ export function HandoffPackage({ task, submit }: P<'handoff_package'>) {
             }}
             onBlur={() => { setHolding(false); setRing(0); }}
             onPointerDown={(e) => (e.currentTarget.setPointerCapture(e.pointerId), (ringAt.current = performance.now()), setHolding(true))}
-            onPointerUp={() => (setHolding(false), ring < task.ringMs && (setRing(0), setHint([t('Bấm nhẹ quá, trong nhà không nghe. Giữ lâu hơn.', 'Too short, nobody heard. Hold longer.'), 'info'])))}
+            onPointerUp={() => (setHolding(false), ring < task.ringMs && (setRing(0), setHint([t('Bấm nhẹ quá, trong nhà không nghe. Giữ lâu hơn.', 'Too short, nobody heard. Hold longer.'), 'bad'])))}
             onPointerCancel={() => (setHolding(false), setRing(0))}
           >
             <img src={taskArt(task.taskId, 'bell')} alt="" draggable={false} />

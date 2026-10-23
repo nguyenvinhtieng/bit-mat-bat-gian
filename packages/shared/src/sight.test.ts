@@ -25,3 +25,9 @@ test('beyond the radius nothing is seen, even in the open', () => {
   assert.equal(canSeePoint(g, { x: 1 * TILE, y: 2 * TILE }, { x: 9 * TILE, y: 2 * TILE }, 200), false);
   assert.equal(canSeePoint(g, { x: 1 * TILE, y: 2 * TILE }, { x: 5 * TILE, y: 2 * TILE }, 200), true);
 });
+
+test('props (solid but not walls) do not block sight', () => {
+  const g = grid([[4, 2]]);
+  g.walls = new Uint8Array(50); // the pillar is a prop, not a wall
+  assert.equal(canSeePoint(g, { x: 1.5 * TILE, y: 2 * TILE + 40 }, { x: 7.5 * TILE, y: 2 * TILE + 40 }, 400), true);
+});

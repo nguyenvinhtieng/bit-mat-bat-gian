@@ -112,26 +112,30 @@ function solve(t: TaskData): unknown {
       const free = [...t.slots];
       return Object.fromEntries(t.items.map((it) => [it.id, free.splice(free.findIndex((s) => s.kind === it.need), 1)[0].id]));
     }
-    case 'dodge_sellers':
-      return { swiped: t.sellers.map((s) => s.id), paid: true };
+    case 'connect_wires':
+      return { connections: t.left.map((color) => ({ from: color, to: color })) };
+    case 'untangle_charger':
+      return { released: t.pegs.map((peg) => peg.id), plugged: true };
+    case 'stuck_shutter':
+      return { cleared: t.jams.map((_, i) => i), freed: t.jams.map(() => 'oil'), lift: 1 };
+    case 'tune_antenna':
+      return { angles: t.target, heldMs: t.holdMs };
+    case 'water_pipes':
+      return { rotations: t.solution, opened: true };
     case 'brew_coffee':
       return { milk: (t.milk[0] + t.milk[1]) / 2, coffee: (t.coffee[0] + t.coffee[1]) / 2 };
     case 'wifi_hunt':
       return t.spot;
     case 'pump_tyre':
-      return { strokes: Math.ceil(t.green[0] / t.perStroke) };
+      return { psi: t.green[0] + 1, heldMs: Math.ceil(((t.green[0] + 1) / t.rate) * 1000) };
     case 'patch_tube':
       return { patched: t.leaks };
     case 'tape_box':
-      return { laps: t.laps };
+      return { flaps: ['left', 'right'], strips: ['seam', 'cross'] };
     case 'stack_rack':
       return { offsets: t.boxes.map(() => 0) };
     case 'unpark_bike':
       return { moves: solveLot(t) };
-    case 'find_ticket': {
-      const at = t.items.findIndex((i) => i.kind === 've-xe');
-      return { removed: t.items.slice(0, at).map((i) => i.id), ticket: t.items[at].id };
-    }
     case 'dodge_potholes':
       return { moves: t.obstacles.map((o) => ({ at: o.at - 200, lane: (o.lane + 1) % 3 })) };
     case 'handoff_package':

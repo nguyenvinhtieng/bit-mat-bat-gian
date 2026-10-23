@@ -63,6 +63,8 @@ export class GameState extends Schema {
   @type('uint8') nightMin = 8;
   /** prep stations dealt to each player (host-adjustable) */
   @type('uint8') tasksPerPlayer = 3;
+  /** undercover cops per game (host-adjustable; clamped to the player count at start) */
+  @type('uint8') cops = 1;
   /** living players per faction — counts only, never who */
   @type('uint8') crewAlive = 0;
   @type('uint8') killersAlive = 0;

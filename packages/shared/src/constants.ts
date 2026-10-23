@@ -78,15 +78,18 @@ export const PLAYER_COLORS = [
  */
 export const PREP_TASK_IDS = [
   'pack_cooler', // Dãy Quán Ăn
-  'dodge_sellers',
+  'water_pipes',
   'brew_coffee', // Quán Nước
   'wifi_hunt',
   'pump_tyre', // Tiệm Sửa Xe
   'patch_tube',
+  'connect_wires',
   'tape_box', // Kho CRAB
   'stack_rack',
   'unpark_bike', // Bãi Giữ Xe
-  'find_ticket',
+  'stuck_shutter',
+  'untangle_charger',
+  'tune_antenna',
   'dodge_potholes', // Hẻm Cuối
 ] as const;
 export const TASK_IDS = [...PREP_TASK_IDS, 'handoff_package'] as const;
@@ -117,15 +120,28 @@ export const GAME = {
   meetingSec: 75,
   /** single countdown "before daybreak" (minutes, host-adjustable); pauses during meetings; at zero the cop wins */
   timeMinMin: 4,
+  /** dev builds only: short rounds for testing */
+  timeMinMinDev: 1,
   timeMinMax: 15,
   timeMinDefault: 8,
-  revealSec: 6,
-  /** prelude + role reveal on game start; the countdown starts when it ends */
-  introSec: 9.5,
+  /** undercover cops per game (host-adjustable); must stay below half the civilians, see `maxCops` */
+  copsMin: 1,
+  copsMax: 5,
+  copsDefault: 1,
+  /** 2.5s kick message + 6s sock-check clip + time to read the verdict */
+  revealSec: 10.5,
+  /** prelude (~8.8s) + a few seconds to read the role on game start; the countdown starts when it ends */
+  introSec: 13,
   emergencyPerPlayer: 1,
   /** veteran: how many recent task activities the inspection shows */
   inspectEntries: 3,
 };
+
+/** Most cops `n` players allow: cops < civilians / 2, i.e. 3 * cops < n (never below 1). */
+export const maxCops = (n: number) => Math.max(GAME.copsMin, Math.floor((n - 1) / 3));
+export const copsValid = (cops: number, n: number) => cops >= GAME.copsMin && 3 * cops < n;
+/** The cop count actually dealt: the host's pick, clamped to 1..maxCops(n). */
+export const copsFor = (want: number, n: number) => Math.max(GAME.copsMin, Math.min(maxCops(n), Math.floor(want) || 0));
 
 /**
  * Personal prep lists for one game: each player gets `perPlayer` distinct stations, always picking

@@ -80,25 +80,49 @@ export function useDragDrop<T>(onDrop: (item: T, target: string) => void, onTap?
 
 /**
  * Common frame for every mini-game: one short action line + a status chip, the rest is play area.
+ * `bare` drops the objective header and the hint line so the board can take the whole screen; the
+ * status floats as a chip and any hint pops as a short toast, so pass feedback only. `bare="head"` keeps the hint.
  * No time limits anywhere — take your time.
  */
-export function MgShell({ taskId, status, children, hint, tone = 'info', vars }: {
+export function MgShell({ taskId, status, children, hint, tone = 'info', vars, bare }: {
   taskId: TaskId;
   status?: React.ReactNode;
   children: React.ReactNode;
   hint?: React.ReactNode;
   tone?: Tone;
   vars?: Record<string, string>;
+  bare?: boolean | 'head';
 }) {
   const lang = useLang((s) => s.lang);
+  const mapSlug = useStore((s) => s.room?.mapSlug);
+  const station = mapSkin(mapSlug).stations.find((s) => s.id === taskId);
   const goal = GUIDE[taskId]?.[lang === 'en' ? 'en' : 'vi'].goal ?? '';
   const fill = (t: string) => t.replace(/\{(\w+)\}/g, (_, k) => vars?.[k] ?? '');
+  // only mistakes are worth reading mid-task; praise and narration stay silent
+  if (tone !== 'bad') hint = undefined;
+  if (bare) {
+    return (
+      <div className="mg-col mg-bare" data-task={taskId} aria-label={lang === 'en' ? station?.titleEn : station?.title}>
+        {status != null && <div className="mg-chip">{status}</div>}
+        <div className="mg-play">{children}</div>
+        {bare === 'head'
+          ? <p className={`mg-hint ${tone}`} role="status" aria-live="polite" aria-atomic="true">{hint ?? ' '}</p>
+          : <MgToast hint={hint} tone={tone} />}
+      </div>
+    );
+  }
   return (
     <div className="mg-col" data-task={taskId}>
       {/* guide / play wrappers are display: contents, except on short landscape screens (goal bar on top) */}
       <div className="mg-guide">
         <header className="mg-head">
-          <p className="mg-goal">{fill(goal)}</p>
+          <span className="mg-emblem" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none"><path d="m16 3 12 7v12l-12 7-12-7V10Z" stroke="currentColor" strokeWidth="2" /><path d="m10 16 4 4 8-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </span>
+          <div className="mg-objective">
+            <span className="mg-station">{lang === 'en' ? station?.titleEn : station?.title}</span>
+            <p className="mg-goal">{fill(goal)}</p>
+          </div>
           {status && <div className="mg-status">{status}</div>}
         </header>
       </div>
@@ -107,6 +131,24 @@ export function MgShell({ taskId, status, children, hint, tone = 'info', vars }:
         {hint ?? ' '}
       </p>
     </div>
+  );
+}
+
+/** Feedback that pops over the board for a moment, then gets out of the way. */
+function MgToast({ hint, tone }: { hint: React.ReactNode; tone: Tone }) {
+  const [shown, setShown] = useState<React.ReactNode>(null);
+  const key = typeof hint === 'string' ? hint : hint ? 'x' : '';
+  useEffect(() => {
+    if (!key) return setShown(null);
+    setShown(hint);
+    const t = setTimeout(() => setShown(null), 1600);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, tone]);
+  return (
+    <p className={`mg-toast ${tone} ${shown ? 'on' : ''}`} role="status" aria-live="polite" aria-atomic="true">
+      {shown}
+    </p>
   );
 }
 
@@ -236,6 +278,12 @@ export const sfx = {
   scrape: () => noise(0.04, 0.05, 2500),
   /** handcuffs snapping shut + a short whistle (arrest, for the people nearby) */
   cuffs: () => (noise(0.03, 0.3, 5000), setTimeout(() => noise(0.03, 0.3, 6200), 90), setTimeout(() => tone(1400, 0.3, 'square', 0.05, 0.7), 200)),
+  /** final-30s clock tick: soft rounded blip, tick/tock pitches; last 10s adds a quick second blip */
+  countdown: (left: number) => {
+    const f = left % 2 ? 740 : 620;
+    tone(f, 0.12, 'triangle', left <= 10 ? 0.13 : 0.09);
+    if (left <= 10) setTimeout(() => tone(f * 1.25, 0.09, 'triangle', 0.08), 110);
+  },
   watch: (n = 2) => void watchDrum(n),
   preloadDrum: () => void loadDrum(),
 };

@@ -7,6 +7,8 @@ import { sfx } from './minigames/common/kit';
 
 const ROW = { down: 0, left: 1, right: 2, up: 3 } as const;
 const DURATION: Record<string, number> = { kill: 5700, report: 4800, emergency: 4200, witness: 1000 };
+/** arrest kill: the full 6s clip, then the .35s cineOut fade */
+const ARREST_MS = 6350;
 /** The stage is authored on a fixed SET_W x SET_H board and scaled to whatever room the bars + caption leave. */
 const SET_W = 1000, SET_H = 420;
 const KICKER: Record<string, string> = { kill: '✦ Bắt giữ ✦', report: '✦ Xe bỏ lại ✦', emergency: '✦ Họp khẩn ✦' };
@@ -14,8 +16,8 @@ const KICKER: Record<string, string> = { kill: '✦ Bắt giữ ✦', report: '�
 // Pose timelines (ms). Impact lands at 900: dash 300-750 → wind-up → slash.
 const ACTOR_STRIKE: PoseTrack = [[0, 'strike-1'], [750, 'strike-0'], [900, 'strike-2'], [1050, 'strike-3']];
 const VICTIM_DIE: PoseTrack = [[0, 'guard-3'], [900, 'die-0'], [1100, 'die-1'], [1350, 'die-2'], [1600, 'die-3']];
-const ARREST: PoseTrack = [0, 350, 700, 2200, 2700, 3200, 3650, 4050].map((ms, i) => [ms, `arrest-${i}`]);
-const PARKED: PoseTrack = [[0, 'parked-left']];
+/** Pre-rendered arrest scene (VP9 with alpha): one smooth clip instead of stepping sprite poses. */
+const ARREST_CLIP = 'maps/game/cinematics/arrest.webm';
 const PROPS = ['cine-seal', 'fx-stamp-burst', 'fx-shock-lines'];
 
 const imgCache = new Map<string, Promise<HTMLImageElement>>();
@@ -194,7 +196,8 @@ export function Cinematic() {
   useEscape(() => set({ cinematic: null }), !!c);
   useEffect(() => {
     if (!c) return;
-    const t = setTimeout(() => set({ cinematic: null }), DURATION[c.kind] ?? 3000);
+    const ms = c.kind === 'kill' && mapSkin(slug).arrest ? ARREST_MS : DURATION[c.kind] ?? 3000;
+    const t = setTimeout(() => set({ cinematic: null }), ms);
     return () => clearTimeout(t);
   }, [c?.id]);
   useEffect(() => {
@@ -214,6 +217,7 @@ export function Cinematic() {
     loadFrames(asset(`${a.action}.json`));
     loadFrames(asset(`${a.atlas}.json`));
     for (const n of PROPS) loadImg(asset(`maps/common/ui/fx/${n}.webp`));
+    if (mapSkin(slug).arrest) fetch(asset(ARREST_CLIP)).catch(() => {});
   }, [slug]);
   useLayoutEffect(() => {
     const el = area.current;
@@ -292,21 +296,19 @@ export function Cinematic() {
     <div className="bike-discovery zola-alert" key={c.id} role="status" aria-live="assertive">
       <div className="bike-discovery-flash" aria-hidden="true" />
       <div className="bike-discovery-rays" aria-hidden="true" />
-      <div className="bike-discovery-band top" aria-hidden="true"><span>! HỌP KHẨN · CẢ NHÓM VÀO ZOLA !</span></div>
-      <div className="bike-discovery-band bottom" aria-hidden="true"><span>! HỌP KHẨN · CẢ NHÓM VÀO ZOLA !</span></div>
+      <div className="bike-discovery-band top" aria-hidden="true"><span>! HỌP KHẨN !</span></div>
+      <div className="bike-discovery-band bottom" aria-hidden="true"><span>! HỌP KHẨN !</span></div>
       <section className="zola-alert-card">
-        <header><span className="zola-alert-brand">Zola</span><span>THÔNG BÁO KHẨN</span><small>vừa xong</small></header>
+        <header><span className="zola-alert-brand">Zola</span></header>
         <div className="zola-alert-content">
           <img className="zola-alert-phone" src={asset('maps/common/ui/meeting-zola.svg')} alt="" />
           <div className="zola-alert-message">
-            <div className="zola-alert-group"><img src={groupAvatar} alt="" /><span>{GROUP_NAME}<small>Tin nhắn ưu tiên</small></span><i>!</i></div>
-            <span className="zola-alert-tag">CẢ NHÓM ƠI, CÓ CHUYỆN RỒI!</span>
+            <div className="zola-alert-group"><img src={groupAvatar} alt="" /><span>{GROUP_NAME}</span><i>!</i></div>
             <h1>HỌP KHẨN!</h1>
-            <p><b>{c.actor.name}</b> vừa gọi cả nhóm.<br /><strong>Tạm dừng chuyến xe, vào nhóm ngay!</strong></p>
-            <div className="zola-alert-receipt"><span /> Đã thông báo đến cả nhóm</div>
+            <p><b>{c.actor.name}</b> gọi họp</p>
           </div>
         </div>
-        <footer><span className="zola-alert-progress" /><span>Đang mở cuộc họp…</span><button type="button" onClick={() => set({ cinematic: null })}>Vào nhóm <span aria-hidden="true">→</span></button></footer>
+        <footer><span className="zola-alert-progress" /><button type="button" onClick={() => set({ cinematic: null })}>Vào nhóm ngay <span aria-hidden="true">→</span></button></footer>
       </section>
     </div>
   );
@@ -322,8 +324,7 @@ export function Cinematic() {
             {c.kind === 'kill' && arrest && (
               <>
                 <div className="arrest-badge-glow" aria-hidden="true" />
-                <div className="arrest-parked"><PoseSprite color={c.victim!.color} track={PARKED} tall scale={3} /></div>
-                <div className="arrest-pair"><PoseSprite color={c.actor.color} pairColor={c.victim!.color} track={ARREST} scale={3} /></div>
+                <video className="arrest-clip" src={asset(ARREST_CLIP)} autoPlay muted playsInline preload="auto" disablePictureInPicture aria-hidden="true" />
               </>
             )}
             {c.kind === 'kill' && !arrest && (

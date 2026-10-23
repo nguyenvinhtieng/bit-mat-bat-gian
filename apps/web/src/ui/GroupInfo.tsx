@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GAME, MAX_PLAYERS, NAME_MAX } from '@hidden-truth/shared';
+import { GAME, MAX_PLAYERS, MIN_PLAYERS, NAME_MAX, copsValid, maxCops } from '@hidden-truth/shared';
 import { send } from '../net';
 import { useStore } from '../store';
 import { useT } from '../i18n';
@@ -240,14 +240,19 @@ function GroupSettings({ onSaved }: { onSaved: () => void }) {
   const me = useStore((s) => s.sessionId);
   const t = useT();
   const isHost = room.hostId === me;
-  const [draft, setDraft] = useState({ turns: room.tasksPerPlayer, timeMin: room.nightMin, isPublic: room.isPublic });
-  const { turns, timeMin, isPublic } = isHost ? draft : { turns: room.tasksPerPlayer, timeMin: room.nightMin, isPublic: room.isPublic };
+  const live = { turns: room.tasksPerPlayer, timeMin: room.nightMin, cops: room.cops, isPublic: room.isPublic };
+  const [draft, setDraft] = useState(live);
+  const { turns, timeMin, cops, isPublic } = isHost ? draft : live;
   const edit = (patch: Partial<typeof draft>) => setDraft((d) => ({ ...d, ...patch }));
-  const dirty = turns !== room.tasksPerPlayer || timeMin !== room.nightMin || isPublic !== room.isPublic;
+  const dirty = turns !== room.tasksPerPlayer || timeMin !== room.nightMin || cops !== room.cops || isPublic !== room.isPublic;
+  const n = room.players.length;
+  // cops must stay below half the civilians: 3 * cops < players
+  const copsOk = copsValid(cops, Math.max(n, MIN_PLAYERS));
   const save = () => {
-    const msg: { tasksPerPlayer?: number; timeMin?: number } = {};
+    const msg: { tasksPerPlayer?: number; timeMin?: number; cops?: number } = {};
     if (turns !== room.tasksPerPlayer) msg.tasksPerPlayer = turns;
     if (timeMin !== room.nightMin) msg.timeMin = timeMin;
+    if (cops !== room.cops) msg.cops = cops;
     if (Object.keys(msg).length) send('configure', msg);
     if (isPublic !== room.isPublic) send('host:visibility', { public: isPublic });
     onSaved();
@@ -260,12 +265,14 @@ function GroupSettings({ onSaved }: { onSaved: () => void }) {
         <ZlSlider
           label={t('nightLen')}
           unit={t('minutesShort')}
-          min={GAME.timeMinMin}
+          min={import.meta.env.DEV ? GAME.timeMinMinDev : GAME.timeMinMin}
           max={GAME.timeMinMax}
           value={timeMin}
           disabled={!isHost}
           onChange={(v) => edit({ timeMin: v })}
         />
+        <ZlSlider label={t('copsCount')} min={GAME.copsMin} max={GAME.copsMax} value={cops} disabled={!isHost} onChange={(v) => edit({ cops: v })} />
+        {!copsOk && <p className="zl-note">{t('copsTooMany').replace('{max}', String(maxCops(Math.max(n, MIN_PLAYERS)))).replace('{n}', String(Math.max(n, MIN_PLAYERS)))}</p>}
         <div className="zl-setting">
           <span className="zl-setting-label">{t('roomVisibility')}</span>
           <div className="zl-seg" role="radiogroup" aria-label={t('roomVisibility')}>

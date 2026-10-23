@@ -94,6 +94,7 @@ function snapshot(state: any): RoomView {
     packageY: state.packageY ?? 0,
     tasksPerPlayer: state.tasksPerPlayer ?? GAME.tasksPerPlayerDefault,
     nightMin: state.nightMin ?? 8,
+    cops: state.cops ?? GAME.copsDefault,
     crewAlive: state.crewAlive ?? 0,
     killersAlive: state.killersAlive ?? 0,
     players,
@@ -136,6 +137,8 @@ function bind(r: Room) {
     const s = useStore.getState();
     if (snap.phase !== lastPhase) {
       if (snap.phase === 'meeting') s.set({ task: null, taskResult: null, voteResult: null, arrestHold: null });
+      // time ran out or a side won: drop any open task so it can't reappear over the results
+      if (snap.phase !== 'explore') s.set({ task: null, taskResult: null });
       // the result screen survives the return to the lobby (closed by each player); a new game drops it
       if (snap.phase === 'lobby') s.set({ me: null, voteResult: null, ejectedNames: [], inspect: null, inspectOpen: false, arrestHold: null });
       if (snap.phase === 'explore') s.set({ end: null });
@@ -163,7 +166,10 @@ function bind(r: Room) {
     for (const cb of sayListeners) cb(m);
   });
   r.onMessage('toast', (t) => useStore.getState().toast(t));
-  r.onMessage('task:data', (task) => useStore.getState().set({ task, taskResult: null }));
+  r.onMessage('task:data', (task) => {
+    const s = useStore.getState();
+    if (s.room?.phase === 'explore' && !s.end) s.set({ task, taskResult: null });
+  });
   r.onMessage('task:result', (res: { ok: boolean; text: string; fact?: string; headline?: string }) => {
     const s = useStore.getState();
     if (res.ok) s.set({ taskResult: res });
@@ -186,7 +192,7 @@ function bind(r: Room) {
     s.set({ voteResult, ejectedNames: voteResult.ejected ? [...s.ejectedNames, voteResult.ejected] : s.ejectedNames });
   });
   r.onMessage('cinematic', (c: Cinematic) => useStore.getState().set({ cinematic: { ...c, id: Date.now() } }));
-  r.onMessage('end', (end) => useStore.getState().set({ end }));
+  r.onMessage('end', (end) => useStore.getState().set({ end, task: null, taskResult: null }));
   r.onMessage('teleport', () => {});
   r.onMessage('pong', (t: number) => useStore.getState().set({ ping: Math.round(performance.now() - t) }));
   if (pingTimer) clearInterval(pingTimer);

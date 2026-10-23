@@ -44,13 +44,60 @@ test('pack cooler: every item in a slot of its kind passes; a drink on the shelf
   assert.equal(ok(p, { ...a, [cup.id]: a[data.items.find((i) => i !== cup && i.need === 'cup')!.id] }), false); // two in one slot
 });
 
-test('dodge sellers: swipe all in order and pay the debt', () => {
-  const { data, p } = open('dodge_sellers');
-  const ids = data.sellers.map((s) => s.id);
-  assert.equal(ok(p, { swiped: ids, paid: true }), true);
-  assert.equal(ok(p, { swiped: ids, paid: false }), false);
-  assert.equal(ok(p, { swiped: ids.slice(1), paid: true }), false);
-  assert.equal(ok(p, { swiped: [...ids].reverse(), paid: true }), false);
+test('charger: release every peg in order and plug in', () => {
+  const { data, p } = open('untangle_charger');
+  const released = data.pegs.map((peg) => peg.id);
+  assert.equal(ok(p, { released, plugged: true }), true);
+  assert.equal(ok(p, { released: [...released].reverse(), plugged: true }), false);
+  assert.equal(ok(p, { released: released.slice(1), plugged: true }), false);
+  assert.equal(ok(p, { released, plugged: false }), false);
+});
+
+test('shutter: every rusty bolt must be oiled or twisted a full turn before full lift', () => {
+  const { data, p } = open('stuck_shutter');
+  assert.equal(data.bolts.length, data.jams.length);
+  const cleared = data.jams.map((_, i) => i);
+  assert.equal(ok(p, { cleared, freed: ['oil', 'oil'], lift: 1 }), true);
+  assert.equal(ok(p, { cleared, freed: [data.turnDeg, 'oil'], lift: 1 }), true);
+  assert.equal(ok(p, { cleared: cleared.slice(1), freed: ['oil'], lift: 1 }), false);
+  assert.equal(ok(p, { cleared, freed: [data.turnDeg - 1, 'oil'], lift: 1 }), false);
+  assert.equal(ok(p, { cleared, freed: ['grease', 'oil'], lift: 1 }), false);
+  assert.equal(ok(p, { cleared, freed: ['oil', 'oil'], lift: 0.9 }), false);
+});
+
+test('antenna: both arms tuned, with a steady hold; invalid angles or short holds fail', () => {
+  const { data, p } = open('tune_antenna');
+  assert.equal(ok(p, { angles: data.target, heldMs: data.holdMs }), true);
+  assert.equal(ok(p, { angles: data.target, heldMs: data.holdMs - 1 }), false);
+  assert.equal(ok(p, { angles: [data.target[0] + data.tolerance + 1, data.target[1]], heldMs: data.holdMs }), false);
+  assert.equal(ok(p, { angles: [NaN, data.target[1]], heldMs: data.holdMs }), false);
+});
+
+test('pipes: every corner connects and valve opens; initial scramble never passes', () => {
+  for (let i = 0; i < 20; i++) {
+    const { data, p } = open('water_pipes');
+    assert.equal(ok(p, { rotations: data.solution, opened: true }), true);
+    assert.equal(ok(p, { rotations: data.rotations, opened: true }), false);
+    assert.equal(ok(p, { rotations: data.solution, opened: false }), false);
+    assert.equal(ok(p, { rotations: [...data.solution, 0], opened: true }), false);
+  }
+});
+
+test('new tasks enforce minimum solve time and removed tasks are unavailable', () => {
+  for (const id of ['untangle_charger', 'stuck_shutter', 'tune_antenna', 'water_pipes'] as const) {
+    const { built, p } = open(id);
+    assert.ok((built.minMs ?? 0) >= 1200);
+    const data = built.data;
+    const answer = data.taskId === 'untangle_charger' ? { released: data.pegs.map((peg) => peg.id), plugged: true }
+      : data.taskId === 'stuck_shutter' ? { cleared: data.jams.map((_, i) => i), freed: data.jams.map(() => 'oil'), lift: 1 }
+      : data.taskId === 'tune_antenna' ? { angles: data.target, heldMs: data.holdMs }
+      : data.taskId === 'water_pipes' ? { rotations: data.solution, opened: true } : {};
+    assert.equal(ok(p, answer), true);
+    p.openedAt = Date.now();
+    assert.equal(ok(p, answer), false);
+  }
+  assert.equal(GAME_CONTENT.buildTask('dodge_sellers' as TaskData['taskId']), null);
+  assert.equal(GAME_CONTENT.buildTask('find_ticket' as TaskData['taskId']), null);
 });
 
 test('brew coffee: both pours inside their bands', () => {
@@ -68,12 +115,14 @@ test('wifi hunt: parking on the hot spot passes, far away fails', () => {
   assert.equal(ok(p, { x: data.spot.x > 0.5 ? 0 : 1, y: data.spot.y }), false);
 });
 
-test('pump tyre: stop in the green, over-pump fails', () => {
+test('pump tyre: stop in the green with a believable hold time; over-pump fails', () => {
   const { data, p } = open('pump_tyre');
-  const strokes = Math.ceil(data.green[0] / data.perStroke);
-  assert.equal(ok(p, { strokes }), true);
-  assert.equal(ok(p, { strokes: strokes + 3 }), false);
-  assert.equal(ok(p, { strokes: 1.5 }), false);
+  const psi = (data.green[0] + data.green[1]) / 2, heldMs = (psi / data.rate) * 1000;
+  assert.equal(ok(p, { psi, heldMs }), true);
+  assert.equal(ok(p, { psi: data.green[1] + 1, heldMs: heldMs * 2 }), false);
+  assert.equal(ok(p, { psi: data.green[0] - 1, heldMs }), false);
+  assert.equal(ok(p, { psi, heldMs: heldMs / 2 }), false);
+  assert.equal(ok(p, { psi }), false);
 });
 
 test('patch tube: exactly the leaks', () => {
@@ -83,10 +132,30 @@ test('patch tube: exactly the leaks', () => {
   assert.equal(ok(p, { patched: [...data.leaks, 7] }), false);
 });
 
-test('tape box: enough laps', () => {
-  const { data, p } = open('tape_box');
-  assert.equal(ok(p, { laps: data.laps }), true);
-  assert.equal(ok(p, { laps: data.laps - 1 }), false);
+test('connect wires: exactly four unique matching colours', () => {
+  const { data, p } = open('connect_wires');
+  assert.deepEqual([...data.left].sort(), ['amber', 'blue', 'mint', 'red']);
+  assert.deepEqual([...data.right].sort(), [...data.left].sort());
+  assert.notDeepEqual(data.left, data.right);
+  const connections = data.left.map((color) => ({ from: color, to: color }));
+  assert.equal(ok(p, { connections: [...connections].reverse() }), true);
+  assert.equal(ok(p, { connections: connections.slice(0, 3) }), false);
+  assert.equal(ok(p, { connections: [...connections, connections[0]] }), false);
+  assert.equal(ok(p, { connections: connections.map(() => connections[0]) }), false);
+  assert.equal(ok(p, { connections: connections.map((c, i) => ({ ...c, to: data.left[(i + 1) % 4] })) }), false);
+  assert.equal(ok(p, { connections: connections.map((c, i) => i ? c : { from: 'unknown', to: 'unknown' }) }), false);
+});
+
+test('tape box: requires both closed flaps and both distinct strips', () => {
+  const { p } = open('tape_box');
+  assert.equal(ok(p, { flaps: ['left', 'right'], strips: ['seam', 'cross'] }), true);
+  for (const answer of [
+    { laps: 2 },
+    { flaps: ['left'], strips: ['seam', 'cross'] },
+    { flaps: ['left', 'right'], strips: ['seam'] },
+    { flaps: ['left', 'left'], strips: ['seam', 'cross'] },
+    { flaps: ['left', 'right'], strips: ['cross', 'cross'] },
+  ]) assert.equal(ok(p, answer), false);
 });
 
 test('stack rack: centred drops pass, a box hanging past its support fails', () => {
@@ -139,15 +208,6 @@ test('unpark bike: always solvable; a move into another bike fails', () => {
     const me = data.bikes.find((b) => b.mine)!;
     assert.equal(ok(p, { moves: Array.from({ length: data.w }, () => ({ id: me.id, d: 1 })) }), false);
   }
-});
-
-test('find ticket: dig out everything above it, then take the ticket', () => {
-  const { data, p } = open('find_ticket');
-  const at = data.items.findIndex((i) => i.kind === 've-xe');
-  const above = data.items.slice(0, at).map((i) => i.id);
-  assert.equal(ok(p, { removed: above, ticket: data.items[at].id }), true);
-  assert.equal(ok(p, { removed: above.slice(1), ticket: data.items[at].id }), false);
-  assert.equal(ok(p, { removed: above, ticket: above[0] }), false);
 });
 
 test('dodge potholes: changing lane before each hazard passes, staying put fails when one is in the middle lane', () => {

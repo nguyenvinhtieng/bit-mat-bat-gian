@@ -6,8 +6,8 @@ export type InputMsg = { seq: number; dx: number; dy: number }[];
 export type ClientMessages = {
   input: InputMsg;
   ready: { ready: boolean };
-  /** tasksPerPlayer: prep stations dealt to each player; timeMin: countdown length in minutes */
-  configure: { tasksPerPlayer?: number; timeMin?: number };
+  /** tasksPerPlayer: prep stations dealt to each player; timeMin: countdown length in minutes; cops: undercover count */
+  configure: { tasksPerPlayer?: number; timeMin?: number; cops?: number };
   start: Record<string, never>;
   'task:open': { taskId: TaskId };
   'task:submit': { taskId: TaskId; answer: unknown };
@@ -80,26 +80,33 @@ export type LotBike = { id: string; x: number; y: number; len: number; dir: 'h' 
 export type Pothole = { at: number; lane: number; kind: string };
 
 export type TaskData =
+  /** Match all four coloured terminals. Answer: { connections: { from: string, to: string }[] } */
+  | { taskId: 'connect_wires'; prompt: string; left: string[]; right: string[] }
   /** drag each takeaway item into the cooler: drinks in cup holders, soup at the bottom. Answer: Record<itemId, slotId> */
   | { taskId: 'pack_cooler'; prompt: string; bill: string[]; items: CoolerItem[]; slots: { id: string; kind: 'cup' | 'bottom' | 'shelf' }[] }
-  /** swipe each street seller away, then pay the stall owner. Answer: { swiped: sellerId[] (in order), paid: true } */
-  | { taskId: 'dodge_sellers'; prompt: string; sellers: Seller[]; owner: { name: string; line: string; debt: number } }
+  /** Release each peg in order, then plug in. Answer: { released: string[], plugged: true } */
+  | { taskId: 'untangle_charger'; prompt: string; pegs: (Pt & { id: string })[]; phone: Pt }
+  /** Pull the door up; at each jam free its rusty bolt (oil can or `turnDeg` of twisting), the door slides down when let go.
+   *  Answer: { cleared: number[], lift: 1, freed: ('oil' | degrees)[] } */
+  | { taskId: 'stuck_shutter'; prompt: string; jams: number[]; bolts: Pt[]; turnDeg: number }
+  /** Tune both aerial arms and hold the picture steady. Answer: { angles: [number, number], heldMs: number } */
+  | { taskId: 'tune_antenna'; prompt: string; target: [number, number]; tolerance: number; holdMs: number }
+  /** Rotate four pipe corners and open the valve. Answer: { rotations: number[], opened: true } */
+  | { taskId: 'water_pipes'; prompt: string; rotations: number[]; solution: number[] }
   /** hold to pour condensed milk into its band, then coffee into its band (0..1 of the glass). Answer: { milk, coffee } */
   | { taskId: 'brew_coffee'; prompt: string; milk: [number, number]; coffee: [number, number]; rate: number }
   /** drag the phone around the stall until the signal is full, hold it there. Answer: { x, y } (0..1) */
   | { taskId: 'wifi_hunt'; prompt: string; networks: string[]; spot: Pt; radius: number }
-  /** swipe the pump up/down, stop with the needle in the green. Answer: { strokes } */
-  | { taskId: 'pump_tyre'; prompt: string; perStroke: number; green: [number, number]; max: number }
+  /** hold to pump (`rate` psi/s) while heat builds; release to cool; stop with the needle in the green. Answer: { psi, heldMs } */
+  | { taskId: 'pump_tyre'; prompt: string; green: [number, number]; max: number; rate: number; heatRate: number; coolRate: number }
   /** slide the tube through the basin, tap each bubbling section to patch it. Answer: { patched: section[] } */
   | { taskId: 'patch_tube'; prompt: string; sections: number; leaks: number[] }
   /** drag round the box along the dotted line, `laps` times. Answer: { laps } */
-  | { taskId: 'tape_box'; prompt: string; laps: number }
+  | { taskId: 'tape_box'; prompt: string; strips: number }
   /** a box swings over the rack, tap to drop; keep the stack standing. Answer: { offsets: number[] } (px from the box below, per box) */
   | { taskId: 'stack_rack'; prompt: string; boxes: RackBox[]; base: number; swing: number }
   /** slide bikes along their axis to free yours (Rush Hour). Answer: { moves: { id, d }[] } (d = ±1 cell) */
   | { taskId: 'unpark_bike'; prompt: string; w: number; h: number; bikes: LotBike[] }
-  /** drag junk out of the pocket (top first) until the parking ticket shows, tap it. Answer: { removed: itemId[], ticket } */
-  | { taskId: 'find_ticket'; prompt: string; items: { id: string; kind: string; name: string }[] }
   /** the bike rides on its own; swipe between 3 lanes to dodge. Answer: { moves: { at, lane }[] } (ms since start) */
   | { taskId: 'dodge_potholes'; prompt: string; lanes: number; duration: number; obstacles: Pothole[] }
   /** final step, package in hand: hold the bell, snap the delivery photo, slide "Delivered". Answer: { rang, photo, slid } */

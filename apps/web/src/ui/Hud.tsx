@@ -1,4 +1,6 @@
 import { ActionArt } from './ActionArt';
+import { Sprite } from './Cinematic';
+import { colorIndex } from './Zola';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { sfx } from './minigames/common/kit';
 import { AREA_RECTS, GAME, LAYOUT_H, LAYOUT_W, TILE, type AreaId, type TaskId } from '@hidden-truth/shared';
@@ -103,7 +105,7 @@ function useClock() {
   const total = room.nightMin * 60_000;
   const elapsed = Math.min(total, Math.max(0, (room.nightPausedAt || now + offset) - room.nightStartAt));
   const left = Math.ceil((total - elapsed) / 1000);
-  return { left, last: left <= 60, urgent: left <= 30 && !room.nightPausedAt, paused: !!room.nightPausedAt };
+  return { left, urgent: left <= 30 && !room.nightPausedAt, paused: !!room.nightPausedAt };
 }
 
 type Prep = { pct: number; progress: number; target: number; open: boolean };
@@ -135,10 +137,16 @@ function NightClock({ night, prep }: { night: NonNullable<ReturnType<typeof useC
 /** Top-right corner (desktop and touch): one pill with time left and preparation progress. */
 function NightBar(prep: Prep) {
   const night = useClock();
+  const urgentLeft = night?.urgent ? night.left : null;
+  // Final 30s: one soft tick per second (tick/tock alternate, quicker double-beep in the last 10s).
+  useEffect(() => {
+    if (urgentLeft != null && urgentLeft > 0) sfx.countdown(urgentLeft);
+  }, [urgentLeft]);
   if (!night) return null;
   return (
-    <div className={`night-wrap ${night.last ? 'last' : ''} ${night.urgent ? 'urgent' : ''} ${night.paused ? 'paused' : ''}`}>
-      <NightClock night={night} prep={prep} />
+    <div className={`night-wrap ${night.urgent ? 'urgent' : ''} ${night.paused ? 'paused' : ''}`}>
+      {/* keyed by the second while urgent so the ping-pong pulse replays every tick */}
+      <NightClock key={night.urgent ? night.left : 'calm'} night={night} prep={prep} />
     </div>
   );
 }
@@ -211,26 +219,43 @@ export function InspectPanel() {
   const sessionId = useStore((s) => s.sessionId);
   const set = useStore((s) => s.set);
   const t = useT();
+  const en = useLang((s) => s.lang) === 'en';
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  useEffect(() => {
+    setSelectedId(null);
+    setPending(false);
+  }, [open, result, room?.phase]);
+  useEffect(() => {
+    if (!pending) return;
+    const timer = setTimeout(() => setPending(false), 6000);
+    return () => clearTimeout(timer);
+  }, [pending]);
+  useEscape(() => set({ inspectOpen: false }), open);
+
   // inspection is an explore-phase action: never over the meeting
   if (!open || !room || room.phase !== 'explore') return null;
   const close = () => set({ inspectOpen: false });
   const pickable = room.players.filter((p) => p.alive && p.id !== sessionId);
+  const selected = pickable.find((p) => p.id === selectedId);
   const done = result?.entries.filter((e) => e.status === 'done') ?? [];
   const title = result ? t('inspectOf') : t('inspect');
   return (
     <div className="modal-backdrop" onClick={close}>
-      <div className="modal inspect-panel" onClick={(e) => e.stopPropagation()}>
+      <div className="modal inspect-panel" role="dialog" aria-modal="true" aria-labelledby="inspect-heading" aria-busy={pending} onClick={(e) => e.stopPropagation()}>
         <header className="inspect-head">
-          <span className="inspect-icon" aria-hidden>🔍</span>
+          {result ? (
+            <div className="inspect-result-art" aria-hidden="true"><Sprite color={colorIndex(result.color)} dir="right" scale={0.9} /></div>
+          ) : <span className="inspect-icon" aria-hidden>🔍</span>}
           <div className="inspect-title">
             <small>{title}</small>
             {result ? (
-              <h3>
+              <h3 id="inspect-heading">
                 <i className="dot" style={{ background: colorHex(result.color) }} />
                 {result.target}
               </h3>
             ) : (
-              <h3>{me?.inspectLeft ? t('inspectPick') : t('inspectUsed')}</h3>
+              <h3 id="inspect-heading">{me?.inspectLeft ? t('inspectPick') : t('inspectUsed')}</h3>
             )}
           </div>
           <CloseButton onClick={close} label={t('close')} />
@@ -256,14 +281,30 @@ export function InspectPanel() {
               </ol>
             )
           ) : me?.inspectLeft ? (
-            <div className="inspect-pick">
-              {pickable.map((p) => (
-                <button key={p.id} className="inspect-pick-btn" style={{ '--pc': colorHex(p.color) } as CSSProperties} onClick={() => send('skill:inspect', { target: p.id })}>
-                  <i className="inspect-avatar">{p.name.slice(0, 1).toUpperCase()}</i>
-                  <span>{p.name}</span>
-                </button>
-              ))}
-            </div>
+            <>
+              <p className="inspect-hint">{en ? 'Recognize their outfit and vehicle, then choose a player.' : 'Nhận diện qua trang phục và xe, rồi chọn người muốn soi.'}</p>
+              <div className="inspect-pick" aria-label={t('inspectPick')}>
+                {pickable.map((p) => (
+                  <button key={p.id} type="button" className={`inspect-pick-btn${selectedId === p.id ? ' selected' : ''}`} aria-pressed={selectedId === p.id} disabled={pending} style={{ '--pc': colorHex(p.color) } as CSSProperties} onClick={() => setSelectedId(p.id)}>
+                    <div className="inspect-player-art" aria-hidden="true">
+                      <Sprite color={colorIndex(p.color)} dir="right" scale={1.35} />
+                      <i className="inspect-choice">{selectedId === p.id ? '✓' : '+'}</i>
+                    </div>
+                    <span className="inspect-player-name"><i className="dot" style={{ background: colorHex(p.color) }} />{p.name}</span>
+                    <small>{selectedId === p.id ? (en ? 'Selected' : 'Đã chọn') : (en ? 'Choose player' : 'Chọn người này')}</small>
+                  </button>
+                ))}
+              </div>
+              {pickable.length === 0 && <p className="inspect-empty">{en ? 'No players available to inspect.' : 'Chưa có người chơi để soi.'}</p>}
+              <div className="inspect-confirm">
+                <p aria-live="polite">{selected ? (en ? `Inspect ${selected.name}?` : `Soi lịch sử của ${selected.name}?`) : (en ? 'Choose a player above' : 'Chọn một người ở phía trên')}<small>{en ? 'Uses your only inspection this match.' : 'Sẽ dùng lượt soi duy nhất trong ván.'}</small></p>
+                <button type="button" className="btn primary" disabled={!selected || pending} onClick={() => {
+                  if (!selected || pending) return;
+                  setPending(true);
+                  send('skill:inspect', { target: selected.id });
+                }}>{pending ? (en ? 'Inspecting…' : 'Đang soi…') : (en ? 'Inspect' : 'Soi lịch sử')}</button>
+              </div>
+            </>
           ) : null}
           {(result || me?.inspectLeft) && <p className="inspect-note">ⓘ {t('inspectNote')}</p>}
         </div>
@@ -367,20 +408,7 @@ export function Hud() {
               <strong>{r.handoff ? (en ? `Pick up the order and deliver to ${skin.areas[r.st.area].nameEn}` : `Nhặt đơn hàng và giao tới ${skin.areas[r.st.area].name}`) : (en ? r.st.titleEn : r.st.title)}</strong>
               <small className="task-where">{en ? skin.areas[r.st.area].nameEn : skin.areas[r.st.area].name}</small>
               {r.handoff && !r.done && <small className="dispatch-hint">{en ? 'At the drop-off, enter the receiving code to finish.' : 'Tới điểm hẹn, nhập mã nhận để hoàn tất.'}</small>}
-              {(r.done || r.locked || here) && <small className="dispatch-state">{r.done ? (en ? 'Completed' : 'Hoàn tất') : r.locked ? (en ? 'Locked · finish preparation' : 'Đang khóa · hoàn tất chuẩn bị') : (en ? 'You are here' : 'Bạn đang ở đây')}</small>}
-              {!r.handoff && !r.done && (
-                <button
-                  type="button"
-                  className="dispatch-map-hint"
-                  onClick={() => {
-                    setTasksOpen(false);
-                    setMapOpen(true);
-                  }}
-                >
-                  {en ? 'Open map for directions' : 'Xem bản đồ để tìm đường'}
-                  {!touch && <span aria-hidden> · M</span>}
-                </button>
-              )}
+              {(r.done || r.locked) && <small className="dispatch-state">{r.done ? (en ? 'Completed' : 'Hoàn tất') : (en ? 'Locked · finish preparation' : 'Đang khóa · hoàn tất chuẩn bị')}</small>}
             </span>
           </li>
         );

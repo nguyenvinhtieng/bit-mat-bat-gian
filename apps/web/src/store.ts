@@ -49,6 +49,8 @@ export type RoomView = {
   tasksPerPlayer: number;
   /** countdown length (min) */
   nightMin: number;
+  /** undercover cops per game (host setting) */
+  cops: number;
   crewAlive: number;
   killersAlive: number;
   players: PlayerView[];

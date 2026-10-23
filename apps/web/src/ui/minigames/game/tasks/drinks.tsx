@@ -1,5 +1,5 @@
 /** Quán Nước: iced milk coffee (hold to pour) · leech the Wi-Fi (drag the phone around). */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MgShell, sfx, useShake, type Tone } from '../../common/kit';
 import { useT } from '../art';
 import { rel, taskArt, useFrame, useOnce, type P } from './shared';
@@ -21,7 +21,7 @@ export function BrewCoffee({ task, submit }: P<'brew_coffee'>) {
     doShake();
     setPouring(false);
     setLevel(phase === 'milk' ? 0 : milk);
-    setHint([t('Lố vạch rồi! Rót lại bước này — gần vạch hãy rót từng chút.', 'Over the line! Retry this step — pour in small bursts near the mark.'), 'bad']);
+    setHint([t('Lố vạch! Thử lại nhé.', 'Too much! Try again.'), 'bad']);
   };
   useFrame(pouring && !sent, (dt) => {
     // Ease the stream near the mark so touch and keyboard releases get the same reaction window.
@@ -33,14 +33,14 @@ export function BrewCoffee({ task, submit }: P<'brew_coffee'>) {
   const stop = () => {
     if (!pouring) return;
     setPouring(false);
-    if (level < band[0]) return setHint([t('Chưa tới vạch, giữ rót thêm.', 'Not at the line yet, keep pouring.'), 'info']);
+    if (level < band[0]) return setHint([t('Rót thêm chút nữa.', 'Pour a little more.'), 'bad']);
     sfx.ok();
     if (phase === 'milk') {
       setMilk(level);
       setPhase('coffee');
-      setHint([t('Sữa vừa đủ. Giờ tới cà phê phin!', 'Milk’s right. Now the drip coffee!'), 'ok']);
+      setHint([t('Tiếp theo: cà phê.', 'Next: coffee.'), 'ok']);
     } else {
-      setHint([t('Khuấy khuấy… chuẩn vị quán cóc!', 'Stir stir… just like the street stall!'), 'ok']);
+      setHint([t('Chuẩn vị!', 'Perfect!'), 'ok']);
       send({ milk, coffee: level });
     }
   };
@@ -48,7 +48,7 @@ export function BrewCoffee({ task, submit }: P<'brew_coffee'>) {
   const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
 
   return (
-    <MgShell taskId={task.taskId} status={phase === 'milk' ? t('Sữa', 'Milk') : t('Cà phê', 'Coffee')} hint={hint[0] || t('Giữ nút hoặc phím Space để rót. Thả trong vùng vạch — gần vạch dòng rót sẽ chậm lại.', 'Hold the button or Space to pour. Release inside the marked band — the stream slows near the target.')} tone={hint[1]}>
+    <MgShell bare taskId={task.taskId} status={phase === 'milk' ? t('Sữa', 'Milk') : t('Cà phê', 'Coffee')} hint={hint[0]} tone={hint[1]}>
       <div className="ck-coffee">
         <div className={`ck-glass ${shake}`} role="meter"
           aria-label={phase === 'milk' ? t('Mức sữa', 'Milk level') : t('Mức cà phê', 'Coffee level')}
@@ -60,10 +60,6 @@ export function BrewCoffee({ task, submit }: P<'brew_coffee'>) {
           {pouring && <div className={`ck-stream ${phase}`} />}
         </div>
         <img className="ck-pourer" src={taskArt(task.taskId, phase === 'milk' ? 'milk' : 'phin')} alt="" draggable={false} />
-      </div>
-      <div className="ck-coffee-readout">
-        <b>{phase === 'milk' ? t('01 · SỮA ĐẶC', '01 · CONDENSED MILK') : t('02 · CÀ PHÊ PHIN', '02 · DRIP COFFEE')}</b>
-        <span>{Math.round(level * 100)}% / {t('vạch', 'target')} {Math.round(band[0] * 100)}–{Math.round(band[1] * 100)}%</span>
       </div>
       <button
         className={`ck-hold ${pouring ? 'on' : ''}`}
@@ -92,8 +88,10 @@ export function WifiHunt({ task, submit }: P<'wifi_hunt'>) {
   const [held, setHeld] = useState(0);
   const dragging = useRef(false);
   const anchor = useRef(pos);
-  const previousDistance = useRef<number | null>(null);
-  const [warmer, setWarmer] = useState<boolean | null>(null);
+  const roomBounds = useRef<DOMRect | null>(null);
+  const pending = useRef<{ x: number; y: number } | null>(null);
+  const frame = useRef(0);
+  useEffect(() => () => cancelAnimationFrame(frame.current), []);
   const [trail, setTrail] = useState<{ x: number; y: number }[]>([]);
   const dist = Math.hypot(pos.x - task.spot.x, pos.y - task.spot.y);
   const bars = dist <= task.radius ? 4 : Math.max(0, 3 - Math.floor((dist - task.radius) / 0.12));
@@ -108,10 +106,6 @@ export function WifiHunt({ task, submit }: P<'wifi_hunt'>) {
   const locate = (next: { x: number; y: number }) => {
     if (sent) return;
     const distance = Math.hypot(next.x - task.spot.x, next.y - task.spot.y);
-    if (previousDistance.current !== null && Math.abs(distance - previousDistance.current) > 0.008) {
-      setWarmer(distance < previousDistance.current);
-      previousDistance.current = distance;
-    } else if (previousDistance.current === null) previousDistance.current = distance;
     setPos(next);
     // Ignore tiny finger jitter; deliberate movement restarts the connection hold.
     if (distance > task.radius) setHeld(0);
@@ -123,14 +117,24 @@ export function WifiHunt({ task, submit }: P<'wifi_hunt'>) {
   };
   const move = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragging.current || sent) return;
-    locate(rel(e, e.currentTarget));
+    const room = roomBounds.current ?? e.currentTarget.getBoundingClientRect();
+    pending.current = {
+      x: Math.max(0, Math.min(1, (e.clientX - room.left) / room.width)),
+      y: Math.max(0, Math.min(1, (e.clientY - room.top - (e.pointerType === 'touch' ? 76 : 0)) / room.height)),
+    };
+    if (!frame.current) frame.current = requestAnimationFrame(() => {
+      frame.current = 0;
+      if (pending.current) locate(pending.current);
+      pending.current = null;
+    });
   };
 
   return (
     <MgShell
+      bare="head"
       taskId={task.taskId}
-      status={sent ? t('Đã kết nối', 'Connected') : `${bars}/4 ▂▄▆█`.slice(0, 4 + bars)}
-      hint={full ? t(`Full vạch! Giữ yên… kết nối “${task.networks[0]}”`, `Full bars! Hold still… joining “${task.networks[0]}”`) : warmer === true ? t('Sóng mạnh hơn! Tiếp tục theo hướng này.', 'Signal is improving! Keep moving this way.') : warmer === false ? t('Sóng yếu đi. Thử đổi hướng.', 'Signal is weaker. Try another direction.') : t('Kéo điện thoại hoặc dùng phím mũi tên. Tìm đủ 4 vạch rồi giữ yên.', 'Drag the phone or use arrow keys. Find all 4 bars and hold still.')}
+      status={<span className="ck-bars" aria-label={`${bars}/4`}>{[1, 2, 3, 4].map((b) => <i key={b} className={b <= bars ? 'on' : ''} style={{ height: 4 + b * 4 }} />)}</span>}
+      hint={t('Di chuyển điện thoại tìm nơi có sóng tốt nhất', 'Move the phone to find the strongest signal')}
       tone={full ? 'ok' : 'info'}
     >
       <div
@@ -144,29 +148,45 @@ export function WifiHunt({ task, submit }: P<'wifi_hunt'>) {
           e.preventDefault();
           locate({ x: Math.max(0, Math.min(1, pos.x + delta[0])), y: Math.max(0, Math.min(1, pos.y + delta[1])) });
         }}
-        onPointerDown={(e) => ((dragging.current = true), e.currentTarget.setPointerCapture(e.pointerId), move(e))}
+        onPointerDown={(e) => {
+          if (sent || (e.pointerType === 'mouse' && e.button !== 0)) return;
+          roomBounds.current = e.currentTarget.getBoundingClientRect();
+          dragging.current = true;
+          e.currentTarget.setPointerCapture(e.pointerId);
+          move(e);
+        }}
         onPointerMove={move}
-        onPointerUp={() => (dragging.current = false)}
-        onPointerCancel={() => (dragging.current = false)}
+        onPointerUp={() => {
+          dragging.current = false;
+          cancelAnimationFrame(frame.current);
+          frame.current = 0;
+          if (pending.current) locate(pending.current);
+          pending.current = null;
+        }}
+        onPointerCancel={() => {
+          dragging.current = false;
+          cancelAnimationFrame(frame.current);
+          frame.current = 0;
+          pending.current = null;
+        }}
       >
+        <div className="ck-scene-caption"><small>{t('Di chuyển điện thoại đến nơi có sóng Wi-Fi mạnh nhất', 'Move the phone to where the Wi-Fi is strongest')}</small></div>
         {trail.map((point, index) => <span key={index} aria-hidden="true" style={{ position: 'absolute', left: `${point.x * 100}%`, top: `${point.y * 100}%`, width: 7, height: 7, borderRadius: '50%', background: '#fff3d2', opacity: .15 + index / 24, pointerEvents: 'none' }} />)}
-        <div className="ck-scene-caption"><span>{t('DÒ SÓNG WI-FI', 'WI-FI SCANNER')}</span><small>{task.networks[0]}</small></div>
-        <div className={`ck-phone ${full ? 'full' : ''}`} style={{ left: `${pos.x * 100}%`, top: `${pos.y * 100}%` }}>
+        <div className={`ck-phone ${full ? 'full' : ''}`} style={{ left: `clamp(36px, ${pos.x * 100}%, calc(100% - 36px))`, top: `clamp(56px, ${pos.y * 100}%, calc(100% - 60px))` }}>
           <span className="ck-phone-shadow" />
           <div className="ck-phone-device">
             <div className="ck-phone-screen">
               <span className="ck-phone-time">16:20</span>
-              <span className="ck-wifi-symbol" aria-hidden="true">◔</span>
+              <svg className="ck-wifi-symbol" viewBox="0 0 32 24" aria-hidden="true"><g fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path className={bars >= 4 ? '' : 'off'} d="M3 7Q16 -3 29 7" /><path className={bars >= 3 ? '' : 'off'} d="M8 12Q16 5 24 12" /><path className={bars >= 2 ? '' : 'off'} d="M12 17Q16 13 20 17" /></g><circle className={bars >= 1 ? '' : 'off'} cx="16" cy="21" r="2" fill="currentColor" /></svg>
               <span className="ck-bars">{[1, 2, 3, 4].map((b) => <i key={b} className={b <= bars ? 'on' : ''} style={{ height: 4 + b * 4 }} />)}</span>
               <span className="ck-phone-label">{sent ? 'OK!' : `${bars}/4`}</span>
             </div>
           </div>
-          <span className="ck-signal-tag">{sent ? t('Đã kết nối', 'Connected') : full ? `${Math.round(progress * 100)}%` : t('Đang dò…', 'Searching…')}</span>
+          <span className="ck-signal-tag">{sent ? '✓' : full ? `${Math.round(progress * 100)}%` : `${bars}/4`}</span>
           {full && <span className="ck-ring" style={{ ['--p' as string]: progress }} />}
         </div>
       </div>
       <div className="ck-wifi-meter">
-        <span>{full ? t('Đang kết nối', 'Connecting') : t('Giữ yên khi đủ 4 vạch', 'Hold still at 4 bars')}</span>
         <progress aria-label={t('Kết nối Wi-Fi', 'Wi-Fi connection')} max={1} value={full ? progress : 0} />
       </div>
     </MgShell>

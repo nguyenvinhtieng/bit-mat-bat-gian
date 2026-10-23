@@ -34,7 +34,7 @@ export function AssetGate({ children }: { children: ReactNode }) {
     <div className="preloader" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
       <LangSwitch className="home-lang" />
       <div className="preloader-card">
-        <img className="preloader-logo" src="/brand/logo.webp" alt="Công An Chìm — The Hidden Police" width={512} height={512} draggable={false} />
+        <img className="preloader-logo" src="/brand/logo.webp" alt="Cua Xanh — Green Crab" width={512} height={512} draggable={false} />
         <p className="preloader-title">{t('loadingAssets')}</p>
         <div className="preloader-bar">
           <i style={{ width: `${pct}%` }} />

@@ -11,7 +11,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e5b76d; outline-
   background: #071719; padding: 86px 20px 36px; isolation: isolate;
   min-height: 100%; height: 100%; overflow-y: auto;
 }
-.home .home-bg { display: block; inset: 0; background-position: center; filter: saturate(.82); animation: none; }
+.home .home-bg { display: block; inset: -32px; background-position: center; filter: blur(10px) saturate(.7) brightness(.6); animation: none; }
 .home::before { display: block; z-index: 0; background: linear-gradient(90deg, #05141666, #06171922 50%, #05141666), linear-gradient(0deg, #051416bd, transparent 55%, #05141666); }
 .home .home-card {
   display: block; width: min(500px, 94vw); min-height: 0; margin: auto; padding: 30px 32px;
@@ -612,7 +612,57 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e5b76d; outline-
 .action-bar.cluster .round-btn.idle :is(img, .action-art),
 .action-bar.cluster .round-btn:disabled :is(img, .action-art) { filter: saturate(.4) brightness(.72); }
 .action-bar.cluster .round-btn.ready:hover { filter: brightness(1.18); }
-.action-bar.cluster .round-btn:active:not(:disabled) { filter: brightness(.85); }
+/* Where the round disc actually sits inside each actions-chibi.webp cell (it is not centred), so glow and ring hug the art. */
+.action-bar.cluster .round-btn { --disc-t: 3%; --disc-r: 3%; --disc-b: 3%; --disc-l: 3%; }
+.action-bar.cluster .round-btn.task { --disc-t: 5.7%; --disc-r: 2.1%; --disc-b: 3.1%; --disc-l: 5.2%; }
+.action-bar.cluster .round-btn.kill { --disc-t: 5.7%; --disc-r: 3.1%; --disc-b: 3.1%; --disc-l: 3.1%; }
+.action-bar.cluster .round-btn.package { --disc-t: 5.7%; --disc-r: 5.7%; --disc-b: 3.1%; --disc-l: 1.6%; }
+.action-bar.cluster .round-btn.report { --disc-t: 2%; --disc-r: 2%; --disc-b: 2%; --disc-l: 2%; }
+/* Ready: the button bounces, a warm glowing disc swells behind it and a ring pops outward. */
+.action-bar.cluster .round-btn:is(.task, .report, .kill, .bell, .package).ready:not(:disabled) {
+  isolation: isolate; animation: actionReadyBounce 1.6s cubic-bezier(.34, 1.56, .64, 1) infinite;
+}
+.action-bar.cluster .round-btn:is(.task, .report, .kill, .bell, .package).ready:not(:disabled)::before {
+  content: ''; position: absolute; z-index: -1; border-radius: 50%;
+  inset: calc(var(--disc-t) - 6%) calc(var(--disc-r) - 6%) calc(var(--disc-b) - 6%) calc(var(--disc-l) - 6%);
+  background: radial-gradient(circle closest-side, #fff3c8 0%, #ffcf5c 55%, #ff9f2e 82%, #ff9f2e00 100%);
+  box-shadow: 0 0 18px 4px #ffb84288;
+  pointer-events: none;
+  animation: actionReadyGlow 1.6s cubic-bezier(.34, 1.56, .64, 1) infinite;
+}
+.action-bar.cluster .round-btn:is(.task, .report, .kill, .bell, .package).ready:not(:disabled)::after {
+  content: ''; position: absolute; z-index: -1; border-radius: 50%;
+  inset: var(--disc-t) var(--disc-r) var(--disc-b) var(--disc-l);
+  border: 3px solid #ffe08a;
+  background: radial-gradient(circle, #ffd56a00 55%, #ffd56a55 100%);
+  pointer-events: none;
+  animation: actionReadyPop 1.6s ease-out infinite;
+}
+@keyframes actionReadyBounce {
+  0%, 100% { scale: 1; }
+  12% { scale: 1.1; }
+  24% { scale: .96; }
+  34% { scale: 1.03; }
+  44% { scale: 1; }
+}
+@keyframes actionReadyGlow {
+  0%, 100% { transform: scale(.9); opacity: .55; }
+  14% { transform: scale(1.12); opacity: 1; }
+  30% { transform: scale(1); opacity: .85; }
+  60% { transform: scale(.94); opacity: .65; }
+}
+@keyframes actionReadyPop {
+  0%, 8% { transform: scale(.95); opacity: 0; }
+  14% { transform: scale(1.02); opacity: 1; }
+  55% { transform: scale(1.45); opacity: 0; border-width: 1px; }
+  100% { transform: scale(1.45); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .action-bar.cluster .round-btn:is(.task, .report, .kill, .bell, .package).ready:not(:disabled),
+  .action-bar.cluster .round-btn:is(.task, .report, .kill, .bell, .package).ready:not(:disabled)::before { animation: none; }
+  .action-bar.cluster .round-btn:is(.task, .report, .kill, .bell, .package).ready:not(:disabled)::after { display: none; }
+}
+.action-bar.cluster .round-btn:active:not(:disabled) { filter: brightness(.85); animation: none; scale: .92; transition: filter .15s, scale .08s; }
 .action-bar.cluster .round-btn:focus-visible { outline: 3px solid #fff0c5; outline-offset: 3px; }
 @media (pointer: coarse) { .action-bar.cluster .round-btn kbd { display: none; } }
 @media (max-width: 600px), (max-height: 560px) {

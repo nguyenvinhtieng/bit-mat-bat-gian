@@ -1,19 +1,16 @@
-/** Bãi Giữ Xe: get the bike out (slide puzzle) · find the parking ticket (dig through the pocket). */
+/** Bãi Giữ Xe: get the bike out (slide puzzle). */
 import { useRef, useState } from 'react';
 import type { LotBike } from '@hidden-truth/shared';
-import { MgShell, sfx, useShake, type Tone } from '../../common/kit';
+import { MgShell, sfx, type Tone } from '../../common/kit';
 import { useT } from '../art';
 import { taskArt, useOnce, type P } from './shared';
 
 // ================================================================== Rút xe ra khỏi bãi
-const CELL = 72;
-
 export function UnparkBike({ task, submit }: P<'unpark_bike'>) {
   const t = useT();
   const [sent, send] = useOnce(submit);
   const [bikes, setBikes] = useState<LotBike[]>(task.bikes);
   const [selected, setSelected] = useState(task.bikes.find((b) => b.mine)?.id ?? task.bikes[0].id);
-  const [history, setHistory] = useState<LotBike[][]>([]);
   const [moves, setMoves] = useState<{ id: string; d: number }[]>([]);
   const [hint, setHint] = useState<[string, Tone]>(['', 'info']);
   const drag = useRef<{ id: string; p0: number; steps: number } | null>(null);
@@ -36,12 +33,10 @@ export function UnparkBike({ task, submit }: P<'unpark_bike'>) {
     const next = step(bikes, id, direction);
     if (!next) {
       sfx.bad();
-      setHint([t('Bị chắn rồi. Dời xe bên cạnh trước nhé.', 'Blocked. Move the neighbouring bike first.'), 'bad']);
       return false;
     }
     sfx.scrape();
     const ms = [...moves, { id, d: direction }];
-    setHistory((h) => [...h, bikes]);
     setBikes(next);
     setMoves(ms);
     setHint(['', 'info']);
@@ -64,11 +59,10 @@ export function UnparkBike({ task, submit }: P<'unpark_bike'>) {
     const direction = Math.sign(want - d.steps);
     if (moveBike(d.id, direction)) d.steps += direction;
   };
-  const selectedBike = bikes.find((b) => b.id === selected)!;
 
   return (
-    <MgShell taskId={task.taskId} status={`${moves.length} ${t('lần đẩy', 'pushes')}`} hint={hint[0] || t('Xe xanh là xe của bạn. Cổng ra ở bên phải.', 'The green bike is yours. The gate is on the right.')} tone={hint[1]}>
-      <div className="ck-lot" style={{ width: `min(${task.w * CELL}px, 100%)`, height: 'auto', aspectRatio: `${task.w} / ${task.h}`, backgroundSize: `${100 / task.w}% ${100 / task.h}%` }} onPointerMove={onMove} onPointerUp={() => (drag.current = null)} onPointerCancel={() => (drag.current = null)}>
+    <MgShell bare taskId={task.taskId} status={`${moves.length} ${t('lần đẩy', 'pushes')}`} hint={hint[0]} tone={hint[1]}>
+      <div className="ck-lot" style={{ '--cols': task.w, '--rows': task.h, height: 'auto', aspectRatio: `${task.w} / ${task.h}`, backgroundSize: `${100 / task.w}% ${100 / task.h}%` } as React.CSSProperties} onPointerMove={onMove} onPointerUp={() => (drag.current = null)} onPointerCancel={() => (drag.current = null)}>
         <div className="ck-gate" style={{ top: `${((bikes.find((b) => b.mine)?.y ?? 0) / task.h) * 100}%`, height: `${100 / task.h}%` }} />
         {bikes.map((b) => (
           <button
@@ -96,105 +90,6 @@ export function UnparkBike({ task, submit }: P<'unpark_bike'>) {
           </button>
         ))}
       </div>
-      <div className="ck-swipe-row">
-        <button disabled={sent} onClick={() => moveBike(selected, -1)} aria-label={t('Đẩy xe đã chọn lùi', 'Move selected bike back')}>{selectedBike.dir === 'h' ? '←' : '↑'}</button>
-        <button disabled={sent} onClick={() => moveBike(selected, 1)} aria-label={t('Đẩy xe đã chọn tới', 'Move selected bike forward')}>{selectedBike.dir === 'h' ? '→' : '↓'}</button>
-        <button disabled={sent || !history.length} onClick={() => {
-          drag.current = null;
-          setBikes(history[history.length - 1]);
-          setHistory((h) => h.slice(0, -1));
-          setMoves((m) => m.slice(0, -1));
-          setHint(['', 'info']);
-        }}>{t('Hoàn tác', 'Undo')}</button>
-        <button disabled={sent || !moves.length} onClick={() => {
-          drag.current = null;
-          setBikes(task.bikes); setMoves([]); setHistory([]); setHint(['', 'info']);
-        }}>{t('Xếp lại', 'Reset')}</button>
-      </div>
-    </MgShell>
-  );
-}
-
-// ================================================================== Lục túi tìm vé xe
-const JOKES: Record<string, [string, string]> = {
-  'vo-keo': ['Vỏ kẹo… kẹo ăn hồi nào không nhớ.', 'A candy wrapper… don’t remember eating it.'],
-  'tien-le': ['2 nghìn! Để dành mua trà đá.', '2k dong! Saving it for iced tea.'],
-  've-so': ['Vé số trật. Như mọi tuần.', 'A losing lottery ticket. As usual.'],
-  'khau-trang': ['Khẩu trang từ năm ngoái…', 'A mask from last year…'],
-  'hoa-don': ['Hóa đơn tiền điện. Thôi đừng nhìn.', 'The power bill. Don’t look.'],
-  'chia-khoa': ['Chìa khóa nhà ai đây trời?', 'Whose house key is this?'],
-  'bat-lua': ['Bật lửa hết gas.', 'An empty lighter.'],
-  'day-thun': ['Dây thun. Giữ lại, lỡ cần.', 'A rubber band. Keep it, just in case.'],
-};
-
-export function FindTicket({ task, submit }: P<'find_ticket'>) {
-  const t = useT();
-  const [sent, send] = useOnce(submit);
-  const [removed, setRemoved] = useState<string[]>([]);
-  const [fly, setFly] = useState<{ id: string; dx: number; dy: number } | null>(null);
-  const [hint, setHint] = useState<[string, Tone]>(['', 'info']);
-  const [shake, doShake] = useShake();
-  const drag = useRef<{ x0: number; y0: number } | null>(null);
-  const pile = task.items.filter((i) => !removed.includes(i.id));
-  const top = pile[0];
-
-  const takeOut = () => {
-    if (!top || sent) return;
-    if (top.kind === 've-xe') {
-      setHint([t('Thấy vé rồi! Nằm dưới đáy, như mọi lần.', 'Found it! At the bottom, as always.'), 'ok']);
-      return send({ removed, ticket: top.id });
-    }
-    drag.current = null;
-    sfx.scrape();
-    const j = JOKES[top.kind];
-    setHint([j ? t(j[0], j[1]) : top.name, 'info']);
-    setRemoved((r) => [...r, top.id]);
-    setFly(null);
-  };
-
-  return (
-    <MgShell taskId={task.taskId} status={`${removed.length} ${t('món đã lấy ra', 'items out')}`} hint={hint[0]} tone={hint[1]}>
-      <div className={`ck-pocket ${shake}`}>
-        {pile
-          .slice(0, 5)
-          .reverse()
-          .map((it, i, arr) => {
-            const isTop = it === top;
-            const k = arr.length - 1 - i;
-            return (
-              <div
-                key={it.id}
-                className={`ck-junk ${isTop ? 'top' : ''}`}
-                style={{
-                  transform: isTop && fly ? `translate(${fly.dx}px, ${fly.dy}px) rotate(${fly.dx / 8}deg)` : `translate(${(k % 2 ? 1 : -1) * k * 6}px, ${k * 10}px) rotate(${(k % 3) * 5 - 5}deg)`,
-                  zIndex: 10 - k,
-                }}
-                onPointerDown={(e) => {
-                  if (sent) return;
-                  if (!isTop) return (sfx.bad(), doShake(), setHint([t('Lấy món trên cùng ra trước đã.', 'Take the top one out first.'), 'bad']));
-                  drag.current = { x0: e.clientX, y0: e.clientY };
-                  e.currentTarget.setPointerCapture(e.pointerId);
-                }}
-                onPointerCancel={() => { drag.current = null; setFly(null); }}
-                onPointerMove={(e) => isTop && drag.current && setFly({ id: it.id, dx: e.clientX - drag.current.x0, dy: e.clientY - drag.current.y0 })}
-                onPointerUp={() => {
-                  if (!isTop || !drag.current) return;
-                  drag.current = null;
-                  // a real pull out of the pocket, or a tap on the ticket once it shows
-                  if ((fly && Math.hypot(fly.dx, fly.dy) > 60) || it.kind === 've-xe') takeOut();
-                  else setFly(null);
-                }}
-              >
-                <img src={taskArt(task.taskId, it.kind)} alt="" draggable={false} />
-                <span>{it.name}</span>
-              </div>
-            );
-          })}
-        <div className="ck-pocket-lip" />
-      </div>
-      <button className="ck-hold" disabled={sent || !top} onClick={takeOut}>
-        {top?.kind === 've-xe' ? t('Lấy vé xe', 'Take ticket') : t('Lấy món trên cùng ra', 'Remove top item')}
-      </button>
     </MgShell>
   );
 }

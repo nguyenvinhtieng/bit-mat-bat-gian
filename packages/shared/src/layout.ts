@@ -156,6 +156,12 @@ export function isSolidTile(g: LayoutGrid, tx: number, ty: number): boolean {
   return g.solid[ty * g.w + tx] === 1;
 }
 
+/** Does this tile block sight? Walls only: props/furniture can be seen past. Out of bounds counts as wall. */
+export function isSightBlocked(g: LayoutGrid, tx: number, ty: number): boolean {
+  if (tx < 0 || ty < 0 || tx >= g.w || ty >= g.h) return true;
+  return (g.walls ?? g.solid)[ty * g.w + tx] === 1;
+}
+
 export function areaAt(g: LayoutGrid, x: number, y: number): AreaId | null {
   const tx = Math.floor(x / TILE);
   const ty = Math.floor(y / TILE);
@@ -164,13 +170,13 @@ export function areaAt(g: LayoutGrid, x: number, y: number): AreaId | null {
   return i >= 0 ? AREA_ORDER[i] : null;
 }
 
-/** Grid raycast: true when no solid tile lies between two pixel points. */
+/** Grid raycast: true when no wall tile lies between two pixel points (props don't block sight). */
 export function hasLineOfSight(g: LayoutGrid, a: Point, b: Point): boolean {
   const d = Math.hypot(b.x - a.x, b.y - a.y);
   const steps = Math.ceil(d / (TILE / 4));
   for (let i = 1; i < steps; i++) {
     const k = i / steps;
-    if (isSolidTile(g, Math.floor((a.x + (b.x - a.x) * k) / TILE), Math.floor((a.y + (b.y - a.y) * k) / TILE))) return false;
+    if (isSightBlocked(g, Math.floor((a.x + (b.x - a.x) * k) / TILE), Math.floor((a.y + (b.y - a.y) * k) / TILE))) return false;
   }
   return true;
 }

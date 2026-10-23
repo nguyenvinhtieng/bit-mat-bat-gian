@@ -16,6 +16,7 @@ import {
   getGrid,
   getLobbyGrid,
   canSeePoint,
+  isSightBlocked,
   mapSkin,
   playerArt,
   stepMovement,
@@ -53,6 +54,9 @@ const FX = {
 const POSES = { strike: 14, die: 8, guard: 10 } as const;
 type Pose = keyof typeof POSES;
 type FxKey = keyof typeof FX;
+
+/** Wall shadows: how much lamp light a wall takes away from the floor behind it (1 = as dark as the fog). */
+const SHADOW_STRENGTH = 0.85;
 
 /** Hand-held oil lamp (tools/paint/lantern.py): where the hand is per facing, and whether the body hides it. */
 const LAMP_SCALE = 0.38;
@@ -134,6 +138,10 @@ export class GameScene extends Phaser.Scene {
   private lastArea = '';
   private fog?: Phaser.GameObjects.RenderTexture;
   private fogBrush?: Phaser.GameObjects.Image;
+  /** wall shadows: hard black wedges behind every wall inside the light, drawn into the fog each frame */
+  private fogShadow?: Phaser.GameObjects.Graphics;
+  private fogLight?: Phaser.GameObjects.RenderTexture;
+  private fogShadowMask?: Phaser.GameObjects.RenderTexture;
   /** warm wash over my whole sight circle: the room reads as lit by my lamp, not by daylight */
   private myLight?: Phaser.GameObjects.Image;
 
@@ -342,6 +350,12 @@ export class GameScene extends Phaser.Scene {
     ctx.fillRect(0, 0, size, size);
     tex.refresh();
     this.fogBrush = this.make.image({ key: 'fog-brush', add: false }).setOrigin(0.5);
+    // the light mask (brush minus wall shadows) lives in a low-res texture: upscaling it with linear filtering feathers the shadow edges
+    // light mask = lamp brush minus wall shadows, then punched out of the fog in one go
+    const ls = Math.ceil(size * 1.1);
+    this.fogLight = this.make.renderTexture({ width: ls, height: ls }, false).setOrigin(0.5);
+    this.fogShadowMask = this.make.renderTexture({ width: ls, height: ls }, false).setOrigin(0.5).setAlpha(SHADOW_STRENGTH);
+    this.fogShadow = this.make.graphics({}, false);
     this.fog = this.add.renderTexture(0, 0, LAYOUT_W * TILE, LAYOUT_H * TILE).setOrigin(0).setDepth(100000).setVisible(false);
     this.myLight = this.add.image(0, 0, 'lantern-glow').setBlendMode(Phaser.BlendModes.ADD).setDepth(99999).setVisible(false);
   }
@@ -355,10 +369,74 @@ export class GameScene extends Phaser.Scene {
     fog.fill(0x0a0605, 0.94);
     // the lamp flame breathes the edge of the light a little (cosmetic; canSee() uses the steady radius)
     const t = performance.now() / 1000;
-    this.fogBrush!.setScale(this.vis * (1 + Math.sin(t * 11) * 0.012 + Math.sin(t * 4.1) * 0.01));
-    fog.erase(this.fogBrush!, me.x, me.y - 30);
-    const d = GAME.visionRadius * 2 * this.fogBrush!.scaleX;
+    const scale = this.vis * (1 + Math.sin(t * 11) * 0.012 + Math.sin(t * 4.1) * 0.01);
+    const light = this.fogLight!;
+    const c = light.width / 2;
+    light.clear();
+    light.draw(this.fogBrush!.setScale(scale), c, c);
+    this.eraseWallShadows(me, { x: me.x, y: me.y - 30 }, (GAME.visionRadius + 32) * scale);
+    fog.erase(this.fogLight!, me.x, me.y - 30);
+    const d = GAME.visionRadius * 2 * scale;
     this.myLight!.setPosition(me.x, me.y - 30).setDisplaySize(d, d).setAlpha(0.2 + Math.sin(t * 7.3) * 0.015);
+  }
+
+  /**
+   * Among Us-style occlusion: every wall tile near me casts an exact shadow volume (its silhouette from my
+   * eye, extruded away), so straight walls give straight, crisp shadow edges. Only walkable floor is darkened:
+   * wall tiles are cut back out of the shadow so walls always read. Players and props never block sight,
+   * only wall tiles (`isSightBlocked`, same rule as canSeePoint).
+   */
+  private eraseWallShadows(me: { x: number; y: number }, center: { x: number; y: number }, far: number) {
+    const g = this.grid;
+    const gfx = this.fogShadow!;
+    const mask = this.fogShadowMask!;
+    // eye at chest height; if that pokes into the wall above, drop to the feet
+    let ex = me.x, ey = me.y - 18;
+    if (isSightBlocked(g, Math.floor(ex / TILE), Math.floor(ey / TILE))) ey = me.y - 1;
+    if (isSightBlocked(g, Math.floor(ex / TILE), Math.floor(ey / TILE))) return;
+    // world -> mask space
+    const c = mask.width / 2;
+    const px = (x: number) => x - center.x + c, py = (y: number) => y - center.y + c;
+    const reach = far * 3; // extrusion length: well past the mask edge
+    const t0x = Math.max(0, Math.floor((ex - far) / TILE)), t1x = Math.min(g.w - 1, Math.floor((ex + far) / TILE));
+    const t0y = Math.max(0, Math.floor((ey - far) / TILE)), t1y = Math.min(g.h - 1, Math.floor((ey + far) / TILE));
+    const walls: number[] = [];
+    gfx.clear().fillStyle(0xffffff, 1);
+    for (let ty = t0y; ty <= t1y; ty++)
+      for (let tx = t0x; tx <= t1x; tx++) {
+        if (!isSightBlocked(g, tx, ty)) continue;
+        const x0 = tx * TILE, y0 = ty * TILE, x1 = x0 + TILE, y1 = y0 + TILE;
+        // nearest point of the tile; skip tiles fully outside the light
+        const nx = Phaser.Math.Clamp(ex, x0, x1), ny = Phaser.Math.Clamp(ey, y0, y1);
+        if (Math.hypot(nx - ex, ny - ey) > far) continue;
+        walls.push(x0, y0);
+        // walls fully enclosed by other walls cast nothing new
+        if (isSightBlocked(g, tx - 1, ty) && isSightBlocked(g, tx + 1, ty) && isSightBlocked(g, tx, ty - 1) && isSightBlocked(g, tx, ty + 1)) continue;
+        // silhouette: the two corners at the extreme angles seen from the eye
+        const cx = x0 + TILE / 2 - ex, cy = y0 + TILE / 2 - ey;
+        let lo = Infinity, hi = -Infinity, lx = 0, ly = 0, hx = 0, hy = 0;
+        for (const [qx, qy] of [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]) {
+          const vx = qx - ex, vy = qy - ey;
+          const a = Math.atan2(cx * vy - cy * vx, cx * vx + cy * vy);
+          if (a < lo) { lo = a; lx = qx; ly = qy; }
+          if (a > hi) { hi = a; hx = qx; hy = qy; }
+        }
+        const ld = Math.hypot(lx - ex, ly - ey) || 1, hd = Math.hypot(hx - ex, hy - ey) || 1;
+        gfx.fillPoints([
+          { x: px(lx), y: py(ly) },
+          { x: px(hx), y: py(hy) },
+          { x: px(ex + ((hx - ex) / hd) * reach), y: py(ey + ((hy - ey) / hd) * reach) },
+          { x: px(ex + ((lx - ex) / ld) * reach), y: py(ey + ((ly - ey) / ld) * reach) },
+        ], true);
+      }
+    mask.clear();
+    mask.draw(gfx);
+    // walls stay lit: only the floor behind them goes dark
+    gfx.clear().fillStyle(0xffffff, 1);
+    for (let i = 0; i < walls.length; i += 2) gfx.fillRect(px(walls[i]), py(walls[i + 1]), TILE, TILE);
+    mask.erase(gfx);
+    // the mask is opaque where shadowed (overlaps don't stack); its alpha sets how much light it takes
+    this.fogLight!.erase(mask, c, c);
   }
 
   // ------------------------------------------------------------ package
@@ -500,14 +578,14 @@ export class GameScene extends Phaser.Scene {
       hit.setInteractive({ useHandCursor: true, pixelPerfect: false }).on('pointerdown', () => this.tryTask(st.id));
       this.tweens.add({ targets: ring, alpha: 0.6, scale: ring.scale * 1.12, yoyo: true, repeat: -1, duration: 900, ease: 'Sine.inOut' });
       const top = prop ? prop.getBounds().top : st.y - 34;
-      // active stations shout a bit: a light shaft, a ripple on the floor and a bobbing "!" so nobody walks past them
+      // A soft beacon and an illustrated pin identify available work along the street.
       // drawn in front (additive, soft) so walls and the prop itself never hide it
       const beam = this.add.image(st.x, st.y + 10, 'station-beam').setOrigin(0.5, 1).setDepth(st.y + 40).setBlendMode(Phaser.BlendModes.ADD);
       beam.setDisplaySize(70, st.y + 10 - top + 150);
       this.tweens.add({ targets: beam, alpha: { from: 0.75, to: 0.35 }, yoyo: true, repeat: -1, duration: 1100, ease: 'Sine.inOut' });
       const ripple = this.add.ellipse(st.x, st.y + 6, 60, 26).setStrokeStyle(4, 0xffa928, 1).setDepth(-4);
       this.tweens.add({ targets: ripple, scale: { from: 0.6, to: 1.9 }, alpha: { from: 1, to: 0 }, repeat: -1, duration: 1500, ease: 'Cubic.easeOut' });
-      const marker = this.buildMarker(st.x, top - 10);
+      const marker = this.buildMarker(st.x, top - 10, st.id, st.icon);
       this.stationSprites.set(st.id, { icon, ring, top, fx: [beam, ripple], marker });
     }
     this.buildTapBadge();
@@ -536,15 +614,22 @@ export class GameScene extends Phaser.Scene {
     tex.refresh();
   }
 
-  /** Golden "!" diamond bobbing over a station. */
-  private buildMarker(x: number, y: number) {
-    const glow = this.add.circle(0, 0, 20, 0xffd36e, 0.35);
-    const gem = this.add.rectangle(0, 0, 24, 24, 0xffd36e).setStrokeStyle(3, 0x7a3e10).setAngle(45);
-    const bang = this.add.text(0, 1, '!', { fontFamily: 'Be Vietnam Pro, system-ui, sans-serif', fontSize: '18px', fontStyle: 'bold', color: '#5a2a08' }).setOrigin(0.5);
-    const inner = this.add.container(0, 0, [glow, gem, bang]);
-    const marker = this.add.container(x, y, [inner]).setDepth(99990).setScale(1.4);
-    this.tweens.add({ targets: inner, y: -10, yoyo: true, repeat: -1, duration: 650, ease: 'Sine.inOut' });
-    this.tweens.add({ targets: glow, scale: { from: 0.8, to: 1.4 }, alpha: { from: 0.45, to: 0 }, repeat: -1, duration: 1100 });
+  /** Small enamel pin: task artwork, mint rim and a gentle floating motion. */
+  private buildMarker(x: number, y: number, id: TaskId, frame: string) {
+    const halo = this.add.circle(0, -17, 26, 0x80ebcd, 0.12);
+    const shadow = this.add.ellipse(0, 14, 23, 6, 0x102c2a, 0.3);
+    const pointer = this.add.triangle(0, 1, 0, 0, 16, 0, 8, 12, 0x97e9ce).setOrigin(0.5, 0);
+    const disc = this.add.circle(0, -17, 21, 0x173c3a).setStrokeStyle(2, 0x97e9ce);
+    const artwork = (this.skin.art.tasks
+      ? this.add.image(0, -17, `task-icon-${id}`)
+      : this.add.image(0, -17, 'map-stations', frame)).setDisplaySize(30, 30);
+    const glint = this.add.circle(15, -32, 4, 0xffdf92).setStrokeStyle(2, 0x173c3a);
+    const inner = this.add.container(0, 0, [halo, pointer, disc, artwork, glint]);
+    const marker = this.add.container(x, y, [shadow, inner]).setDepth(99990);
+    marker.setInteractive({ hitArea: new Phaser.Geom.Rectangle(-26, -48, 52, 64), hitAreaCallback: Phaser.Geom.Rectangle.Contains, useHandCursor: true })
+      .on('pointerdown', () => this.tryTask(id));
+    this.tweens.add({ targets: inner, y: -5, yoyo: true, repeat: -1, duration: 1250, ease: 'Sine.inOut' });
+    this.tweens.add({ targets: halo, alpha: { from: 0.08, to: 0.22 }, yoyo: true, repeat: -1, duration: 1600 });
     return marker;
   }
 
@@ -587,7 +672,7 @@ export class GameScene extends Phaser.Scene {
       s.icon.setTint(active ? 0xffffff : 0x777777).setAlpha(active ? 1 : 0.55);
       s.ring.setVisible(active);
       for (const o of s.fx) (o as unknown as Phaser.GameObjects.Components.Visible).setVisible(active);
-      // the tap badge takes the "!" spot while the player stands at the station
+      // The action label takes the pin's spot while the player stands at the station.
       s.marker.setVisible(active && this.tapBadgeFor !== id);
     }
   }

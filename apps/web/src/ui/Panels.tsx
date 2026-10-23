@@ -1,15 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
-import { GAME, mapSkin } from '@hidden-truth/shared';
+import { mapSkin } from '@hidden-truth/shared';
 import { KILLER_NAME_COLOR, useStore } from '../store';
 import { RoleBadge, useEscape } from './common';
 import { isTouchDevice } from './Joystick';
 
 const FLY_MS = 850; // role reveal shrinking into the HUD role card
-const PRELUDE_MS = 3400; // dark "night falls" lines before the role, so players settle in first
-// role reveal is held until the server starts the night (canh một) — the story lives in the Guide
-const ROLE_MS = GAME.introSec * 1000 - PRELUDE_MS - FLY_MS;
+// dark "night falls" lines before the role: one line every LINE_GAP_S, held HOLD_MS after the last one finishes
+const LINE_START_S = 0.5;
+const LINE_GAP_S = 1.4;
+const LINE_IN_MS = 1100; // matches .opening-prelude p lineIn
+const HOLD_MS = 1000;
+const FADE_MS = 600; // matches preludeOut
+const preludeMs = (lines: number) => (LINE_START_S + (lines - 1) * LINE_GAP_S) * 1000 + LINE_IN_MS + HOLD_MS + FADE_MS;
+const ROLE_TAP_MS = 1800; // ignore taps until the role reveal has settled, so a stray tap does not skip it
 
-/** Opening: night-falls prelude -> role reveal, then it shrinks into the HUD role card and the night (canh một) begins. */
+/** Opening: night-falls prelude -> role reveal (held until the player taps), then it shrinks into the HUD role card. */
 export function IntroModal() {
   const open = useStore((s) => s.introOpen);
   const me = useStore((s) => s.me);
@@ -18,28 +23,34 @@ export function IntroModal() {
   const [stage, setStage] = useState<'prelude' | 'role' | 'game'>('prelude');
   const [leaving, setLeaving] = useState(false);
   const [flying, setFlying] = useState(false);
+  const [tappable, setTappable] = useState(false);
   const roleRef = useRef<HTMLDivElement>(null);
+  const prelude = mapSkin(useStore.getState().room?.mapSlug).story.prelude;
+  const PRELUDE_MS = preludeMs(prelude.length);
 
   useEffect(() => {
     if (open) {
       setStage(quick ? 'role' : 'prelude');
       setLeaving(false);
       setFlying(false);
+      setTappable(quick);
     }
   }, [open]);
 
-  // the opening is not skippable so all players enter at the same moment the night starts
+  // the prelude is not skippable; the role then stays up until the player taps
   useEffect(() => {
-    if (!open || quick || stage === 'game') return;
-    const t = setTimeout(() => setStage(stage === 'prelude' ? 'role' : 'game'), stage === 'prelude' ? PRELUDE_MS : ROLE_MS);
+    if (!open || quick || stage !== 'prelude') return;
+    const t = setTimeout(() => setStage('role'), PRELUDE_MS);
     return () => clearTimeout(t);
   }, [open, quick, stage]);
   useEffect(() => {
-    if (stage === 'game') close();
-  }, [stage]);
+    if (!open || quick || stage !== 'role') return;
+    const t = setTimeout(() => setTappable(true), ROLE_TAP_MS);
+    return () => clearTimeout(t);
+  }, [open, quick, stage]);
 
   const close = () => {
-    if (leaving) return;
+    if (leaving || stage !== 'role' || !tappable) return;
     setLeaving(true);
     // shrink the role reveal into the HUD role card so players learn where to re-open it
     const role = roleRef.current;
@@ -71,11 +82,10 @@ export function IntroModal() {
     }
     setTimeout(() => set({ introOpen: false }), 600);
   };
-  // only the quick re-open (from the HUD role card) can be dismissed by the player
-  useEscape(close, open && quick && !!me);
+  useEscape(close, open && stage === 'role' && !!me);
 
   useEffect(() => {
-    if (!open || !quick) return;
+    if (!open || stage !== 'role') return;
     const h = (e: KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
@@ -92,11 +102,11 @@ export function IntroModal() {
   const killer = me.faction === 'killer';
 
   return (
-    <div className={`opening ${leaving ? 'leaving' : ''} ${flying ? 'to-card' : ''} ${quick ? 'quick' : ''}`} onClick={quick ? close : undefined}>
+    <div className={`opening ${leaving ? 'leaving' : ''} ${flying ? 'to-card' : ''} ${quick ? 'quick' : ''} ${tappable ? 'tappable' : ''}`} onClick={stage === 'role' ? close : undefined}>
       {stage === 'prelude' && (
-        <div className="opening-prelude" key="prelude" style={{ animationDelay: `${PRELUDE_MS - 600}ms` }}>
-          {skin.story.prelude.map((l, i) => (
-            <p key={i} style={{ animationDelay: `${0.4 + i * 1}s` }}>
+        <div className="opening-prelude" key="prelude" style={{ animationDelay: `${PRELUDE_MS - FADE_MS}ms` }}>
+          {prelude.map((l, i) => (
+            <p key={i} style={{ animationDelay: `${LINE_START_S + i * LINE_GAP_S}s` }}>
               {l}
             </p>
           ))}
@@ -139,6 +149,7 @@ export function IntroModal() {
               Đóng
             </button>
           )}
+          {!quick && tappable && <p className="opening-tap">{isTouchDevice() ? 'Chạm vào màn hình để vào hẻm' : 'Bấm chuột hoặc Enter để vào hẻm'}</p>}
         </div>
       )}
     </div>

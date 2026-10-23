@@ -24,6 +24,9 @@ import {
   NAME_MAX,
   MIN_PLAYERS,
   dealTasks,
+  copsFor,
+  copsValid,
+  maxCops,
   stepMovement,
   type ChatMsg,
   type EndReveal,
@@ -238,13 +241,17 @@ export class GameRoom extends Room<GameState> {
       this.system(`${prev} đã đổi tên thành ${name}.`);
     });
 
-    this.onMessage('configure', (client, msg: { tasksPerPlayer?: number; timeMin?: number }) => {
+    this.onMessage('configure', (client, msg: { tasksPerPlayer?: number; timeMin?: number; cops?: number }) => {
       if (client.sessionId !== this.state.hostId || this.state.phase !== 'lobby') return;
       if (Number.isFinite(msg?.tasksPerPlayer)) {
         this.state.tasksPerPlayer = Math.max(GAME.tasksPerPlayerMin, Math.min(GAME.tasksPerPlayerMax, Math.floor(msg.tasksPerPlayer!)));
       }
       if (Number.isFinite(msg?.timeMin)) {
-        this.state.nightMin = Math.max(GAME.timeMinMin, Math.min(GAME.timeMinMax, Math.floor(msg.timeMin!)));
+        const min = DEV ? GAME.timeMinMinDev : GAME.timeMinMin;
+        this.state.nightMin = Math.max(min, Math.min(GAME.timeMinMax, Math.floor(msg.timeMin!)));
+      }
+      if (Number.isFinite(msg?.cops)) {
+        this.state.cops = Math.max(GAME.copsMin, Math.min(GAME.copsMax, Math.floor(msg.cops!)));
       }
     });
 
@@ -256,6 +263,9 @@ export class GameRoom extends Room<GameState> {
         return this.startGame();
       }
       if (n < MIN_PLAYERS) return client.send('toast', { text: `Cần ít nhất ${MIN_PLAYERS} người để bắt đầu (hiện có ${n}).`, kind: 'warn' });
+      if (!copsValid(this.state.cops, n)) {
+        return client.send('toast', { text: `${this.state.cops} công an là quá nhiều cho ${n} người (tối đa ${maxCops(n)}: phải ít hơn 1/2 số dân).`, kind: 'warn' });
+      }
       const waiting = [...this.state.players.values()].filter((p) => !p.ready).length;
       if (waiting) return client.send('toast', { text: `Còn ${waiting} người chưa sẵn sàng.`, kind: 'warn' });
       this.startGame();
@@ -442,8 +452,8 @@ export class GameRoom extends Room<GameState> {
     const players = [...this.state.players.values()];
     const n = players.length;
     const c = this.cfg();
-    // exactly one undercover cop and one veteran; everyone else is a plain CRAB driver
-    const roles: RoleId[] = ['undercover', 'veteran_driver'];
+    // the host's cop count (clamped for small dev rooms) and one veteran; everyone else is a plain CRAB driver
+    const roles: RoleId[] = [...Array<RoleId>(copsFor(this.state.cops, n)).fill('undercover'), 'veteran_driver'];
     while (roles.length < n) roles.push('driver');
     const assigned = shuffle(roles);
 
@@ -618,7 +628,7 @@ export class GameRoom extends Room<GameState> {
       p.voted = false;
       p.voteFor = '';
     }
-    this.setPhase('reveal', GAME.revealSec * 1000);
+    this.setPhase('reveal', result.ejected !== null ? GAME.revealSec * 1000 : 4000);
   }
 
   // ---------------------------------------------------------------- win conditions
@@ -652,7 +662,8 @@ export class GameRoom extends Room<GameState> {
     // no syncAlive() here: an arrest must not show on the public counter — it updates after each vote
     if (this.delivery.state === 'delivered') return this.finishGame('crew', this.skin.story.endings.tasks);
     if (this.totalKillers() > 0 && this.aliveKillers() === 0) return this.finishGame('crew', this.skin.story.endings.vote);
-    if (this.aliveCrew() === 0) return this.finishGame('killer', this.skin.story.endings.killer);
+    // parity: once killers match the crew, a vote can never eject them (ties eject nobody)
+    if (this.aliveKillers() >= this.aliveCrew()) return this.finishGame('killer', this.skin.story.endings.killer);
     return false;
   }
 
@@ -950,7 +961,8 @@ export class GameRoom extends Room<GameState> {
     };
     if (s.faction === 'killer') {
       info.arrestReadyAt = s.arrestReadyAt;
-      info.killerIds = [id];
+      // cops know each other
+      info.killerIds = [...this.secrets].filter(([, x]) => x.faction === 'killer').map(([k]) => k);
     }
     if (s.role === 'veteran_driver') info.inspectLeft = s.inspectLeft;
     client.send('private', info);

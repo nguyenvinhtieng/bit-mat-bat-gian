@@ -1,8 +1,8 @@
-import { useSyncExternalStore } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { PLAYER_COLORS, mapSkin } from '@hidden-truth/shared';
 import { leaveRoom, send } from '../net';
 import { colorHex, useStore } from '../store';
-import { RoleBadge, asset } from './common';
+import { RoleBadge } from './common';
 
 // same breakpoint as the full-viewport mobile layout in styles.css: phones keep the role list folded
 const MOBILE_QUERY = '(max-width: 640px), (max-width: 960px) and (max-height: 500px)';
@@ -15,6 +15,12 @@ const isMobileLayout = () => matchMedia(MOBILE_QUERY).matches;
 
 export function EndScreen() {
   const mobile = useSyncExternalStore(subscribeMobile, isMobileLayout);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const previous = document.activeElement;
+    dialogRef.current?.focus({ preventScroll: true });
+    return () => { if (previous instanceof HTMLElement && previous.isConnected) previous.focus({ preventScroll: true }); };
+  }, []);
   const end = useStore((s) => s.end);
   const room = useStore((s) => s.room);
   if (!end || !room) return null;
@@ -29,16 +35,22 @@ export function EndScreen() {
   ];
   const reason = shortReasons.find(([full]) => full === end.reason)?.[1] ?? end.reason;
   const officers = end.roles.filter((r) => r.faction === 'killer').length;
-  // the first one to leave the results brings the room back to its lobby; later ones just close their own screen
-  const backToLobby = () => (room.phase === 'ended' ? send('lobby:return', {}) : useStore.getState().set({ end: null }));
+  // the first one to leave the results brings the room back to its lobby; everyone closes their own screen
+  const backToLobby = () => {
+    if (room.phase === 'ended') send('lobby:return', {});
+    useStore.getState().set({ end: null });
+  };
   return (
-    <div className={`end-screen ${end.winner}`} role="dialog" aria-modal="true" aria-labelledby="end-title" aria-describedby="end-reason">
+    <div ref={dialogRef} tabIndex={-1} className={`end-screen ${end.winner}`} onKeyDown={(e) => {
+      if (e.key !== 'Tab') return;
+      const targets = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('button, summary:not([tabindex="-1"])'));
+      const first = targets[0];
+      const last = targets[targets.length - 1];
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === e.currentTarget)) { e.preventDefault(); last?.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+    }} role="dialog" aria-modal="true" aria-labelledby="end-title" aria-describedby="end-reason">
       <div className="end-card">
         <div className="end-hero">
-          <div className="end-art">
-            <img className="end-emblem" src={asset(`maps/game/ui/end/victory-${end.winner}-v2.webp`)} alt={crewWins ? 'Hội tài xế vui mừng bên kiện hàng trong hẻm Sài Gòn' : 'Công an chìm giơ thẻ ngành trước các tài xế trong hẻm'} draggable={false} fetchPriority="high" />
-            <span className="end-scene-label">HẺM 42 · CUỐC CUỐI</span>
-          </div>
           <div className="end-summary">
             <span className="end-eyebrow">Ván chơi đã kết thúc</span>
             <span className="end-winner-mark" aria-hidden="true">{crewWins ? '★' : '✓'}</span>
@@ -51,19 +63,10 @@ export function EndScreen() {
           </div>
         </div>
 
-        <div className="end-actions">
-          <button className="btn primary" onClick={backToLobby}>
-            Về sảnh · Chơi tiếp
-          </button>
-          <button className="btn ghost" onClick={leaveRoom}>
-            Rời phòng
-          </button>
-        </div>
-
         {/* desktop has room for the whole list: always open, no toggle */}
         <details className={`end-reveal${mobile ? '' : ' always-open'}`} open={mobile ? undefined : true}>
           <summary className="end-section-heading" tabIndex={mobile ? undefined : -1} onClick={mobile ? undefined : (e) => e.preventDefault()}>Xem vai trò cả hội <span>{end.roles.length} người chơi</span></summary>
-          <div className="role-list" role="region" aria-label="Vai trò người chơi" tabIndex={0}>
+          <div className="role-list" role="region" aria-label="Vai trò người chơi">
             {/* the cop first so the reveal is the first thing everyone reads */}
             {[...end.roles].sort((a, b) => Number(b.faction === 'killer') - Number(a.faction === 'killer')).map((r, i) => (
               <div
@@ -85,6 +88,15 @@ export function EndScreen() {
             ))}
           </div>
         </details>
+
+        <div className="end-actions">
+          <button className="btn primary" onClick={backToLobby}>
+            Về sảnh · Chơi tiếp
+          </button>
+          <button className="btn ghost" onClick={leaveRoom}>
+            Rời phòng
+          </button>
+        </div>
       </div>
     </div>
   );

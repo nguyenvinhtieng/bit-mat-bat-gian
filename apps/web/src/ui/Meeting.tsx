@@ -8,7 +8,7 @@ import { Avatar, ChatLines, colorIndex, Composer, GROUP_NAME, groupAvatar } from
 import { Digits, fmt, useCountdown } from './common';
 
 /** gap between the kick message and the full-screen sock check (reveal phase is only GAME.revealSec long) */
-const EJECT_DELAY_MS = 1100;
+const EJECT_DELAY_MS = 2500;
 
 /** Overlapping mini avatars of who picked an option (ballots are public). */
 function VoterStack({ list }: { list: PlayerView[] }) {

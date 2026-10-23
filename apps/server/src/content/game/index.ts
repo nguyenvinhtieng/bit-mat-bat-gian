@@ -9,13 +9,29 @@ import { pick, rid, sample, shuffle, type Built, type Fact, type MapContent, typ
 
 /** Card shown after each task: the joke from the brief + a bit of night-delivery Saigon life. */
 export const TASK_FACTS: Record<TaskId, Fact> = {
+  connect_wires: {
+    headline: '“Nối xong hộp điện, tiệm lại sáng đèn.”',
+    text: 'Hộp điện trong tiệm có nhãn riêng cho từng đường dây. Ghép đúng bốn cặp để bật lại đèn và tiếp tục chuẩn bị chuyến hàng đêm.',
+  },
   pack_cooler: {
     headline: '“Không hành, nhiều hành phi, ớt để riêng, đá để riêng.”',
     text: 'Thùng giữ nhiệt sau xe là “văn phòng” của tài xế giao đồ ăn: ly nước phải đứng thẳng, nước lèo nằm dưới đáy — đổ một bịch là cả thùng thơm mùi hủ tiếu tới sáng.',
   },
-  dodge_sellers: {
-    headline: '“Mua giùm cô tờ vé số đi con, đài nay trúng chắc!”',
-    text: 'Ngồi quán lề đường Sài Gòn chưa tới năm phút là có người bán vé số, đánh giày, bán kẹo ghé qua. Lắc đầu cười là đủ — dân ở đây quen rồi, không ai giận ai.',
+  untangle_charger: {
+    headline: '“Còn một phần trăm pin mà dây thì thắt nút!”',
+    text: 'Dây sạc trong túi tài xế hay mắc vào đủ thứ. Gỡ lần lượt từng chốt, cắm điện thoại rồi mới yên tâm nhận cuốc tiếp.',
+  },
+  stuck_shutter: {
+    headline: '“Kéo nhẹ thôi! Cửa này có bí quyết.”',
+    text: 'Cửa cuốn tiệm quen rỉ sét, cứ tới đoạn đó là chốt kẹt cứng. Nhỏ chút dầu hoặc vặn lỏng con ốc rồi kéo tiếp — buông tay là cửa tụt xuống lại.',
+  },
+  tune_antenna: {
+    headline: '“Đứng yên đó! Đang rõ rồi!”',
+    text: 'Chiếc tivi quán cóc vẫn bắt sóng bằng hai nhánh anten. Chỉnh đúng góc, giữ một nhịp: cả quán lại được xem tiếp trận bóng.',
+  },
+  water_pipes: {
+    headline: '“Rửa tay cái đã rồi hẵng bốc bánh mì.”',
+    text: 'Vòi rửa tay ở góc quán bị lỏng mấy khúc nối. Xoay cho thông đường, mở van: dòng nước mát là phần thưởng sau một cuốc chạy bụi đường.',
   },
   brew_coffee: {
     headline: '“Ly này của tui, làm ly khác đi.”',
@@ -45,10 +61,6 @@ export const TASK_FACTS: Record<TaskId, Fact> = {
     headline: '“Xe ai cũng khóa cổ, đẩy kiểu gì bây giờ?”',
     text: 'Bãi giữ xe Sài Gòn xếp xe sát rạt từng chiếc. Muốn lấy xe ra giờ cao điểm là phải nhờ bảo vệ dời cả hàng.',
   },
-  find_ticket: {
-    headline: '“Vé đâu rồi? Có vỏ kẹo, có vé số trật, có khẩu trang…”',
-    text: 'Mất vé giữ xe là phải trình giấy tờ, chờ đối chiếu, có khi còn bị phạt. Vậy mà tấm vé nhỏ xíu đó lúc nào cũng lẩn dưới đáy túi.',
-  },
   dodge_potholes: {
     headline: '“Bà Tư tạt nước ra hẻm đúng lúc mình chạy ngang.”',
     text: 'Sau mưa, hẻm nhỏ Sài Gòn thành đường đua vượt chướng ngại: ổ gà, vũng nước, chó nằm giữa đường, và cửa nhà ai cũng có thể mở ra bất cứ lúc nào.',
@@ -61,8 +73,12 @@ export const TASK_FACTS: Record<TaskId, Fact> = {
 
 /** Success line shown right after a task is solved. */
 export const TASK_DONE: Record<TaskId, string> = {
+  connect_wires: 'Đủ bốn mạch! Đèn tiệm sáng trở lại.',
   pack_cooler: 'Đủ món, không đổ giọt nào. Ớt vẫn để riêng!',
-  dodge_sellers: 'Thoát hết! Mất 5 nghìn tiền trà đá hôm qua.',
+  untangle_charger: 'Cắm sạc rồi! Đủ pin nhận thêm một cuốc.',
+  stuck_shutter: 'Rè rè… cửa mở! Cả hẻm nghe thấy luôn.',
+  tune_antenna: 'Hình nét căng! Đừng ai đụng anten nha.',
+  water_pipes: 'Nước chảy rồi! Rửa tay sạch, chạy cuốc tiếp.',
   brew_coffee: 'Ly cà phê sữa đá chuẩn vị quán cóc!',
   wifi_hunt: 'Full vạch! Wifi “Hoi_ma_Chi_Tu” đã kết nối.',
   pump_tyre: 'Lốp căng vừa đủ — không ai phải nghe tiếng BỤP.',
@@ -70,7 +86,6 @@ export const TASK_DONE: Record<TaskId, string> = {
   tape_box: 'Rẹtttt! Thùng kín mít, không ai biết bên trong có gì.',
   stack_rack: 'Chồng hàng vững như kiềng — kể cả thùng sầu riêng.',
   unpark_bike: 'Xe ra khỏi bãi rồi! Bảo vệ vỗ tay.',
-  find_ticket: 'Thấy vé rồi! Nằm dưới đáy, như mọi lần.',
   dodge_potholes: 'Vô tới cuối hẻm, áo vẫn khô!',
   handoff_package: 'Bàn giao xong Cuốc Cuối! Năm sao cho cả hội!',
 };
@@ -122,32 +137,69 @@ function verifyCooler(e: { items: CoolerItem[]; slots: { id: string; kind: strin
   });
 }
 
-// ------------------------------------------------------------------ dodge_sellers
-const SELLERS: [string, string, string][] = [
-  ['ve-so', 'Cô bán vé số', 'Mua giùm cô tờ vé số đi con, đài nay trúng chắc!'],
-  ['danh-giay', 'Chú đánh giày', 'Đánh giày hông con? Dép lào chú cũng đánh!'],
-  ['keo', 'Bé bán kẹo', 'Anh ơi mua kẹo cao su ủng hộ em đi!'],
-  ['to-roi', 'Cô phát tờ rơi', 'Khoan cắt bê tông, rút hầm cầu giá rẻ nè!'],
-  ['bong-bay', 'Chú bán bong bóng', 'Bong bóng hình con cua nè, mua cho con hông?'],
-  ['dau-gio', 'Ông bán dầu gió', 'Dầu gió xanh, xức cái tỉnh ngủ liền!'],
-];
-function buildSellers(): Built {
-  const sellers = sample(SELLERS, 4).map(([kind, name, line]) => ({ id: rid(), kind, name, line }));
+// ------------------------------------------------------------------ everyday repairs
+function buildWires(): Built {
+  const left = shuffle(['red', 'blue', 'amber', 'mint']);
+  let right = shuffle([...left]);
+  if (right.every((color, i) => color === left[i])) right = [...right.slice(1), right[0]];
+  return { data: { taskId: 'connect_wires', prompt: 'Kéo từng đầu dây vào cọc cùng màu để khôi phục bốn mạch điện.', left, right }, expected: left, minMs: 2000 };
+}
+function verifyWires(colors: string[], a: unknown) {
+  if (!isObj(a) || !Array.isArray(a.connections) || a.connections.length !== colors.length) return false;
+  const connections: unknown[] = a.connections;
+  return colors.every((color) => connections.filter((c) => isObj(c) && c.from === color && c.to === color).length === 1);
+}
+function buildCharger(): Built {
+  const pegs = [{ id: rid(), x: 0.25, y: 0.35 }, { id: rid(), x: 0.58, y: 0.25 }, { id: rid(), x: 0.72, y: 0.6 }, ...(Math.random() < 0.5 ? [{ id: rid(), x: 0.4, y: 0.7 }] : [])];
   return {
-    data: {
-      taskId: 'dodge_sellers',
-      prompt: 'Ngồi chờ lấy đơn mà “tiếp thị dạo” cứ ghé. Vuốt để lắc đầu từ chối từng người.',
-      sellers,
-      owner: { name: 'Chủ quán', line: 'Ê, ly trà đá hôm qua chưa trả nha!', debt: 5000 },
-    },
-    expected: sellers.map((s) => s.id),
-    minMs: sellers.length * 500 + 800,
+    data: { taskId: 'untangle_charger', prompt: 'Kéo đầu dây lần lượt qua từng chốt đang sáng, rồi cắm vào điện thoại.', pegs, phone: { x: 0.85, y: 0.85 } },
+    expected: pegs.map((peg) => peg.id), minMs: 2500,
   };
 }
-function verifySellers(order: string[], a: unknown) {
-  if (!isObj(a) || a.paid !== true || !Array.isArray(a.swiped)) return false;
-  const swiped: unknown[] = a.swiped;
-  return swiped.length === order.length && order.every((id, i) => swiped[i] === id);
+function verifyCharger(pegs: string[], a: unknown) {
+  if (!isObj(a) || a.plugged !== true || !Array.isArray(a.released)) return false;
+  return a.released.length === pegs.length && pegs.every((id, i) => (a.released as unknown[])[i] === id);
+}
+function buildShutter(): Built {
+  const jams = [round(rand(0.25, 0.4), 2), round(rand(0.58, 0.75), 2)];
+  // each jam shows a rusty bolt somewhere on the door; it never sits under the oil can (bottom-left)
+  const bolts = jams.map(() => ({ x: round(rand(0.3, 0.85), 2), y: round(rand(0.18, 0.62), 2) }));
+  const turnDeg = 360;
+  return {
+    data: { taskId: 'stuck_shutter', prompt: 'Kéo cửa lên. Gặp chốt rỉ: nhỏ dầu hoặc vặn ốc một vòng, rồi kéo tiếp. Buông tay là cửa tụt.', jams, bolts, turnDeg },
+    expected: { jams, turnDeg }, minMs: 3000,
+  };
+}
+function verifyShutter(e: { jams: number[]; turnDeg: number }, a: unknown) {
+  if (!isObj(a) || a.lift !== 1 || !Array.isArray(a.cleared) || !Array.isArray(a.freed)) return false;
+  const cleared: unknown[] = a.cleared, freed: unknown[] = a.freed;
+  return cleared.length === e.jams.length && freed.length === e.jams.length
+    && e.jams.every((_, i) => cleared[i] === i && (freed[i] === 'oil' || (isNum(freed[i]) && (freed[i] as number) >= e.turnDeg && (freed[i] as number) <= 7200)));
+}
+function buildAntenna(): Built {
+  const target: [number, number] = [randInt(25, 65), randInt(115, 155)];
+  const tolerance = 13, holdMs = 1200; // error ≤ 13° ⇔ client signal ≥ 85%
+  return {
+    data: { taskId: 'tune_antenna', prompt: 'Xoay hai nhánh anten tới khi hình rõ, giữ yên một nhịp.', target, tolerance, holdMs },
+    expected: { target, tolerance, holdMs }, minMs: 2500,
+  };
+}
+function verifyAntenna(e: { target: [number, number]; tolerance: number; holdMs: number }, a: unknown) {
+  if (!isObj(a) || !Array.isArray(a.angles) || a.angles.length !== 2 || !isNum(a.heldMs) || a.heldMs < e.holdMs || a.heldMs > 60000) return false;
+  const angles: unknown[] = a.angles;
+  return e.target.every((angle, i) => isNum(angles[i]) && Math.abs((angles[i] as number) - angle) <= e.tolerance);
+}
+function buildPipes(): Built {
+  const solution = [2, 1, 0, 3];
+  const rotations = solution.map((angle) => (angle + randInt(1, 3)) % 4);
+  return {
+    data: { taskId: 'water_pipes', prompt: 'Xoay bốn đoạn ống cho nối từ vòi tới bồn, rồi mở van nước.', rotations, solution },
+    expected: solution, minMs: 2500,
+  };
+}
+function verifyPipes(solution: number[], a: unknown) {
+  if (!isObj(a) || a.opened !== true || !Array.isArray(a.rotations) || a.rotations.length !== solution.length) return false;
+  return solution.every((angle, i) => (a.rotations as unknown[])[i] === angle);
 }
 
 // ------------------------------------------------------------------ brew_coffee
@@ -170,7 +222,10 @@ function verifyCoffee(e: { milk: [number, number]; coffee: [number, number] }, a
 // ------------------------------------------------------------------ wifi_hunt
 const NETWORKS = ['Hoi_ma_Chi_Tu', 'Ko_Cho_Xai_Ke', 'Tra_Tien_Nuoc_Di', 'Wifi_Nha_Ai_Do', 'Cam_Xai_Chua', 'Quan_Nuoc_Co_Ba'];
 function buildWifi(): Built {
-  const spot = { x: round(rand(0.15, 0.85)), y: round(rand(0.2, 0.85)) };
+  // the phone starts at the centre (0.5, 0.5): keep the hot spot well away so it can't pass on open
+  let spot: { x: number; y: number };
+  do spot = { x: round(rand(0.15, 0.85)), y: round(rand(0.2, 0.85)) };
+  while (Math.hypot(spot.x - 0.5, spot.y - 0.5) < 0.3);
   const radius = 0.1;
   return {
     data: { taskId: 'wifi_hunt', prompt: 'Kéo điện thoại đi khắp quán, chỗ nào full vạch thì giữ yên ở đó.', networks: sample(NETWORKS, 4), spot, radius },
@@ -184,23 +239,27 @@ function verifyWifi(e: { spot: { x: number; y: number }; radius: number }, a: un
 
 // ------------------------------------------------------------------ pump_tyre
 function buildPump(): Built {
-  const perStroke = randInt(6, 9);
+  const rate = randInt(7, 10); // psi per second while the button is held
   const lo = randInt(30, 40);
-  const green: [number, number] = [lo, lo + perStroke + 2];
+  const green: [number, number] = [lo, lo + randInt(7, 9)];
+  // the pump overheats after ~2 s of holding, so reaching the green takes at least one cool-down
+  const heatRate = 0.5, coolRate = 0.4;
   return {
-    data: { taskId: 'pump_tyre', prompt: 'Vuốt lên xuống để bơm. Kim vào vùng xanh thì dừng — lố là BỤP!', perStroke, green, max: 60 },
-    expected: { perStroke, green },
-    minMs: Math.ceil(lo / perStroke) * 250,
+    data: { taskId: 'pump_tyre', prompt: 'Giữ nút để bơm, thả cho bơm nguội trước khi quá nóng. Kim vào vùng xanh thì dừng — lố là BỤP!', green, max: 60, rate, heatRate, coolRate },
+    expected: { green, rate },
+    minMs: Math.ceil((lo / rate) * 1000),
   };
 }
-function verifyPump(e: { perStroke: number; green: [number, number] }, a: unknown) {
-  return isObj(a) && isInt(a.strokes) && inBand((a.strokes as number) * e.perStroke, e.green);
+function verifyPump(e: { green: [number, number]; rate: number }, a: unknown) {
+  // air only goes in while held, so the reported hold time must cover the pressure
+  return isObj(a) && inBand(a.psi, e.green) && isNum(a.heldMs) && a.heldMs <= 120_000 && a.heldMs >= ((a.psi as number) / e.rate) * 1000 * 0.9;
 }
 
 // ------------------------------------------------------------------ patch_tube
 function buildTube(): Built {
   const sections = 8;
-  const leaks = sample([1, 2, 3, 4, 5, 6], 2).sort((x, y) => x - y);
+  // section 1 starts in the basin, so it is never a leak (the first patch must take a pull)
+  const leaks = sample([2, 3, 4, 5, 6], 2).sort((x, y) => x - y);
   return {
     data: { taskId: 'patch_tube', prompt: 'Kéo ruột xe qua thau nước. Chỗ nào sủi bọt thì chạm để dán miếng vá.', sections, leaks },
     expected: leaks,
@@ -216,12 +275,14 @@ function verifyTube(leaks: number[], a: unknown) {
 // ------------------------------------------------------------------ tape_box
 function buildTape(): Built {
   return {
-    data: { taskId: 'tape_box', prompt: 'Kéo ngón tay vòng quanh thùng theo đường chấm để quấn băng keo.', laps: 2 },
+    data: { taskId: 'tape_box', prompt: 'Gấp hai nắp thùng, kéo băng keo dọc đường ráp rồi dán dải ngang.', strips: 2 },
     expected: 2,
     minMs: 2500,
   };
 }
-const verifyTape = (laps: number, a: unknown) => isObj(a) && isInt(a.laps) && (a.laps as number) >= laps && (a.laps as number) <= laps + 3;
+const verifyTape = (_: number, a: unknown) => isObj(a)
+  && Array.isArray(a.flaps) && a.flaps.length === 2 && new Set(a.flaps).size === 2 && ['left', 'right'].every(v => (a.flaps as unknown[]).includes(v))
+  && Array.isArray(a.strips) && a.strips.length === 2 && new Set(a.strips).size === 2 && ['seam', 'cross'].every(v => (a.strips as unknown[]).includes(v));
 
 // ------------------------------------------------------------------ stack_rack
 const RACK: [string, string][] = [
@@ -347,34 +408,6 @@ function verifyLot(start: Lot, a: unknown) {
   return freed(bikes);
 }
 
-// ------------------------------------------------------------------ find_ticket
-const JUNK: [string, string][] = [
-  ['vo-keo', 'Vỏ kẹo'],
-  ['tien-le', 'Tờ 2 nghìn nhàu'],
-  ['ve-so', 'Vé số trật'],
-  ['khau-trang', 'Khẩu trang cũ'],
-  ['hoa-don', 'Hóa đơn tiền điện'],
-  ['chia-khoa', 'Chìa khóa nhà ai'],
-  ['bat-lua', 'Bật lửa hết gas'],
-  ['day-thun', 'Dây thun'],
-];
-function buildTicket(): Built {
-  const junk = sample(JUNK, 6).map(([kind, name]) => ({ id: rid(), kind, name }));
-  const ticket = { id: rid(), kind: 've-xe', name: 'Vé giữ xe' };
-  const at = randInt(3, 5);
-  const items = [...junk.slice(0, at), ticket, ...junk.slice(at)];
-  return {
-    data: { taskId: 'find_ticket', prompt: 'Bảo vệ đòi vé xe. Kéo từng món ra khỏi túi cho tới khi thấy vé, rồi chạm vào vé.', items },
-    expected: { ticket: ticket.id, above: junk.slice(0, at).map((j) => j.id) },
-    minMs: 2000,
-  };
-}
-function verifyTicket(e: { ticket: string; above: string[] }, a: unknown) {
-  if (!isObj(a) || a.ticket !== e.ticket || !Array.isArray(a.removed)) return false;
-  const removed: unknown[] = a.removed;
-  return !removed.includes(e.ticket) && e.above.every((id) => removed.includes(id));
-}
-
 // ------------------------------------------------------------------ dodge_potholes
 const HAZARDS = ['o-ga', 'vung-nuoc', 'cho', 'tat-nuoc'];
 const POTHOLE_MS = 9000;
@@ -408,8 +441,12 @@ const verifyHandoff = (tol: number, a: unknown) => isObj(a) && a.rang === true &
 
 // ------------------------------------------------------------------ map content
 const BUILDERS: Record<TaskId, () => Built> = {
+  connect_wires: buildWires,
   pack_cooler: buildCooler,
-  dodge_sellers: buildSellers,
+  untangle_charger: buildCharger,
+  stuck_shutter: buildShutter,
+  tune_antenna: buildAntenna,
+  water_pipes: buildPipes,
   brew_coffee: buildCoffee,
   wifi_hunt: buildWifi,
   pump_tyre: buildPump,
@@ -417,7 +454,6 @@ const BUILDERS: Record<TaskId, () => Built> = {
   tape_box: buildTape,
   stack_rack: buildRack,
   unpark_bike: buildLot,
-  find_ticket: buildTicket,
   dodge_potholes: buildPotholes,
   handoff_package: buildHandoff,
 };
@@ -435,8 +471,16 @@ export const GAME_CONTENT: MapContent = {
     switch (p.taskId as TaskData['taskId']) {
       case 'pack_cooler':
         return verifyCooler(e, a);
-      case 'dodge_sellers':
-        return verifySellers(e, a);
+      case 'connect_wires':
+        return verifyWires(e, a);
+      case 'untangle_charger':
+        return verifyCharger(e, a);
+      case 'stuck_shutter':
+        return verifyShutter(e, a);
+      case 'tune_antenna':
+        return verifyAntenna(e, a);
+      case 'water_pipes':
+        return verifyPipes(e, a);
       case 'brew_coffee':
         return verifyCoffee(e, a);
       case 'wifi_hunt':
@@ -451,8 +495,6 @@ export const GAME_CONTENT: MapContent = {
         return verifyRack(e, a);
       case 'unpark_bike':
         return verifyLot(e, a);
-      case 'find_ticket':
-        return verifyTicket(e, a);
       case 'dodge_potholes':
         return verifyPotholes(e, a);
       case 'handoff_package':

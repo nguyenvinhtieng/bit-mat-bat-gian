@@ -15,12 +15,12 @@
    "icon": "icon"
   },
   {
-   "id": "dodge_sellers",
+   "id": "water_pipes",
    "area": "exhibition",
    "x": 600,
    "y": 466,
-   "title": "Né “tiếp thị dạo”",
-   "titleEn": "Dodge the street sellers",
+   "title": "Mở van nước rửa tay",
+   "titleEn": "Fix the handwashing tap",
    "icon": "icon"
   },
   {
@@ -42,12 +42,30 @@
    "icon": "icon"
   },
   {
+   "id": "tune_antenna",
+   "area": "coordination",
+   "x": 1800,
+   "y": 418,
+   "title": "Chỉnh anten tivi quán cóc",
+   "titleEn": "Tune the stall TV aerial",
+   "icon": "icon"
+  },
+  {
    "id": "pump_tyre",
    "area": "editing",
    "x": 1272,
    "y": 946,
    "title": "Bơm bánh xe",
    "titleEn": "Pump the tyre",
+   "icon": "icon"
+  },
+  {
+   "id": "connect_wires",
+   "area": "editing",
+   "x": 984,
+   "y": 1186,
+   "title": "Nối dây hộp điện",
+   "titleEn": "Reconnect the junction box",
    "icon": "icon"
   },
   {
@@ -78,6 +96,15 @@
    "icon": "icon"
   },
   {
+   "id": "untangle_charger",
+   "area": "archive",
+   "x": 264,
+   "y": 1469,
+   "title": "Gỡ dây sạc điện thoại",
+   "titleEn": "Untangle the phone charger",
+   "icon": "icon"
+  },
+  {
    "id": "unpark_bike",
    "area": "artifact_storage",
    "x": 1800,
@@ -87,12 +114,12 @@
    "icon": "icon"
   },
   {
-   "id": "find_ticket",
+   "id": "stuck_shutter",
    "area": "artifact_storage",
    "x": 1224,
    "y": 1469,
-   "title": "Lục túi tìm vé xe",
-   "titleEn": "Find the parking ticket",
+   "title": "Kéo cửa cuốn kẹt",
+   "titleEn": "Unstick the roller shutter",
    "icon": "icon"
   },
   {
