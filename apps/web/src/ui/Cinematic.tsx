@@ -204,8 +204,8 @@ export function Cinematic() {
     if (c?.kind !== 'report' && c?.kind !== 'emergency') return;
     // Use the shared audio bus so the player's volume/mute setting is respected.
     const cues = c.kind === 'report'
-      ? [setTimeout(sfx.drum, 100), setTimeout(sfx.bad, 280), setTimeout(sfx.drum, 780)]
-      : [setTimeout(sfx.senh, 100), setTimeout(sfx.drum, 280), setTimeout(() => sfx.sao(880), 650)];
+      ? [setTimeout(sfx.report, 100)]
+      : [setTimeout(sfx.meeting, 100)];
     return () => cues.forEach(clearTimeout);
   }, [c?.id, c?.kind]);
   // warm the pose sheets so the first kill does not start on a blank canvas

@@ -22,11 +22,11 @@ export function PumpTyre({ task, submit }: P<'pump_tyre'>) {
       m.psi += (task.rate * dt) / 1000;
       m.heldMs += dt;
       m.heat = Math.min(1, m.heat + (task.heatRate * dt) / 1000);
-      if ((m.beat += dt) > 260) (m.beat = 0), sfx.drum();
+      if ((m.beat += dt) > 420) (m.beat = 0), sfx.pump();
       if (m.psi > task.green[1]) {
         m.popped = true;
         m.psi = 0;
-        sfx.bad();
+        sfx.bump();
         doShake();
         setHint([t('BỤP! Bơm lố rồi — thả tay, bơm lại từ đầu.', 'POP! Too much air — let go and start again.'), 'bad']);
       } else if (m.heat >= 1) {
@@ -131,7 +131,7 @@ export function PatchTube({ task, submit }: P<'patch_tube'>) {
       doShake();
       return setHint([t('Chỗ này lành mà, không có bọt.', 'No bubbles here — it’s fine.'), 'bad']);
     }
-    sfx.stamp();
+    sfx.patch();
     const next = [...patched, i];
     setPatched(next);
     if (next.length === task.leaks.length) {

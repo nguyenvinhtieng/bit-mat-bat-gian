@@ -53,16 +53,15 @@ test('charger: release every peg in order and plug in', () => {
   assert.equal(ok(p, { released, plugged: false }), false);
 });
 
-test('shutter: every rusty bolt must be oiled or twisted a full turn before full lift', () => {
+test('shutter: replay requires full quiet opening and rejects old or forged answers', () => {
   const { data, p } = open('stuck_shutter');
-  assert.equal(data.bolts.length, data.jams.length);
-  const cleared = data.jams.map((_, i) => i);
-  assert.equal(ok(p, { cleared, freed: ['oil', 'oil'], lift: 1 }), true);
-  assert.equal(ok(p, { cleared, freed: [data.turnDeg, 'oil'], lift: 1 }), true);
-  assert.equal(ok(p, { cleared: cleared.slice(1), freed: ['oil'], lift: 1 }), false);
-  assert.equal(ok(p, { cleared, freed: [data.turnDeg - 1, 'oil'], lift: 1 }), false);
-  assert.equal(ok(p, { cleared, freed: ['grease', 'oil'], lift: 1 }), false);
-  assert.equal(ok(p, { cleared, freed: ['oil', 'oil'], lift: 0.9 }), false);
+  assert.ok(data.quietSpeed > 0);
+  const samples = Array.from({ length: 100 }, () => ({ dtMs: 100, rise: .01 }));
+  assert.equal(ok(p, { samples }), true);
+  assert.equal(ok(p, { samples: samples.slice(0, 50) }), false);
+  assert.equal(ok(p, { samples: [{ dtMs: 100, rise: 1 }] }), false);
+  assert.equal(ok(p, { samples: [{ dtMs: Infinity, rise: 1 }] }), false);
+  assert.equal(ok(p, { cleared: [0, 1], freed: ['oil', 'oil'], lift: 1 }), false);
 });
 
 test('antenna: both arms tuned, with a steady hold; invalid angles or short holds fail', () => {
@@ -89,7 +88,7 @@ test('new tasks enforce minimum solve time and removed tasks are unavailable', (
     assert.ok((built.minMs ?? 0) >= 1200);
     const data = built.data;
     const answer = data.taskId === 'untangle_charger' ? { released: data.pegs.map((peg) => peg.id), plugged: true }
-      : data.taskId === 'stuck_shutter' ? { cleared: data.jams.map((_, i) => i), freed: data.jams.map(() => 'oil'), lift: 1 }
+      : data.taskId === 'stuck_shutter' ? { samples: Array.from({ length: 100 }, () => ({ dtMs: 100, rise: .01 })) }
       : data.taskId === 'tune_antenna' ? { angles: data.target, heldMs: data.holdMs }
       : data.taskId === 'water_pipes' ? { rotations: data.solution, opened: true } : {};
     assert.equal(ok(p, answer), true);

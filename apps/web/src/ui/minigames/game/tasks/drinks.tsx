@@ -44,7 +44,13 @@ export function BrewCoffee({ task, submit }: P<'brew_coffee'>) {
       send({ milk, coffee: level });
     }
   };
-  const start = () => { if (sent || pouring) return; setPouring(true); sfx.scrape(); };
+  const start = () => { if (sent || pouring) return; setPouring(true); sfx.pour(); };
+  // keep the stream audible while the button is held
+  useEffect(() => {
+    if (!pouring || sent) return;
+    const id = setInterval(sfx.pour, 480);
+    return () => clearInterval(id);
+  }, [pouring, sent]);
   const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
 
   return (
@@ -89,6 +95,8 @@ export function WifiHunt({ task, submit }: P<'wifi_hunt'>) {
   const dragging = useRef(false);
   const anchor = useRef(pos);
   const roomBounds = useRef<DOMRect | null>(null);
+  const phoneRef = useRef<HTMLDivElement>(null);
+  const grab = useRef({ x: 0, y: 0 });
   const pending = useRef<{ x: number; y: number } | null>(null);
   const frame = useRef(0);
   useEffect(() => () => cancelAnimationFrame(frame.current), []);
@@ -97,6 +105,8 @@ export function WifiHunt({ task, submit }: P<'wifi_hunt'>) {
   const bars = dist <= task.radius ? 4 : Math.max(0, 3 - Math.floor((dist - task.radius) / 0.12));
   const full = bars === 4;
   const progress = Math.min(1, held / HOLD_MS);
+  // one probe ping per signal-bar change, brighter as it gets stronger
+  useEffect(() => { if (!sent && bars > 0) sfx.ping(bars / 4); }, [bars]);
 
   useFrame(full && !sent, (dt) => {
     const h = held + dt;
@@ -115,12 +125,21 @@ export function WifiHunt({ task, submit }: P<'wifi_hunt'>) {
       anchor.current = next;
     }
   };
+  // Pointer → room fraction, measured against the padding box the phone's % offsets use.
+  const toRoom = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const room = roomBounds.current ?? el.getBoundingClientRect();
+    return {
+      x: (e.clientX - room.left - el.clientLeft) / el.clientWidth,
+      y: (e.clientY - room.top - el.clientTop) / el.clientHeight,
+    };
+  };
   const move = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragging.current || sent) return;
-    const room = roomBounds.current ?? e.currentTarget.getBoundingClientRect();
+    const p = toRoom(e);
     pending.current = {
-      x: Math.max(0, Math.min(1, (e.clientX - room.left) / room.width)),
-      y: Math.max(0, Math.min(1, (e.clientY - room.top - (e.pointerType === 'touch' ? 76 : 0)) / room.height)),
+      x: Math.max(0, Math.min(1, p.x + grab.current.x)),
+      y: Math.max(0, Math.min(1, p.y + grab.current.y)),
     };
     if (!frame.current) frame.current = requestAnimationFrame(() => {
       frame.current = 0;
@@ -151,6 +170,11 @@ export function WifiHunt({ task, submit }: P<'wifi_hunt'>) {
         onPointerDown={(e) => {
           if (sent || (e.pointerType === 'mouse' && e.button !== 0)) return;
           roomBounds.current = e.currentTarget.getBoundingClientRect();
+          // Grabbing the phone keeps the finger on the same spot of it; tapping elsewhere jumps it there.
+          const phone = phoneRef.current?.getBoundingClientRect();
+          const onPhone = phone && e.clientX >= phone.left && e.clientX <= phone.right && e.clientY >= phone.top && e.clientY <= phone.bottom;
+          const p = toRoom(e);
+          grab.current = onPhone ? { x: pos.x - p.x, y: pos.y - p.y } : { x: 0, y: 0 };
           dragging.current = true;
           e.currentTarget.setPointerCapture(e.pointerId);
           move(e);
@@ -172,7 +196,7 @@ export function WifiHunt({ task, submit }: P<'wifi_hunt'>) {
       >
         <div className="ck-scene-caption"><small>{t('Di chuyển điện thoại đến nơi có sóng Wi-Fi mạnh nhất', 'Move the phone to where the Wi-Fi is strongest')}</small></div>
         {trail.map((point, index) => <span key={index} aria-hidden="true" style={{ position: 'absolute', left: `${point.x * 100}%`, top: `${point.y * 100}%`, width: 7, height: 7, borderRadius: '50%', background: '#fff3d2', opacity: .15 + index / 24, pointerEvents: 'none' }} />)}
-        <div className={`ck-phone ${full ? 'full' : ''}`} style={{ left: `clamp(36px, ${pos.x * 100}%, calc(100% - 36px))`, top: `clamp(56px, ${pos.y * 100}%, calc(100% - 60px))` }}>
+        <div ref={phoneRef} className={`ck-phone ${full ? 'full' : ''}`} style={{ left: `clamp(36px, ${pos.x * 100}%, calc(100% - 36px))`, top: `clamp(56px, ${pos.y * 100}%, calc(100% - 60px))` }}>
           <span className="ck-phone-shadow" />
           <div className="ck-phone-device">
             <div className="ck-phone-screen">

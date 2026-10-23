@@ -30,7 +30,7 @@ export function PackCooler({ task, submit }: P<'pack_cooler'>) {
             : t('Đồ khô để trên kệ, đáy thùng dành cho nước lèo.', 'Dry food goes on the shelf, the bottom is for soup.');
       return setHint([why, 'bad']);
     }
-    sfx.ok();
+    sfx.pack();
     const next = { ...placed, [itemId]: slotId };
     setPlaced(next);
     setSel('');

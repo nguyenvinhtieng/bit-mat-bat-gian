@@ -3,6 +3,7 @@ import { mapSkin } from '@hidden-truth/shared';
 import { KILLER_NAME_COLOR, useStore } from '../store';
 import { RoleBadge, useEscape } from './common';
 import { isTouchDevice } from './Joystick';
+import { sfx } from './minigames/common/kit';
 
 const FLY_MS = 850; // role reveal shrinking into the HUD role card
 // dark "night falls" lines before the role: one line every LINE_GAP_S, held HOLD_MS after the last one finishes
@@ -40,7 +41,11 @@ export function IntroModal() {
   // the prelude is not skippable; the role then stays up until the player taps
   useEffect(() => {
     if (!open || quick || stage !== 'prelude') return;
-    const t = setTimeout(() => setStage('role'), PRELUDE_MS);
+    const t = setTimeout(() => {
+      setStage('role');
+      const faction = useStore.getState().me?.faction;
+      if (faction) sfx.role(faction);
+    }, PRELUDE_MS);
     return () => clearTimeout(t);
   }, [open, quick, stage]);
   useEffect(() => {

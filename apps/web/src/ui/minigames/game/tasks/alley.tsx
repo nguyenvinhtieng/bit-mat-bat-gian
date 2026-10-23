@@ -28,6 +28,7 @@ export function DodgePotholes({ task, submit }: P<'dodge_potholes'>) {
     if (lane === r.lane) return;
     r.lane = lane;
     r.moves.push({ at: r.t, lane });
+    sfx.scrape();
     setTick((v) => v + 1);
   };
 
@@ -37,7 +38,7 @@ export function DodgePotholes({ task, submit }: P<'dodge_potholes'>) {
     r.t += dt;
     const hit = task.obstacles.find((o) => o.at > prev && o.at <= r.t && o.lane === r.lane);
     if (hit) {
-      sfx.bad();
+      sfx.bump();
       doShake();
       restart();
       setRunning(false);
@@ -131,7 +132,7 @@ export function HandoffPackage({ task, submit }: P<'handoff_package'>) {
     const v = performance.now() - ringAt.current;
     setRing(v);
     if (v >= task.ringMs) {
-      sfx.ok();
+      sfx.bell();
       setHolding(false);
       setPhase('photo');
       setHint([t('“Có tính tiền gửi xe hông em?” — Chụp ảnh giao hàng đi.', '“Do I pay for parking too?” — Snap the delivery photo.'), 'info']);
@@ -145,7 +146,7 @@ export function HandoffPackage({ task, submit }: P<'handoff_package'>) {
       doShake();
       return setHint([t('Ảnh mờ, thùng lệch khung. Chụp lại!', 'Blurry, box out of frame. Again!'), 'bad']);
     }
-    sfx.stamp();
+    sfx.snap();
     setPhoto(x);
     setPhase('slide');
     setHint([t('Ảnh nét! Vuốt “Đã giao” để chốt.', 'Sharp! Slide “Delivered” to confirm.'), 'ok']);
@@ -153,6 +154,7 @@ export function HandoffPackage({ task, submit }: P<'handoff_package'>) {
   const finish = () => {
     if (sent) return;
     setSlide(1);
+    sfx.handoff();
     setHint([t('Năm sao! Cuốc Cuối hoàn tất.', 'Five stars! The Last Ride is done.'), 'ok']);
     send({ rang: true, photo, slid: true });
   };

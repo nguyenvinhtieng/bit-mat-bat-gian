@@ -27,7 +27,7 @@ export function useOnce(submit: Submit): [boolean, Submit] {
       if (locked.current) return;
       locked.current = true;
       setSent(true);
-      sfx.stamp();
+      sfx.send();
       timer.current = setTimeout(() => submit(a), Math.max(450, MIN_PLAY_MS - (performance.now() - openedAt)));
     },
   ];

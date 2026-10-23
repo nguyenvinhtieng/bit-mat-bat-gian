@@ -14,6 +14,8 @@ export function UnparkBike({ task, submit }: P<'unpark_bike'>) {
   const [moves, setMoves] = useState<{ id: string; d: number }[]>([]);
   const [hint, setHint] = useState<[string, Tone]>(['', 'info']);
   const drag = useRef<{ id: string; p0: number; steps: number } | null>(null);
+  // a drag fires many moves per second: keep the foley from piling up
+  const soundAt = useRef({ roll: 0, block: 0 });
 
   const cellsOf = (b: LotBike) => Array.from({ length: b.len }, (_, k) => (b.dir === 'h' ? `${b.x + k},${b.y}` : `${b.x},${b.y + k}`));
   /** slide one cell if the lot allows it; returns the new lot or null */
@@ -31,11 +33,12 @@ export function UnparkBike({ task, submit }: P<'unpark_bike'>) {
   const moveBike = (id: string, direction: number) => {
     if (sent) return false;
     const next = step(bikes, id, direction);
+    const now = performance.now();
     if (!next) {
-      sfx.bad();
+      if (now - soundAt.current.block > 450) (soundAt.current.block = now), sfx.nudge();
       return false;
     }
-    sfx.scrape();
+    if (now - soundAt.current.roll > 90) (soundAt.current.roll = now), sfx.roll();
     const ms = [...moves, { id, d: direction }];
     setBikes(next);
     setMoves(ms);
@@ -43,6 +46,7 @@ export function UnparkBike({ task, submit }: P<'unpark_bike'>) {
     const me = next.find((v) => v.mine)!;
     if (me.x + me.len === task.w) {
       drag.current = null;
+      sfx.rev();
       setHint([t('Ra rồi! Bảo vệ vỗ tay.', 'Out! The guard applauds.'), 'ok']);
       send({ moves: ms });
     }

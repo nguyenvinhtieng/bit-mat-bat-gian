@@ -117,7 +117,7 @@ function solve(t: TaskData): unknown {
     case 'untangle_charger':
       return { released: t.pegs.map((peg) => peg.id), plugged: true };
     case 'stuck_shutter':
-      return { cleared: t.jams.map((_, i) => i), freed: t.jams.map(() => 'oil'), lift: 1 };
+      return { samples: Array.from({ length: 100 }, () => ({ dtMs: 100, rise: .01 })) };
     case 'tune_antenna':
       return { angles: t.target, heldMs: t.holdMs };
     case 'water_pipes':

@@ -6,6 +6,7 @@ import { colorHex, KILLER_NAME_COLOR, useKillerIds, useStore, type PlayerView } 
 import { SockReveal } from './SockReveal';
 import { Avatar, ChatLines, colorIndex, Composer, GROUP_NAME, groupAvatar } from './Zola';
 import { Digits, fmt, useCountdown } from './common';
+import { sfx } from './minigames/common/kit';
 
 /** gap between the kick message and the full-screen sock check (reveal phase is only GAME.revealSec long) */
 const EJECT_DELAY_MS = 2500;
@@ -54,6 +55,7 @@ function Poll({
   const submit = () => {
     if (!pick) return;
     send('vote', { target: pick });
+    sfx.vote();
     onDone?.();
   };
   const row = (id: string, label: React.ReactNode, ava: React.ReactNode, disabled: boolean, extra = '') => {

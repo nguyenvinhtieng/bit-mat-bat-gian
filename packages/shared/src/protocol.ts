@@ -86,9 +86,8 @@ export type TaskData =
   | { taskId: 'pack_cooler'; prompt: string; bill: string[]; items: CoolerItem[]; slots: { id: string; kind: 'cup' | 'bottom' | 'shelf' }[] }
   /** Release each peg in order, then plug in. Answer: { released: string[], plugged: true } */
   | { taskId: 'untangle_charger'; prompt: string; pegs: (Pt & { id: string })[]; phone: Pt }
-  /** Pull the door up; at each jam free its rusty bolt (oil can or `turnDeg` of twisting), the door slides down when let go.
-   *  Answer: { cleared: number[], lift: 1, freed: ('oil' | degrees)[] } */
-  | { taskId: 'stuck_shutter'; prompt: string; jams: number[]; bolts: Pt[]; turnDeg: number }
+  /** Lift slowly to stay quiet; pause to cool noise. Answer: { samples: { dtMs, rise }[] }. */
+  | { taskId: 'stuck_shutter'; prompt: string; quietSpeed: number; noiseGain: number; cooldownRate: number; alarmMs: number }
   /** Tune both aerial arms and hold the picture steady. Answer: { angles: [number, number], heldMs: number } */
   | { taskId: 'tune_antenna'; prompt: string; target: [number, number]; tolerance: number; holdMs: number }
   /** Rotate four pipe corners and open the valve. Answer: { rotations: number[], opened: true } */
