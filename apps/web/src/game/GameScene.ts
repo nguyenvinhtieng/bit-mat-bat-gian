@@ -242,6 +242,7 @@ export class GameScene extends Phaser.Scene {
 
     this.buildFog();
     this.buildPackage();
+    this.buildGoal();
     const cam = this.cameras.main;
     cam.setBounds(0, 0, LAYOUT_W * TILE, LAYOUT_H * TILE);
     cam.setBackgroundColor('#1b120d');
@@ -470,6 +471,54 @@ export class GameScene extends Phaser.Scene {
     }
     c.setPosition(r.packageX, r.packageY).setScale(1).setDepth(r.packageY).setVisible(canSee(r.packageX, r.packageY));
     this.pkgGlow!.setVisible(r.packageState === 'dropped');
+  }
+
+  /** While I carry the package: a beacon on the handoff point and an arrow at the screen edge pointing to it. */
+  private goalRing?: Phaser.GameObjects.Container;
+  private goalArrow?: Phaser.GameObjects.Container;
+
+  private buildGoal() {
+    const ring = this.add.circle(0, 0, 40).setStrokeStyle(4, 0xffd23f, 0.95);
+    const fill = this.add.circle(0, 0, 40, 0xffd23f, 0.18);
+    this.tweens.add({ targets: ring, scale: 1.7, alpha: 0, duration: 1100, repeat: -1 });
+    this.goalRing = this.add.container(0, 0, [fill, ring]).setDepth(99989).setVisible(false);
+    // drawn pointing right; rotated toward the goal each frame
+    const tri = this.add.triangle(0, 0, 0, 0, 26, 14, 0, 28, 0xffd23f).setStrokeStyle(3, 0x1b120d);
+    const label = this.add.text(0, 0, '📦', { fontSize: '16px' }).setOrigin(0.5, 0.5);
+    this.goalArrow = this.add.container(0, 0, [tri, label]).setDepth(100002).setVisible(false);
+  }
+
+  private updateGoal() {
+    const ring = this.goalRing, arrow = this.goalArrow;
+    if (!ring || !arrow) return;
+    const { room: r, sessionId } = useStore.getState();
+    const st = this.skin.stations.find((x) => x.id === 'handoff_package');
+    const on = !!r && !!st && r.phase === 'explore' && r.packageState === 'carried' && r.packageCarrier === sessionId;
+    if (!on || !st) return void (ring.setVisible(false), arrow.setVisible(false));
+    const alpha = r.handoffOpen ? 1 : 0.5;
+    ring.setPosition(st.x, st.y).setVisible(true).setAlpha(alpha);
+    const cam = this.cameras.main, v = cam.worldView;
+    const k = 1 / cam.zoom;
+    const pad = 44 * k;
+    const tx = st.x, ty = st.y - 30;
+    const tri = arrow.list[0] as Phaser.GameObjects.Triangle, label = arrow.list[1] as Phaser.GameObjects.Text;
+    arrow.setScale(k).setAlpha(alpha).setVisible(true);
+    if (tx > v.x + pad && tx < v.right - pad && ty > v.y + pad && ty < v.bottom - pad) {
+      // on screen: bob straight down over the point
+      const bob = Math.sin(performance.now() / 180) * 6 * k;
+      arrow.setPosition(tx, ty - 46 * k + bob);
+      tri.setRotation(Math.PI / 2);
+      label.setVisible(false);
+      return;
+    }
+    // off screen: pin to the edge along the line from the screen centre
+    const cx = v.centerX, cy = v.centerY, dx = tx - cx, dy = ty - cy;
+    const f = Math.min((v.width / 2 - pad) / Math.max(Math.abs(dx), 1e-3), (v.height / 2 - pad) / Math.max(Math.abs(dy), 1e-3));
+    const a = Math.atan2(dy, dx);
+    arrow.setPosition(cx + dx * f, cy + dy * f);
+    tri.setRotation(a);
+    // the box sits behind the tip, toward the screen centre
+    label.setVisible(true).setPosition(-Math.cos(a) * 28, -Math.sin(a) * 28);
   }
 
   private togglePackage() {
@@ -1367,6 +1416,7 @@ export class GameScene extends Phaser.Scene {
       } else pair.setVisible(canSee(pair.x, pair.y));
     }
     this.updatePackage(canSee);
+    this.updateGoal();
     const now = performance.now();
     for (const [id, av] of this.avatars) {
       const mineAv = id === r.sessionId;

@@ -1,7 +1,7 @@
 import { AREA_RECTS, LAYOUT_H, LAYOUT_W, MEETING_POINT, PREP_TASK_IDS, TILE, type AreaId, type TaskId } from '@hidden-truth/shared';
 import { useLang } from '../i18n';
 import { useStore } from '../store';
-import { CloseButton, EscHint, asset, useEscape, useSkin, usePackageSpot } from './common';
+import { CloseButton, EscHint, asset, useEscape, useSkin, usePackageSpot, useHandoffGoal } from './common';
 
 /** Label anchor per room (tile units) — kept off the furniture. */
 const LABEL_AT: Partial<Record<AreaId, [number, number]>> = {
@@ -46,6 +46,7 @@ export function MapView({
   const name = (id: AreaId) => (en ? skin.areas[id].nameEn : skin.areas[id].name);
   const tx = (v: number) => v / TILE;
   const pkg = usePackageSpot();
+  const goal = useHandoffGoal();
 
   return (
     <div className="mapview" onClick={onClose}>
@@ -111,6 +112,15 @@ export function MapView({
                   <circle className="mv-ward-dot" r={0.7} />
                   <text className="mv-me-label" y={-1.2}>
                     {en ? 'Package' : 'Kiện hàng'}
+                  </text>
+                </g>
+              )}
+              {goal && (
+                <g className={`mv-goal ${goal.open ? '' : 'locked'}`} transform={`translate(${tx(goal.x)} ${tx(goal.y)})`}>
+                  <circle className="mv-goal-pulse" r={2.4} />
+                  <circle className="mv-goal-dot" r={0.85} />
+                  <text className="mv-me-label" y={-1.6}>
+                    {en ? 'Deliver here' : 'Giao tại đây'}
                   </text>
                 </g>
               )}

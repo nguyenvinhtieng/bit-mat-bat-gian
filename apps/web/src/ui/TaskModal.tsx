@@ -15,7 +15,11 @@ export function TaskModal() {
   const lang = useLang((s) => s.lang);
   const skin = useSkin();
   const en = lang === 'en';
-  const close = () => set({ task: null, taskResult: null });
+  const close = () => {
+    // frees this station's slot for the next player
+    send('task:cancel', {});
+    set({ task: null, taskResult: null });
+  };
   useEscape(task && !result ? close : undefined);
   useEffect(() => {
     if (!result) return;

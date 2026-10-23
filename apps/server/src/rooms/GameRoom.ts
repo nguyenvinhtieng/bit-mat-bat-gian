@@ -273,6 +273,7 @@ export class GameRoom extends Room<GameState> {
 
     this.onMessage('task:open', (client, msg: { taskId: TaskId }) => this.openTask(client, msg?.taskId));
     this.onMessage('task:submit', (client, msg: { taskId: TaskId; answer: unknown }) => this.submitTask(client, msg));
+    this.onMessage('task:cancel', (client) => this.cancelTask(client));
     this.onMessage('arrest', (client, msg: { on: boolean }) => {
       if (msg?.on === true) this.arrestStart(client);
     });
@@ -891,6 +892,10 @@ export class GameRoom extends Room<GameState> {
       const mine = this.delivery.tasksOf(p.id).some((j) => j.id === taskId);
       return client.send('toast', { text: mine ? 'Bạn đã xong trạm này rồi.' : 'Trạm này không có trong danh sách của bạn.', kind: 'info' });
     }
+    // one worker per station, so players can't move in a pack and cover each other
+    if (s.pending?.taskId !== taskId && this.workersAt(taskId, p.id) > 0) {
+      return client.send('toast', { text: 'Trạm này đang có người làm — đợi chút hoặc đi trạm khác.', kind: 'info' });
+    }
     const built = this.content.buildTask(taskId);
     if (!built) return;
     s.pending = { expected: built.expected, openedAt: Date.now(), reward: built.fact, done: built.done, taskId, minMs: built.minMs };
@@ -935,6 +940,26 @@ export class GameRoom extends Room<GameState> {
     this.syncDelivery();
     this.sendPrivate(client.sessionId);
     this.checkWin();
+  }
+
+  /**
+   * Free players with this station open and still standing at it. Arrested runners are unseen,
+   * so they neither hold a slot nor reveal themselves by blocking one.
+   */
+  private workersAt(taskId: TaskId, except: string) {
+    const st = this.station(taskId);
+    if (!st) return 0;
+    let n = 0;
+    for (const [id, s] of this.secrets) {
+      const p = this.state.players.get(id);
+      if (id !== except && s.pending?.taskId === taskId && p?.alive && p.connected && this.near(p, st.x, st.y)) n++;
+    }
+    return n;
+  }
+
+  private cancelTask(client: Client) {
+    const s = this.secrets.get(client.sessionId);
+    if (s) s.pending = undefined;
   }
 
   /**

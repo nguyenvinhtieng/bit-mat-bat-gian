@@ -134,6 +134,7 @@ export const GAME_SKIN: MapSkin = {
       'Hãy cùng nhau chuẩn bị và giao hàng trót lọt,',
       'hoặc tìm ra ai là công an chìm — trước khi cả hội bị còng tay.',
     ],
+    preludeAlert: 2,
     // 23:42 -> 05:00 on the fictional clock, whatever the countdown length
     clock: { startMin: 23 * 60 + 42, endMin: 24 * 60 + 5 * 60 },
     endings: GAME_ENDINGS,

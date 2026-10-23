@@ -99,6 +99,8 @@ export type MapSkin = {
     intro: string;
     /** dark prelude before role reveal, one line per beat */
     prelude: string[];
+    /** index of the prelude line that drops the twist: shown as a red alert bubble with its own sting */
+    preludeAlert?: number;
     /** fictional clock shown with the countdown: minute-of-day at the start and at daybreak (may pass 24*60) */
     clock: { startMin: number; endMin: number };
     endings: { /** package handed off */ tasks: string; vote: string; killer: string; timeout: string };

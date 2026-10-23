@@ -15,6 +15,12 @@ const FADE_MS = 600; // matches preludeOut
 const preludeMs = (lines: number) => (LINE_START_S + (lines - 1) * LINE_GAP_S) * 1000 + LINE_IN_MS + HOLD_MS + FADE_MS;
 const ROLE_TAP_MS = 1800; // ignore taps until the role reveal has settled, so a stray tap does not skip it
 
+/** Paint every mention of the hidden faction red inside a prelude line. */
+function markKiller(line: string, name: string) {
+  const parts = line.split(new RegExp(`(${name})`, 'i'));
+  return parts.map((p, i) => (i % 2 ? <em key={i} className="prelude-killer">{p}</em> : p));
+}
+
 /** Opening: night-falls prelude -> role reveal (held until the player taps), then it shrinks into the HUD role card. */
 export function IntroModal() {
   const open = useStore((s) => s.introOpen);
@@ -26,7 +32,7 @@ export function IntroModal() {
   const [flying, setFlying] = useState(false);
   const [tappable, setTappable] = useState(false);
   const roleRef = useRef<HTMLDivElement>(null);
-  const prelude = mapSkin(useStore.getState().room?.mapSlug).story.prelude;
+  const { prelude, preludeAlert } = mapSkin(useStore.getState().room?.mapSlug).story;
   const PRELUDE_MS = preludeMs(prelude.length);
 
   useEffect(() => {
@@ -46,6 +52,12 @@ export function IntroModal() {
       const faction = useStore.getState().me?.faction;
       if (faction) sfx.role(faction);
     }, PRELUDE_MS);
+    return () => clearTimeout(t);
+  }, [open, quick, stage]);
+  // the twist line lands with its own sting (on top of the intro music)
+  useEffect(() => {
+    if (!open || quick || stage !== 'prelude' || preludeAlert == null) return;
+    const t = setTimeout(() => sfx.alert(), (LINE_START_S + preludeAlert * LINE_GAP_S) * 1000);
     return () => clearTimeout(t);
   }, [open, quick, stage]);
   useEffect(() => {
@@ -105,17 +117,29 @@ export function IntroModal() {
   const skin = mapSkin(useStore.getState().room?.mapSlug);
   const info = skin.roles[me.role];
   const killer = me.faction === 'killer';
+  const skinKillerName = skin.killerName.vi;
+  const alertAt = LINE_START_S + (preludeAlert ?? 0) * LINE_GAP_S; // s, when the twist line lands
 
   return (
     <div className={`opening ${leaving ? 'leaving' : ''} ${flying ? 'to-card' : ''} ${quick ? 'quick' : ''} ${tappable ? 'tappable' : ''}`} onClick={stage === 'role' ? close : undefined}>
       {stage === 'prelude' && (
-        <div className="opening-prelude" key="prelude" style={{ animationDelay: `${PRELUDE_MS - FADE_MS}ms` }}>
-          {prelude.map((l, i) => (
-            <p key={i} style={{ animationDelay: `${LINE_START_S + i * LINE_GAP_S}s` }}>
-              {l}
-            </p>
-          ))}
-        </div>
+        <>
+          {preludeAlert != null && <div className="prelude-siren" style={{ animationDelay: `${alertAt}s, ${alertAt + 1.6}s` }} />}
+          <div className="opening-prelude" key="prelude" style={{ animationDelay: `${PRELUDE_MS - FADE_MS}ms` }}>
+            {prelude.map((l, i) =>
+              i === preludeAlert ? (
+                <p key={i} className="prelude-alert" style={{ animationDelay: `${alertAt}s, ${alertAt + 0.5}s, ${alertAt + 1}s` }}>
+                  <span className="prelude-alert-tag">Tin mật báo</span>
+                  <span className="prelude-alert-text">{markKiller(l, skinKillerName)}</span>
+                </p>
+              ) : (
+                <p key={i} style={{ animationDelay: `${LINE_START_S + i * LINE_GAP_S}s` }}>
+                  {markKiller(l, skinKillerName)}
+                </p>
+              ),
+            )}
+          </div>
+        </>
       )}
       {stage === 'role' && (
         <div className={`opening-role ${me.faction}`} key="role" ref={roleRef}>

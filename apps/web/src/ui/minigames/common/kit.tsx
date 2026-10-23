@@ -487,6 +487,13 @@ export const sfx = {
   skip: () => notes([[D4, 0, 0.3], [D4, 0.25, 0.4]], { type: 'triangle', vol: 0.05, reverb: 0.25 }),
   /** the night begins: timed to the five prelude lines (bass creeps in, phones buzz, cuffs, brass hit) */
   intro: () => music('intro'),
+  /** the "cop among us" prelude line: siren whoop over a low hit and a phone buzz */
+  alert: () => (
+    tone(55, 1.1, { vol: 0.2, bend: 0.5, attack: 0.005, reverb: 0.35 }),
+    noise(0.25, { vol: 0.07, freq: 180, type: 'lowpass' }),
+    [0, 0.42].forEach((at) => (tone(740, 0.4, { type: 'sawtooth', vol: 0.025, bend: 1.35, at, attack: 0.03, lp: 1800, reverb: 0.3 }), tone(990, 0.4, { type: 'sawtooth', vol: 0.02, bend: 0.75, at: at + 0.21, attack: 0.03, lp: 1800, reverb: 0.3 }))),
+    [0.05, 0.2].forEach((at) => noise(0.11, { vol: 0.03, freq: 160, q: 6, at: at + 0.9 }))
+  ),
   /** role reveal: the cop gets a "dun dun dunnn", drivers get a cheeky horn and a bright arpeggio */
   role: (faction: string) => music(faction === 'killer' ? 'role-cop' : 'role-crew'),
   /** end of the night, by how it ended: deliveries done, cop voted out, everyone cuffed, or dawn broke */

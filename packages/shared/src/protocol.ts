@@ -11,6 +11,8 @@ export type ClientMessages = {
   start: Record<string, never>;
   'task:open': { taskId: TaskId };
   'task:submit': { taskId: TaskId; answer: unknown };
+  /** closed the task window: frees the station slot */
+  'task:cancel': Record<string, never>;
   /** undercover only: on=true requests an immediate arrest; on=false is a compatibility no-op */
   arrest: { on: boolean };
   /** pick up the package when standing next to it */

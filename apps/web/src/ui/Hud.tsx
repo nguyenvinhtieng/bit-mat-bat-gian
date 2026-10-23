@@ -8,6 +8,7 @@ import { AREA_RECTS, GAME, LAYOUT_H, LAYOUT_W, TILE, type AreaId, type TaskId } 
 function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''; pending: Set<AreaId>; pos: { x: number; y: number } | null; big?: boolean; onClick?: () => void }) {
   const skin = useSkin();
   const pkg = usePackageSpot();
+  const goal = useHandoffGoal();
   const ids = Object.keys(AREA_RECTS) as AreaId[];
   return (
     <svg className={`minimap ${big ? 'big' : 'mini'}`} onClick={onClick} viewBox={`0 0 ${LAYOUT_W} ${LAYOUT_H}`}>
@@ -34,6 +35,12 @@ function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''
           <circle cx={pkg.x / TILE} cy={pkg.y / TILE} r={1.2} className="mm-ward-dot" />
         </g>
       )}
+      {goal && (
+        <g className={`mm-goal ${goal.open ? '' : 'locked'}`}>
+          <circle cx={goal.x / TILE} cy={goal.y / TILE} r={3.4} className="mm-goal-pulse" />
+          <circle cx={goal.x / TILE} cy={goal.y / TILE} r={1.4} className="mm-goal-dot" />
+        </g>
+      )}
       {pos && (
         <g className="mm-me">
           <circle cx={pos.x} cy={pos.y} r={big ? 1.6 : 2.2} className="mm-pulse" />
@@ -46,7 +53,7 @@ function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''
 import { arrest, send } from '../net';
 import { colorHex, uiBlocksMovement, useStore } from '../store';
 import { useLang, useT } from '../i18n';
-import { CloseButton, Digits, Icon, RoleBadge, asset, fmt, tapProps, useCountdown, useEscape, usePackageSpot, useSkin } from './common';
+import { CloseButton, Digits, Icon, RoleBadge, asset, fmt, tapProps, useCountdown, useEscape, useHandoffGoal, usePackageSpot, useSkin } from './common';
 import { MapView } from './MapView';
 import { GameSettings } from './GameSetting';
 import { VoiceControls } from './VoiceControls';
@@ -77,16 +84,51 @@ function CooldownRing({ readyAt }: { readyAt: number }) {
 }
 
 function CarryNotice() {
-  const mine = useStore((s) => !!s.room && s.room.packageState === 'carried' && s.room.packageCarrier === s.sessionId);
-  const open = useStore((s) => !!s.room?.handoffOpen);
+  const goal = useHandoffGoal();
+  const skin = useSkin();
+  const en = useLang((s) => s.lang) === 'en';
   const t = useT();
-  if (!mine) return null;
+  if (!goal) return null;
+  const area = en ? skin.areas[goal.area].nameEn : skin.areas[goal.area].name;
   return (
     <div className="notice carry-notice">
       <span className="notice-ico">📦</span>
       <div className="notice-body">
         <b>{t('carrying')}</b>
-        <span>{open ? t('carryGo') : t('carryWait')}</span>
+        <span>{goal.open ? `${t('carryGo')} ${area} — ${t('carryFollow')}` : t('carryWait')}</span>
+      </div>
+    </div>
+  );
+}
+
+/** Everyone at once, the moment prep hits 100%: someone has to grab the package and run it. */
+function HandoffAnnounce() {
+  const open = useStore((s) => !!s.room?.handoffOpen);
+  const carried = useStore((s) => s.room?.packageState === 'carried');
+  const skin = useSkin();
+  const en = useLang((s) => s.lang) === 'en';
+  const t = useT();
+  // starts at the current value so a reconnect / remount after a meeting doesn't replay it
+  const was = useRef(open);
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const opened = open && !was.current;
+    was.current = open;
+    if (!opened) return;
+    setShow(true);
+    sfx.done();
+    const id = setTimeout(() => setShow(false), 8000);
+    return () => clearTimeout(id);
+  }, [open]);
+  const st = skin.stations.find((x) => x.id === 'handoff_package');
+  // someone already has it: the carrier gets their own notice
+  if (!show || !open || carried || !st) return null;
+  return (
+    <div className="notice handoff-notice" role="status">
+      <span className="notice-ico">🚚</span>
+      <div className="notice-body">
+        <b>{t('handoffReady')}</b>
+        <span>{`${t('handoffGo')} ${en ? skin.areas[st.area].nameEn : skin.areas[st.area].name}.`}</span>
       </div>
     </div>
   );
@@ -459,6 +501,7 @@ export function Hud() {
     <>
       {inGame && (
         <div className="hud-notices">
+          {room.phase === 'explore' && <HandoffAnnounce />}
           {room.phase === 'explore' && <CarryNotice />}
         </div>
       )}

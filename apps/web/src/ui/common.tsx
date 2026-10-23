@@ -81,6 +81,15 @@ export function usePackageSpot() {
   return on ? { x, y } : null;
 }
 
+/** The handoff point (px) while I carry the package, so maps can point the way. */
+export function useHandoffGoal() {
+  const skin = useSkin();
+  const mine = useStore((s) => s.room?.phase === 'explore' && s.room.packageState === 'carried' && s.room.packageCarrier === s.sessionId);
+  const open = useStore((s) => !!s.room?.handoffOpen);
+  const st = skin.stations.find((x) => x.id === 'handoff_package');
+  return mine && st ? { x: st.x, y: st.y, area: st.area, open } : null;
+}
+
 export function useCountdown(endsAt: number) {
   const offset = useStore((s) => s.timeOffset);
   const [now, setNow] = useState(Date.now());

@@ -188,6 +188,31 @@
   .zl-side header { height: 46px; }
   .zl-opt { min-height: 36px; padding-block: 3px; }
 }
+/* phones (portrait + landscape): slim member list, one-line meeting notice and pinned poll so the chat keeps the room */
+@media (max-width: 820px), (max-height: 520px) {
+  .zl-app { grid-template-columns: minmax(0, 1fr) 210px; }
+  .zl-side header { height: auto; min-height: 40px; padding-block: 4px; padding-left: 12px; font-size: 0.85em; }
+  .zl-side ul { padding: 4px; }
+  .zl-side li { gap: 7px; padding: 4px 6px; }
+  .zl-side .zl-ava { width: 26px !important; height: 26px !important; }
+  .zl-mem b { font-size: 0.82em; }
+  .zl-mem small { font-size: 0.68em; }
+  .zl-tick { width: 16px; height: 16px; }
+  .zl-meeting-notice { gap: 8px; padding: 4px 10px; }
+  .zl-meeting-notice > span { padding: 3px 6px; font-size: 8px; }
+  .zl-meeting-notice p { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .zl-meeting-notice small { display: none; }
+  .zl-pin { gap: 8px; padding: 4px 10px; }
+  .zl-pin .zl-poll-ico { width: 24px; height: 24px; padding: 4px; }
+  .zl-pin-text small { display: none; }
+  .zl-pin-text b { font-size: 0.85em; }
+  .zl-pin-count { font-size: 0.78em; }
+  .zl-pin .zl-btn.small { padding: 4px 10px; font-size: 0.78em; }
+}
+@media (max-width: 820px) {
+  .zl-app { grid-template-columns: minmax(0, 1fr); }
+  .zl-side { width: min(240px, 78%); }
+}
 @media (prefers-reduced-motion: reduce) {
   .zl-side, .zl-opt-bar, .zl-modal, .zl-modal-bg { transition: none; animation: none; }
 }
