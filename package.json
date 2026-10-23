@@ -5,13 +5,6 @@
   "packageManager": "pnpm@11.1.1",
   "scripts": {
     "layout:gen": "tsx tools/layout-gen/gen.ts",
-    "assets:pack": "node tools/assets-pack/pack.mjs",
-    "assets:pack-ui": "node tools/assets-pack/pack-ui-fx.mjs",
-    "assets:ui-art": "node tools/ui-art/draw-ui.mjs",
-    "assets:fx": "node tools/ui-art/draw-fx.mjs",
-    "assets:guide": "node tools/ui-art/draw-guide.mjs",
-    "assets:mobile": "node tools/ui-art/draw-mobile.mjs",
-    "assets:chars": "node tools/char-art/draw-characters.mjs",
     "prepare:data": "pnpm layout:gen",
     "dev": "pnpm prepare:data && pnpm -r --parallel --filter \"./apps/**\" dev",
     "dev:server": "pnpm --filter @hidden-truth/server dev",

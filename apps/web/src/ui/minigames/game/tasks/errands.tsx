@@ -6,7 +6,7 @@ import { useT } from '../art';
 import { rel, useFrame, useOnce, type P } from './shared';
 
 function Scene({ id, children, className = '' }: { id: string; children: ReactNode; className?: string }) {
-  return <div className={`ck-errand ${className}`}><img className="ck-errand-art" src={asset(`maps/game/tasks/${id}.png`)} alt="" draggable={false} />{children}</div>;
+  return <div className={`ck-errand ${className}`}><img className="ck-errand-art" src={asset(`maps/game/tasks/${id}.webp`)} alt="" draggable={false} />{children}</div>;
 }
 
 export function UntangleCharger({ task, submit }: P<'untangle_charger'>) {
@@ -96,7 +96,7 @@ export function StuckShutter({ task, submit }: P<'stuck_shutter'>) {
   const status = sent ? t('Cửa đã mở', 'Door open') : alarm ? t('Hàng xóm thức giấc. Chờ yên rồi kéo tiếp.', 'Neighbor awake. Wait, then pull gently.') : t('Kéo chậm để giữ yên lặng', 'Pull slowly to stay quiet');
   return <MgShell bare taskId={task.taskId}>
     <div className={`ck-errand ck-quiet-scene ${alarm ? 'alarmed' : ''} ${warning ? 'warning' : ''} ${sent ? 'complete' : ''}`} data-noise={state.noise} data-alarm={alarm}>
-      <img className="ck-errand-art" src={asset('maps/game/tasks/quiet-shutter-night-v1.png')} alt="" draggable={false} />
+      <img className="ck-errand-art" src={asset('maps/game/tasks/quiet-shutter-night-v1.webp')} alt="" draggable={false} />
       <div className="ck-quiet-hud">
         <span className="ck-quiet-moon"><QuietIcon kind={sent ? 'check' : 'moon'} /></span>
         <div className="ck-quiet-meter" role="meter" aria-label={t('Tiếng ồn', 'Noise')} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(state.noise * 100)}>
