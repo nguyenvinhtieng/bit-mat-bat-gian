@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ROLE_INFO, mapSkin, type RoleId } from '@hidden-truth/shared';
 import { useStore } from '../store';
+import { uiTap } from './minigames/common/kit';
 
 export const asset = (p: string) => `/assets/${p}`;
 
@@ -51,6 +52,7 @@ export const tapProps = (fn: () => void) => ({
     if (e.pointerType === 'mouse') return;
     (e.currentTarget as HTMLElement & { tapAt?: number }).tapAt = Date.now();
     fn();
+    uiTap(e.currentTarget, true);
   },
   onClick: (e: React.MouseEvent<HTMLElement>) => {
     // the click that trails a touch was already handled on pointerdown

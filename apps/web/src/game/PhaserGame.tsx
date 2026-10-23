@@ -1,6 +1,16 @@
 import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { GameScene } from './GameScene';
+import { useStore } from '../store';
+import { keyboardOpen } from '../keyboard';
+
+/** Phones report DPR 3: rendering at 2 looks the same at arm's length and fills ~56% fewer pixels (heat/battery). */
+const MAX_DENSITY = 2;
+/** Full-screen overlays hide the map entirely: stop the render loop under them instead of drawing (and re-blurring) unseen frames. */
+const covered = (s: ReturnType<typeof useStore.getState>) => {
+  const phase = s.room?.phase;
+  return phase === 'meeting' || phase === 'reveal' || phase === 'ended' || s.cinematic?.kind === 'report' || s.cinematic?.kind === 'emergency';
+};
 
 /** Mounts Phaser exactly once; React and Phaser talk through the zustand store + net module. */
 export function PhaserGame() {
@@ -8,7 +18,7 @@ export function PhaserGame() {
   useEffect(() => {
     if (!host.current) return;
     const parent = host.current;
-    const density = () => Math.max(1, window.devicePixelRatio || 1);
+    const density = () => Math.min(MAX_DENSITY, Math.max(1, window.devicePixelRatio || 1));
     const size = parent.getBoundingClientRect();
     const game = new Phaser.Game({
       type: Phaser.AUTO,
@@ -39,7 +49,8 @@ export function PhaserGame() {
       for (const ms of [50, 250, 600])
         timers.push(
           window.setTimeout(() => {
-            window.scrollTo(0, 0);
+            // don't fight the browser panning a focused input into view above the keyboard
+            if (!keyboardOpen()) window.scrollTo(0, 0);
             resize();
           }, ms),
         );
@@ -49,7 +60,16 @@ export function PhaserGame() {
     window.visualViewport?.addEventListener('resize', remeasure);
     const observer = new ResizeObserver(remeasure);
     observer.observe(parent);
+    const pause = (s: ReturnType<typeof useStore.getState>) => {
+      if (!game.isBooted) return;
+      const off = covered(s);
+      if (off && game.loop.running) game.loop.sleep();
+      else if (!off && !game.loop.running) game.loop.wake(true);
+    };
+    game.events.once(Phaser.Core.Events.READY, () => pause(useStore.getState()));
+    const unsub = useStore.subscribe(pause);
     return () => {
+      unsub();
       observer.disconnect();
       timers.forEach(clearTimeout);
       window.removeEventListener('orientationchange', remeasure);

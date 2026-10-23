@@ -10,6 +10,7 @@ import { MobileShell } from './ui/MobileShell';
 import { registerAssetWorker } from './preload';
 import { AdminStats } from './ui/AdminStats';
 import { initVoice } from './voice';
+import { initKeyboardViewport } from './keyboard';
 
 // dev-only hooks for automated visual checks (tools/smoke)
 if (import.meta.env.DEV) Object.assign(window, { __store: useStore, __net: net });
@@ -22,6 +23,7 @@ if (/^\/admin\/?$/.test(location.pathname)) {
 } else {
   registerAssetWorker();
   initVoice();
+  initKeyboardViewport();
   root.render(
     <>
       <AssetGate>

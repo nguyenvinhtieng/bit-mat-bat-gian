@@ -152,9 +152,9 @@ export class GameRoom extends Room<GameState> {
   }
 
   async onLeave(client: Client, consented: boolean) {
-    const p = this.state.players.get(client.sessionId);
-    if (!p) return;
     const kicked = this.kicked.delete(client.sessionId);
+    const p = this.state.players.get(client.sessionId);
+    if (!p) return; // evicted: the seat is already gone
     if (!consented && !kicked) {
       // flaky mobile networks / app switching: hold the seat (shorter in the lobby so a dead player doesn't block the start)
       p.connected = false;
@@ -380,10 +380,7 @@ export class GameRoom extends Room<GameState> {
       const victim = this.clients.find((c) => c.sessionId === target);
       if (!victim) return;
       const name = this.state.players.get(target)?.name ?? '';
-      victim.send('toast', { text: 'Bạn đã bị chủ phòng mời ra khỏi phòng.', kind: 'warn' });
-      this.lastActive.delete(target);
-      this.kicked.add(target);
-      victim.leave(4001);
+      this.evict(victim, 'Bạn đã bị chủ phòng mời ra khỏi phòng.');
       this.system(`Chủ phòng đã mời ${name} ra khỏi phòng.`);
     });
   }
@@ -395,13 +392,24 @@ export class GameRoom extends Room<GameState> {
       if (client.sessionId === this.state.hostId) continue;
       const last = this.lastActive.get(client.sessionId) ?? now;
       if (now - last > AFK_LOBBY_MS) {
-        client.send('toast', { text: 'Bạn bị mời ra khỏi phòng vì không hoạt động.', kind: 'warn' });
-        this.lastActive.delete(client.sessionId);
-        this.kicked.add(client.sessionId);
-        client.leave(4001);
-        this.system(`${this.state.players.get(client.sessionId)?.name ?? ''} bị mời ra vì không hoạt động.`);
+        const name = this.state.players.get(client.sessionId)?.name ?? '';
+        this.evict(client, 'Bạn bị mời ra khỏi phòng vì không hoạt động.');
+        this.system(`${name} bị mời ra vì không hoạt động.`);
       }
     }
+  }
+
+  /** Lobby removal by the server (host kick / AFK): the seat goes now — a backgrounded phone's socket close can lag ~30s. */
+  private evict(client: Client, text: string) {
+    const id = client.sessionId;
+    client.send('toast', { text, kind: 'warn' });
+    this.lastActive.delete(id);
+    this.kicked.add(id);
+    this.state.players.delete(id);
+    this.moves.delete(id);
+    if (!DEV && this.state.players.size < MIN_PLAYERS) for (const x of this.state.players.values()) x.ready = false;
+    this.syncMeta();
+    client.leave(4001);
   }
 
   // ---------------------------------------------------------------- simulation

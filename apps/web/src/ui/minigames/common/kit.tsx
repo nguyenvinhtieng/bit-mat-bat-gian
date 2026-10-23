@@ -162,16 +162,52 @@ let ctx: AudioContext | null = null;
 /** performance.now() of the last cue started — lets the generic button tap stay quiet when a screen already played its own sound */
 let lastCueAt = -Infinity;
 export const msSinceLastCue = () => performance.now() - lastCueAt;
+/**
+ * A running context keeps the audio thread (compressor + reverb) busy even in silence, which warms phones up:
+ * suspend it once nothing has sounded for a while (no engine, no stinger); the next cue resumes it.
+ */
+const IDLE_SUSPEND_MS = 4000;
+let sleepTimer: ReturnType<typeof setTimeout> | undefined;
+const scheduleSleep = () => {
+  clearTimeout(sleepTimer);
+  sleepTimer = setTimeout(() => {
+    if (motors.size || playing) return scheduleSleep();
+    if (ctx?.state === 'running') void ctx.suspend();
+  }, IDLE_SUSPEND_MS);
+};
+if (typeof document !== 'undefined')
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && ctx?.state === 'running') void ctx.suspend();
+  });
 const ac = () => {
   lastCueAt = performance.now();
   try {
     ctx ??= new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     if (ctx.state === 'suspended') void ctx.resume();
+    scheduleSleep();
     return ctx;
   } catch {
     return null;
   }
 };
+/** create / resume the context inside a user gesture (iOS unlock) without counting as a cue */
+export const wakeAudio = () => {
+  const at = lastCueAt;
+  ac();
+  lastCueAt = at;
+};
+/** the touch-down that already ticked a button, so the click trailing it stays quiet */
+let touchTap: { el: EventTarget; at: number } | null = null;
+/** Generic press tick: skipped when the press already played its own cue. */
+export function uiTap(el?: EventTarget | null, touch = false) {
+  if (!touch && el && touchTap?.el === el && performance.now() - touchTap.at < 3000) {
+    touchTap = null;
+    return;
+  }
+  if (touch && el) touchTap = { el, at: performance.now() };
+  if (msSinceLastCue() < 120) return;
+  sfx.tap();
+}
 
 /** Master volume (0..1) for every cue, set from the in-game settings and remembered per device. */
 const VOL_KEY = 'ht-volume';
@@ -366,8 +402,8 @@ function music(name: Track) {
 
 export const sfx = {
   // ---- interface
-  /** light tap on a button / selection: tiny soft tick, barely there */
-  tap: () => (tone(jitter(640, 0.03), 0.06, { type: 'triangle', vol: 0.03, bend: 0.85, attack: 0.004, reverb: 0 }), noise(0.02, { vol: 0.015, freq: 1800, q: 2, reverb: 0 })),
+  /** light tap on a button / selection: short soft tick, still audible on a phone speaker */
+  tap: () => (tone(jitter(640, 0.03), 0.06, { type: 'triangle', vol: 0.05, bend: 0.85, attack: 0.004, reverb: 0 }), noise(0.02, { vol: 0.025, freq: 1800, q: 2, reverb: 0 })),
   /** small positive step (a correct move inside a task) */
   ok: () => notes([[D5, 0, 0.14], [A5, 0.07, 0.2]], { type: 'triangle', vol: 0.06 }),
   /** gentle "nope": two low, round bumps, never a buzz */
@@ -526,6 +562,8 @@ function motor(a: AudioContext, id: string): Motor {
  */
 export function setEngines(list: EngineMix[]) {
   if (!navigator.userActivation?.hasBeenActive && !ctx) return;
+  // nothing audible and nothing to fade out: don't wake (or keep awake) the context just to mix silence
+  if (!motors.size && list.every((e) => e.level <= 0.001)) return;
   const a = ac();
   if (!a) return;
   const t = a.currentTime;

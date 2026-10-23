@@ -1,20 +1,10 @@
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useRef } from 'react';
 import { PLAYER_COLORS, mapSkin } from '@hidden-truth/shared';
 import { leaveRoom, send } from '../net';
 import { colorHex, useStore } from '../store';
 import { RoleBadge } from './common';
 
-// same breakpoint as the full-viewport mobile layout in styles.css: phones keep the role list folded
-const MOBILE_QUERY = '(max-width: 640px), (max-width: 960px) and (max-height: 500px)';
-const subscribeMobile = (cb: () => void) => {
-  const mq = matchMedia(MOBILE_QUERY);
-  mq.addEventListener('change', cb);
-  return () => mq.removeEventListener('change', cb);
-};
-const isMobileLayout = () => matchMedia(MOBILE_QUERY).matches;
-
 export function EndScreen() {
-  const mobile = useSyncExternalStore(subscribeMobile, isMobileLayout);
   const dialogRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const previous = document.activeElement;
@@ -53,7 +43,22 @@ export function EndScreen() {
         <div className="end-hero">
           <div className="end-summary">
             <span className="end-eyebrow">Ván chơi đã kết thúc</span>
-            <span className="end-winner-mark" aria-hidden="true">{crewWins ? '★' : '✓'}</span>
+            <span className="end-winner-mark" aria-hidden="true">
+              <svg viewBox="0 0 120 64" fill="none">
+                <g stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path className="end-laurel" d="M35 55C15 49 13 29 24 15M24 43l-10-5m8-3-9-8m10 0-5-10m67 38c20-6 22-26 11-40m0 28 10-5m-8-3 9-8m-10 0 5-10" />
+                  <path d="m10 11 1-4 1 4 4 1-4 1-1 4-1-4-4-1 4-1Zm98 39 1-4 1 4 4 1-4 1-1 4-1-4-4-1 4-1Z" fill="currentColor" stroke="none" />
+                  {crewWins ? <>
+                    <path d="M47 15h26v14a13 13 0 0 1-26 0V15Z" fill="currentColor" fillOpacity=".18" />
+                    <path d="M47 19h-8v7a10 10 0 0 0 12 10m22-17h8v7a10 10 0 0 1-12 10M60 42v9m-10 4h20m-17-4h14" />
+                    <path d="m60 21 2 5 5 .5-4 3.5 1 5-4-2.5-4 2.5 1-5-4-3.5 5-.5 2-5Z" fill="currentColor" stroke="none" />
+                  </> : <>
+                    <path d="m60 11 18 7v15c0 10-10 18-18 22-8-4-18-12-18-22V18l18-7Z" fill="currentColor" fillOpacity=".18" />
+                    <path d="m60 21 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6Z" fill="currentColor" />
+                  </>}
+                </g>
+              </svg>
+            </span>
             <h1 id="end-title">{winnerName}<span>chiến thắng!</span></h1>
             <p id="end-reason" className="end-reason">{reason}</p>
             <div className="end-stats" aria-label="Thông tin ván chơi">
@@ -63,9 +68,9 @@ export function EndScreen() {
           </div>
         </div>
 
-        {/* desktop has room for the whole list: always open, no toggle */}
-        <details className={`end-reveal${mobile ? '' : ' always-open'}`} open={mobile ? undefined : true}>
-          <summary className="end-section-heading" tabIndex={mobile ? undefined : -1} onClick={mobile ? undefined : (e) => e.preventDefault()}>Xem vai trò cả hội <span>{end.roles.length} người chơi</span></summary>
+        {/* Keep the role reveal open on every screen size. */}
+        <details className="end-reveal always-open" open>
+          <summary className="end-section-heading" tabIndex={-1} onClick={(e) => e.preventDefault()}>Xem vai trò cả hội <span>{end.roles.length} người chơi</span></summary>
           <div className="role-list" role="region" aria-label="Vai trò người chơi">
             {/* the cop first so the reveal is the first thing everyone reads */}
             {[...end.roles].sort((a, b) => Number(b.faction === 'killer') - Number(a.faction === 'killer')).map((r, i) => (

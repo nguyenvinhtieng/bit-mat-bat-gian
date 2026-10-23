@@ -333,8 +333,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e5b76d; outline-
   .home .home-card {
     width: 100%; min-height: 100%; margin: 0; box-sizing: border-box;
     border: 0; border-radius: 0; box-shadow: none;
-    background: linear-gradient(155deg, #18383bc4, #0a1c20d9);
-    -webkit-backdrop-filter: blur(22px) saturate(.85); backdrop-filter: blur(22px) saturate(.85);
+    /* no backdrop blur here: a full-screen blur is the costliest thing a phone GPU can composite; a denser tint reads the same */
+    background: linear-gradient(155deg, #18383beb, #0a1c20f2);
+    -webkit-backdrop-filter: none; backdrop-filter: none;
     padding: max(68px, calc(env(safe-area-inset-top) + 56px)) max(22px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
   }
 }

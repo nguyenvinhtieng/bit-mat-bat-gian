@@ -14,6 +14,8 @@
 }
 * { box-sizing: border-box; }
 html, body, #root { margin: 0; height: 100%; overflow: hidden; }
+/* on-screen keyboard open (src/keyboard.ts): fit the app above it; the transform makes #root the containing block for fixed overlays */
+html.kb-open #root { position: fixed; left: 0; right: 0; top: var(--vv-top, 0px); height: var(--vv-h, 100%); transform: translateZ(0); }
 /* iOS Safari inflates text after rotating to landscape unless this is pinned */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 button { font: inherit; }
@@ -235,7 +237,7 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 .end-screen.killer { --end-accent: #ff6a5c; background: #1a0607c4; scrollbar-color: #8e4a46 #280b0c; animation-name: endDimKiller; }
 .end-screen.killer .end-card { border-color: #ff5a4a8c; background: radial-gradient(ellipse at 50% 0%, #6a1d1d, #2a0d10 70%); box-shadow: 0 24px 80px #000a, 0 0 60px #ff3b3040, inset 0 1px 0 #ffffff14; animation: endCardIn .9s cubic-bezier(.16,1,.3,1) 1.1s both, endSiren 1.6s ease-in-out 2s 3 alternate; }
 .end-screen.killer .end-eyebrow { color: #f0b3ab; }
-.end-screen.killer .end-winner-mark { color: #fff; border-color: #ff7a6a; background: #e0332a; box-shadow: 0 0 36px #ff3b3080; }
+.end-screen.killer .end-winner-mark { color: #ffbd91; background: radial-gradient(ellipse, #ff654933, transparent 70%); }
 .end-screen.killer .end-summary h1 { text-shadow: 0 0 24px #ff3b3066; }
 .end-screen.killer .end-reason, .end-screen.killer .end-stats { color: #ecc9c4; }
 .end-screen.killer .end-reveal, .end-screen.killer .end-actions { border-top-color: #ff8a7a2e; }
@@ -255,7 +257,9 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 .end-scene-label { position: absolute; z-index: 1; left: 22px; bottom: 18px; padding: 6px 10px; border: 1px solid #fff3; border-radius: 8px; color: #fff2cd; background: #0b3034dc; font-size: .67rem; font-weight: 800; letter-spacing: .12em; }
 .end-summary { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px 28px 24px; text-align: center; }
 .end-eyebrow { color: #b9cfc7; font-size: .76rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.end-winner-mark { display: grid; place-items: center; width: 52px; height: 52px; margin: 16px 0 14px; border: 1px solid #d9e8b94d; border-radius: 12px; color: #ffe1a0; background: #f6d18612; font-size: 1.7rem; box-shadow: 0 0 36px #f6d18616; }
+.end-winner-mark { display: grid; place-items: center; width: 120px; height: 52px; flex-shrink: 0; margin: 16px 0 14px; color: #ffe1a0; background: radial-gradient(ellipse, #f6d18626, transparent 70%); }
+.end-winner-mark svg { display: block; width: 120px; height: 64px; max-width: none; filter: drop-shadow(0 0 8px #f6d18630); }
+.end-laurel { opacity: .65; }
 .end-summary h1 { margin: 0; color: var(--end-accent); font-family: inherit; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 900; line-height: 1.18; letter-spacing: -.025em; text-shadow: none; }
 .end-summary h1 span { display: block; color: #fff1d0; }
 .end-screen .end-reason { margin: 16px 0 0; color: #d3e0d9; font-size: .9rem; line-height: 1.65; overflow-wrap: anywhere; }
@@ -809,6 +813,8 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 .home-bg { position: fixed; inset: -3%; background-size: cover; background-position: center; opacity: 0; transition: opacity 0.7s ease; animation: bgDrift 40s ease-in-out infinite alternate; }
 .home-bg.on { opacity: 1; }
 @keyframes bgDrift { from { transform: scale(1) translate(0, 0); } to { transform: scale(1.05) translate(-1%, -1%); } }
+/* phones: a drifting full-screen image under the blurred home card re-renders every frame (heat) — keep it still */
+@media (hover: none), (pointer: coarse) { .home-bg { animation: none; } }
 .home::before { z-index: 0; background: radial-gradient(ellipse at 50% 50%, rgba(10, 6, 4, 0.35) 25%, rgba(10, 6, 4, 0.8)); }
 .home-card {
   z-index: 1; width: min(560px, 96vw); margin: auto; border-radius: 0; box-shadow: none; padding: 26px 22px 14px;
@@ -1540,7 +1546,8 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
   .end-screen .end-card { width: min(520px, 100%); max-height: 100%; margin: auto; border-radius: 22px; }
   .end-summary { padding: 22px 18px 18px; align-items: center; text-align: center; }
   .end-eyebrow { display: block; }
-  .end-winner-mark { display: grid; width: 40px; height: 40px; margin: 8px 0 12px; font-size: 1.3rem; }
+  .end-winner-mark { display: grid; width: 100px; height: 40px; margin: 8px 0 12px; }
+  .end-winner-mark svg { width: 100px; height: 48px; }
   /* iOS can't scroll a <details>: the card scrolls as a whole and the actions stick to its bottom */
   .end-screen .end-card { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
   .end-screen .end-card > * { flex-shrink: 0; }
@@ -2372,6 +2379,9 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
   .lobby-chat .zl-compose input { font-size: 16px; }
   .ready-dock.with-chat { visibility: hidden; }
 }
+/* keyboard up: the popup already sits above it, so drop the safe-area/outer padding to keep messages visible */
+html.kb-open .lobby-chat { padding-block: 4px; }
+html.kb-open .meeting.zola { padding: 0; }
 
 /* ---------- in-game settings cog (top right; the alive counter sits to its left) */
 .hud-settings {
@@ -2599,7 +2609,8 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
 .cta-text b { font-size: 1.12em; font-weight: 900; letter-spacing: 0.02em; line-height: 1.15; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35); }
 .cta-find .cta-text b { text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
 .cta-text small { font-size: 0.74em; font-weight: 600; opacity: 0.82; line-height: 1.25; }
-@keyframes ctaShine { 0%, 55% { left: -60%; } 85%, 100% { left: 130%; } }
+/* transform-only sweep (left:-60% -> 130% of the card = 475% of the 40%-wide shine): composited, no per-frame repaint */
+@keyframes ctaShine { 0%, 55% { transform: translateX(0) skewX(-20deg); } 85%, 100% { transform: translateX(475%) skewX(-20deg); } }
 @keyframes ctaScan { 0%, 100% { transform: translate(0, 0) rotate(0); } 25% { transform: translate(-2px, -1px) rotate(-12deg); } 75% { transform: translate(2px, 1px) rotate(10deg); } }
 @keyframes ctaPop { 50% { transform: scale(1.15) rotate(-6deg); } }
 
@@ -3216,7 +3227,8 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
 /* Report: a brief shared shock, then a readable warning in the alley palette. */
 .bike-discovery { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; overflow: hidden; padding: clamp(50px, 8vh, 76px) 20px; cursor: pointer; color: #f7e7c6; background: radial-gradient(ellipse at 50% 42%, #63502b 0%, #242e28 43%, #0d1617 85%); isolation: isolate; animation: cineOut .3s 4.5s forwards; }
 .bike-discovery-flash { position: absolute; inset: 0; z-index: 5; pointer-events: none; background: #fff0c8; opacity: 0; animation: bikeAlarmFlash .3s .1s both; }
-.bike-discovery-rays { position: absolute; inset: -80%; z-index: -1; pointer-events: none; background: repeating-conic-gradient(from 8deg at 50% 50%, transparent 0deg 13deg, #dbaa4824 13deg 15deg, transparent 15deg 29deg); mask-image: radial-gradient(ellipse, transparent 9%, #000 38%, transparent 68%); animation: bikeAlarmRays 1.3s .12s both; }
+/* sized to the screen's long side, not inset:-80% (a ~2.6x-viewport layer at DPR 3 is ~80MB of GPU memory and crashed iPhones) */
+.bike-discovery-rays { position: absolute; left: 50%; top: 50%; width: 120vmax; height: 120vmax; margin: -60vmax 0 0 -60vmax; z-index: -1; pointer-events: none; background: repeating-conic-gradient(from 8deg at 50% 50%, transparent 0deg 13deg, #dbaa4824 13deg 15deg, transparent 15deg 29deg); mask-image: radial-gradient(ellipse, transparent 9%, #000 38%, transparent 68%); animation: bikeAlarmRays 1.3s .12s both; }
 .bike-discovery-band { position: absolute; left: -5%; width: 110%; height: clamp(28px, 5vh, 40px); display: grid; place-items: center; overflow: hidden; background: repeating-linear-gradient(125deg, #ddaf50 0 16px, #27312a 16px 30px); box-shadow: 0 0 28px #0007; animation: bikeAlarmBand .35s .12s cubic-bezier(.12,.85,.22,1) both; }
 .bike-discovery-band.top { top: 4vh; transform: rotate(-2deg); }
 .bike-discovery-band.bottom { bottom: 4vh; transform: rotate(-2deg); }
@@ -3243,6 +3255,8 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
 @keyframes bikeAlarmMarker { from { opacity: 0; transform: scale(.1) rotate(-20deg); } to { opacity: 1; transform: none; } }
 @keyframes bikeAlarmCaption { from { opacity: 0; transform: translateY(24px) scale(.9); } to { opacity: 1; transform: none; } }
 @keyframes bikeProgress { to { transform: scaleX(0); } }
+/* phones: no drop-shadow filters on the animated sprites (re-filtered every frame of the shake/buzz) */
+@media (hover: none), (pointer: coarse) { .bike-discovery-sprite, .zola-alert-phone { filter: none; } }
 @media (max-height: 500px) { .bike-discovery { gap: 3px; padding: 35px 12px; } .bike-discovery-scene { height: 32vh; } .bike-discovery-band.top { top: 0; } .bike-discovery-band.bottom { bottom: 0; } .bike-discovery-kicker { margin-bottom: 4px; padding: 2px 8px; } .bike-discovery-caption h1 { font-size: clamp(1.2rem, 5vw, 2rem); } .bike-discovery-caption p { margin: 5px 0 3px; font-size: .8rem; } .bike-discovery-next { font-size: .7rem; } }
 @media (prefers-reduced-motion: reduce) { .bike-discovery, .bike-discovery * { animation: none; } .bike-discovery-flash { display: none; } .bike-discovery-rays { opacity: .3; } }
 

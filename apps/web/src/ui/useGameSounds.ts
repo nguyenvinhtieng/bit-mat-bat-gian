@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
 import { mapSkin } from '@hidden-truth/shared';
 import { useStore } from '../store';
-import { type Ending, msSinceLastCue, preloadMusic, sfx } from './minigames/common/kit';
+import { type Ending, preloadMusic, sfx, uiTap, wakeAudio } from './minigames/common/kit';
 
-const TAPPABLE = 'button, [role="button"], a[href], summary, select, input[type="checkbox"], input[type="radio"], input[type="range"], label[for]';
+const TAPPABLE = 'button, [role="button"], a[href], summary, select, input[type="checkbox"], input[type="radio"], input[type="range"], label[for], .minimap';
+/** tapping the dim area around a modal closes it — only when the backdrop itself was hit */
+const BACKDROP = '.modal-backdrop, .zl-modal-bg, .mapview, .code-pop';
 
 /** Which ending stinger fits: the server sends the story line, so match it back to its kind. */
 function endingOf(end: { winner: string; reason: string }, mapSlug?: string): Ending {
@@ -27,16 +29,18 @@ export function useGameSounds() {
     [],
   );
 
-  // Soft tick on every button press, so a click always feels registered. Runs after React's handlers
-  // (bubble phase on window) and stays silent when the handler already played its own cue.
+  // Soft tick on every button press, so a click always feels registered. Captured on window because
+  // modals stopPropagation() their clicks; the tick itself waits until React's handlers ran, and stays
+  // silent when the handler already played its own cue.
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      const el = (e.target as Element | null)?.closest?.(TAPPABLE);
+      const target = e.target as Element | null;
+      const el = target?.closest?.(TAPPABLE) ?? (target?.matches?.(BACKDROP) ? target : null);
       if (!el || el.closest('[data-sfx="off"]') || (el as HTMLButtonElement).disabled || el.getAttribute('aria-disabled') === 'true') return;
-      if (msSinceLastCue() < 120) return;
-      sfx.tap();
+      wakeAudio();
+      setTimeout(() => uiTap(el));
     };
-    window.addEventListener('click', onClick);
-    return () => window.removeEventListener('click', onClick);
+    window.addEventListener('click', onClick, true);
+    return () => window.removeEventListener('click', onClick, true);
   }, []);
 }

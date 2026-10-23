@@ -5,17 +5,17 @@ import { useStore } from '../store';
 import { asset } from './common';
 import { useT } from '../i18n';
 import { GameSettings } from './GameSetting';
-import { randomDevName } from '../devNames';
+import { randomName } from '../randomNames';
 
 const NAME_KEY = 'tht:name';
-/** dev: every tab gets a fresh themed name so multi-tab testing needs no typing */
+/** dev: every tab gets a fresh random name (ignores the saved one) so multi-tab testing needs no typing */
 const DEV = import.meta.env.DEV;
 
 export function Home() {
   const { connecting, error } = useStore();
   const busy = !!connecting && connecting !== 'reconnect';
   const t = useT();
-  const [name, setName] = useState(() => (DEV ? randomDevName() : (localStorage.getItem(NAME_KEY) ?? '').slice(0, NAME_MAX)));
+  const [name, setName] = useState(() => (DEV ? '' : (localStorage.getItem(NAME_KEY) ?? '').trim().slice(0, NAME_MAX)) || randomName());
   const [autoName, setAutoName] = useState(DEV);
   const joinMatch = /^\/join\/([A-Za-z0-9]{4,8})/.exec(location.pathname);
   const [invited, setInvited] = useState(!!joinMatch);
@@ -91,7 +91,7 @@ export function Home() {
           <div className="home-id">
             <label className="field">
               {t('displayName')}
-              <span className={DEV ? 'name-row has-dice' : 'name-row'}>
+              <span className="name-row has-dice">
                 <input
                   value={name}
                   maxLength={NAME_MAX}
@@ -104,19 +104,18 @@ export function Home() {
                 <span className={name.length >= NAME_MAX ? 'name-count full' : 'name-count'} aria-live="polite">
                   {name.length}/{NAME_MAX}
                 </span>
-                {DEV && (
-                  <button
-                    type="button"
-                    className="name-dice"
-                    title="Dev: random name"
-                    onClick={() => {
-                      setName(randomDevName(name));
-                      setAutoName(true);
-                    }}
-                  >
-                    🎲
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="name-dice"
+                  title={t('randomName')}
+                  aria-label={t('randomName')}
+                  onClick={() => {
+                    setName(randomName(name));
+                    setAutoName(true);
+                  }}
+                >
+                  🎲
+                </button>
               </span>
             </label>
           </div>
