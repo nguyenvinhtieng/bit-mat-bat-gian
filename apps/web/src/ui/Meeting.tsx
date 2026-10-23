@@ -34,10 +34,13 @@ function Poll({
   votersOf,
   castN,
   aliveN,
+  out,
   onDone,
 }: {
   question: string;
   options: PlayerView[];
+  /** players no longer in the game, shown struck through with why they are gone */
+  out: { p: PlayerView; reason: string }[];
   myId: string;
   canVote: boolean;
   myVote: string;
@@ -53,12 +56,12 @@ function Poll({
     send('vote', { target: pick });
     onDone?.();
   };
-  const row = (id: string, label: React.ReactNode, ava: React.ReactNode, disabled: boolean) => {
+  const row = (id: string, label: React.ReactNode, ava: React.ReactNode, disabled: boolean, extra = '') => {
     const voters = votersOf(id);
     const pct = castN ? Math.round((voters.length / castN) * 100) : 0;
     return (
       <li key={id}>
-        <label className={`zl-opt ${chosen === id ? 'on' : ''} ${disabled ? 'off' : ''}`}>
+        <label className={`zl-opt ${chosen === id ? 'on' : ''} ${disabled ? 'off' : ''} ${extra}`}>
           <input type="radio" name="zl-poll" checked={chosen === id} disabled={disabled} onChange={() => setPick(id)} />
           <span className="zl-check" aria-hidden />
           <span className="zl-opt-bar" style={{ width: `${pct}%` }} aria-hidden />
@@ -85,12 +88,26 @@ function Poll({
             p.id,
             <>
               {p.name}
-              {p.id === myId && <i> (bạn)</i>}
+              {p.id === myId && <span className="zl-me-tag">Bạn</span>}
             </>,
             <Avatar color={colorIndex(p.color)} size={28} />,
             !canVote || p.id === myId,
+            p.id === myId ? 'me' : '',
           ),
         )}
+        {out.map(({ p, reason }) => (
+          <li key={p.id}>
+            <div className="zl-opt off gone" aria-disabled>
+              <span className="zl-check" aria-hidden />
+              <Avatar color={colorIndex(p.color)} size={28} dim />
+              <span className="zl-opt-label">
+                <s>{p.name}</s>
+                {p.id === myId && <span className="zl-me-tag">Bạn</span>}
+              </span>
+              <i className="zl-gone-why">{reason}</i>
+            </div>
+          </li>
+        ))}
         {row('skip', 'Không chọn ai', <span className="zl-ava zl-ava-skip" style={{ width: 28, height: 28 }}>—</span>, !canVote)}
       </ul>
       {canVote ? (
@@ -243,6 +260,10 @@ export function Meeting() {
   const votersOf = (target: string) => room.players.filter((v) => v.alive && v.voteFor === target);
   const question = `Ai là ${skin.killerName.vi}?`;
   const options = room.players.filter((p) => p.alive);
+  const ejectedNames = useStore((s) => s.ejectedNames);
+  const out = room.players
+    .filter((p) => !p.alive)
+    .map((p) => ({ p, reason: ejectedNames.includes(p.name) ? 'Bị đuổi khỏi nhóm' : 'Bị bắt' }));
   const urgent = left != null && left <= 10;
   const poll = (onDone?: () => void) => (
     <Poll
@@ -254,6 +275,7 @@ export function Meeting() {
       votersOf={votersOf}
       castN={votedN}
       aliveN={alive.length}
+      out={out}
       onDone={onDone}
     />
   );

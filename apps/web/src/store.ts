@@ -95,6 +95,8 @@ type Store = {
   /** reopened from the HUD: show only the role card, no story / long animation */
   introQuick: boolean;
   voteResult: VoteResult | null;
+  /** names voted out of the group this game (vs. arrested) — lets the poll show why someone is gone */
+  ejectedNames: string[];
   end: EndReveal | null;
   cinematic: (Cinematic & { id: number }) | null;
   timeOffset: number;
@@ -128,6 +130,7 @@ export const useStore = create<Store>((set, get) => ({
   introOpen: false,
   introQuick: false,
   voteResult: null,
+  ejectedNames: [],
   end: null,
   cinematic: null,
   timeOffset: 0,

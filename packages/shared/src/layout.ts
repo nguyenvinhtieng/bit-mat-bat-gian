@@ -1,4 +1,5 @@
 import { TILE, type AreaId } from './constants';
+import { GAME_COLLISION } from './maps/game/collision';
 
 /**
  * Common layout (one for every map). Rects are in tile units: [x, y, w, h].
@@ -101,8 +102,16 @@ export type LayoutGrid = {
   h: number;
   /** area index per cell (-1 = wall/void) */
   area: Int8Array;
+  /** walls + furniture slots, whole tiles: sight lines and reachability */
   solid: Uint8Array;
+  /** walls only: movement checks these tiles plus `boxes` (defaults to `solid`) */
+  walls?: Uint8Array;
+  /** prop footprints that block movement (px), clipped to their furniture slots */
+  boxes?: PxBox[];
 };
+
+/** Pixel box: [left, top, right, bottom]. */
+export type PxBox = [number, number, number, number];
 
 export function buildGrid(): LayoutGrid {
   const w = LAYOUT_W;
@@ -119,10 +128,11 @@ export function buildGrid(): LayoutGrid {
         }
     }
   });
+  const walls = solid.slice();
   for (const [x, y, rw, rh] of Object.values(FURNITURE_SLOTS)) {
     for (let j = y; j < y + rh; j++) for (let i = x; i < x + rw; i++) solid[j * w + i] = 1;
   }
-  return { w, h, area, solid };
+  return { w, h, area, solid, walls, boxes: GAME_COLLISION };
 }
 
 export const AREA_ORDER = Object.keys(AREA_RECTS) as AreaId[];

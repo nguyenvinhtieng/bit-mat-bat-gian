@@ -1,0 +1,245 @@
+{
+  "results": [
+    {
+      "size": "desktop",
+      "taskId": "pack_cooler",
+      "visual": true
+    },
+    {
+      "size": "desktop",
+      "taskId": "dodge_sellers",
+      "visual": true
+    },
+    {
+      "size": "desktop",
+      "taskId": "brew_coffee",
+      "visual": true
+    },
+    {
+      "size": "desktop",
+      "taskId": "wifi_hunt",
+      "visual": true
+    },
+    {
+      "size": "desktop",
+      "taskId": "pump_tyre",
+      "visual": true
+    },
+    {
+      "size": "desktop",
+      "taskId": "patch_tube",
+      "visual": true
+    },
+    {
+      "size": "desktop",
+      "taskId": "tape_box",
+      "visual": true
+    },
+    {
+      "size": "desktop",
+      "taskId": "stack_rack",
+      "visual": true
+    },
+    {
+      "size": "desktop",
+      "taskId": "unpark_bike",
+      "visual": true
+    },
+    {
+      "size": "desktop",
+      "taskId": "find_ticket",
+      "visual": true
+    },
+    {
+      "size": "desktop",
+      "taskId": "dodge_potholes",
+      "visual": true
+    },
+    {
+      "size": "desktop",
+      "taskId": "handoff_package",
+      "visual": true
+    },
+    {
+      "size": "mobile",
+      "taskId": "pack_cooler",
+      "visual": true
+    },
+    {
+      "size": "mobile",
+      "taskId": "dodge_sellers",
+      "visual": true
+    },
+    {
+      "size": "mobile",
+      "taskId": "brew_coffee",
+      "visual": true
+    },
+    {
+      "size": "mobile",
+      "taskId": "wifi_hunt",
+      "visual": true
+    },
+    {
+      "size": "mobile",
+      "taskId": "pump_tyre",
+      "visual": true
+    },
+    {
+      "size": "mobile",
+      "taskId": "patch_tube",
+      "visual": true
+    },
+    {
+      "size": "mobile",
+      "taskId": "tape_box",
+      "visual": true
+    },
+    {
+      "size": "mobile",
+      "taskId": "stack_rack",
+      "visual": true
+    },
+    {
+      "size": "mobile",
+      "taskId": "unpark_bike",
+      "visual": true
+    },
+    {
+      "size": "mobile",
+      "taskId": "find_ticket",
+      "visual": true
+    },
+    {
+      "size": "mobile",
+      "taskId": "dodge_potholes",
+      "visual": true
+    },
+    {
+      "size": "mobile",
+      "taskId": "handoff_package",
+      "visual": true
+    },
+    {
+      "size": "tiny",
+      "taskId": "pack_cooler",
+      "visual": true
+    },
+    {
+      "size": "tiny",
+      "taskId": "dodge_sellers",
+      "visual": true
+    },
+    {
+      "size": "tiny",
+      "taskId": "brew_coffee",
+      "visual": true
+    },
+    {
+      "size": "tiny",
+      "taskId": "wifi_hunt",
+      "visual": true
+    },
+    {
+      "size": "tiny",
+      "taskId": "pump_tyre",
+      "visual": true
+    },
+    {
+      "size": "tiny",
+      "taskId": "patch_tube",
+      "visual": true
+    },
+    {
+      "size": "tiny",
+      "taskId": "tape_box",
+      "visual": true
+    },
+    {
+      "size": "tiny",
+      "taskId": "stack_rack",
+      "visual": true
+    },
+    {
+      "size": "tiny",
+      "taskId": "unpark_bike",
+      "visual": true
+    },
+    {
+      "size": "tiny",
+      "taskId": "find_ticket",
+      "visual": true
+    },
+    {
+      "size": "tiny",
+      "taskId": "dodge_potholes",
+      "visual": true
+    },
+    {
+      "size": "tiny",
+      "taskId": "handoff_package",
+      "visual": true
+    },
+    {
+      "size": "landscape",
+      "taskId": "pack_cooler",
+      "visual": true
+    },
+    {
+      "size": "landscape",
+      "taskId": "dodge_sellers",
+      "visual": true
+    },
+    {
+      "size": "landscape",
+      "taskId": "brew_coffee",
+      "visual": true
+    },
+    {
+      "size": "landscape",
+      "taskId": "wifi_hunt",
+      "visual": true
+    },
+    {
+      "size": "landscape",
+      "taskId": "pump_tyre",
+      "visual": true
+    },
+    {
+      "size": "landscape",
+      "taskId": "patch_tube",
+      "visual": true
+    },
+    {
+      "size": "landscape",
+      "taskId": "tape_box",
+      "visual": true
+    },
+    {
+      "size": "landscape",
+      "taskId": "stack_rack",
+      "visual": true
+    },
+    {
+      "size": "landscape",
+      "taskId": "unpark_bike",
+      "visual": true
+    },
+    {
+      "size": "landscape",
+      "taskId": "find_ticket",
+      "visual": true
+    },
+    {
+      "size": "landscape",
+      "taskId": "dodge_potholes",
+      "visual": true
+    },
+    {
+      "size": "landscape",
+      "taskId": "handoff_package",
+      "visual": true
+    }
+  ],
+  "failures": []
+}

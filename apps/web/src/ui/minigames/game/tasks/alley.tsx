@@ -61,6 +61,7 @@ export function DodgePotholes({ task, submit }: P<'dodge_potholes'>) {
   });
 
   const r = run.current;
+  const upcoming = task.obstacles.find((o) => o.at > r.t && o.at - r.t < LEAD_MS);
   const swipe = useRef<number | null>(null);
   const laneX = (l: number) => `${((l + 0.5) / task.lanes) * 100}%`;
   return (
@@ -71,7 +72,8 @@ export function DodgePotholes({ task, submit }: P<'dodge_potholes'>) {
         style={{ backgroundPositionY: `${r.t / 5}px` }}
         role="group"
         aria-label={t('Đường hẻm ba làn', 'Three-lane alley')}
-        onPointerDown={(e) => (swipe.current = e.clientX)}
+        onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); swipe.current = e.clientX; }}
+        onPointerCancel={() => { swipe.current = null; }}
         onPointerUp={(e) => {
           const x0 = swipe.current;
           swipe.current = null;
@@ -101,6 +103,7 @@ export function DodgePotholes({ task, submit }: P<'dodge_potholes'>) {
       </div>
       <div className="ck-alley-controls">
         <button type="button" aria-label={t('Sang trái', 'Steer left')} disabled={!running || sent} onClick={() => steer(-1)}>←</button>
+        <span className="ck-note" role="status">{sent ? t('Đến nơi!', 'Arrived!') : running && upcoming ? t(`Chướng ngại làn ${upcoming.lane + 1}`, `Obstacle in lane ${upcoming.lane + 1}`) : t('Vuốt hoặc ← →', 'Swipe or ← →')}</span>
         <button type="button" aria-label={t('Sang phải', 'Steer right')} disabled={!running || sent} onClick={() => steer(1)}>→</button>
       </div>
     </MgShell>
@@ -149,22 +152,40 @@ export function HandoffPackage({ task, submit }: P<'handoff_package'>) {
     setPhase('slide');
     setHint([t('Ảnh nét! Vuốt “Đã giao” để chốt.', 'Sharp! Slide “Delivered” to confirm.'), 'ok']);
   };
-  const endSlide = () => {
-    if (sliding.current == null) return;
-    sliding.current = null;
-    if (slide < 0.9) return setSlide(0);
+  const finish = () => {
+    if (sent) return;
     setSlide(1);
     setHint([t('Năm sao! Cuốc Cuối hoàn tất.', 'Five stars! The Last Ride is done.'), 'ok']);
     send({ rang: true, photo, slid: true });
   };
+  const endSlide = () => {
+    if (sliding.current == null) return;
+    sliding.current = null;
+    if (slide < 0.9) return setSlide(0);
+    finish();
+  };
 
   return (
     <MgShell taskId={task.taskId} status={phase === 'ring' ? '🔔' : phase === 'photo' ? '📷' : '✅'} hint={hint[0]} tone={hint[1]}>
+      <div className="ck-steps" aria-label={t('Các bước giao hàng', 'Delivery steps')}>
+        {[t('1 · Gọi cửa', '1 · Ring'), t('2 · Chụp ảnh', '2 · Photo'), t('3 · Xác nhận', '3 · Confirm')].map((label, i) => <span key={label} className={i === ['ring', 'photo', 'slide'].indexOf(phase) ? 'active' : i < ['ring', 'photo', 'slide'].indexOf(phase) ? 'done' : ''}>{label}</span>)}
+      </div>
       <div className={`ck-door ${shake}`}>
         <img className="ck-door-bg" src={taskArt(task.taskId, phase === 'ring' ? 'door' : 'recipient')} alt="" draggable={false} />
         {phase === 'ring' && (
           <button
             className={`ck-bell ${holding ? 'on' : ''}`}
+            aria-label={t('Giữ để gọi cửa', 'Hold to ring the doorbell')}
+            onKeyDown={(e) => {
+              if (![' ', 'Enter'].includes(e.key)) return;
+              e.preventDefault();
+              if (!e.repeat) { ringAt.current = performance.now(); setHolding(true); }
+            }}
+            onKeyUp={(e) => {
+              if (![' ', 'Enter'].includes(e.key)) return;
+              e.preventDefault(); setHolding(false); setRing(0);
+            }}
+            onBlur={() => { setHolding(false); setRing(0); }}
             onPointerDown={(e) => (e.currentTarget.setPointerCapture(e.pointerId), (ringAt.current = performance.now()), setHolding(true))}
             onPointerUp={() => (setHolding(false), ring < task.ringMs && (setRing(0), setHint([t('Bấm nhẹ quá, trong nhà không nghe. Giữ lâu hơn.', 'Too short, nobody heard. Hold longer.'), 'info'])))}
             onPointerCancel={() => (setHolding(false), setRing(0))}
@@ -196,7 +217,19 @@ export function HandoffPackage({ task, submit }: P<'handoff_package'>) {
             setSlide(Math.max(0, Math.min(1, (e.clientX - sliding.current) / w)));
           }}
           onPointerUp={endSlide}
-          onPointerCancel={endSlide}
+          onPointerCancel={() => { sliding.current = null; setSlide(0); }}
+          role="slider"
+          tabIndex={sent ? -1 : 0}
+          aria-label={t('Xác nhận đã giao: kéo sang phải hoặc dùng phím mũi tên', 'Confirm delivery: slide right or use arrow keys')}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(slide * 100)}
+          onKeyDown={(e) => {
+            if (sent || !['ArrowRight', 'ArrowLeft', 'Home', 'End', 'Enter', ' '].includes(e.key)) return;
+            e.preventDefault();
+            if (e.key === 'Enter' || e.key === ' ') { if (slide >= 0.9) finish(); return; }
+            setSlide(e.key === 'Home' ? 0 : e.key === 'End' ? 1 : Math.max(0, Math.min(1, slide + (e.key === 'ArrowRight' ? 0.1 : -0.1))));
+          }}
         >
           <span>{t('Đã giao →', 'Delivered →')}</span>
           <i className="ck-thumb" style={{ left: `calc(${slide} * (100% - 56px))` }} />

@@ -24,7 +24,7 @@ import {
   type TaskId,
   BODY_HH,
   BODY_HW,
-  isSolidTile,
+  BODY_OY,
 } from '@hidden-truth/shared';
 import { useDev } from '../ui/DevPanel';
 import { arrest, onHeard, onRoom, onSay, room, send } from '../net';
@@ -1023,7 +1023,7 @@ export class GameScene extends Phaser.Scene {
     return canSeePoint(this.grid, this.pred, { x, y }, GAME.sightRadius * this.vis);
   }
 
-  /** Dev: red outline on every solid tile edge that borders walkable floor, i.e. exactly where stepMovement stops you. */
+  /** Dev: red outline on every wall tile edge that borders walkable floor plus every prop footprint, i.e. exactly where stepMovement stops you. */
   private drawDevColliders() {
     const gfx = this.devGfx;
     if (!gfx) return;
@@ -1034,12 +1034,14 @@ export class GameScene extends Phaser.Scene {
     const g = this.moveGrid();
     this.devGrid = g;
     gfx.clear();
+    const walls = g.walls ?? g.solid;
+    const wall = (tx: number, ty: number) => tx < 0 || ty < 0 || tx >= g.w || ty >= g.h || walls[ty * g.w + tx] === 1;
     for (let ty = 0; ty < g.h; ty++)
       for (let tx = 0; tx < g.w; tx++) {
-        if (!isSolidTile(g, tx, ty)) continue;
+        if (!wall(tx, ty)) continue;
         const x = tx * TILE, y = ty * TILE;
-        const up = !isSolidTile(g, tx, ty - 1), down = !isSolidTile(g, tx, ty + 1);
-        const left = !isSolidTile(g, tx - 1, ty), right = !isSolidTile(g, tx + 1, ty);
+        const up = !wall(tx, ty - 1), down = !wall(tx, ty + 1);
+        const left = !wall(tx - 1, ty), right = !wall(tx + 1, ty);
         if (!(up || down || left || right)) continue;
         gfx.fillStyle(0xff0000, 0.18).fillRect(x, y, TILE, TILE);
         gfx.lineStyle(2, 0xff2020, 1);
@@ -1048,6 +1050,7 @@ export class GameScene extends Phaser.Scene {
         if (left) gfx.lineBetween(x, y, x, y + TILE);
         if (right) gfx.lineBetween(x + TILE, y, x + TILE, y + TILE);
       }
+    for (const [l, t, r, b] of g.boxes ?? []) gfx.fillStyle(0xff0000, 0.25).fillRect(l, t, r - l, b - t).lineStyle(2, 0xff2020, 1).strokeRect(l, t, r - l, b - t);
   }
 
   /** must match the server: the lobby gate is solid only while phase is 'lobby' */
@@ -1215,7 +1218,7 @@ export class GameScene extends Phaser.Scene {
 
     if (this.devGfx?.visible && this.devGrid !== this.moveGrid()) this.drawDevColliders(); // lobby gate opens/closes
     if (this.devHitbox?.visible)
-      this.devHitbox.clear().lineStyle(1, 0x00ffff, 1).strokeRect(this.pred.x - BODY_HW, this.pred.y - BODY_HH, BODY_HW * 2, BODY_HH * 2);
+      this.devHitbox.clear().lineStyle(1, 0x00ffff, 1).strokeRect(this.pred.x - BODY_HW, this.pred.y + BODY_OY - BODY_HH, BODY_HW * 2, BODY_HH * 2);
 
     // own avatar
     const mine = this.avatars.get(r.sessionId);

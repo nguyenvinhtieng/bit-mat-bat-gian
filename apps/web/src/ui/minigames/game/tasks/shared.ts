@@ -16,13 +16,17 @@ const MIN_PLAY_MS = 3100;
 export function useOnce(submit: Submit): [boolean, Submit] {
   const [sent, setSent] = useState(false);
   const [openedAt] = useState(() => performance.now());
+  const locked = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
   return [
     sent,
     (a) => {
-      if (sent) return;
+      if (locked.current) return;
+      locked.current = true;
       setSent(true);
       sfx.stamp();
-      window.setTimeout(() => submit(a), Math.max(450, MIN_PLAY_MS - (performance.now() - openedAt)));
+      timer.current = setTimeout(() => submit(a), Math.max(450, MIN_PLAY_MS - (performance.now() - openedAt)));
     },
   ];
 }

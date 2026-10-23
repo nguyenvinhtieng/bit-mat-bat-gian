@@ -4,7 +4,7 @@ type G = { goal: string };
 /** One short action line per mini-game (vi / en) — the play area explains the rest. */
 export const GUIDE: Partial<Record<GameTaskId, { vi: G; en: G }>> = {
   pack_cooler: { vi: { goal: 'Kéo từng món vào thùng' }, en: { goal: 'Drag each item into the box' } },
-  dodge_sellers: { vi: { goal: 'Vuốt trái / phải để từ chối' }, en: { goal: 'Swipe left / right to decline' } },
+  dodge_sellers: { vi: { goal: 'Trái: từ chối · Phải: trả tiền chủ quán' }, en: { goal: 'Left: decline · Right: pay the owner' } },
   brew_coffee: { vi: { goal: 'Giữ để rót tới vạch' }, en: { goal: 'Hold to pour up to the band' } },
   wifi_hunt: { vi: { goal: 'Rê điện thoại tìm full vạch' }, en: { goal: 'Move the phone to full bars' } },
   pump_tyre: { vi: { goal: 'Bơm tới vùng xanh rồi dừng' }, en: { goal: 'Pump into the green, then stop' } },

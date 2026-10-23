@@ -103,6 +103,13 @@
 .zl-opt-label { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .zl-opt-label i, .zl-mem i { color: var(--zl-muted); font-style: normal; font-weight: 400; }
 .zl-opt-n { flex: none; min-width: 1.4em; text-align: right; color: var(--zl-blue); font-variant-numeric: tabular-nums; }
+.zl-opt.me { border-color: #f5b301; background: #fff8e1; border-style: dashed; }
+.zl-me-tag { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px; background: #f5b301; color: #fff; font-size: 11px; font-weight: 700; line-height: 16px; vertical-align: 1px; }
+.zl-opt.gone { background: #eef0f2; border-color: transparent; color: var(--zl-muted); }
+.zl-opt.gone .zl-check { opacity: 0.4; }
+.zl-opt.gone .zl-opt-label { font-weight: 400; }
+.zl-opt.gone s { text-decoration-thickness: 1.5px; }
+.zl-gone-why { flex: none; font-size: 12px; font-style: normal; color: #d0343b; }
 .zl-stack { flex: none; display: flex; align-items: center; }
 .zl-stack > span + span { margin-left: -7px; }
 .zl-stack .zl-ava { border: 2px solid #fff; }

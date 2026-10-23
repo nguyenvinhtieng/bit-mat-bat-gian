@@ -103,7 +103,7 @@ function useClock() {
   const total = room.nightMin * 60_000;
   const elapsed = Math.min(total, Math.max(0, (room.nightPausedAt || now + offset) - room.nightStartAt));
   const left = Math.ceil((total - elapsed) / 1000);
-  return { left, last: left <= 60, paused: !!room.nightPausedAt };
+  return { left, last: left <= 60, urgent: left <= 30 && !room.nightPausedAt, paused: !!room.nightPausedAt };
 }
 
 type Prep = { pct: number; progress: number; target: number; open: boolean };
@@ -137,7 +137,7 @@ function NightBar(prep: Prep) {
   const night = useClock();
   if (!night) return null;
   return (
-    <div className={`night-wrap ${night.last ? 'last' : ''} ${night.paused ? 'paused' : ''}`}>
+    <div className={`night-wrap ${night.last ? 'last' : ''} ${night.urgent ? 'urgent' : ''} ${night.paused ? 'paused' : ''}`}>
       <NightClock night={night} prep={prep} />
     </div>
   );

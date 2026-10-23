@@ -1,5 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
-<circle cx="64" cy="64" r="58" fill="#3a7bd5" stroke="#fff6e0" stroke-width="8"/>
-<circle cx="64" cy="64" r="58" fill="none" stroke="#2b1a10" stroke-width="3"/>
-<text x="64" y="68" font-size="64" text-anchor="middle" dominant-baseline="central" font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,sans-serif">📶</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><g stroke="#343b35" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><ellipse cx="48" cy="87" rx="31" ry="4" fill="#343b3514"/><rect x="28" y="8" width="40" height="80" rx="5" fill="#343b35"/><rect x="33" y="18" width="30" height="56" rx="5" fill="#b8caaa"/><path d="M38 40Q48 29 58 40M42 46Q48 39 54 46" fill="none" /><circle cx="48" cy="51" r="2" fill="#438978"/><path d="M44 12L52 12" stroke="#343b35" fill="none"/><circle cx="48" cy="81" r="2" fill="#fff2ce"/></g></svg>

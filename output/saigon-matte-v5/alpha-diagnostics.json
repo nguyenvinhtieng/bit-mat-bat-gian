@@ -1,0 +1,862 @@
+{
+  "total": 45,
+  "present": 45,
+  "missing": [],
+  "sprites": [
+    {
+      "key": "decor-ban-inox",
+      "width": 1299,
+      "height": 1211,
+      "visiblePixels": 491048,
+      "transparentPixels": 1067391,
+      "bbox": {
+        "left": 167,
+        "top": 131,
+        "width": 990,
+        "height": 999
+      },
+      "bboxAspect": 0.990990990990991,
+      "destination": {
+        "width": 240,
+        "height": 192,
+        "aspect": 1.25
+      }
+    },
+    {
+      "key": "decor-ban-tho-ong-dia",
+      "width": 1278,
+      "height": 1230,
+      "visiblePixels": 751253,
+      "transparentPixels": 807141,
+      "bbox": {
+        "left": 223,
+        "top": 79,
+        "width": 839,
+        "height": 1021
+      },
+      "bboxAspect": 0.821743388834476,
+      "destination": {
+        "width": 216,
+        "height": 264,
+        "aspect": 0.8181818181818182
+      }
+    },
+    {
+      "key": "decor-binh-tra-da",
+      "width": 1220,
+      "height": 1289,
+      "visiblePixels": 817271,
+      "transparentPixels": 740774,
+      "bbox": {
+        "left": 185,
+        "top": 76,
+        "width": 939,
+        "height": 1130
+      },
+      "bboxAspect": 0.8309734513274336,
+      "destination": {
+        "width": 144,
+        "height": 192,
+        "aspect": 0.75
+      }
+    },
+    {
+      "key": "decor-binh-xang",
+      "width": 1312,
+      "height": 1199,
+      "visiblePixels": 818559,
+      "transparentPixels": 733936,
+      "bbox": {
+        "left": 142,
+        "top": 72,
+        "width": 1111,
+        "height": 1086
+      },
+      "bboxAspect": 1.0230202578268877,
+      "destination": {
+        "width": 120,
+        "height": 168,
+        "aspect": 0.7142857142857143
+      }
+    },
+    {
+      "key": "decor-can-nuoc",
+      "width": 1278,
+      "height": 1230,
+      "visiblePixels": 577236,
+      "transparentPixels": 981537,
+      "bbox": {
+        "left": 311,
+        "top": 45,
+        "width": 658,
+        "height": 1144
+      },
+      "bboxAspect": 0.5751748251748252,
+      "destination": {
+        "width": 144,
+        "height": 192,
+        "aspect": 0.75
+      }
+    },
+    {
+      "key": "decor-chau-bong-giay",
+      "width": 1206,
+      "height": 1304,
+      "visiblePixels": 463786,
+      "transparentPixels": 1009510,
+      "bbox": {
+        "left": 32,
+        "top": 33,
+        "width": 1150,
+        "height": 1190
+      },
+      "bboxAspect": 0.9663865546218487,
+      "destination": {
+        "width": 216,
+        "height": 360,
+        "aspect": 0.6
+      }
+    },
+    {
+      "key": "decor-cot-chung-cu",
+      "width": 1024,
+      "height": 1536,
+      "visiblePixels": 462238,
+      "transparentPixels": 1091856,
+      "bbox": {
+        "left": 329,
+        "top": 34,
+        "width": 380,
+        "height": 1464
+      },
+      "bboxAspect": 0.25956284153005466,
+      "destination": {
+        "width": 168,
+        "height": 600,
+        "aspect": 0.28
+      }
+    },
+    {
+      "key": "decor-cot-dien",
+      "width": 1024,
+      "height": 1536,
+      "visiblePixels": 271042,
+      "transparentPixels": 1247193,
+      "bbox": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1487
+      },
+      "bboxAspect": 0.6886348352387357,
+      "destination": {
+        "width": 240,
+        "height": 744,
+        "aspect": 0.3225806451612903
+      }
+    },
+    {
+      "key": "decor-dong-rac",
+      "width": 1536,
+      "height": 1024,
+      "visiblePixels": 628719,
+      "transparentPixels": 922989,
+      "bbox": {
+        "left": 200,
+        "top": 61,
+        "width": 1154,
+        "height": 873
+      },
+      "bboxAspect": 1.3218785796105383,
+      "destination": {
+        "width": 360,
+        "height": 252,
+        "aspect": 1.4285714285714286
+      }
+    },
+    {
+      "key": "decor-du-che",
+      "width": 1145,
+      "height": 1374,
+      "visiblePixels": 492700,
+      "transparentPixels": 1065576,
+      "bbox": {
+        "left": 68,
+        "top": 91,
+        "width": 1033,
+        "height": 1204
+      },
+      "bboxAspect": 0.8579734219269103,
+      "destination": {
+        "width": 408,
+        "height": 480,
+        "aspect": 0.85
+      }
+    },
+    {
+      "key": "decor-ghe-nhua-do",
+      "width": 1339,
+      "height": 1175,
+      "visiblePixels": 658010,
+      "transparentPixels": 899724,
+      "bbox": {
+        "left": 149,
+        "top": 100,
+        "width": 1054,
+        "height": 1005
+      },
+      "bboxAspect": 1.0487562189054727,
+      "destination": {
+        "width": 120,
+        "height": 144,
+        "aspect": 0.8333333333333334
+      }
+    },
+    {
+      "key": "decor-ghe-nhua-xanh",
+      "width": 1312,
+      "height": 1199,
+      "visiblePixels": 638181,
+      "transparentPixels": 917054,
+      "bbox": {
+        "left": 167,
+        "top": 156,
+        "width": 1040,
+        "height": 1009
+      },
+      "bboxAspect": 1.030723488602577,
+      "destination": {
+        "width": 120,
+        "height": 144,
+        "aspect": 0.8333333333333334
+      }
+    },
+    {
+      "key": "decor-hem-barrier",
+      "width": 1230,
+      "height": 1278,
+      "visiblePixels": 402291,
+      "transparentPixels": 1133391,
+      "bbox": {
+        "left": 284,
+        "top": 159,
+        "width": 638,
+        "height": 989
+      },
+      "bboxAspect": 0.6450960566228514,
+      "destination": {
+        "width": 144,
+        "height": 240,
+        "aspect": 0.6
+      }
+    },
+    {
+      "key": "decor-long-chim",
+      "width": 1024,
+      "height": 1536,
+      "visiblePixels": 222904,
+      "transparentPixels": 1314667,
+      "bbox": {
+        "left": 313,
+        "top": 13,
+        "width": 505,
+        "height": 1482
+      },
+      "bboxAspect": 0.3407557354925776,
+      "destination": {
+        "width": 144,
+        "height": 360,
+        "aspect": 0.4
+      }
+    },
+    {
+      "key": "decor-lop-treo",
+      "width": 1024,
+      "height": 1536,
+      "visiblePixels": 637171,
+      "transparentPixels": 915600,
+      "bbox": {
+        "left": 186,
+        "top": 63,
+        "width": 689,
+        "height": 1392
+      },
+      "bboxAspect": 0.4949712643678161,
+      "destination": {
+        "width": 192,
+        "height": 312,
+        "aspect": 0.6153846153846154
+      }
+    },
+    {
+      "key": "decor-nha-ong",
+      "width": 1024,
+      "height": 1536,
+      "visiblePixels": 722198,
+      "transparentPixels": 835751,
+      "bbox": {
+        "left": 237,
+        "top": 43,
+        "width": 576,
+        "height": 1425
+      },
+      "bboxAspect": 0.40421052631578946,
+      "destination": {
+        "width": 576,
+        "height": 696,
+        "aspect": 0.8275862068965517
+      }
+    },
+    {
+      "key": "decor-non-bao-hiem",
+      "width": 1374,
+      "height": 1145,
+      "visiblePixels": 735662,
+      "transparentPixels": 825915,
+      "bbox": {
+        "left": 157,
+        "top": 84,
+        "width": 1045,
+        "height": 935
+      },
+      "bboxAspect": 1.1176470588235294,
+      "destination": {
+        "width": 168,
+        "height": 144,
+        "aspect": 1.1666666666666667
+      }
+    },
+    {
+      "key": "decor-o-ga",
+      "width": 1536,
+      "height": 1024,
+      "visiblePixels": 725071,
+      "transparentPixels": 829139,
+      "bbox": {
+        "left": 53,
+        "top": 168,
+        "width": 1430,
+        "height": 718
+      },
+      "bboxAspect": 1.9916434540389971,
+      "destination": {
+        "width": 288,
+        "height": 120,
+        "aspect": 2.4
+      }
+    },
+    {
+      "key": "decor-quat-may",
+      "width": 1145,
+      "height": 1374,
+      "visiblePixels": 372736,
+      "transparentPixels": 1137856,
+      "bbox": {
+        "left": 315,
+        "top": 11,
+        "width": 671,
+        "height": 1338
+      },
+      "bboxAspect": 0.5014947683109118,
+      "destination": {
+        "width": 144,
+        "height": 264,
+        "aspect": 0.5454545454545454
+      }
+    },
+    {
+      "key": "decor-thung-da",
+      "width": 1312,
+      "height": 1199,
+      "visiblePixels": 969216,
+      "transparentPixels": 586548,
+      "bbox": {
+        "left": 153,
+        "top": 10,
+        "width": 1085,
+        "height": 1177
+      },
+      "bboxAspect": 0.9218351741716228,
+      "destination": {
+        "width": 192,
+        "height": 192,
+        "aspect": 1
+      }
+    },
+    {
+      "key": "decor-thung-giay",
+      "width": 1384,
+      "height": 1136,
+      "visiblePixels": 786575,
+      "transparentPixels": 753524,
+      "bbox": {
+        "left": 104,
+        "top": 110,
+        "width": 1205,
+        "height": 923
+      },
+      "bboxAspect": 1.305525460455038,
+      "destination": {
+        "width": 192,
+        "height": 192,
+        "aspect": 1
+      }
+    },
+    {
+      "key": "decor-xe-banh-trang",
+      "width": 1312,
+      "height": 1199,
+      "visiblePixels": 858667,
+      "transparentPixels": 688720,
+      "bbox": {
+        "left": 66,
+        "top": 52,
+        "width": 1197,
+        "height": 1087
+      },
+      "bboxAspect": 1.1011959521619135,
+      "destination": {
+        "width": 312,
+        "height": 312,
+        "aspect": 1
+      }
+    },
+    {
+      "key": "decor-xe-crab",
+      "width": 1536,
+      "height": 1024,
+      "visiblePixels": 713214,
+      "transparentPixels": 796992,
+      "bbox": {
+        "left": 122,
+        "top": 6,
+        "width": 1310,
+        "height": 1003
+      },
+      "bboxAspect": 1.3060817547357926,
+      "destination": {
+        "width": 360,
+        "height": 288,
+        "aspect": 1.25
+      }
+    },
+    {
+      "key": "prop-archive-ban-dem-tien",
+      "width": 1536,
+      "height": 1024,
+      "visiblePixels": 747967,
+      "transparentPixels": 797958,
+      "bbox": {
+        "left": 159,
+        "top": 43,
+        "width": 1285,
+        "height": 928
+      },
+      "bboxAspect": 1.384698275862069,
+      "destination": {
+        "width": 408,
+        "height": 288,
+        "aspect": 1.4166666666666667
+      }
+    },
+    {
+      "key": "prop-archive-nem",
+      "width": 1536,
+      "height": 1024,
+      "visiblePixels": 621487,
+      "transparentPixels": 940705,
+      "bbox": {
+        "left": 31,
+        "top": 164,
+        "width": 1473,
+        "height": 784
+      },
+      "bboxAspect": 1.878826530612245,
+      "destination": {
+        "width": 408,
+        "height": 216,
+        "aspect": 1.8888888888888888
+      }
+    },
+    {
+      "key": "prop-archive-tu-so",
+      "width": 1312,
+      "height": 1199,
+      "visiblePixels": 789762,
+      "transparentPixels": 754098,
+      "bbox": {
+        "left": 180,
+        "top": 37,
+        "width": 970,
+        "height": 1142
+      },
+      "bboxAspect": 0.8493870402802102,
+      "destination": {
+        "width": 312,
+        "height": 456,
+        "aspect": 0.6842105263157895
+      }
+    },
+    {
+      "key": "prop-coordination-ban-ghe-nhua",
+      "width": 1536,
+      "height": 1024,
+      "visiblePixels": 506460,
+      "transparentPixels": 966380,
+      "bbox": {
+        "left": 181,
+        "top": 74,
+        "width": 1218,
+        "height": 929
+      },
+      "bboxAspect": 1.3110871905274488,
+      "destination": {
+        "width": 360,
+        "height": 264,
+        "aspect": 1.3636363636363635
+      }
+    },
+    {
+      "key": "prop-coordination-binh-tra-da",
+      "width": 1145,
+      "height": 1374,
+      "visiblePixels": 725797,
+      "transparentPixels": 825701,
+      "bbox": {
+        "left": 147,
+        "top": 42,
+        "width": 860,
+        "height": 1285
+      },
+      "bboxAspect": 0.669260700389105,
+      "destination": {
+        "width": 192,
+        "height": 288,
+        "aspect": 0.6666666666666666
+      }
+    },
+    {
+      "key": "prop-coordination-quay-ca-phe",
+      "width": 1312,
+      "height": 1199,
+      "visiblePixels": 961565,
+      "transparentPixels": 588212,
+      "bbox": {
+        "left": 42,
+        "top": 51,
+        "width": 1245,
+        "height": 1125
+      },
+      "bboxAspect": 1.1066666666666667,
+      "destination": {
+        "width": 480,
+        "height": 360,
+        "aspect": 1.3333333333333333
+      }
+    },
+    {
+      "key": "prop-corridor-cot-dien",
+      "width": 1024,
+      "height": 1536,
+      "visiblePixels": 243888,
+      "transparentPixels": 1300483,
+      "bbox": {
+        "left": 0,
+        "top": 15,
+        "width": 1024,
+        "height": 1503
+      },
+      "bboxAspect": 0.6813040585495675,
+      "destination": {
+        "width": 288,
+        "height": 864,
+        "aspect": 0.3333333333333333
+      }
+    },
+    {
+      "key": "prop-courtyard-ban-inox",
+      "width": 1536,
+      "height": 1024,
+      "visiblePixels": 593693,
+      "transparentPixels": 940327,
+      "bbox": {
+        "left": 67,
+        "top": 26,
+        "width": 1403,
+        "height": 935
+      },
+      "bboxAspect": 1.5005347593582887,
+      "destination": {
+        "width": 384,
+        "height": 264,
+        "aspect": 1.4545454545454546
+      }
+    },
+    {
+      "key": "prop-courtyard-cot-dien",
+      "width": 1024,
+      "height": 1536,
+      "visiblePixels": 210832,
+      "transparentPixels": 1341147,
+      "bbox": {
+        "left": 187,
+        "top": 19,
+        "width": 650,
+        "height": 1493
+      },
+      "bboxAspect": 0.43536503683858,
+      "destination": {
+        "width": 288,
+        "height": 864,
+        "aspect": 0.3333333333333333
+      }
+    },
+    {
+      "key": "prop-courtyard-xe-crab-hang",
+      "width": 1536,
+      "height": 1024,
+      "visiblePixels": 784493,
+      "transparentPixels": 739923,
+      "bbox": {
+        "left": 14,
+        "top": 25,
+        "width": 1505,
+        "height": 974
+      },
+      "bboxAspect": 1.5451745379876796,
+      "destination": {
+        "width": 624,
+        "height": 336,
+        "aspect": 1.8571428571428572
+      }
+    },
+    {
+      "key": "prop-editing-cot-dien",
+      "width": 1024,
+      "height": 1536,
+      "visiblePixels": 248610,
+      "transparentPixels": 1290312,
+      "bbox": {
+        "left": 234,
+        "top": 0,
+        "width": 790,
+        "height": 1513
+      },
+      "bboxAspect": 0.5221414408460013,
+      "destination": {
+        "width": 288,
+        "height": 816,
+        "aspect": 0.35294117647058826
+      }
+    },
+    {
+      "key": "prop-editing-ke-xang",
+      "width": 1079,
+      "height": 1458,
+      "visiblePixels": 761696,
+      "transparentPixels": 773348,
+      "bbox": {
+        "left": 70,
+        "top": 78,
+        "width": 897,
+        "height": 1310
+      },
+      "bboxAspect": 0.684732824427481,
+      "destination": {
+        "width": 288,
+        "height": 360,
+        "aspect": 0.8
+      }
+    },
+    {
+      "key": "prop-editing-thau-va-xe",
+      "width": 1536,
+      "height": 1024,
+      "visiblePixels": 706447,
+      "transparentPixels": 812766,
+      "bbox": {
+        "left": 166,
+        "top": 11,
+        "width": 1184,
+        "height": 980
+      },
+      "bboxAspect": 1.2081632653061225,
+      "destination": {
+        "width": 384,
+        "height": 264,
+        "aspect": 1.4545454545454546
+      }
+    },
+    {
+      "key": "prop-exhibition-bang-hieu",
+      "width": 1536,
+      "height": 1024,
+      "visiblePixels": 851117,
+      "transparentPixels": 696010,
+      "bbox": {
+        "left": 63,
+        "top": 166,
+        "width": 1410,
+        "height": 706
+      },
+      "bboxAspect": 1.9971671388101984,
+      "destination": {
+        "width": 624,
+        "height": 288,
+        "aspect": 2.1666666666666665
+      }
+    },
+    {
+      "key": "prop-exhibition-xe-banh-mi",
+      "width": 1306,
+      "height": 1204,
+      "visiblePixels": 942987,
+      "transparentPixels": 606264,
+      "bbox": {
+        "left": 73,
+        "top": 18,
+        "width": 1192,
+        "height": 1146
+      },
+      "bboxAspect": 1.0401396160558465,
+      "destination": {
+        "width": 384,
+        "height": 408,
+        "aspect": 0.9411764705882353
+      }
+    },
+    {
+      "key": "prop-exhibition-xe-com-tam",
+      "width": 1312,
+      "height": 1199,
+      "visiblePixels": 977842,
+      "transparentPixels": 562511,
+      "bbox": {
+        "left": 6,
+        "top": 12,
+        "width": 1298,
+        "height": 1171
+      },
+      "bboxAspect": 1.1084543125533732,
+      "destination": {
+        "width": 480,
+        "height": 432,
+        "aspect": 1.1111111111111112
+      }
+    },
+    {
+      "key": "prop-exhibition-xe-hu-tieu",
+      "width": 1312,
+      "height": 1199,
+      "visiblePixels": 878382,
+      "transparentPixels": 669953,
+      "bbox": {
+        "left": 27,
+        "top": 19,
+        "width": 1262,
+        "height": 1159
+      },
+      "bboxAspect": 1.088869715271786,
+      "destination": {
+        "width": 384,
+        "height": 432,
+        "aspect": 0.8888888888888888
+      }
+    },
+    {
+      "key": "prop-exhibition-xe-nuoc-mia",
+      "width": 1312,
+      "height": 1199,
+      "visiblePixels": 872167,
+      "transparentPixels": 674175,
+      "bbox": {
+        "left": 93,
+        "top": 22,
+        "width": 1132,
+        "height": 1145
+      },
+      "bboxAspect": 0.988646288209607,
+      "destination": {
+        "width": 384,
+        "height": 408,
+        "aspect": 0.9411764705882353
+      }
+    },
+    {
+      "key": "prop-storage-ao-mua",
+      "width": 1199,
+      "height": 1312,
+      "visiblePixels": 489691,
+      "transparentPixels": 1055725,
+      "bbox": {
+        "left": 276,
+        "top": 22,
+        "width": 658,
+        "height": 1253
+      },
+      "bboxAspect": 0.5251396648044693,
+      "destination": {
+        "width": 288,
+        "height": 360,
+        "aspect": 0.8
+      }
+    },
+    {
+      "key": "prop-storage-day-phoi",
+      "width": 1536,
+      "height": 1024,
+      "visiblePixels": 432410,
+      "transparentPixels": 1091202,
+      "bbox": {
+        "left": 94,
+        "top": 130,
+        "width": 1364,
+        "height": 775
+      },
+      "bboxAspect": 1.76,
+      "destination": {
+        "width": 528,
+        "height": 360,
+        "aspect": 1.4666666666666666
+      }
+    },
+    {
+      "key": "prop-storage-xe-may-xep",
+      "width": 1536,
+      "height": 1024,
+      "visiblePixels": 806898,
+      "transparentPixels": 711477,
+      "bbox": {
+        "left": 37,
+        "top": 8,
+        "width": 1475,
+        "height": 983
+      },
+      "bboxAspect": 1.5005086469989828,
+      "destination": {
+        "width": 528,
+        "height": 336,
+        "aspect": 1.5714285714285714
+      }
+    },
+    {
+      "key": "prop-storage-xe-may",
+      "width": 1536,
+      "height": 1024,
+      "visiblePixels": 667384,
+      "transparentPixels": 855816,
+      "bbox": {
+        "left": 113,
+        "top": 5,
+        "width": 1307,
+        "height": 1004
+      },
+      "bboxAspect": 1.301792828685259,
+      "destination": {
+        "width": 384,
+        "height": 288,
+        "aspect": 1.3333333333333333
+      }
+    }
+  ]
+}

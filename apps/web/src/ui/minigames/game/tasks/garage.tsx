@@ -1,5 +1,5 @@
 /** Tiệm Sửa Xe: pump the tyre (swipe the handle) · patch the inner tube (find the bubbles). */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MgShell, sfx, useShake, type Tone } from '../../common/kit';
 import { useT } from '../art';
 import { taskArt, useOnce, type P } from './shared';
@@ -15,27 +15,29 @@ export function PumpTyre({ task, submit }: P<'pump_tyre'>) {
   const [hint, setHint] = useState<[string, Tone]>(['', 'info']);
   const [shake, doShake] = useShake();
   const drag = useRef<{ y0: number; armed: boolean } | null>(null);
+  const strokeRef = useRef(0);
   const psi = strokes * task.perStroke;
   const green = psi >= task.green[0] && psi <= task.green[1];
 
   const pump = () => {
-    if (sent) return;
-    const n = strokes + 1;
+    if (sent || strokeRef.current * task.perStroke >= task.max) return;
+    const n = strokeRef.current + 1;
+    strokeRef.current = n;
+    setStrokes(n);
     if (n * task.perStroke > task.green[1]) {
       sfx.bad();
       doShake();
-      setStrokes(0);
-      return setHint([t('BỤP! Nổ ruột rồi. Thay ruột mới, bơm lại từ đầu.', 'POP! Tube’s gone. New tube, pump again.'), 'bad']);
+      return setHint([t('Áp suất quá cao! Xả một nhịp rồi kiểm tra lại.', 'Too much pressure! Bleed one stroke, then check again.'), 'bad']);
     }
     sfx.drum();
-    setStrokes(n);
     setHint(n * task.perStroke >= task.green[0] ? [t('Vào vùng xanh! Bấm “Đủ rồi”.', 'In the green! Press “That’s enough”.'), 'ok'] : ['', 'info']);
   };
   const angle = -120 + (Math.min(psi, task.max) / task.max) * 240;
   const arc = (v: number) => -120 + (v / task.max) * 240;
 
   return (
-    <MgShell taskId={task.taskId} status={`${psi} psi`} hint={hint[0]} tone={hint[1]}>
+    <MgShell taskId={task.taskId} status={`${psi} psi`} hint={hint[0] || t('Vuốt tay bơm xuống rồi kéo lên, hoặc bấm Bơm. Dừng trong vùng xanh.', 'Push the handle down and back up, or press Pump. Stop in the green.')} tone={hint[1]}>
+      <p className="ck-note">{t('Áp suất chuẩn', 'Target pressure')}: <b>{task.green[0]}–{task.green[1]} psi</b> · +{task.perStroke} psi/{t('nhịp', 'stroke')}</p>
       <div className="ck-pump-row">
         <div className={`ck-gauge ${shake}`}>
           <svg viewBox="-60 -60 120 90">
@@ -58,6 +60,7 @@ export function PumpTyre({ task, submit }: P<'pump_tyre'>) {
             if (!d.armed && dy < 8) d.armed = true;
           }}
           onPointerUp={() => ((drag.current = null), setHandle(0))}
+          onPointerCancel={() => ((drag.current = null), setHandle(0))}
         >
           <div className="ck-pump-handle" style={{ transform: `translateY(${handle * STROKE_PX}px)` }} />
           <div className="ck-pump-body">
@@ -66,9 +69,15 @@ export function PumpTyre({ task, submit }: P<'pump_tyre'>) {
         </div>
       </div>
       <div className="ck-swipe-row">
-        <button disabled={sent} onClick={pump}>
+        <button disabled={sent || psi >= task.max} onClick={pump}>
           ⬇ {t('Bơm', 'Pump')}
         </button>
+        <button disabled={sent || strokes === 0} onClick={() => {
+          strokeRef.current = Math.max(0, strokeRef.current - 1);
+          setStrokes(strokeRef.current);
+          sfx.scrape();
+          setHint([t('Đã xả một nhịp. Canh lại kim trước khi chốt.', 'One stroke released. Check the needle before finishing.'), 'info']);
+        }}>{t('Xả bớt', 'Bleed air')}</button>
         <button className="go" disabled={!green || sent} onClick={() => send({ strokes })}>
           {t('Đủ rồi!', 'That’s enough!')}
         </button>
@@ -94,9 +103,12 @@ export function PatchTube({ task, submit }: P<'patch_tube'>) {
   const [hint, setHint] = useState<[string, Tone]>(['', 'info']);
   const [shake, doShake] = useShake();
   const drag = useRef<{ x0: number; off0: number; moved: boolean } | null>(null);
+  const [checked, setChecked] = useState<number[]>([]);
   const maxOff = (task.sections - VIEW) * SEG;
   // section whose centre is in the basin (the middle of the window)
   const wet = Math.floor((off + SEG * 1.5) / SEG);
+
+  useEffect(() => { setChecked((prev) => prev.includes(wet) ? prev : [...prev, wet]); }, [wet]);
 
   const tap = (i: number) => {
     if (sent || patched.includes(i)) return;
@@ -116,30 +128,34 @@ export function PatchTube({ task, submit }: P<'patch_tube'>) {
   };
 
   return (
-    <MgShell taskId={task.taskId} status={`🩹 ${patched.length}/${task.leaks.length}`} hint={hint[0]} tone={hint[1]}>
+    <MgShell taskId={task.taskId} status={`🩹 ${patched.length}/${task.leaks.length}`} hint={hint[0] || t('Kéo ruột qua nước, tìm bọt khí rồi vá. Dùng nút mũi tên nếu không kéo được.', 'Pull the tube through the water, find bubbles, then patch. Arrow buttons also move the tube.')} tone={hint[1]}>
+      <p className="ck-note">{t('Đang kiểm tra đoạn', 'Inspecting section')} <b>{wet + 1}/{task.sections}</b> · {t('Đã soi', 'Checked')} {checked.length}/{task.sections - 2}</p>
       <div
         className={`ck-basin ${shake}`}
-        style={{ width: SEG * VIEW }}
+        style={{ width: SEG * VIEW, maxWidth: '100%' }}
         onPointerDown={(e) => ((drag.current = { x0: e.clientX, off0: off, moved: false }), e.currentTarget.setPointerCapture(e.pointerId))}
         onPointerMove={(e) => {
           const d = drag.current;
           if (!d) return;
           if (Math.abs(e.clientX - d.x0) > 6) d.moved = true;
-          setOff(Math.max(0, Math.min(maxOff, d.off0 - (e.clientX - d.x0))));
+          setOff(Math.max(0, Math.min(maxOff, d.off0 - (e.clientX - d.x0) * (SEG * VIEW / e.currentTarget.getBoundingClientRect().width))));
         }}
+        onPointerCancel={() => { drag.current = null; }}
         onPointerUp={(e) => {
           const d = drag.current;
           drag.current = null;
           if (d && !d.moved) {
-            const x = e.clientX - e.currentTarget.getBoundingClientRect().left + off;
+            const r = e.currentTarget.getBoundingClientRect();
+            const x = (e.clientX - r.left) * (SEG * VIEW / r.width) + off;
             tap(Math.floor(x / SEG));
           }
         }}
       >
-        <div className="ck-water" style={{ left: SEG, width: SEG }} />
-        <div className="ck-tube" style={{ width: SEG * task.sections, transform: `translateX(${-off}px)` }}>
+        <div className="ck-water" style={{ left: '33.333%', width: '33.333%' }} />
+        <div className="ck-tube" style={{ width: `${task.sections / VIEW * 100}%`, transform: `translateX(${-off / (SEG * task.sections) * 100}%)` }}>
           {Array.from({ length: task.sections }, (_, i) => (
-            <div key={i} className={`ck-seg ${i === wet ? 'wet' : ''}`} style={{ width: SEG }}>
+            <div key={i} className={`ck-seg ${i === wet ? 'wet' : ''}`} style={{ width: `${100 / task.sections}%`, flexShrink: 0 }}>
+              <small style={{ position: 'absolute', bottom: 3, color: '#fff8de' }}>{i + 1}</small>
               {patched.includes(i) && <img src={taskArt(task.taskId, 'patch')} alt="" draggable={false} />}
               {i === wet && task.leaks.includes(i) && !patched.includes(i) && (
                 <span className="ck-bubbles">
@@ -150,6 +166,11 @@ export function PatchTube({ task, submit }: P<'patch_tube'>) {
             </div>
           ))}
         </div>
+      </div>
+      <div className="ck-swipe-row">
+        <button disabled={sent || off <= 0} onClick={() => setOff((v) => Math.max(0, v - SEG))} aria-label={t('Đoạn trước', 'Previous section')}>←</button>
+        <button className="go" disabled={sent || patched.includes(wet)} onClick={() => tap(wet)}>{t('Vá đoạn đang nhúng', 'Patch submerged section')}</button>
+        <button disabled={sent || off >= maxOff} onClick={() => setOff((v) => Math.min(maxOff, v + SEG))} aria-label={t('Đoạn sau', 'Next section')}>→</button>
       </div>
     </MgShell>
   );

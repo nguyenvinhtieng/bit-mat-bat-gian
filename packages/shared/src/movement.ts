@@ -1,21 +1,25 @@
-import { BODY_HH, BODY_HW, PLAYER_SPEED, SIM_DT, TILE } from './constants';
-import { isSolidTile, type LayoutGrid } from './layout';
+import { BODY_HH, BODY_HW, BODY_OY, PLAYER_SPEED, SIM_DT, TILE } from './constants';
+import type { LayoutGrid, PxBox } from './layout';
 
 export type Vec = { x: number; y: number };
 export type InputDir = { dx: number; dy: number };
 
-function collides(g: LayoutGrid, x: number, y: number): boolean {
-  const x0 = Math.floor((x - BODY_HW) / TILE);
-  const x1 = Math.floor((x + BODY_HW - 0.001) / TILE);
-  const y0 = Math.floor((y - BODY_HH) / TILE);
-  const y1 = Math.floor((y + BODY_HH - 0.001) / TILE);
-  for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) if (isSolidTile(g, tx, ty)) return true;
-  return false;
+/** Every obstacle the body box at feet (x, y) overlaps: wall tiles (as boxes) + prop footprints. */
+function blockers(g: LayoutGrid, x: number, y: number): PxBox[] {
+  const l = x - BODY_HW, r = x + BODY_HW, t = y + BODY_OY - BODY_HH, b = y + BODY_OY + BODY_HH;
+  const walls = g.walls ?? g.solid;
+  const out: PxBox[] = [];
+  for (let ty = Math.floor(t / TILE); ty <= Math.floor((b - 0.001) / TILE); ty++)
+    for (let tx = Math.floor(l / TILE); tx <= Math.floor((r - 0.001) / TILE); tx++)
+      if (tx < 0 || ty < 0 || tx >= g.w || ty >= g.h || walls[ty * g.w + tx] === 1)
+        out.push([tx * TILE, ty * TILE, (tx + 1) * TILE, (ty + 1) * TILE]);
+  for (const k of g.boxes ?? []) if (k[0] < r && k[2] > l && k[1] < b && k[3] > t) out.push(k);
+  return out;
 }
 
 /**
  * Deterministic fixed-step movement shared by server (authoritative) and client (prediction).
- * Axis-separated collision against the tile grid.
+ * Axis-separated collision against wall tiles and prop footprints; a blocked axis snaps flush to the obstacle.
  */
 export function stepMovement(g: LayoutGrid, pos: Vec, input: InputDir, dt = SIM_DT): Vec {
   // keys send ±1 per axis, the touch stick sends any vector — both are capped to the unit circle
@@ -32,17 +36,19 @@ export function stepMovement(g: LayoutGrid, pos: Vec, input: InputDir, dt = SIM_
 
   if (sx !== 0) {
     const nx = x + sx;
-    if (!collides(g, nx, y)) x = nx;
-    else if (sx > 0) x = Math.floor((nx + BODY_HW) / TILE) * TILE - BODY_HW;
-    else x = (Math.floor((nx - BODY_HW) / TILE) + 1) * TILE + BODY_HW;
-    if (collides(g, x, y)) x = pos.x;
+    const hits = blockers(g, nx, y);
+    if (!hits.length) x = nx;
+    else if (sx > 0) x = Math.min(...hits.map((h) => h[0])) - BODY_HW;
+    else x = Math.max(...hits.map((h) => h[2])) + BODY_HW;
+    if (blockers(g, x, y).length) x = pos.x;
   }
   if (sy !== 0) {
     const ny = y + sy;
-    if (!collides(g, x, ny)) y = ny;
-    else if (sy > 0) y = Math.floor((ny + BODY_HH) / TILE) * TILE - BODY_HH;
-    else y = (Math.floor((ny - BODY_HH) / TILE) + 1) * TILE + BODY_HH;
-    if (collides(g, x, y)) y = pos.y;
+    const hits = blockers(g, x, ny);
+    if (!hits.length) y = ny;
+    else if (sy > 0) y = Math.min(...hits.map((h) => h[1])) - BODY_OY - BODY_HH;
+    else y = Math.max(...hits.map((h) => h[3])) - BODY_OY + BODY_HH;
+    if (blockers(g, x, y).length) y = pos.y;
   }
   return { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 };
 }

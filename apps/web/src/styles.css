@@ -1111,6 +1111,12 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
 .night-wrap.last .night-clock { border-color: #e2584a; animation: lastCanh 1.2s ease-in-out infinite; }
 .night-wrap.last .nc-left { color: #ffb0a6; opacity: 1; font-weight: 700; }
 @keyframes lastCanh { 50% { box-shadow: 0 0 14px #e2584aaa; } }
+/* final 30s: solid red pill, blinking */
+.night-wrap.urgent .night-clock { background: linear-gradient(#d6301d, #8e1a10); border-color: #ff8a7a; color: #fff; animation: ncUrgent 0.5s steps(1, end) infinite; }
+.night-wrap.urgent .nc-left, .night-wrap.urgent .nc-prep { color: #fff; }
+.night-wrap.urgent .nc-time { color: #fff; text-shadow: 0 0 10px #fff8; }
+@keyframes ncUrgent { 50% { background: linear-gradient(#5a0f08, #2a0704); border-color: #e2584a; box-shadow: 0 0 18px #ff3b2aee; } }
+@media (prefers-reduced-motion: reduce) { .night-wrap.urgent .night-clock { animation: none; } }
 .nc-prep { padding-left: 8px; border-left: 1px solid #c58b2688; font-size: 0.9em; font-weight: 700; color: #ffe9b0; }
 .nc-prep.open { color: #8fe0a8; }
 .ghost-strip { position: fixed; top: calc(var(--hud-top-h) + 10px); left: 50%; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 8px; padding: 5px 6px 5px 14px; border-radius: 999px; background: #1f2a44dd; border: 1px solid #9fb6e6; color: #e8efff; font-weight: 700; font-size: 0.85em; white-space: nowrap; pointer-events: none; animation: ghostPulse 2.4s ease-in-out infinite; max-width: 94vw; }
@@ -3167,41 +3173,43 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
 @keyframes arrestBadge { 0%, 12% { opacity: 0; transform: scale(.8); } 17%, 45% { opacity: 1; transform: scale(1); } 52%, 100% { opacity: 0; transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .arrest-pair { animation-timing-function: steps(1, end); } .arrest-badge-glow { animation: none; } }
 
-/* Zola emergency notification: same teal, warm paper and brass as the alley. */
-.zola-alert { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px; background: #081d29df; backdrop-filter: blur(7px); color: #183d43; font-family: 'Be Vietnam Pro', sans-serif; animation: fadeIn2 .2s both; }
+/* Emergency group notification — the same alley alarm as an abandoned bike. */
+.bike-discovery.zola-alert { animation: cineOut .3s 3.9s forwards; cursor: default; font-family: 'Be Vietnam Pro', sans-serif; }
 .zola-alert * { box-sizing: border-box; }
-.zola-alert-halo { position: absolute; width: min(85vw, 700px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, #50b6aa35, transparent 68%); pointer-events: none; }
-.zola-alert-card { position: relative; width: min(100%, 680px); border: 2px solid #e4be7b; border-radius: 24px; background: #fff8e8; box-shadow: 0 24px 90px #0008, 0 0 0 7px #dfb7720c; overflow: hidden; animation: zolaNotifyIn .5s cubic-bezier(.18,.85,.25,1.1) both; }
-.zola-alert-card header { display: flex; align-items: center; gap: 13px; padding: 16px 24px; background: #153b43; color: #f1d4a0; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
-.zola-alert-brand { color: #fff8e8; font-size: 24px; letter-spacing: -.06em; }
-.zola-alert-card header small { margin-left: auto; font-weight: 400; letter-spacing: 0; color: #a4c6c3; }
-.zola-alert-content { display: flex; align-items: center; gap: 24px; padding: 28px; background: radial-gradient(ellipse at 10% 85%, #d5e9db, transparent 65%); }
-.zola-alert-phone { width: 190px; flex: none; filter: drop-shadow(0 12px 10px #1a4d4520); animation: zolaPhoneBuzz .4s .5s 3; }
+.zola-alert-card { position: relative; width: min(100%, 760px); border: 1px solid #cda85d; border-radius: 18px; background: #1a2b25f5; box-shadow: 0 24px 90px #0008, 0 0 55px #dfb77218; overflow: hidden; animation: zolaNotifyIn .5s .12s cubic-bezier(.16,.82,.2,1) both; }
+.zola-alert-card header { display: flex; align-items: center; gap: 14px; padding: 14px 24px; border-bottom: 1px solid #c7a46444; background: #111f1b; color: #d7b678; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.zola-alert-brand { display: inline-block; padding: 4px 9px; border-radius: 8px; background: #2c6c5d; color: #fff5d9; font-size: 24px; letter-spacing: -.06em; }
+.zola-alert-card header small { margin-left: auto; font-weight: 400; letter-spacing: 0; color: #aebcac; }
+.zola-alert-content { display: flex; align-items: center; gap: 25px; padding: 28px; background: radial-gradient(ellipse at 12% 65%, #d4a75228, transparent 65%); }
+.zola-alert-phone { width: 180px; flex: none; filter: drop-shadow(0 12px 18px #0006); animation: zolaPhoneBuzz .4s .5s 2; }
 .zola-alert-message { flex: 1; min-width: 0; }
-.zola-alert-group { display: flex; gap: 9px; align-items: center; margin-bottom: 22px; font-size: 13px; font-weight: 800; }
-.zola-alert-group img { width: 38px; height: 38px; border-radius: 12px; }
+.zola-alert-group { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; color: #f3e5c5; font-size: 13px; font-weight: 800; }
+.zola-alert-group img { width: 40px; height: 40px; border: 1px solid #c4a46a77; border-radius: 12px; }
 .zola-alert-group span { overflow-wrap: anywhere; }
-.zola-alert-group small { display: block; margin-top: 4px; font-size: 10px; font-weight: 500; color: #66837e; }
-.zola-alert-group i { margin-left: auto; background: #e7764b; border-radius: 50%; width: 22px; height: 22px; text-align: center; color: white; font-style: normal; line-height: 22px; }
-.zola-alert-tag { color: #a55a32; font-size: 10px; font-weight: 800; letter-spacing: .15em; }
-.zola-alert h1 { margin: 8px 0 12px; color: #153e45; font-size: clamp(30px, 5vw, 44px); line-height: 1.15; letter-spacing: -.04em; }
-.zola-alert p { font-size: 13px; line-height: 1.8; margin: 0; overflow-wrap: anywhere; }
-.zola-alert-receipt { display: flex; align-items: center; gap: 6px; margin-top: 18px; color: #608579; font-size: 10px; }
-.zola-alert-receipt span { width: 6px; height: 6px; border-radius: 50%; background: #44977b; }
-.zola-alert-card footer { position: relative; display: flex; align-items: center; gap: 12px; padding: 17px 24px; border-top: 1px solid #d8ded0; color: #608079; font-size: 11px; }
-.zola-alert-card button { margin-left: auto; padding: 10px 17px; border: 1px solid #2a6e71; border-radius: 10px; background: #21616a; color: #fff8e8; font: inherit; font-weight: 700; cursor: pointer; }
-.zola-alert-card button:focus-visible { outline: 3px solid #e18a45; outline-offset: 3px; }
-.zola-alert-progress { position: absolute; top: -2px; left: 0; height: 3px; width: 100%; background: #de9e57; transform-origin: left; animation: zolaCountdown 3.3s linear both; }
+.zola-alert-group small { display: block; margin-top: 4px; font-size: 10px; font-weight: 500; color: #b7c3ad; }
+.zola-alert-group i { margin-left: auto; display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; background: #e4b458; color: #1d2a20; font-size: 19px; font-style: normal; font-weight: 900; }
+.zola-alert-tag { color: #d9b370; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.zola-alert h1 { margin: 8px 0 14px; color: #ffe0a0; font-family: 'Noto Serif', serif; font-size: clamp(30px, 5vw, 46px); font-weight: 900; line-height: 1.2; text-shadow: 0 3px 0 #101c15, 0 5px 18px #0008; animation: bikeAlarmCaption .35s .3s both; }
+.zola-alert p { color: #e0e2ce; font-size: 13px; line-height: 1.8; margin: 0; overflow-wrap: anywhere; }
+.zola-alert p b { color: #fff1cf; }
+.zola-alert p strong { color: #eabc76; font-weight: 700; }
+.zola-alert-receipt { display: flex; align-items: center; gap: 6px; margin-top: 18px; color: #adbeaa; font-size: 10px; }
+.zola-alert-receipt span { width: 6px; height: 6px; border-radius: 50%; background: #9bbc87; }
+.zola-alert-card footer { position: relative; display: flex; align-items: center; gap: 12px; padding: 15px 24px; border-top: 1px solid #c7a46444; background: #14221d; color: #b9c5af; font-size: 11px; }
+.zola-alert-card button { margin-left: auto; padding: 11px 18px; border: 1px solid #ebc47e; border-radius: 9px; background: #ddae58; color: #1c2b21; font: inherit; font-weight: 800; cursor: pointer; box-shadow: 0 3px 0 #826534; }
+.zola-alert-card button:hover { background: #f1c878; }
+.zola-alert-card button:focus-visible { outline: 3px solid #fff0c4; outline-offset: 3px; }
+.zola-alert-progress { position: absolute; top: -2px; left: 0; height: 2px; width: 100%; background: #e3b352; transform-origin: left; animation: zolaCountdown 4.2s linear both; }
 .zl-meeting-notice { display: flex; align-items: center; gap: 12px; padding: 12px 18px; background: #eaf5ef; border-bottom: 1px solid #d0e1d9; color: #244e50; }
 .zl-meeting-notice > span { flex: none; padding: 5px 8px; border-radius: 6px; background: #26666a; color: #fff6df; font-size: 9px; font-weight: 800; letter-spacing: .06em; }
 .zl-meeting-notice p { margin: 0; font-size: 12px; overflow-wrap: anywhere; }
 .zl-meeting-notice small { display: block; margin-top: 4px; color: #698780; font-size: 10px; }
-@keyframes zolaNotifyIn { from { opacity: 0; transform: translateY(30px) scale(.94); } to { opacity: 1; transform: none; } }
-@keyframes zolaPhoneBuzz { 20%, 60% { transform: rotate(-3deg); } 40%, 80% { transform: rotate(3deg); } }
+@keyframes zolaNotifyIn { 0% { opacity: 0; transform: scale(1.25) rotate(-3deg); } 55% { opacity: 1; transform: scale(.98) rotate(1deg); } 100% { opacity: 1; transform: none; } }
+@keyframes zolaPhoneBuzz { 0%, 100% { transform: none; } 20%, 60% { transform: translateX(-4px) rotate(-5deg); } 40%, 80% { transform: translateX(4px) rotate(5deg); } }
 @keyframes zolaCountdown { to { transform: scaleX(0); } }
-@media (max-width: 520px) { .zola-alert { padding: 16px; } .zola-alert-card header { padding: 12px 16px; gap: 10px; font-size: 8px; } .zola-alert-content { padding: 22px 18px; gap: 10px; } .zola-alert-phone { width: 90px; } .zola-alert-group { font-size: 11px; margin-bottom: 16px; } .zola-alert-group img { width: 30px; height: 30px; } .zola-alert p { font-size: 12px; } .zola-alert-card footer { padding: 14px 16px; font-size: 10px; } }
-@media (max-height: 440px) { .zola-alert { padding: 10px; } .zola-alert-content { padding: 12px 24px; } .zola-alert-phone { width: 115px; } .zola-alert-group { margin-bottom: 8px; } .zola-alert h1 { font-size: 28px; margin: 5px 0; } .zola-alert-receipt { margin-top: 8px; } .zola-alert-card header, .zola-alert-card footer { padding: 9px 20px; } }
-@media (prefers-reduced-motion: reduce) { .zola-alert, .zola-alert-card, .zola-alert-phone { animation: none; } }
+@media (max-width: 520px) { .zola-alert-card header { padding: 12px 14px; gap: 8px; font-size: 8px; } .zola-alert-brand { font-size: 21px; } .zola-alert-content { padding: 24px 14px; gap: 8px; } .zola-alert-phone { width: 76px; } .zola-alert-group { font-size: 11px; margin-bottom: 16px; gap: 7px; } .zola-alert-group img { width: 30px; height: 30px; } .zola-alert-group i { width: 22px; height: 22px; font-size: 15px; } .zola-alert-tag { font-size: 8px; letter-spacing: .06em; } .zola-alert h1 { font-size: clamp(26px, 7.5vw, 36px); } .zola-alert p { font-size: 12px; } .zola-alert-receipt { font-size: 9px; } .zola-alert-card footer { padding: 14px; font-size: 10px; gap: 6px; } .zola-alert-card button { padding: 10px 12px; } }
+@media (max-height: 500px) { .zola-alert-content { padding: 12px 24px; gap: 18px; } .zola-alert-phone { width: 105px; } .zola-alert-group { margin-bottom: 7px; } .zola-alert-group img { width: 30px; height: 30px; } .zola-alert h1 { font-size: 28px; margin: 4px 0; } .zola-alert p { font-size: 12px; line-height: 1.6; } .zola-alert-receipt { margin-top: 7px; } .zola-alert-card header, .zola-alert-card footer { padding: 8px 18px; } .zola-alert-card button { padding: 8px 14px; } .zola-alert-brand { font-size: 19px; } }
+@media (prefers-reduced-motion: reduce) { .bike-discovery.zola-alert, .zola-alert-card, .zola-alert-phone, .zola-alert h1 { animation: none; } }
 
 /* ---------- dev-only debug popup (import.meta.env.DEV) */
 .dev-panel { position: absolute; left: max(8px, env(safe-area-inset-left)); bottom: 18px; z-index: 70; font: 500 13px/1.3 system-ui, sans-serif; }
@@ -3217,3 +3225,36 @@ input, textarea, [contenteditable='true'] { -webkit-user-select: text; user-sele
 .dev-panel-head { display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: #ff8080; }
 .dev-panel-head button { background: none; border: 0; color: inherit; font-size: 18px; cursor: pointer; line-height: 1; }
 .dev-panel-pop label { display: flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+
+/* Report: a brief shared shock, then a readable warning in the alley palette. */
+.bike-discovery { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; overflow: hidden; padding: clamp(50px, 8vh, 76px) 20px; cursor: pointer; color: #f7e7c6; background: radial-gradient(ellipse at 50% 42%, #63502b 0%, #242e28 43%, #0d1617 85%); isolation: isolate; animation: cineOut .3s 4.5s forwards; }
+.bike-discovery-flash { position: absolute; inset: 0; z-index: 5; pointer-events: none; background: #fff0c8; opacity: 0; animation: bikeAlarmFlash .3s .1s both; }
+.bike-discovery-rays { position: absolute; inset: -80%; z-index: -1; pointer-events: none; background: repeating-conic-gradient(from 8deg at 50% 50%, transparent 0deg 13deg, #dbaa4824 13deg 15deg, transparent 15deg 29deg); mask-image: radial-gradient(ellipse, transparent 9%, #000 38%, transparent 68%); animation: bikeAlarmRays 1.3s .12s both; }
+.bike-discovery-band { position: absolute; left: -5%; width: 110%; height: clamp(28px, 5vh, 40px); display: grid; place-items: center; overflow: hidden; background: repeating-linear-gradient(125deg, #ddaf50 0 16px, #27312a 16px 30px); box-shadow: 0 0 28px #0007; animation: bikeAlarmBand .35s .12s cubic-bezier(.12,.85,.22,1) both; }
+.bike-discovery-band.top { top: 4vh; transform: rotate(-2deg); }
+.bike-discovery-band.bottom { bottom: 4vh; transform: rotate(-2deg); }
+.bike-discovery-band span { padding: 4px 22px; background: #dfb45e; color: #1a241e; font-size: clamp(.65rem, 1.5vw, .85rem); font-weight: 900; letter-spacing: .15em; white-space: nowrap; }
+.bike-discovery-scene { position: relative; width: min(560px, 82vw); height: min(340px, 40vh); flex: 0 1 auto; animation: bikeAlarmShake .42s .25s both; }
+.bike-discovery-light { position: absolute; inset: -15%; background: radial-gradient(ellipse, #e5b85555, transparent 64%); animation: bikeAlarmLight 1.2s .18s both; }
+.bike-discovery-ground { position: absolute; left: 10%; right: 10%; bottom: 8%; height: 16%; border-radius: 50%; background: radial-gradient(ellipse, #091310aa, transparent 70%); }
+.bike-discovery-sprite { position: relative; display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 15px 10px #0006); animation: bikeAlarmReveal .55s .12s cubic-bezier(.16,.82,.2,1) both; }
+.bike-discovery-marker { position: absolute; right: 15%; top: 3%; display: grid; place-items: center; width: 54px; height: 60px; background: #ecc05e; color: #222d25; clip-path: polygon(50% 0, 60% 15%, 86% 8%, 82% 33%, 100% 50%, 82% 62%, 88% 90%, 60% 83%, 50% 100%, 37% 82%, 12% 91%, 18% 64%, 0 50%, 18% 35%, 12% 10%, 38% 17%); font: 900 39px sans-serif; animation: bikeAlarmMarker .45s .38s cubic-bezier(.1,1.5,.3,1) both; }
+.bike-discovery-caption { position: relative; text-align: center; max-width: 800px; animation: bikeAlarmCaption .4s .32s cubic-bezier(.1,.9,.25,1) both; }
+.bike-discovery-kicker { display: inline-block; padding: 4px 12px; margin-bottom: 10px; border: 1px solid #cba65988; color: #e3bb6c; background: #18231dcc; font-size: clamp(.62rem, 1.6vw, .76rem); font-weight: 800; letter-spacing: .2em; }
+.bike-discovery-caption h1 { margin: 0; color: #ffe0a0; font-family: 'Noto Serif', serif; font-size: clamp(1.5rem, 5vw, 3.4rem); font-weight: 900; line-height: 1.25; text-shadow: 0 3px 0 #152018, 0 5px 18px #0009; }
+.bike-discovery-caption p { margin: 14px 0 10px; color: #e1e2cf; font-size: clamp(.85rem, 2vw, 1.1rem); line-height: 1.55; }
+.bike-discovery-caption p b { color: #fff1cf !important; font-weight: 800; }
+.bike-discovery-missing { display: block; margin-top: 4px; color: #efbc76; font-weight: 800; }
+.bike-discovery-next { display: block; color: #bac8b7; font-size: clamp(.72rem, 1.6vw, .88rem); line-height: 1.6; }
+.bike-discovery-progress { position: absolute; bottom: 0; left: 0; height: 3px; width: 100%; background: #e3b352; transform-origin: left; animation: bikeProgress 4.8s linear forwards; }
+@keyframes bikeAlarmFlash { 0% { opacity: 0; } 15% { opacity: .8; } 100% { opacity: 0; } }
+@keyframes bikeAlarmRays { 0% { opacity: 0; transform: scale(.7) rotate(-5deg); } 12% { opacity: 1; } 100% { opacity: .35; transform: scale(1) rotate(0); } }
+@keyframes bikeAlarmBand { from { opacity: 0; translate: -45% 0; } to { opacity: 1; translate: 0 0; } }
+@keyframes bikeAlarmShake { 0%, 100% { transform: none; } 15% { transform: translate(-9px, 4px) rotate(-1deg); } 32% { transform: translate(7px, -3px) rotate(1deg); } 50% { transform: translate(-5px, 2px); } 72% { transform: translate(3px, -1px); } }
+@keyframes bikeAlarmLight { from { opacity: 0; transform: scale(.6); } 25% { opacity: 1; transform: scale(1.12); } to { opacity: .65; transform: none; } }
+@keyframes bikeAlarmReveal { 0% { opacity: 0; transform: scale(1.65) rotate(-7deg); } 42% { opacity: 1; transform: scale(.96) rotate(2deg); } 70% { transform: scale(1.03) rotate(-1deg); } 100% { opacity: 1; transform: none; } }
+@keyframes bikeAlarmMarker { from { opacity: 0; transform: scale(.1) rotate(-20deg); } to { opacity: 1; transform: none; } }
+@keyframes bikeAlarmCaption { from { opacity: 0; transform: translateY(24px) scale(.9); } to { opacity: 1; transform: none; } }
+@keyframes bikeProgress { to { transform: scaleX(0); } }
+@media (max-height: 500px) { .bike-discovery { gap: 3px; padding: 35px 12px; } .bike-discovery-scene { height: 32vh; } .bike-discovery-band.top { top: 0; } .bike-discovery-band.bottom { bottom: 0; } .bike-discovery-kicker { margin-bottom: 4px; padding: 2px 8px; } .bike-discovery-caption h1 { font-size: clamp(1.2rem, 5vw, 2rem); } .bike-discovery-caption p { margin: 5px 0 3px; font-size: .8rem; } .bike-discovery-next { font-size: .7rem; } }
+@media (prefers-reduced-motion: reduce) { .bike-discovery, .bike-discovery * { animation: none; } .bike-discovery-flash { display: none; } .bike-discovery-rays { opacity: .3; } }

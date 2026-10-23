@@ -1,0 +1,367 @@
+{
+  "style": "Use case: stylized-concept. Production sprite for a top-down 3/4 Vietnamese alley exploration game. Single isolated object, front and top visible, orthographic camera elevated 35 degrees, no isometric diamond base. Hand-drawn 2D gouache and ink, simple chunky readable silhouette, restrained detail, thin charcoal outline, matte worn surfaces. Quiet low-saturation palette: dusty petrol teal, faded brick red, warm grey, tobacco brown, dirty ivory. Soft subdued warm light from upper left; small soft contact shadow only. NO glossy 3D render, no gold trim, no ornate fantasy carving, no neon, no luminous rim light, no oversaturated orange/yellow, no bloom, no scenery, no floor platform, no decorative border, no watermark. True transparent background. Entire object contained, generous clear padding; bottom-center ground contact. Match ordinary working-class Saigon, gently humorous lived-in details. ",
+  "jobs": [
+    {
+      "key": "decor-ghe-nhua-do",
+      "subject": "One battered low faded brick-red plastic sidewalk stool"
+    },
+    {
+      "key": "decor-ghe-nhua-xanh",
+      "subject": "One small faded petrol-blue Vietnamese plastic stool, four short legs, rectangular holes and a round drain hole in square seat. Scuffed matte plastic. No other objects."
+    },
+    {
+      "key": "prop-corridor-cot-dien",
+      "subject": "One ordinary slender concrete Saigon electricity pole, uneven grey concrete with a SMALL bundle of messy black cables and TWO simple ceramic insulators near top, faded paper plumbing stickers on shaft. No giant transformer, no ornate finials, no gold. Tall narrow upright silhouette."
+    },
+    {
+      "key": "prop-courtyard-cot-dien",
+      "subject": "One slender grey concrete electricity pole from a Saigon alley, small rectangular weathered electric meter halfway up, small bundle of messy black cable near top, two simple ceramic insulators. Plain everyday utilitarian construction; no grand substation, no gold, no glowing light."
+    },
+    {
+      "key": "prop-editing-cot-dien",
+      "subject": "One plain narrow weathered grey concrete utility pole at a Saigon motorbike repair shop, a little dull grey electrical box and scraps of cream plumbing adverts. Few black cable coils at top, two simple insulators. Ordinary infrastructure, no gold or decorative finials."
+    },
+    {
+      "key": "decor-cot-dien",
+      "subject": "One simple narrow concrete alley utility pole, sparse messy black wires on top, one faded paper plumbing sticker. Low detail, matte grey concrete, no gold, no ornate transformer."
+    },
+    {
+      "key": "decor-nha-ong",
+      "subject": "One narrow humble Saigon two-storey tube house facade, weathered grey-beige plaster, barred balcony, two washed shirts drying, rusty blue-grey metal shutter at street level, small blue address plaque reading '42/7'. Flat back silhouette, no surrounding buildings or ground plane. No glowing windows. Single building sprite."
+    },
+    {
+      "key": "decor-cot-chung-cu",
+      "subject": "One narrow old Saigon apartment-block concrete column, rectangular cross section, chipped dirty ivory paint, taped handwritten scooter-parking ticket and two worn paper scraps. Plain base on ground, no ornate capital, no gold."
+    },
+    {
+      "key": "decor-du-che",
+      "subject": "One street cafe parasol with faded dusty teal and dirty ivory canvas panels, a slightly sagging canopy on thin dull metal pole with modest concrete base. Canvas patched once. Whole parasol including pole, no chairs, no table."
+    },
+    {
+      "key": "prop-archive-tu-so",
+      "subject": "One humble squat wooden storage cabinet in a Saigon delivery office. Dull dark brown plywood, two open shelves of bundled notebooks and string-tied brown parcels, battered thermos and small transistor radio on top. No ornate carving, no glowing highlights, no antique luxury finish."
+    },
+    {
+      "key": "prop-exhibition-xe-com-tam",
+      "subject": "One small authentic Saigon com tam pushcart: rectangular dull stainless-steel glass food cabinet, faded brick-red lower panels, two small wheels. Inside simple cooked rice plates, one tray of grilled pork; a little charcoal grill attached to side. Handpainted cream fascia exact short text 'CƠM TẤM'. Humble modern alley stall, no carved wood, no ornamental scrolls, no gold trim."
+    },
+    {
+      "key": "prop-exhibition-xe-hu-tieu",
+      "subject": "One small authentic Saigon hu tieu go pushcart: plain rectangular worn petrol-blue metal body, dull stainless steel stockpot on counter, a few stacked ivory bowls, chopsticks in tin can, noodle bundles behind glass, small wheels. Small handpainted cream fascia 'HỦ TIẾU GÕ'. Plain practical cart, no ornate carvings or gold, no billowing luminous steam."
+    },
+    {
+      "key": "prop-exhibition-xe-banh-mi",
+      "subject": "One small real Saigon banh mi pushcart, battered dull stainless-steel rectangular glass cabinet on two small black wheels, cream lower panels, five simple baguettes inside and jars of pickles, red cloth tied to handle. Handpainted short faded red fascia 'BÁNH MÌ'. No rustic fantasy ornate carvings, no gold, no oversized decorative canopy."
+    },
+    {
+      "key": "prop-exhibition-xe-nuoc-mia",
+      "subject": "One compact authentic Saigon sugarcane juice cart, faded muted green rectangular metal body, dull stainless steel sugarcane press on counter with a small handwheel, bundle of cut cane leaning vertically at side, few plastic cups on top, two small black wheels. Short handpainted cream panel 'NƯỚC MÍA'. Practical cart, no ornate wood or golden trim."
+    },
+    {
+      "key": "decor-chau-bong-giay",
+      "subject": "One terracotta pot of bougainvillea from a Saigon doorstep, irregular sparse dusty magenta papery flowers, olive-grey green leaves, skinny bent woody trunk. Pot cracked and tied with a wire. Small natural lopsided silhouette, no neon flowers, no glossy plant render."
+    },
+    {
+      "key": "decor-long-chim",
+      "subject": "One simple small bamboo birdcage hung from a bent black iron freestanding hook on a thin pole with weighted round base. A little brown bird sits in cage, faded brown cloth folded over top. Whole freestanding object, tall and very narrow, ordinary Saigon sidewalk cafe."
+    },
+    {
+      "key": "prop-coordination-quay-ca-phe",
+      "subject": "One humble Saigon street coffee counter: squat rectangular counter faced with chipped dusty teal ceramic tiles, dull stainless steel top, two aluminum phin filters on little glasses, dented black kettle, a reused condensed-milk tin for spoons, coffee sock strainer. Modest everyday cafe, no gold, no polished copper, no ornate details."
+    },
+    {
+      "key": "prop-editing-ke-xang",
+      "subject": "One humble tiny open steel rack selling petrol in a Saigon alley: two rows of four REUSED CLEAR GLASS BOTTLES containing pale dirty straw-coloured liquid, old red bottle caps, a small dull tin funnel, grey rusty frame. Short cream paper tag 'XĂNG LẺ'. Absolutely no glowing orange liquid or gold. Narrow upright object."
+    },
+    {
+      "key": "prop-storage-ao-mua",
+      "subject": "One humble simple metal clothes stand holding two thin batwing motorbike rain ponchos, one grey-teal and one faded mustard-beige, sagging crinkled plastic, small black round weighted base. Authentic practical Vietnamese rain capes, no coats, no fantasy robes."
+    },
+    {
+      "key": "prop-storage-day-phoi",
+      "subject": "One short low washing line tied between two slender ordinary steel poles, faded checked shorts, off-white undershirt, dusty blue shirt and one mismatched sock hanging with wooden pegs. Dry working-class Saigon humour in the lonely sock. Low wide silhouette, no ground platform."
+    },
+    {
+      "key": "prop-courtyard-xe-crab-hang",
+      "subject": "Three compact everyday Vietnamese step-through scooters parked diagonally tightly together, faded grey-green and ivory panels, small black seats, one green delivery box strapped with elastic cords and one plain helmet hooked over a mirror. Modest utilitarian bikes, no luxury Vespa styling, no glowing headlights. Wide low cluster, every wheel on ground."
+    },
+    {
+      "key": "prop-storage-xe-may-xep",
+      "subject": "Three ordinary Vietnamese step-through motorbikes parked in a tight row diagonally, muted burgundy, dirty ivory and petrol grey. One rear-view mirror has a parking ticket under rubber band, modest black seats, no glow. Practical Honda Dream-type shapes without brand logos, no fashionable retro Vespa, no ornate details."
+    },
+    {
+      "key": "decor-lop-treo",
+      "subject": "Two old thin black motorcycle tyres hanging from one rusty short wall hook, one tilted and slightly overlapping the other, a tiny cream chalk tag 'VÁ VỎ'. Front view with slight top visible, very dark worn rubber, no golden rims. Tall narrow single cluster."
+    },
+    {
+      "key": "decor-xe-banh-trang",
+      "subject": "One tiny practical Saigon banh trang tron pushcart, plain faded brick-red rectangular metal body and glass top case on two small wheels, clear jars of rice-paper strips and small sauce bottles, plastic mixing bowl. Small cream panel exact short text 'BÁNH TRÁNG'. Humble cart, no ornate carving or gold."
+    },
+    {
+      "key": "decor-xe-crab",
+      "subject": "One ordinary compact Vietnamese step-through delivery scooter in dusty grey-green and dirty ivory, dark seat, weathered plain green box strapped on rear rack with two bungee cords, half-helmet hanging on mirror. No logo, no driver. Three quarter side view facing right, visible front and side, both wheels grounded. No glow, no Vespa luxury styling."
+    },
+    {
+      "key": "prop-archive-ban-dem-tien",
+      "subject": "One small low plain dark wooden desk in Saigon delivery office: cheap grey calculator, two rubber-banded bundles of receipts, open notebook, modest little tin cash box and pencil cup. No stacks of fantasy gold, no mahogany carving, no ornate copper."
+    },
+    {
+      "key": "prop-coordination-binh-tra-da",
+      "subject": "One orange-ochre faded plastic insulated iced-tea cooler with dirty ivory lid and little tap, standing on ONE small faded blue plastic stool, two scratched plastic cups hanging on string from handle. Everyday Saigon free-iced-tea station. No metallic gold, no glow, no other furniture."
+    },
+    {
+      "key": "prop-exhibition-bang-hieu",
+      "subject": "One flat rectangular weathered cream enamel street food sign on two small rusty metal attachment tabs, handwritten faded dark red lettering EXACT 'ĂN NO RỒI TÍNH', underneath three tiny simple drawings: rice plate, noodle bowl, baguette. Restrained little border. Saigon humorous food-stall sign, no gold or ornate curling details."
+    },
+    {
+      "key": "prop-storage-xe-may",
+      "subject": "One compact everyday Vietnamese white step-through scooter parked on kickstand, dull dirty ivory panels, black seat, brown half-helmet with taped visor on saddle, small crumpled parking slip held at handlebar. Three-quarter side view facing left, wheels grounded. No person, no brand logo, no luxury Vespa shape."
+    },
+    {
+      "key": "decor-ban-tho-ong-dia",
+      "subject": "One tiny humble floor-level Vietnamese Tho Dia / Than Tai household shrine, a plain faded brick-red wooden box with two little ceramic figurines, one orange fruit on a small white dish and three slender incense sticks. Respectful ordinary neighbourhood shop shrine, no gaudy gold or glow, no ornate towering temple."
+    },
+    {
+      "key": "decor-quat-may",
+      "subject": "One old small Vietnamese pedestal fan, dusty faded mint-grey metal grille, three dull grey blades, thin upright stem and scuffed oval plastic base. A little red ribbon on grille for comic household detail. No gold, no chrome shine. Tall slender object."
+    },
+    {
+      "key": "prop-coordination-ban-ghe-nhua",
+      "subject": "One small Saigon sidewalk cafe seating group: low round dull stainless-steel table, TWO worn faded red plastic stools and one dusty blue stool around it. Two tiny glasses of dark iced coffee, small aluminum phin and a folded lottery-ticket strip on table. Simple furniture readable at small size, subdued colours, no polished glow."
+    },
+    {
+      "key": "prop-courtyard-ban-inox",
+      "subject": "One modest rectangular low stainless-steel alley meeting table with TWO short faded brick-red plastic stools tucked at sides. Dull grey tabletop, dented thermos, three small tea cups, a rubber-banded notebook and a stack of lottery tickets. Humble Saigon, no gold, no chrome shine. Wide low silhouette."
+    },
+    {
+      "key": "prop-editing-thau-va-xe",
+      "subject": "One compact Saigon tyre-repair tool cluster: shallow dented metal water basin with a black motorcycle inner tube partly submerged, one red-brown rusty tool tray, thin old manual floor pump standing upright at side, two plain spanners. All items form one low wide cluster, no glowing bubbles, no brass ornaments."
+    },
+    {
+      "key": "decor-dong-rac",
+      "subject": "One small discreet pile of Saigon household trash: two tied dull charcoal-grey plastic bags, a folded flattened brown carton and a coconut shell. Low compact silhouette. No shiny neon bag, no colorful excess, no flies, no scattering debris outside cluster."
+    },
+    {
+      "key": "decor-hem-barrier",
+      "subject": "One narrow battered square concrete planter acting as an alley barrier, rough grey-beige square tub containing a modest wiry shrub with dull olive leaves. Entire base square and exactly visible, modest bush same width as tub; reads as a 48px-wide solid obstacle, tall no more than 64px. No bright flowers, no tall column, no surrounding ground."
+    },
+    {
+      "key": "prop-archive-nem",
+      "subject": "One thin old Vietnamese sleeping mat with a flattened pillow and folded dark grey blanket at one end, small keypad phone and cooling hand fan beside pillow. Mat faded muted brick and beige checker pattern. Low horizontal rectangle seen from elevated camera, rumpled humble staff nap spot. No pink glow, no plush luxury mattress."
+    },
+    {
+      "key": "decor-ban-inox",
+      "subject": "One small round scratched dull stainless steel sidewalk cafe table on four thin metal legs, one small glass of dark iced coffee, aluminum phin and one folded strip of lottery tickets. No chair. Modest matte metal, no chrome gleam or gold, low wide silhouette."
+    },
+    {
+      "key": "decor-binh-tra-da",
+      "subject": "One faded orange-ochre plastic iced tea cooler with dirty ivory lid, little white tap, scratched shell, one used clear plastic cup hooked to handle with string. On ground, no stool, no other props, humble Saigon everyday object. No golden metal."
+    },
+    {
+      "key": "decor-can-nuoc",
+      "subject": "One common Vietnamese refillable blue water jug, translucent dusty grey-blue plastic, broad shoulders, narrow neck and blue lid. Worn slightly scuffed and unbranded. On ground with no dispenser or stand, no glossy highlights."
+    },
+    {
+      "key": "decor-thung-da",
+      "subject": "One battered off-white polystyrene ice box with chipped corners, lid slightly ajar, two small clear water bottles visible inside, blue plastic cord tied around body. Humble Vietnamese sidewalk drink stall object. No bright brand labels, no shiny metal."
+    },
+    {
+      "key": "decor-thung-giay",
+      "subject": "Three small battered brown delivery cardboard cartons stacked unevenly, clear worn packing tape, a little black hand-drawn 'HÀNG DỄ VỠ' with simple glass symbol, low wide cluster. One carton has a tiny repaired tear. No bright gold, no glossy surfaces."
+    },
+    {
+      "key": "decor-binh-xang",
+      "subject": "One small faded dark brick-red plastic petrol jerrycan with a short black spout and old white cap tied by string, scratched and dusty. No gas flames, no orange glow, no gold. Compact grounded object."
+    },
+    {
+      "key": "decor-non-bao-hiem",
+      "subject": "One typical Vietnamese half-face motorbike helmet, faded dusty green shell with dirty ivory centre stripe, scratched visor and black chin strap tucked inside. Side three-quarter view, lying upright on ground. Simple small object, no logo, no chrome glare."
+    },
+    {
+      "key": "decor-o-ga",
+      "subject": "One small irregular SHALLOW pothole decal seen from the same elevated top-down camera: muted charcoal-grey cracked asphalt edge, muddy grey-brown puddle at centre with very faint reflected dull sky. Entire isolated flat decal, transparent outside jagged edge, no raised rock mound, no orange dirt, no luminous water."
+    }
+  ],
+  "generated": [
+    {
+      "key": "decor-ghe-nhua-do",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-b2daa585-66fb-4f4c-8f11-5c90842f9dc4.png"
+    },
+    {
+      "key": "decor-ghe-nhua-xanh",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-31ccdeec-6e37-44ea-9e89-15494760193b.png"
+    },
+    {
+      "key": "prop-corridor-cot-dien",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-3b61c338-ce18-4d2e-bd2b-92a422fa4a58.png"
+    },
+    {
+      "key": "prop-courtyard-cot-dien",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-8ace103c-7ef4-489f-8712-0dcb184a9c68.png"
+    },
+    {
+      "key": "prop-editing-cot-dien",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-67dc4917-3f5b-472a-89e0-c69103912108.png"
+    },
+    {
+      "key": "decor-cot-chung-cu",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-ca0d715f-4ab0-475d-8370-e311a399db04.png"
+    },
+    {
+      "key": "decor-nha-ong",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-142155eb-71a3-46bf-a8e9-c110c782a924.png"
+    },
+    {
+      "key": "decor-cot-dien",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-62159dc0-4050-4c63-93f2-ae3a803bfdd2.png"
+    },
+    {
+      "key": "decor-du-che",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-edbe5f8b-5dba-4fe0-8a7d-5527cdfce72f.png"
+    },
+    {
+      "key": "prop-archive-tu-so",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-3cfd0097-240d-4da2-a2c0-c699b6688ce8.png"
+    },
+    {
+      "key": "prop-exhibition-xe-com-tam",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-482410f7-faeb-401c-980c-1d2f35d3bafd.png"
+    },
+    {
+      "key": "prop-exhibition-xe-hu-tieu",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-5ffa51bc-db91-48a9-9375-34fa39bd402c.png"
+    },
+    {
+      "key": "prop-exhibition-xe-banh-mi",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-24fe80c3-032f-4a07-805e-238ab98fd3fc.png"
+    },
+    {
+      "key": "prop-exhibition-xe-nuoc-mia",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-76c1e6e0-dbb3-4c9a-b6ad-4cfd38b7528a.png"
+    },
+    {
+      "key": "decor-long-chim",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-145c0c7b-03b7-4730-96a5-c2e4bd41e404.png"
+    },
+    {
+      "key": "prop-coordination-quay-ca-phe",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-f49a585f-81b0-4edc-b25d-be74e52f4cd5.png"
+    },
+    {
+      "key": "decor-chau-bong-giay",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-cc1f62ed-7f6a-4da8-9a4a-2215330fc66c.png"
+    },
+    {
+      "key": "prop-editing-ke-xang",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-49fa94a4-5486-47d4-b473-2ac59493cdf7.png"
+    },
+    {
+      "key": "prop-storage-ao-mua",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-9df011b9-6ee0-4087-a877-cdbd4ad97a94.png"
+    },
+    {
+      "key": "prop-storage-day-phoi",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-9e23d15b-5ab6-4798-a668-cec1338ea3ce.png"
+    },
+    {
+      "key": "prop-courtyard-xe-crab-hang",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-a792a121-9fa1-47d4-b0cc-798cb07a0264.png"
+    },
+    {
+      "key": "prop-storage-xe-may-xep",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-841fd3c0-09e0-4e43-8486-f8f979e78cd8.png"
+    },
+    {
+      "key": "decor-lop-treo",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-c5865b11-db57-4bf8-b8e8-91e089cc60f2.png"
+    },
+    {
+      "key": "decor-xe-banh-trang",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-11af47db-95d2-4dc1-a4e4-a42583b209e0.png"
+    },
+    {
+      "key": "decor-xe-crab",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-155eccbc-f750-495e-80fc-25e6526787b6.png"
+    },
+    {
+      "key": "prop-archive-ban-dem-tien",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-a0682913-c27d-49d2-aa59-e147f2cf839d.png"
+    },
+    {
+      "key": "prop-coordination-binh-tra-da",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-63c640a5-1552-4e02-a67d-5946ec3e8891.png"
+    },
+    {
+      "key": "prop-exhibition-bang-hieu",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-c1e990f5-d4ca-4921-8256-81b7cc5c7e9c.png"
+    },
+    {
+      "key": "prop-storage-xe-may",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-92989935-08a4-4d8c-aa9f-72849639c714.png"
+    },
+    {
+      "key": "decor-quat-may",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-f746e541-fe03-4e51-930c-a2853261b618.png"
+    },
+    {
+      "key": "decor-ban-tho-ong-dia",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-d463a92b-f446-46bc-82b3-fe78cd9c7cf1.png"
+    },
+    {
+      "key": "prop-coordination-ban-ghe-nhua",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-840d18c5-0916-4362-b790-ac06633782b8.png"
+    },
+    {
+      "key": "prop-courtyard-ban-inox",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-6c5818e7-ce7c-4206-b9fb-541a4190b67a.png"
+    },
+    {
+      "key": "prop-editing-thau-va-xe",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-2dd9636c-6168-4cbe-9d87-4fd1ead8f8fb.png"
+    },
+    {
+      "key": "decor-dong-rac",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-44f1c2c5-3f2e-4ffe-97f3-b9050dfbd030.png"
+    },
+    {
+      "key": "decor-hem-barrier",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-b4d9be81-9e78-4275-a288-14587b6fc8fb.png"
+    },
+    {
+      "key": "prop-archive-nem",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-71e63dca-351d-4536-a25b-35fd3d1a7b63.png"
+    },
+    {
+      "key": "decor-ban-inox",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-b08110d0-ae54-4b07-83a9-7b14e828bae7.png"
+    },
+    {
+      "key": "decor-binh-tra-da",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-34fa32db-2d61-472a-bb22-561b0789b9d7.png"
+    },
+    {
+      "key": "decor-can-nuoc",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-8f9df1f3-17a3-4c18-ae32-98b6c72d5d8f.png"
+    },
+    {
+      "key": "decor-thung-da",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-71b70490-a441-4b38-a90b-4ffb0877c7e9.png"
+    },
+    {
+      "key": "decor-thung-giay",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-b7120571-a01f-44de-8ebb-c9edf2573a88.png"
+    },
+    {
+      "key": "decor-o-ga",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-ab641d81-ef57-4f4e-adb9-56a4283fa26d.png"
+    },
+    {
+      "key": "decor-non-bao-hiem",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-63c7ee54-075f-4bb3-9ec8-afb37151cd7d.png"
+    },
+    {
+      "key": "decor-binh-xang",
+      "path": "/Users/nguyenvinhtieng.vn/.codex/generated_images/01a1644f-a059-79b0-8ce2-5081958502ee/exec-8e0b6f0b-c825-4be0-8edf-7f5f8ed91e43.png"
+    }
+  ]
+}

@@ -6,9 +6,11 @@ export const SIM_HZ = 30;
 export const SIM_DT = 1 / SIM_HZ;
 export const PATCH_MS = 50;
 export const PLAYER_SPEED = 170; // px / s
-/** Feet collision half-extents (px). Player position = feet point. */
+/** Collision half-extents (px). Player position = feet point; the box sits just above it (the scooter's wheels end ~3px above the feet). */
 export const BODY_HW = 12;
 export const BODY_HH = 7;
+/** Box centre relative to the feet point (px, negative = up): y + BODY_OY ± BODY_HH. */
+export const BODY_OY = -10;
 export const INTERACT_RADIUS = 72;
 
 export const MAX_PLAYERS = 10;

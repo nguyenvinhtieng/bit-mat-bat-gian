@@ -94,7 +94,7 @@ export function MgShell({ taskId, status, children, hint, tone = 'info', vars }:
   const goal = GUIDE[taskId]?.[lang === 'en' ? 'en' : 'vi'].goal ?? '';
   const fill = (t: string) => t.replace(/\{(\w+)\}/g, (_, k) => vars?.[k] ?? '');
   return (
-    <div className="mg-col">
+    <div className="mg-col" data-task={taskId}>
       {/* guide / play wrappers are display: contents, except on short landscape screens (goal bar on top) */}
       <div className="mg-guide">
         <header className="mg-head">
@@ -103,7 +103,7 @@ export function MgShell({ taskId, status, children, hint, tone = 'info', vars }:
         </header>
       </div>
       <div className="mg-play">{children}</div>
-      <p className={`mg-hint ${tone}`} role="status">
+      <p className={`mg-hint ${tone}`} role="status" aria-live="polite" aria-atomic="true">
         {hint ?? ' '}
       </p>
     </div>

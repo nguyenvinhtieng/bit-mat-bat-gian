@@ -1,5 +1,5 @@
 import { Client, type Room } from 'colyseus.js';
-import { GAME, PLAYER_COLORS, ROOM_NAME, type ArrestHoldMsg, type ClientMessages, type Cinematic, type InspectResult, type SayMsg } from '@hidden-truth/shared';
+import { GAME, PLAYER_COLORS, ROOM_NAME, type ArrestHoldMsg, type ClientMessages, type Cinematic, type InspectResult, type SayMsg, type VoteResult } from '@hidden-truth/shared';
 import { useStore, type Connecting, type RoomView } from './store';
 
 function endpoint(): string {
@@ -122,7 +122,7 @@ let leaving = false;
 function bind(r: Room) {
   room = r;
   const st = useStore.getState();
-  st.set({ screen: 'room', sessionId: r.sessionId, error: '', connecting: false, end: null, me: null, chat: [], voteResult: null });
+  st.set({ screen: 'room', sessionId: r.sessionId, error: '', connecting: false, end: null, me: null, chat: [], voteResult: null, ejectedNames: [] });
   sessionStorage.setItem(TOKEN_KEY, r.reconnectionToken);
   history.replaceState(null, '', `/join/${r.roomId}`);
 
@@ -137,7 +137,7 @@ function bind(r: Room) {
     if (snap.phase !== lastPhase) {
       if (snap.phase === 'meeting') s.set({ task: null, taskResult: null, voteResult: null, arrestHold: null });
       // the result screen survives the return to the lobby (closed by each player); a new game drops it
-      if (snap.phase === 'lobby') s.set({ me: null, voteResult: null, inspect: null, inspectOpen: false, arrestHold: null });
+      if (snap.phase === 'lobby') s.set({ me: null, voteResult: null, ejectedNames: [], inspect: null, inspectOpen: false, arrestHold: null });
       if (snap.phase === 'explore') s.set({ end: null });
       lastPhase = snap.phase;
     }
@@ -181,7 +181,10 @@ function bind(r: Room) {
   });
   r.onMessage('inspect:result', (inspect: InspectResult) => useStore.getState().set({ inspect, inspectOpen: true }));
   r.onMessage('task:close', () => useStore.getState().set({ task: null, taskResult: null }));
-  r.onMessage('vote:result', (voteResult) => useStore.getState().set({ voteResult }));
+  r.onMessage('vote:result', (voteResult: VoteResult) => {
+    const s = useStore.getState();
+    s.set({ voteResult, ejectedNames: voteResult.ejected ? [...s.ejectedNames, voteResult.ejected] : s.ejectedNames });
+  });
   r.onMessage('cinematic', (c: Cinematic) => useStore.getState().set({ cinematic: { ...c, id: Date.now() } }));
   r.onMessage('end', (end) => useStore.getState().set({ end }));
   r.onMessage('teleport', () => {});

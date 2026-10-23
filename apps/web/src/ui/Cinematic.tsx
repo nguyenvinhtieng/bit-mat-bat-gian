@@ -3,9 +3,10 @@ import { PLAYER_COLORS, mapSkin, playerArt } from '@hidden-truth/shared';
 import { colorHex, useStore } from '../store';
 import { asset, useEscape } from './common';
 import { GROUP_NAME, groupAvatar } from './Zola';
+import { sfx } from './minigames/common/kit';
 
 const ROW = { down: 0, left: 1, right: 2, up: 3 } as const;
-const DURATION: Record<string, number> = { kill: 5700, report: 3600, emergency: 3300, witness: 1000 };
+const DURATION: Record<string, number> = { kill: 5700, report: 4800, emergency: 4200, witness: 1000 };
 /** The stage is authored on a fixed SET_W x SET_H board and scaled to whatever room the bars + caption leave. */
 const SET_W = 1000, SET_H = 420;
 const KICKER: Record<string, string> = { kill: '✦ Bắt giữ ✦', report: '✦ Xe bỏ lại ✦', emergency: '✦ Họp khẩn ✦' };
@@ -13,10 +14,8 @@ const KICKER: Record<string, string> = { kill: '✦ Bắt giữ ✦', report: '�
 // Pose timelines (ms). Impact lands at 900: dash 300-750 → wind-up → slash.
 const ACTOR_STRIKE: PoseTrack = [[0, 'strike-1'], [750, 'strike-0'], [900, 'strike-2'], [1050, 'strike-3']];
 const VICTIM_DIE: PoseTrack = [[0, 'guard-3'], [900, 'die-0'], [1100, 'die-1'], [1350, 'die-2'], [1600, 'die-3']];
-const BODY: PoseTrack = [[0, 'die-3']];
 const ARREST: PoseTrack = [0, 350, 700, 2200, 2700, 3200, 3650, 4050].map((ms, i) => [ms, `arrest-${i}`]);
 const PARKED: PoseTrack = [[0, 'parked-left']];
-const FINDER_STARTLE: PoseTrack = [[0, 'guard-0'], [1350, 'guard-1'], [1650, 'guard-2']];
 const PROPS = ['cine-seal', 'fx-stamp-burst', 'fx-shock-lines'];
 
 const imgCache = new Map<string, Promise<HTMLImageElement>>();
@@ -198,8 +197,17 @@ export function Cinematic() {
     const t = setTimeout(() => set({ cinematic: null }), DURATION[c.kind] ?? 3000);
     return () => clearTimeout(t);
   }, [c?.id]);
+  useEffect(() => {
+    if (c?.kind !== 'report' && c?.kind !== 'emergency') return;
+    // Use the shared audio bus so the player's volume/mute setting is respected.
+    const cues = c.kind === 'report'
+      ? [setTimeout(sfx.drum, 100), setTimeout(sfx.bad, 280), setTimeout(sfx.drum, 780)]
+      : [setTimeout(sfx.senh, 100), setTimeout(sfx.drum, 280), setTimeout(() => sfx.sao(880), 650)];
+    return () => cues.forEach(clearTimeout);
+  }, [c?.id, c?.kind]);
   // warm the pose sheets so the first kill does not start on a blank canvas
   useEffect(() => {
+    loadImg(asset('maps/game/ui/abandoned-bike.png'));
     const a = playerArt(slug);
     loadImg(asset(`${a.action}.webp`));
     loadImg(asset(`${a.actionTint}.webp`));
@@ -232,8 +240,8 @@ export function Cinematic() {
     title = c.youAre === 'victim' ? 'BẠN BỊ HẠ GỤC' : 'HẠ GỤC';
     sub = c.youAre === 'victim' ? <>{nm(c.actor.name, actorCol)} là {mapSkin(useStore.getState().room?.mapSlug).killerName.vi}!</> : <>Bạn đã hạ gục {nm(c.victim!.name, victimCol)}</>;
   } else if (c.kind === 'report') {
-    title = 'BÁO XE BỎ LẠI';
-    sub = <>{nm(c.actor.name, actorCol)} phát hiện chiếc xe CRAP bỏ lại của {nm(c.victim!.name, victimCol)}</>;
+    title = 'CÓ XE BỊ BỎ LẠI!';
+    sub = <>{nm(c.actor.name, actorCol)} vừa phát hiện xe của {nm(c.victim!.name, victimCol)}.</>;
   } else {
     title = 'HỌP KHẨN';
     sub = <>{nm(c.actor.name, actorCol)} đã gọi họp khẩn ({mapSkin(useStore.getState().room?.mapSlug).emergency.vi})</>;
@@ -258,22 +266,47 @@ export function Cinematic() {
     </div>
   );
 
+  if (c.kind === 'report') return (
+    <div className="bike-discovery" key={c.id} role="status" aria-live="assertive" onClick={() => set({ cinematic: null })}>
+      <div className="bike-discovery-flash" aria-hidden="true" />
+      <div className="bike-discovery-rays" aria-hidden="true" />
+      <div className="bike-discovery-band top" aria-hidden="true"><span>! CẢNH BÁO · XE BỎ LẠI · CẢNH BÁO !</span></div>
+      <div className="bike-discovery-band bottom" aria-hidden="true"><span>! CẢNH BÁO · XE BỎ LẠI · CẢNH BÁO !</span></div>
+      <div className="bike-discovery-scene" aria-hidden="true">
+        <div className="bike-discovery-light" />
+        <div className="bike-discovery-ground" />
+        <img className="bike-discovery-sprite" src={asset('maps/game/ui/abandoned-bike.png')} alt="" draggable={false} />
+        <span className="bike-discovery-marker">!</span>
+      </div>
+      <div className="bike-discovery-caption">
+        <span className="bike-discovery-kicker">BÁO ĐỘNG TOÀN NHÓM</span>
+        <h1>{title}</h1>
+        <p>{sub}<strong className="bike-discovery-missing">Không thấy tài xế đâu!</strong></p>
+        <span className="bike-discovery-next">Có chuyện rồi! Cả nhóm vào họp ngay.</span>
+      </div>
+      <div className="bike-discovery-progress" aria-hidden="true" />
+    </div>
+  );
+
   if (c.kind === 'emergency') return (
-    <div className="zola-alert" key={c.id} role="status" aria-live="assertive">
-      <div className="zola-alert-halo" aria-hidden="true" />
+    <div className="bike-discovery zola-alert" key={c.id} role="status" aria-live="assertive">
+      <div className="bike-discovery-flash" aria-hidden="true" />
+      <div className="bike-discovery-rays" aria-hidden="true" />
+      <div className="bike-discovery-band top" aria-hidden="true"><span>! HỌP KHẨN · CẢ NHÓM VÀO ZOLA !</span></div>
+      <div className="bike-discovery-band bottom" aria-hidden="true"><span>! HỌP KHẨN · CẢ NHÓM VÀO ZOLA !</span></div>
       <section className="zola-alert-card">
-        <header><span className="zola-alert-brand">Zola</span><span>THÔNG BÁO NHÓM</span><small>vừa xong</small></header>
+        <header><span className="zola-alert-brand">Zola</span><span>THÔNG BÁO KHẨN</span><small>vừa xong</small></header>
         <div className="zola-alert-content">
           <img className="zola-alert-phone" src={asset('maps/common/ui/meeting-zola.svg')} alt="" />
           <div className="zola-alert-message">
             <div className="zola-alert-group"><img src={groupAvatar} alt="" /><span>{GROUP_NAME}<small>Tin nhắn ưu tiên</small></span><i>!</i></div>
-            <span className="zola-alert-tag">MỌI NGƯỜI ƠI</span>
-            <h1>Họp khẩn!</h1>
-            <p><b>{c.actor.name}</b> vừa gọi cả nhóm.<br />Tạm dừng chuyến xe, vào nhóm bàn ngay!</p>
+            <span className="zola-alert-tag">CẢ NHÓM ƠI, CÓ CHUYỆN RỒI!</span>
+            <h1>HỌP KHẨN!</h1>
+            <p><b>{c.actor.name}</b> vừa gọi cả nhóm.<br /><strong>Tạm dừng chuyến xe, vào nhóm ngay!</strong></p>
             <div className="zola-alert-receipt"><span /> Đã thông báo đến cả nhóm</div>
           </div>
         </div>
-        <footer><span className="zola-alert-progress" /><span>Đang mở cuộc họp…</span><button onClick={() => set({ cinematic: null })}>Vào nhóm <span aria-hidden="true">→</span></button></footer>
+        <footer><span className="zola-alert-progress" /><span>Đang mở cuộc họp…</span><button type="button" onClick={() => set({ cinematic: null })}>Vào nhóm <span aria-hidden="true">→</span></button></footer>
       </section>
     </div>
   );
@@ -307,29 +340,7 @@ export function Cinematic() {
                 <Fx name="fx-soul-rise" className="cine-fx-soul" ms={1100} delay={1700} />
               </>
             )}
-            {c.kind === 'report' && (
-              <>
-                <i className="cine-spot" />
-                <div className="cine-victim lie">
-                  <PoseSprite color={c.victim!.color} track={arrest ? PARKED : BODY} tall={!!arrest} />
-                </div>
-                <Fx name="fx-shock-lines" className="cine-fx-shock" ms={900} delay={1150} />
-                <div className="cine-actor findin">
-                  <div className="cine-walker">
-                    <Sprite color={c.actor.color} dir="right" walking scale={4} />
-                  </div>
-                  <div className="cine-flip cine-startle">
-                    <PoseSprite color={c.actor.color} track={FINDER_STARTLE} />
-                  </div>
-                  <Fx name="fx-witness" className="cine-bang-fx" ms={500} delay={1150} />
-                </div>
-                <i className="cine-ring red r1" />
-                <i className="cine-ring red r2" />
-                <i className="cine-ring red r3" />
-                <img className="cine-seal" src={asset('maps/common/ui/fx/cine-seal.webp')} alt="" draggable={false} />
-                <Fx name="fx-stamp-burst" className="cine-fx-stamp" ms={700} delay={1780} />
-              </>
-            )}
+
 
           </div>
         </div>

@@ -1,5 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
-<circle cx="64" cy="64" r="58" fill="#f2a33a" stroke="#fff6e0" stroke-width="8"/>
-<circle cx="64" cy="64" r="58" fill="none" stroke="#2b1a10" stroke-width="3"/>
-<text x="64" y="68" font-size="64" text-anchor="middle" dominant-baseline="central" font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,sans-serif">🙅</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><g stroke="#343b35" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><ellipse cx="48" cy="87" rx="31" ry="4" fill="#343b3514"/><path d="M17 87V71Q19 58 34 56H62Q77 58 79 71V87Z" fill="#438978" /><circle cx="48" cy="34" r="22" fill="#d8ad7d"/><path d="M26 31Q22 9 48 10Q73 9 70 31L61 21Q44 32 28 27" fill="#343b35" /><circle cx="40" cy="35" r="1" fill="#343b35"/><circle cx="56" cy="35" r="1" fill="#343b35"/><path d="M41 46Q48 51 55 46" fill="none" /><path d="M34 60L48 73 62 60" fill="#fff2ce" /></g></svg>
