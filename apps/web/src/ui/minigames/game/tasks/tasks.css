@@ -608,9 +608,14 @@
 .ck-quiet-scene .ck-shutter-handle:active { cursor: grabbing; }
 .ck-shutter-handle:focus-visible { outline: 3px solid #ffe4a3; outline-offset: 3px; }
 .ck-quiet-grip { display: block; width: 55%; height: 28%; border: 3px solid #203c3d; border-bottom-color: #bed0ad; border-radius: 5px; background: #172f32; }
-.ck-quiet-hud { position: absolute; z-index: 5; bottom: 3%; left: 5%; right: 5%; display: flex; justify-content: space-between; align-items: center; gap: 12px; pointer-events: none; }
-.ck-quiet-hud svg, .ck-quiet-cue svg { width: clamp(24px, 5cqw, 38px); height: clamp(24px, 5cqw, 38px); flex-shrink: 0; }
-.ck-quiet-moon { display: grid; place-items: center; color: #f4d99d; padding: 8px; border: 1px solid #c9c59866; border-radius: 50%; background: #122c35dc; }
+.ck-quiet-hud { position: absolute; z-index: 5; bottom: 3%; left: 5%; right: 5%; display: flex; justify-content: center; align-items: center; gap: 12px; pointer-events: none; }
+.ck-quiet-hud svg { width: clamp(24px, 5cqw, 38px); height: clamp(24px, 5cqw, 38px); flex-shrink: 0; }
+/* Pull hint rides on the handle itself: bouncing arrow above it until the first drag. */
+.ck-quiet-pull { position: absolute; left: 50%; bottom: calc(100% + 6px); width: clamp(34px, 7cqw, 50px); height: clamp(34px, 7cqw, 50px); margin-left: calc(clamp(34px, 7cqw, 50px) / -2); display: grid; place-items: center; color: #1d2a2e; background: #f9df9e; border: 2px solid #1d2a2e; border-radius: 50%; pointer-events: none; animation: ck-quiet-pull 1.2s ease-in-out infinite; }
+.ck-quiet-pull svg { width: 70%; height: 70%; stroke-width: 3.2; }
+.ck-quiet-scene .ck-shutter-handle:has(.ck-quiet-pull) { animation: ck-quiet-glow 1.2s ease-in-out infinite; }
+@keyframes ck-quiet-pull { 0%, 100% { transform: translateY(4px); opacity: .75; } 50% { transform: translateY(-10px); opacity: 1; } }
+@keyframes ck-quiet-glow { 50% { box-shadow: inset 0 2px #e4ce9a, 0 0 0 4px #f9df9eaa, 0 4px 6px #0008; } }
 .ck-quiet-meter { display: flex; align-items: center; gap: 10px; width: 56%; padding: 9px 12px; color: var(--quiet-color); border: 1px solid #a9c8ae66; border-radius: 40px; background: #102d35ed; box-shadow: 0 4px 14px #0004; }
 .ck-quiet-bars { display: flex; align-items: center; gap: 4px; height: 28px; flex: 1; }
 .ck-quiet-bars i { flex: 1; border-radius: 4px; background: #78999233; transition: background .12s; }
@@ -627,14 +632,12 @@
 .ck-quiet-interior { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(ellipse at bottom, #b08c4d88, transparent 75%); }
 .ck-quiet-interior svg { width: 30%; color: #b5e3b6; opacity: 0; transition: opacity .3s; }
 .complete .ck-quiet-interior svg { opacity: 1; }
-.ck-quiet-cue, .ck-quiet-feedback { position: absolute; z-index: 4; pointer-events: none; display: flex; align-items: center; justify-content: center; color: #f9df9e; background: #142e36e8; border: 1px solid #d1bc8180; border-radius: 40px; padding: 8px 16px; gap: 10px; left: 50%; bottom: 12%; transform: translateX(-50%); }
-.ck-quiet-cue svg:first-child { animation: ck-quiet-up 1.5s ease-in-out infinite; }
+.ck-quiet-feedback { position: absolute; z-index: 4; pointer-events: none; display: flex; align-items: center; justify-content: center; color: #f9df9e; background: #142e36e8; border: 1px solid #d1bc8180; border-radius: 40px; padding: 8px 16px; gap: 10px; left: 50%; bottom: 12%; transform: translateX(-50%); }
 .ck-quiet-feedback svg { width: 32px; height: 32px; }
 .ck-quiet-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .alarmed .ck-shutter { animation: ck-quiet-rattle .13s linear 5; }
-@keyframes ck-quiet-up { 50% { transform: translateY(-5px); } }
 @keyframes ck-quiet-rattle { 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
-@media (prefers-reduced-motion: reduce) { .ck-quiet-cue svg:first-child, .alarmed .ck-shutter { animation: none; }.ck-neighbor, .ck-neighbor::before, .ck-neighbor::after { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .ck-quiet-pull, .ck-quiet-scene .ck-shutter-handle:has(.ck-quiet-pull), .alarmed .ck-shutter { animation: none; }.ck-neighbor, .ck-neighbor::before, .ck-neighbor::after { transition: none; } }
 
 /* Phones play in landscape: zoom the shop on the left, keep feedback on the right.
    Square art is scaled to 140% of scene height and offset by (-12%, -30%). */
@@ -650,12 +653,11 @@
   .ck-quiet-scene .ck-neighbor-right { right: 3%; }
   .ck-quiet-scene .ck-neighbor span { font-size: 26px; }
   .ck-quiet-scene .ck-quiet-hud { top: 51%; bottom: auto; left: 73%; right: 3%; gap: 0; }
-  .ck-quiet-scene .ck-quiet-moon { display: none; }
   .ck-quiet-scene .ck-quiet-meter { box-sizing: border-box; width: 100%; min-width: 0; gap: 7px; padding: 10px 9px; }
   .ck-quiet-scene .ck-quiet-meter > svg:last-child { display: none; }
   .ck-quiet-scene .ck-quiet-bars { min-width: 0; gap: 3px; }
-  .ck-quiet-scene .ck-quiet-hud svg, .ck-quiet-scene .ck-quiet-cue svg { width: 26px; height: 26px; }
-  .ck-quiet-scene .ck-quiet-cue, .ck-quiet-scene .ck-quiet-feedback { box-sizing: border-box; left: 73%; right: 3%; bottom: 13%; transform: none; padding: 8px; }
+  .ck-quiet-scene .ck-quiet-hud svg { width: 26px; height: 26px; }
+  .ck-quiet-scene .ck-quiet-feedback { box-sizing: border-box; left: 73%; right: 3%; bottom: 13%; transform: none; padding: 8px; }
 }
 
 /* untangle_charger on phones (landscape, short): button beside the scene so it takes the full height; bigger pegs / plug / phone */

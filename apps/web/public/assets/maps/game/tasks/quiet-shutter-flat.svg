@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+  <!-- Flat line-art backdrop for the quiet shutter task. Door opening sits at 24%..76% x, 34%..78% y;
+       neighbor windows at 27..39% / 63..75% x, 4..17% y so the live overlays line up. -->
+  <g stroke="#1d2a2e" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <!-- night sky + neighbor house -->
+    <rect x="0" y="0" width="1000" height="800" fill="#1f3550" stroke="none"/>
+    <circle cx="905" cy="95" r="38" fill="#f6e7b4"/>
+    <path d="M945 330V260l55-40v110Z" fill="#3a3346"/>
+    <rect x="958" y="275" width="26" height="34" fill="#f2c56c"/>
+    <!-- main wall -->
+    <rect x="50" y="-10" width="890" height="800" fill="#e7b257"/>
+    <path d="M50 60h890" fill="none" stroke="#c98f3c" stroke-width="5"/>
+    <path d="M110 140q30-10 40 18M820 420q30 6 34 30M120 560q20 18 6 40M880 600q-24 14-10 40" fill="none" stroke="#c98f3c" stroke-width="5"/>
+    <!-- upper windows (shutter overlays sit on top) -->
+    <rect x="252" y="28" width="156" height="156" rx="10" fill="#9a6a33"/>
+    <rect x="612" y="28" width="156" height="156" rx="10" fill="#9a6a33"/>
+    <rect x="240" y="182" width="180" height="20" rx="4" fill="#f3d79a"/>
+    <rect x="600" y="182" width="180" height="20" rx="4" fill="#f3d79a"/>
+    <!-- side vents -->
+    <rect x="78" y="250" width="70" height="120" rx="6" fill="#d39b45"/>
+    <path d="M113 250v120M78 290h70M78 330h70" fill="none" stroke-width="4"/>
+    <!-- tiled awning -->
+    <path d="M150 300 190 230h620l40 70Z" fill="#c9573e"/>
+    <path d="M150 300h700" fill="none"/>
+    <path d="M150 300q25 24 50 0q25 24 50 0q25 24 50 0q25 24 50 0q25 24 50 0q25 24 50 0q25 24 50 0q25 24 50 0q25 24 50 0q25 24 50 0q25 24 50 0q25 24 50 0q25 24 50 0q25 24 50 0" fill="#e07a52"/>
+    <path d="M250 232l-14 66M350 232l-7 66M450 232v66M550 232v66M650 232l7 66M750 232l14 66" fill="none" stroke-width="4"/>
+    <!-- door surround -->
+    <rect x="212" y="322" width="576" height="466" rx="6" fill="#b9853f"/>
+    <rect x="236" y="336" width="528" height="452" fill="#0d2a2f"/>
+    <!-- bougainvillea -->
+    <path d="M60 790C80 600 60 420 120 300S230 190 290 210" fill="none" stroke="#5a3a26" stroke-width="10"/>
+    <g fill="#e2457a">
+      <circle cx="100" cy="230" r="34"/><circle cx="150" cy="195" r="30"/><circle cx="205" cy="215" r="28"/>
+      <circle cx="80" cy="300" r="30"/><circle cx="250" cy="200" r="24"/><circle cx="90" cy="380" r="24"/>
+      <circle cx="300" cy="225" r="20"/><circle cx="72" cy="460" r="22"/>
+    </g>
+    <g fill="#5f9b5a">
+      <ellipse cx="128" cy="262" rx="18" ry="10" transform="rotate(-30 128 262)"/>
+      <ellipse cx="180" cy="242" rx="16" ry="9" transform="rotate(20 180 242)"/>
+      <ellipse cx="60" cy="340" rx="16" ry="9" transform="rotate(-50 60 340)"/>
+      <ellipse cx="275" cy="248" rx="14" ry="8" transform="rotate(15 275 248)"/>
+    </g>
+    <!-- wall lantern -->
+    <circle cx="880" cy="420" r="70" fill="#f8d47a" opacity=".28" stroke="none"/>
+    <path d="M880 340v28" fill="none"/>
+    <path d="M858 368h44l-6 70h-32Z" fill="#f6cf6e"/>
+    <path d="M852 368h56M860 438h40" fill="none"/>
+    <!-- pavement -->
+    <rect x="-10" y="788" width="1020" height="40" fill="#8b8a7f"/>
+    <rect x="-10" y="828" width="1020" height="190" fill="#4c5157"/>
+    <path d="M120 828 90 1000M330 828l-12 172M540 828v172M750 828l14 172M940 828l34 172M-10 905h1020" fill="none" stroke-width="4"/>
+    <!-- potted plants -->
+    <g fill="#4f8f55">
+      <path d="M120 700c-40-60-60-120-40-160 30 40 50 100 40 160Z"/>
+      <path d="M130 700c10-70 40-130 80-150 0 60-30 120-80 150Z"/>
+      <path d="M120 705c-60-20-90-60-90-100 50 10 80 50 90 100Z"/>
+      <path d="M880 700c-30-70-20-140 20-170 20 60 10 120-20 170Z"/>
+      <path d="M870 705c-50-30-80-80-70-130 40 30 70 80 70 130Z"/>
+      <path d="M890 705c30-50 70-80 110-80-10 50-50 80-110 80Z"/>
+    </g>
+    <path d="M80 700h90l-12 92h-66Z" fill="#3f6fa0"/>
+    <path d="M94 735h62" fill="none" stroke="#f3e3b5" stroke-width="5"/>
+    <path d="M830 700h100l-14 92h-72Z" fill="#b5523c"/>
+  </g>
+</svg>
