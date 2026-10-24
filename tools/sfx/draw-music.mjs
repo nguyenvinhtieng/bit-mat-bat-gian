@@ -12,6 +12,9 @@
  *   end-vote.wav     — cop unmasked: "gotcha!" hit, everyone scatters on their bikes
  *   end-killer.wav   — last driver cuffed: cuffs, police whistle, noir descent
  *   end-timeout.wav  — dawn, parcel undelivered: birds, a rooster, a deflated "wah wah wah waaah"
+ *   sock-cop.wav     — timed to the 6 s sock-check clip (scuffle -> zoom at 3.1 s -> drum roll -> flash at 4.7 s ->
+ *                      reveal at 4.95 s): green socks, brass "gotcha!", cuffs and a police whistle
+ *   sock-civil.wav   — same build-up; black socks: wrong driver, a deflated "wah wah waaah"
  *   node tools/sfx/draw-music.mjs
  * Writes apps/web/public/assets/maps/game/music/*.wav
  */
@@ -428,4 +431,59 @@ const arp = (x, t0, midis, step = 0.09, o = {}) => midis.forEach((m, i) => keys(
   brass(x, 3.85, [N.F3 - 1], { dur: 2, gain: 0.2, attack: 0.08, wah: true, sag: 0.5, vibr: 0.3 });
   bass(x, 3.85, N.Eb2, { dur: 1.6, gain: 0.3 });
   write('end-timeout.wav', reverb(x, 0.28), { soft: true });
+}
+
+// ---------------------------------------------------------------- sock check (timed to cinematics/sock-*.mp4)
+/** Cloth scuffle: a quick band-passed noise swell (pulling, tugging at trousers). */
+function rustle(x, t0, dur = 0.16, gain = 0.12) {
+  const bp = bandpass(1100, 0.7);
+  add(x, t0, dur, (t) => gain * Math.sin((Math.PI * t) / dur) ** 2 * bp(rnd(), 900 + 900 * (t / dur)));
+}
+/** 0-2.9 s the crew wrestles the trouser leg up, 3.1 s cut to the ankle, a drum roll, 4.7 s the flash. */
+function sockBuildup(x) {
+  const E = 0.25;
+  [N.D2, N.D2, N.F2, N.D2, N.Ab2, N.G2, N.F2, N.Eb2, N.D2, N.D2, N.F2, N.D2].forEach((m, k) => bass(x, 0.05 + k * E, m, { dur: 0.22, gain: 0.45 }));
+  for (let k = 0; k < 6; k++) kick(x, 0.05 + k * 2 * E, 0.45);
+  for (let k = 0; k < 6; k++) snap(x, 0.3 + k * 2 * E, 0.6);
+  [0.2, 0.55, 0.9, 1.15, 1.5, 1.85, 2.1, 2.4, 2.65].forEach((t, k) => rustle(x, t, 0.14 + (k % 3) * 0.04, 0.1 + (k % 2) * 0.05));
+  [[0.55, N.D5], [0.8, N.F5], [1.55, N.E5], [1.8, N.Eb5], [2.3, N.D5]].forEach(([t, m]) => vib(x, t, m, { dur: 0.28, gain: 0.18 }));
+  // zoom to the ankle
+  riser(x, 2.55, 0.55, 0.3);
+  kick(x, 3.1, 0.8);
+  snap(x, 3.1);
+  bass(x, 3.1, N.D2, { dur: 1.5, gain: 0.5 });
+  // drum roll: hits crowd together and swell into the flash, a heartbeat underneath, a dissonant bed
+  for (let t = 3.2, gap = 0.11; t < 4.62; t += gap, gap = Math.max(0.028, gap * 0.93)) brush(x, t, 0.06 + 0.14 * ((t - 3.2) / 1.42), 0.07);
+  [3.45, 3.62, 4.05, 4.2].forEach((t, k) => kick(x, t, k % 2 ? 0.3 : 0.45));
+  pad(x, 3.15, 1.55, [N.D3, N.Eb3, N.A3], 0.09);
+  riser(x, 3.6, 1.05, 0.22);
+  // flash: a bright shimmer while the screen goes white
+  [96, 91, 100].forEach((m, k) => coin(x, 4.68 + k * 0.05, m, 0.06));
+}
+{
+  const x = buf(6.8);
+  sockBuildup(x);
+  // green socks: GOTCHA! — big major hit, cuffs, a police whistle, sparkles
+  kick(x, 4.95, 0.9);
+  snap(x, 4.95);
+  bass(x, 4.95, N.Bb1, { dur: 1.6, gain: 0.6 });
+  brass(x, 4.95, [N.Bb3, N.D4, N.F4], { dur: 1.5, gain: 0.22 });
+  cuffs(x, 5.3);
+  cuffs(x, 5.45, 0.7);
+  whistle(x, 5.7, 0.22, 0.14);
+  whistle(x, 5.98, 0.4, 0.14);
+  [[5.05, N.F5], [5.15, N.Bb4 + 12], [5.25, N.D5 + 12]].forEach(([t, m]) => vib(x, t, m, { dur: 1.2, gain: 0.14 }));
+  [5.2, 5.5, 5.85].forEach((t, k) => coin(x, t, 93 + k * 2, 0.05));
+  write('sock-cop.wav', reverb(x, 0.24));
+}
+{
+  const x = buf(6.8);
+  sockBuildup(x);
+  // black socks: wrong driver — the hit sags, then a shrugging "wah wah waaah"
+  kick(x, 4.95, 0.8);
+  bass(x, 4.95, N.D2, { dur: 0.6, gain: 0.55, fall: 1 });
+  [[4.95, N.G3], [5.3, N.Gb3]].forEach(([t, m]) => brass(x, t, [m], { dur: 0.32, gain: 0.22, attack: 0.04, wah: true }));
+  brass(x, 5.65, [N.F3], { dur: 1.1, gain: 0.22, attack: 0.06, wah: true, sag: 0.6, vibr: 0.3 });
+  bass(x, 5.65, N.Eb2, { dur: 1, gain: 0.35 });
+  write('sock-civil.wav', reverb(x, 0.24));
 }

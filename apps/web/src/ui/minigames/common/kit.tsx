@@ -351,7 +351,7 @@ const C4 = 262, D4 = 294, E4 = 330, G4 = 392, A4 = 440, C5 = 523, D5 = 587, E5 =
 
 // ------------------------------------------------------------------ music stingers (rendered by tools/sfx/draw-music.mjs)
 export type Ending = 'tasks' | 'vote' | 'killer' | 'timeout';
-const TRACKS = ['intro', 'role-crew', 'role-cop', 'end-tasks', 'end-vote', 'end-killer', 'end-timeout'] as const;
+const TRACKS = ['intro', 'role-crew', 'role-cop', 'end-tasks', 'end-vote', 'end-killer', 'end-timeout', 'sock-cop', 'sock-civil'] as const;
 type Track = (typeof TRACKS)[number];
 /** the files are already mixed loud with their own room, so they sit under the master volume at this level */
 const MUSIC_GAIN = 0.32;
@@ -524,6 +524,8 @@ export const sfx = {
   role: (faction: string) => music(faction === 'killer' ? 'role-cop' : 'role-crew'),
   /** end of the night, by how it ended: deliveries done, cop voted out, everyone cuffed, or dawn broke */
   ending: (kind: Ending) => music(`end-${kind}`),
+  /** sock check, timed to its clip: scuffle, drum roll, then "gotcha!" (green socks) or a deflated "wah wah" (black) */
+  sock: (wasKiller: boolean) => music(wasKiller ? 'sock-cop' : 'sock-civil'),
 
   // ---- older names some screens still call
   drum: () => (tone(100, 0.45, { vol: 0.14, bend: 0.5, reverb: 0.2 }), noise(0.08, { vol: 0.04, freq: 300, type: 'lowpass' })),
