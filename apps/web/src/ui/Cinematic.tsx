@@ -16,8 +16,9 @@ const KICKER: Record<string, string> = { kill: '✦ Bắt giữ ✦', report: '�
 // Pose timelines (ms). Impact lands at 900: dash 300-750 → wind-up → slash.
 const ACTOR_STRIKE: PoseTrack = [[0, 'strike-1'], [750, 'strike-0'], [900, 'strike-2'], [1050, 'strike-3']];
 const VICTIM_DIE: PoseTrack = [[0, 'guard-3'], [900, 'die-0'], [1100, 'die-1'], [1350, 'die-2'], [1600, 'die-3']];
-/** Pre-rendered arrest scene (VP9 with alpha): one smooth clip instead of stepping sprite poses. */
-const ARREST_CLIP = 'maps/game/cinematics/arrest.webm';
+/** Pre-rendered arrest scene with alpha: one smooth clip instead of stepping sprite poses.
+ *  WebKit (every iOS browser) smears VP9 alpha, so it gets HEVC with alpha instead. */
+const ARREST_CLIP = typeof navigator !== 'undefined' && /Apple/.test(navigator.vendor) ? 'maps/game/cinematics/arrest.mov' : 'maps/game/cinematics/arrest.webm';
 const PROPS = ['cine-seal', 'fx-stamp-burst', 'fx-shock-lines'];
 
 const imgCache = new Map<string, Promise<HTMLImageElement>>();
@@ -324,7 +325,8 @@ export function Cinematic() {
             {c.kind === 'kill' && arrest && (
               <>
                 <div className="arrest-badge-glow" aria-hidden="true" />
-                <video className="arrest-clip" src={asset(ARREST_CLIP)} autoPlay muted playsInline preload="auto" disablePictureInPicture aria-hidden="true" />
+                <video className="arrest-clip" src={asset(ARREST_CLIP)} autoPlay muted playsInline preload="auto" disablePictureInPicture aria-hidden="true"
+                  onPlaying={(e) => e.currentTarget.currentTime < 0.3 && sfx.arrest()} />
               </>
             )}
             {c.kind === 'kill' && !arrest && (

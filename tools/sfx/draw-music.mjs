@@ -487,3 +487,47 @@ function sockBuildup(x) {
   bass(x, 5.65, N.Eb2, { dur: 1, gain: 0.35 });
   write('sock-civil.wav', reverb(x, 0.24));
 }
+
+// ---------------------------------------------------------------- arrest (timed to cinematics/arrest.*)
+{
+  // 0.4 s the cop flashes the badge, 1.6 s "!", 2.8 s the grab, 3.2 s the title, 4.2-5.4 s the cuffs go on
+  const x = buf(6.4);
+  [0.05, 0.25].forEach((t) => (kick(x, t, 0.4), bass(x, t, N.D2, { dur: 0.18, gain: 0.35 })));
+  kick(x, 0.42, 0.75);
+  snap(x, 0.42);
+  brass(x, 0.42, [N.D3, 56], { dur: 0.5, gain: 0.16 });
+  [0.5, 0.58, 0.66].forEach((t, k) => coin(x, t, 91 + k * 3, 0.05));
+  pad(x, 0.5, 1.2, [N.D3, N.F3, 56], 0.07);
+  // "!": a stab, then a nervous ticking heartbeat while the driver shakes
+  snap(x, 1.6);
+  vib(x, 1.6, 86, { dur: 0.35, gain: 0.2 });
+  bass(x, 1.6, N.Eb2, { dur: 0.3, gain: 0.45 });
+  for (let k = 0; k < 6; k++) kick(x, 1.85 + k * 0.17 + (k % 2) * 0.03, k % 2 ? 0.28 : 0.42);
+  for (let t = 1.75; t < 2.75; t += 0.085) brush(x, t, 0.05, 0.05);
+  [[1.9, 62], [2.0, 63], [2.1, 62]].forEach(([t, m]) => vib(x, t, m + 12, { dur: 0.12, gain: 0.12 }));
+  riser(x, 2.2, 0.6, 0.28);
+  // the grab + scuffle
+  kick(x, 2.8, 0.9);
+  snap(x, 2.8);
+  bass(x, 2.8, N.D2, { dur: 0.9, gain: 0.55 });
+  [2.9, 3.25, 3.5, 3.85, 4.05].forEach((t, k) => rustle(x, t, 0.14 + (k % 2) * 0.05, 0.12));
+  // title: the brass hit
+  kick(x, 3.2, 0.7);
+  brass(x, 3.2, [N.D3, N.F3, N.Bb3], { dur: 1.0, gain: 0.22 });
+  pipPip(x, 3.55, 0.12);
+  for (let t = 3.4, gap = 0.12; t < 4.15; t += gap, gap = Math.max(0.035, gap * 0.9)) brush(x, t, 0.05 + 0.1 * ((t - 3.4) / 0.75), 0.06);
+  // cuffs: two clicks, a stomp, then the resolving major hit + whistle
+  cuffs(x, 4.25);
+  cuffs(x, 4.6, 0.8);
+  [4.25, 4.6, 4.95].forEach((t) => kick(x, t, 0.45));
+  bass(x, 4.25, N.G2, { dur: 0.3, gain: 0.4 });
+  bass(x, 4.6, N.A2, { dur: 0.3, gain: 0.4 });
+  riser(x, 4.75, 0.45, 0.2);
+  kick(x, 5.2, 0.9);
+  snap(x, 5.2);
+  bass(x, 5.2, N.Bb1, { dur: 1.1, gain: 0.55 });
+  brass(x, 5.2, [N.Bb3, N.D4, N.F4], { dur: 1.1, gain: 0.22 });
+  whistle(x, 5.35, 0.18, 0.13);
+  whistle(x, 5.6, 0.4, 0.13);
+  write('arrest.wav', reverb(x, 0.24));
+}
