@@ -36,37 +36,43 @@ export const FURNITURE_SLOTS: Record<string, Rect> = {
   alley_east_left: [33, 20, 1, 4],
   alley_east_right: [35, 20, 1, 4],
   meeting_table: [19, 3, 4, 2],
-  exhibition_panel: [5, 11, 2, 1],
-  editing_printer: [14, 20, 2, 1],
-  editing_scanner: [26, 20, 2, 1],
-  editing_desk: [19, 22, 3, 1],
-  archive_shelf: [5, 26, 4, 1],
-  storage_copy_stand: [32, 27, 2, 1],
+  exhibition_panel: [6, 12, 2, 2],
+  editing_printer: [14, 21, 2, 1],
+  editing_scanner: [26, 19, 2, 2],
+  // Work floor stays open; the former central pole no longer blocks movement.
+  editing_parts: [14, 19, 3, 2],
+  editing_wiring_panel: [20, 24, 1, 1],
+  archive_shelf: [4, 26, 2, 1],
+  storage_guard_corner: [30, 27, 5, 1], // bàn trà, ghế, quạt và bình nước sát vách bắc
+  storage_guard_stool: [32, 28, 2, 1], // ghế kê chếch trước bàn, lối giữa vẫn thoáng
+  storage_cooler: [24, 27, 2, 1],
+  storage_raincoats: [36, 27, 2, 2], // giá áo mưa sát vách đông; chừa ô nhiệm vụ 37,30
   storage_crate: [26, 29, 1, 1], // the station cell (25,30) sits between lantern + censer: keep 25,29 open
   coord_whiteboard: [30, 8, 3, 1],
-  coord_desk: [33, 7, 2, 1],
+  coord_desk: [36, 8, 3, 1], // tivi CRT cạnh nhiệm vụ chỉnh anten
   courtyard_bench: [24, 1, 3, 1],
   // decor footprints (columns, lanterns, plants, shelves…) — keep every station reachable (movement.test.ts)
   decor_cy_urn_w: [15, 1, 1, 1],
   decor_cy_urn_e: [26, 6, 1, 1],
   decor_cy_flag: [16, 3, 1, 1],
-  decor_ex_throne: [6, 9, 3, 1],
-  decor_ex_crane_w: [5, 9, 1, 1],
-  decor_ex_crane_e: [9, 9, 1, 1],
-  decor_ex_col_nw: [3, 9, 1, 1],
-  decor_ex_col_ne: [11, 9, 1, 1],
-  decor_ex_lamp_w: [3, 14, 1, 1],
-  decor_ex_lamp_e: [11, 14, 1, 1],
+  decor_ex_throne: [8, 9, 2, 1], // hủ tiếu
+  decor_ex_crane_w: [5, 9, 2, 1], // nước mía
+  decor_ex_crane_e: [9, 15, 1, 1], // ghế bàn phía đông
+  decor_ex_col_nw: [3, 9, 1, 1], // bánh mì
+  decor_ex_col_ne: [11, 15, 1, 1],
+  decor_ex_lamp_w: [3, 12, 1, 1], // cơm tấm
   decor_ex_vase_w: [2, 8, 1, 1],
-  decor_ex_vase_e: [12, 8, 1, 1],
+  decor_ex_vase_e: [11, 8, 2, 1], // bồn rửa; ô nhiệm vụ 12,9 luôn trống
+  exhibition_table_e: [10, 14, 1, 2],
+  exhibition_pickup: [2, 16, 1, 1],
+  exhibition_waiting: [6, 17, 2, 1],
   decor_co_plant_n: [19, 8, 1, 1],
   decor_co_plant_s: [22, 17, 1, 1],
-  decor_th_bench_w: [30, 16, 2, 1],
-  decor_th_bench_e: [37, 16, 2, 1],
+  decor_th_bench_w: [35, 14, 4, 3], // nhóm ngồi gọn trên chiếu, chừa lối hai bên
+  coordination_table_w: [31, 11, 2, 1],
+  coordination_table_n: [34, 11, 3, 1],
+  coordination_bikes: [29, 16, 4, 2], // xe sát vách, không lấn cửa nam x34
   decor_th_zither: [38, 12, 2, 1],
-  decor_th_col_nw: [29, 10, 1, 1],
-  decor_th_col_sw: [29, 14, 1, 1],
-  decor_th_col_ne: [39, 10, 1, 1],
   decor_th_vase: [39, 8, 1, 1],
   decor_ob_shelf_w: [17, 19, 2, 1],
   decor_ob_shelf_e: [23, 19, 2, 1],
@@ -74,13 +80,11 @@ export const FURNITURE_SLOTS: Record<string, Rect> = {
   decor_ob_globe: [14, 19, 1, 1],
   decor_ob_sundial: [14, 24, 1, 1],
   decor_ob_lamp: [27, 24, 1, 1],
-  decor_ar_desk: [15, 28, 2, 1],
   decor_ar_chest_e: [17, 30, 2, 1],
   decor_ar_chest_m: [10, 30, 2, 1],
   decor_ar_jar_w: [4, 30, 1, 1],
   decor_ar_jar_e: [18, 26, 1, 1],
   decor_ar_lamp: [4, 26, 1, 1],
-  decor_st_urn_m: [29, 27, 2, 1],
   decor_st_tree: [36, 29, 1, 1],
   decor_st_lantern_w: [24, 30, 1, 1],
   decor_st_lantern_n: [23, 26, 1, 1],

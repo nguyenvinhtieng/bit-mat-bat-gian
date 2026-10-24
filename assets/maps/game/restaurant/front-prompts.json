@@ -1,0 +1,21 @@
+{
+  "mode": "built-in imagegen edit",
+  "transparent_background": true,
+  "common": "Use case: precise-object-edit. Edit this 2D Saigon game prop sprite. Change viewing angle to STRICT FRONT ELEVATION with only a small centered view of the top from above. Camera centered exactly on the front, zero yaw, no left or right side panel visible, no isometric angle, no diagonal receding horizontal edges. All front horizontal rails parallel to image horizontal, all upright legs vertical. Keep the same object identity, materials, colors, restrained hand-painted game art, functional plausible construction. One isolated full object, transparent background, no floor or wall, no people, 6% margin. ",
+  "subjects": {
+    "banh-mi": "Keep baguettes glass counter cream cabinet, front-facing wheels.",
+    "hu-tieu": "Keep noodle display and stockpot blue cabinet.",
+    "com-tam": "Keep food trays glass counter maroon cabinet four casters.",
+    "nuoc-mia": "Keep green sugarcane press cart, sugarcane bundle at side. Front rectangle cabinet.",
+    "sink": "Keep single basin curved faucet blue water supply red valve gray drain. Basin centered front, two legs symmetrical.",
+    "pickup": "REPLACE horizontal wide rack with a NARROW TALL UPRIGHT green insulated shipper delivery box on compact stainless stand, height 1.8 times width, flat vertical back for placing against wall. Stacked rectangular green compartments, black edging and straps, a small upper shelf with two takeaway bags. FRONT only. No writing.",
+    "table": "Round stainless cafe table viewed symmetrically front center, centered ellipse tabletop with horizontal long axis, two glasses and tea pitcher. Legs symmetric, no slant to either side.",
+    "red-chair": "Low red plastic stool, exact frontal symmetrical shape, two legs and horizontal rectangular foot opening. Top visible as centered trapezoid no sideways angle.",
+    "blue-chair": "Low blue plastic stool, exact frontal symmetrical shape, two legs and horizontal rectangular foot opening. Top visible as centered trapezoid no sideways angle."
+  },
+  "sign": {
+    "source": "waiting-sign.svg",
+    "text": "SHIPPER VUI LÒNG NGỒI CHỜ TẠI ĐÂY",
+    "construction": "Portrait A4 paper clipped to a steel mobile sign holder with a single post and wheeled base; native SVG"
+  }
+}

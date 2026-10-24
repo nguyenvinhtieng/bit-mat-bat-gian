@@ -10,8 +10,8 @@
    "name": "decor-0",
    "file": "maps/game/atlas/decor-0",
    "size": [
-    4096,
-    1842
+    1728,
+    3528
    ],
    "generatedBy": "ChatGPT Image; tools/assets-pack/import-saigon-art.mjs",
    "textureScale": 3
@@ -87,10 +87,10 @@
   "sign-drain": {
    "file": "maps/game/signs/drain",
    "size": [
-    1452,
-    925
+    192,
+    108
    ],
-   "generatedBy": "ChatGPT Image; tools/assets-pack/import-saigon-art.mjs"
+   "generatedBy": "Built-in ImageGen; docs/saigon-street-assets.md"
   },
   "sign-moving": {
    "file": "maps/game/signs/moving",
@@ -103,10 +103,10 @@
   "sign-trash": {
    "file": "maps/game/signs/trash",
    "size": [
-    1499,
-    875
+    336,
+    108
    ],
-   "generatedBy": "ChatGPT Image; tools/assets-pack/import-saigon-art.mjs"
+   "generatedBy": "Built-in ImageGen; docs/saigon-street-assets.md"
   },
   "sign-dead-end": {
    "file": "maps/game/signs/dead-end",
@@ -146,44 +146,6 @@
     864
    ]
   },
-  "prop-courtyard-cot-dien": {
-   "atlas": "decor-0",
-   "size": [
-    96,
-    288
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "footprint": [
-    48,
-    48
-   ],
-   "textureSize": [
-    288,
-    864
-   ]
-  },
-  "prop-editing-cot-dien": {
-   "atlas": "decor-0",
-   "size": [
-    96,
-    272
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "footprint": [
-    48,
-    48
-   ],
-   "textureSize": [
-    288,
-    816
-   ]
-  },
   "decor-cot-dien": {
    "atlas": "decor-0",
    "size": [
@@ -212,36 +174,6 @@
    "textureSize": [
     576,
     696
-   ]
-  },
-  "decor-cot-chung-cu": {
-   "atlas": "decor-0",
-   "size": [
-    56,
-    200
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "textureSize": [
-    168,
-    600
-   ]
-  },
-  "decor-du-che": {
-   "atlas": "decor-0",
-   "size": [
-    136,
-    160
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "textureSize": [
-    408,
-    480
    ]
   },
   "prop-archive-tu-so": {
@@ -388,25 +320,6 @@
     360
    ]
   },
-  "prop-editing-ke-xang": {
-   "atlas": "decor-0",
-   "size": [
-    96,
-    120
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "footprint": [
-    48,
-    48
-   ],
-   "textureSize": [
-    288,
-    360
-   ]
-  },
   "prop-storage-ao-mua": {
    "atlas": "decor-0",
    "size": [
@@ -445,44 +358,6 @@
     360
    ]
   },
-  "prop-courtyard-xe-crab-hang": {
-   "atlas": "decor-0",
-   "size": [
-    208,
-    112
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "footprint": [
-    48,
-    48
-   ],
-   "textureSize": [
-    624,
-    336
-   ]
-  },
-  "prop-storage-xe-may-xep": {
-   "atlas": "decor-0",
-   "size": [
-    176,
-    112
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "footprint": [
-    48,
-    48
-   ],
-   "textureSize": [
-    528,
-    336
-   ]
-  },
   "decor-lop-treo": {
    "atlas": "decor-0",
    "size": [
@@ -498,52 +373,7 @@
     312
    ]
   },
-  "decor-xe-banh-trang": {
-   "atlas": "decor-0",
-   "size": [
-    104,
-    104
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "textureSize": [
-    312,
-    312
-   ]
-  },
   "body": {
-   "atlas": "decor-0",
-   "size": [
-    120,
-    96
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "textureSize": [
-    360,
-    288
-   ]
-  },
-  "body-tint": {
-   "atlas": "decor-0",
-   "size": [
-    120,
-    96
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "textureSize": [
-    360,
-    288
-   ]
-  },
-  "decor-xe-crab": {
    "atlas": "decor-0",
    "size": [
     120,
@@ -577,25 +407,6 @@
     288
    ]
   },
-  "prop-coordination-binh-tra-da": {
-   "atlas": "decor-0",
-   "size": [
-    64,
-    96
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "footprint": [
-    48,
-    48
-   ],
-   "textureSize": [
-    192,
-    288
-   ]
-  },
   "prop-exhibition-bang-hieu": {
    "atlas": "decor-0",
    "size": [
@@ -612,25 +423,6 @@
    ],
    "textureSize": [
     624,
-    288
-   ]
-  },
-  "prop-storage-xe-may": {
-   "atlas": "decor-0",
-   "size": [
-    128,
-    96
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "footprint": [
-    48,
-    48
-   ],
-   "textureSize": [
-    384,
     288
    ]
   },
@@ -661,25 +453,6 @@
    ],
    "textureSize": [
     144,
-    264
-   ]
-  },
-  "prop-coordination-ban-ghe-nhua": {
-   "atlas": "decor-0",
-   "size": [
-    120,
-    88
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "footprint": [
-    48,
-    48
-   ],
-   "textureSize": [
-    360,
     264
    ]
   },
@@ -721,56 +494,7 @@
     264
    ]
   },
-  "prop-archive-nem": {
-   "atlas": "decor-0",
-   "size": [
-    136,
-    72
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "footprint": [
-    48,
-    48
-   ],
-   "textureSize": [
-    408,
-    216
-   ]
-  },
-  "decor-ban-inox": {
-   "atlas": "decor-0",
-   "size": [
-    80,
-    64
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "textureSize": [
-    240,
-    192
-   ]
-  },
   "decor-binh-tra-da": {
-   "atlas": "decor-0",
-   "size": [
-    48,
-    64
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "textureSize": [
-    144,
-    192
-   ]
-  },
-  "decor-can-nuoc": {
    "atlas": "decor-0",
    "size": [
     48,
@@ -813,66 +537,6 @@
    "textureSize": [
     192,
     192
-   ]
-  },
-  "decor-binh-xang": {
-   "atlas": "decor-0",
-   "size": [
-    40,
-    56
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "textureSize": [
-    120,
-    168
-   ]
-  },
-  "decor-ghe-nhua-do": {
-   "atlas": "decor-0",
-   "size": [
-    40,
-    48
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "textureSize": [
-    120,
-    144
-   ]
-  },
-  "decor-ghe-nhua-xanh": {
-   "atlas": "decor-0",
-   "size": [
-    40,
-    48
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "textureSize": [
-    120,
-    144
-   ]
-  },
-  "decor-non-bao-hiem": {
-   "atlas": "decor-0",
-   "size": [
-    56,
-    48
-   ],
-   "anchor": [
-    0.5,
-    1
-   ],
-   "textureSize": [
-    168,
-    144
    ]
   },
   "decor-hem-barrier": {
@@ -922,6 +586,201 @@
    "textureSize": [
     360,
     252
+   ]
+  },
+  "decor-exhibition-sink": {
+   "atlas": "decor-0",
+   "size": [
+    80,
+    112
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "textureSize": [
+    240,
+    336
+   ]
+  },
+  "decor-exhibition-pickup": {
+   "atlas": "decor-0",
+   "size": [
+    64,
+    112
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "textureSize": [
+    192,
+    336
+   ]
+  },
+  "decor-exhibition-table": {
+   "atlas": "decor-0",
+   "size": [
+    80,
+    64
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "textureSize": [
+    240,
+    192
+   ]
+  },
+  "decor-exhibition-chair-red": {
+   "atlas": "decor-0",
+   "size": [
+    40,
+    48
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "textureSize": [
+    120,
+    144
+   ]
+  },
+  "decor-exhibition-chair-blue": {
+   "atlas": "decor-0",
+   "size": [
+    40,
+    48
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "textureSize": [
+    120,
+    144
+   ]
+  },
+  "decor-exhibition-waiting-sign": {
+   "atlas": "decor-0",
+   "size": [
+    72,
+    120
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "textureSize": [
+    216,
+    360
+   ]
+  },
+  "prop-coordination-tivi": {
+   "atlas": "decor-0",
+   "size": [
+    96,
+    112
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "textureSize": [
+    288,
+    336
+   ]
+  },
+  "decor-coordination-router": {
+   "atlas": "decor-0",
+   "size": [
+    72,
+    52
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "textureSize": [
+    216,
+    156
+   ]
+  },
+  "prop-coordination-danh-bai": {
+   "atlas": "decor-0",
+   "size": [
+    192,
+    160
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "textureSize": [
+    576,
+    480
+   ]
+  },
+  "prop-coordination-xe-dung": {
+   "atlas": "decor-0",
+   "size": [
+    160,
+    96
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "textureSize": [
+    480,
+    288
+   ]
+  },
+  "prop-editing-compressor": {
+   "atlas": "decor-0",
+   "size": [
+    112,
+    96
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "textureSize": [
+    336,
+    288
+   ]
+  },
+  "prop-editing-parts-shelf": {
+   "atlas": "decor-0",
+   "size": [
+    144,
+    144
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "textureSize": [
+    432,
+    432
+   ]
+  },
+  "prop-editing-wiring-panel": {
+   "atlas": "decor-0",
+   "size": [
+    112,
+    96
+   ],
+   "anchor": [
+    0.5,
+    1
+   ],
+   "textureSize": [
+    336,
+    288
    ]
   }
  },

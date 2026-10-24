@@ -340,6 +340,11 @@ function noise(dur: number, { vol = 0.06, freq = 1200, to, q = 1, type = 'bandpa
 /** Notes in sequence: [freq, delay s, dur s] */
 const notes = (list: [number, number, number][], o: ToneOpts = {}) => list.forEach(([f, at, d]) => tone(f, d, { ...o, at: (o.at ?? 0) + at }));
 const jitter = (f: number, spread = 0.06) => f * (1 + (Math.random() * 2 - 1) * spread);
+/** Soft bell pluck: sine + a quick octave partial for the "ting" */
+const pluck = (f: number, at: number, vol: number, dur = 0.42) => (
+  tone(f, dur, { vol, at, attack: 0.004, reverb: 0.25 }),
+  tone(f * 2, 0.1, { vol: vol * 0.25, at, attack: 0.003, reverb: 0.25 })
+);
 
 // C-major pentatonic, kept in the warm middle register
 const C4 = 262, D4 = 294, E4 = 330, G4 = 392, A4 = 440, C5 = 523, D5 = 587, E5 = 659, G5 = 784, A5 = 880;
@@ -476,10 +481,31 @@ export const sfx = {
     tone(f, 0.09, { type: 'triangle', vol: urgent ? 0.06 : 0.04, reverb: 0 });
     if (urgent) tone(f * 1.25, 0.08, { type: 'triangle', vol: 0.035, at: 0.12, reverb: 0 });
   },
-  /** emergency meeting: soft two-tone scooter "píp píp" */
-  meeting: () => [0, 0.26].forEach((at) => (tone(A4, 0.18, { type: 'triangle', vol: 0.06, at, attack: 0.015 }), tone(D5, 0.18, { type: 'triangle', vol: 0.04, at, attack: 0.015 }))),
-  /** body reported: low, hushed falling sting */
-  report: () => (tone(110, 0.9, { vol: 0.12, bend: 0.6, attack: 0.02, reverb: 0.3 }), notes([[E4, 0.15, 0.5], [C4, 0.4, 0.8]], { type: 'triangle', vol: 0.05, reverb: 0.3 })),
+  /**
+   * emergency meeting: a chat-app "ting-tíng" ring, twice, over a soft rising low pulse (alarm without the shrill).
+   * Bell-ish plucks = sine + a quick octave partial; top note stays at A5 so it never pierces.
+   */
+  meeting: () => {
+    [0, 0.34].forEach((at, i) => {
+      tone(220, 0.26, { type: 'triangle', vol: 0.045, bend: 1.12, at, attack: 0.03, lp: 900, reverb: 0.1 });
+      pluck(D5, at, 0.06);
+      pluck(i ? A5 : G5, at + 0.1, 0.055);
+    });
+    pluck(D5, 0.68, 0.04);
+  },
+  /**
+   * abandoned bike found: a soft muffled hit, then a minor bell motif (E5 → C5 → A4) falling into a low
+   * A/E pad — eerie "something's wrong" rather than a siren; nothing above E5, all sine/filtered triangle.
+   */
+  report: () => {
+    tone(98, 0.5, { vol: 0.13, bend: 0.55, attack: 0.006, reverb: 0.2 });
+    noise(0.18, { vol: 0.04, freq: 220, type: 'lowpass', reverb: 0.2 });
+    pluck(E5, 0.12, 0.05, 0.7);
+    pluck(C5, 0.3, 0.05, 0.8);
+    pluck(A4, 0.5, 0.055, 1.3);
+    tone(110, 1.5, { type: 'triangle', vol: 0.05, at: 0.5, attack: 0.25, lp: 500, reverb: 0.35 });
+    tone(165, 1.4, { type: 'triangle', vol: 0.03, at: 0.55, attack: 0.3, lp: 600, reverb: 0.35 });
+  },
   /** my vote cast */
   vote: () => (noise(0.07, { vol: 0.035, freq: 1400, q: 1 }), tone(C5, 0.12, { type: 'triangle', vol: 0.05, at: 0.03 })),
   /** vote result: someone leaves the table (falling) or nobody does (level, neutral) */

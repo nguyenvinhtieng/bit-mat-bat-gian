@@ -36,7 +36,7 @@
    "id": "wifi_hunt",
    "area": "coordination",
    "x": 1896,
-   "y": 797,
+   "y": 845,
    "title": "Bắt wifi ké",
    "titleEn": "Leech the Wi-Fi",
    "icon": "icon"
@@ -45,7 +45,7 @@
    "id": "tune_antenna",
    "area": "coordination",
    "x": 1800,
-   "y": 418,
+   "y": 466,
    "title": "Chỉnh anten tivi quán cóc",
    "titleEn": "Tune the stall TV aerial",
    "icon": "icon"
@@ -53,8 +53,8 @@
   {
    "id": "pump_tyre",
    "area": "editing",
-   "x": 1272,
-   "y": 946,
+   "x": 1282,
+   "y": 1013,
    "title": "Bơm bánh xe",
    "titleEn": "Pump the tyre",
    "icon": "icon"
@@ -63,7 +63,7 @@
    "id": "connect_wires",
    "area": "editing",
    "x": 984,
-   "y": 1186,
+   "y": 1147,
    "title": "Nối dây hộp điện",
    "titleEn": "Reconnect the junction box",
    "icon": "icon"
@@ -71,8 +71,8 @@
   {
    "id": "patch_tube",
    "area": "editing",
-   "x": 701,
-   "y": 1032,
+   "x": 744,
+   "y": 1080,
    "title": "Vá ruột xe",
    "titleEn": "Patch the inner tube",
    "icon": "icon"
@@ -81,7 +81,7 @@
    "id": "tape_box",
    "area": "archive",
    "x": 216,
-   "y": 1330,
+   "y": 1306,
    "title": "Quấn băng keo thùng hàng",
    "titleEn": "Tape up the box",
    "icon": "icon"

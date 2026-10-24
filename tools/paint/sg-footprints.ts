@@ -60,9 +60,15 @@ for (const p of GAME_PROPS) {
   const m = cache.get(p.key) ?? measure(p.key);
   cache.set(p.key, m);
   const s = (p.scale ?? 1) / texScale;
-  const l = p.x + (m.l - m.w / 2) * s, r = p.x + (m.r - m.w / 2) * s;
+  const seatedGroup = p.key === 'prop-coordination-danh-bai';
+  const l = seatedGroup ? p.x - 90 * (p.scale ?? 1) : p.x + (m.l - m.w / 2) * s;
+  const r = seatedGroup ? p.x + 90 * (p.scale ?? 1) : p.x + (m.r - m.w / 2) * s;
   const b = p.y - (m.h - m.bottom) * s;
-  const t = b - Math.min(DEPTH_MAX, Math.max(DEPTH_MIN, (r - l) * DEPTH_K));
+  // This floor vignette contains four seated people, not one upright prop.
+  // Reserve its mat depth so players cannot walk through the northern players.
+  const depth = seatedGroup ? 112 * (p.scale ?? 1)
+    : Math.min(DEPTH_MAX, Math.max(DEPTH_MIN, (r - l) * DEPTH_K));
+  const t = b - depth;
   for (const [sl, st, sr, sb] of slots) {
     const box = [Math.max(l, sl), Math.max(t, st), Math.min(r, sr), Math.min(b, sb)].map(Math.round);
     if (box[2] - box[0] < 2 || box[3] - box[1] < 2) continue;

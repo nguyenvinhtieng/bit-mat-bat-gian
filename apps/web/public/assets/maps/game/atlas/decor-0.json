@@ -20,49 +20,9 @@
         "h": 864
       }
     },
-    "prop-courtyard-cot-dien": {
-      "frame": {
-        "x": 294,
-        "y": 0,
-        "w": 288,
-        "h": 864
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 288,
-        "h": 864
-      },
-      "sourceSize": {
-        "w": 288,
-        "h": 864
-      }
-    },
-    "prop-editing-cot-dien": {
-      "frame": {
-        "x": 588,
-        "y": 0,
-        "w": 288,
-        "h": 816
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 288,
-        "h": 816
-      },
-      "sourceSize": {
-        "w": 288,
-        "h": 816
-      }
-    },
     "decor-cot-dien": {
       "frame": {
-        "x": 882,
+        "x": 294,
         "y": 0,
         "w": 240,
         "h": 744
@@ -82,7 +42,7 @@
     },
     "decor-nha-ong": {
       "frame": {
-        "x": 1128,
+        "x": 540,
         "y": 0,
         "w": 576,
         "h": 696
@@ -98,52 +58,12 @@
       "sourceSize": {
         "w": 576,
         "h": 696
-      }
-    },
-    "decor-cot-chung-cu": {
-      "frame": {
-        "x": 1710,
-        "y": 0,
-        "w": 168,
-        "h": 600
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 168,
-        "h": 600
-      },
-      "sourceSize": {
-        "w": 168,
-        "h": 600
-      }
-    },
-    "decor-du-che": {
-      "frame": {
-        "x": 1884,
-        "y": 0,
-        "w": 408,
-        "h": 480
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 408,
-        "h": 480
-      },
-      "sourceSize": {
-        "w": 408,
-        "h": 480
       }
     },
     "prop-archive-tu-so": {
       "frame": {
-        "x": 2298,
-        "y": 0,
+        "x": 0,
+        "y": 870,
         "w": 312,
         "h": 456
       },
@@ -162,8 +82,8 @@
     },
     "prop-exhibition-xe-com-tam": {
       "frame": {
-        "x": 2616,
-        "y": 0,
+        "x": 318,
+        "y": 870,
         "w": 480,
         "h": 432
       },
@@ -182,8 +102,8 @@
     },
     "prop-exhibition-xe-hu-tieu": {
       "frame": {
-        "x": 3102,
-        "y": 0,
+        "x": 1242,
+        "y": 870,
         "w": 384,
         "h": 432
       },
@@ -202,8 +122,8 @@
     },
     "prop-exhibition-xe-banh-mi": {
       "frame": {
-        "x": 3492,
-        "y": 0,
+        "x": 0,
+        "y": 1332,
         "w": 384,
         "h": 408
       },
@@ -222,8 +142,8 @@
     },
     "prop-exhibition-xe-nuoc-mia": {
       "frame": {
-        "x": 0,
-        "y": 870,
+        "x": 390,
+        "y": 1332,
         "w": 384,
         "h": 408
       },
@@ -242,8 +162,8 @@
     },
     "decor-chau-bong-giay": {
       "frame": {
-        "x": 390,
-        "y": 870,
+        "x": 780,
+        "y": 1746,
         "w": 216,
         "h": 360
       },
@@ -262,8 +182,8 @@
     },
     "decor-long-chim": {
       "frame": {
-        "x": 612,
-        "y": 870,
+        "x": 1002,
+        "y": 1746,
         "w": 144,
         "h": 360
       },
@@ -282,8 +202,8 @@
     },
     "prop-coordination-quay-ca-phe": {
       "frame": {
-        "x": 762,
-        "y": 870,
+        "x": 0,
+        "y": 1746,
         "w": 480,
         "h": 360
       },
@@ -297,33 +217,13 @@
       },
       "sourceSize": {
         "w": 480,
-        "h": 360
-      }
-    },
-    "prop-editing-ke-xang": {
-      "frame": {
-        "x": 1248,
-        "y": 870,
-        "w": 288,
-        "h": 360
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 288,
-        "h": 360
-      },
-      "sourceSize": {
-        "w": 288,
         "h": 360
       }
     },
     "prop-storage-ao-mua": {
       "frame": {
-        "x": 1542,
-        "y": 870,
+        "x": 486,
+        "y": 1746,
         "w": 288,
         "h": 360
       },
@@ -342,8 +242,8 @@
     },
     "prop-storage-day-phoi": {
       "frame": {
-        "x": 1836,
-        "y": 870,
+        "x": 780,
+        "y": 1332,
         "w": 528,
         "h": 360
       },
@@ -358,52 +258,12 @@
       "sourceSize": {
         "w": 528,
         "h": 360
-      }
-    },
-    "prop-courtyard-xe-crab-hang": {
-      "frame": {
-        "x": 2370,
-        "y": 870,
-        "w": 624,
-        "h": 336
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 624,
-        "h": 336
-      },
-      "sourceSize": {
-        "w": 624,
-        "h": 336
-      }
-    },
-    "prop-storage-xe-may-xep": {
-      "frame": {
-        "x": 3000,
-        "y": 870,
-        "w": 528,
-        "h": 336
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 528,
-        "h": 336
-      },
-      "sourceSize": {
-        "w": 528,
-        "h": 336
       }
     },
     "decor-lop-treo": {
       "frame": {
-        "x": 3534,
-        "y": 870,
+        "x": 1446,
+        "y": 1746,
         "w": 192,
         "h": 312
       },
@@ -417,73 +277,13 @@
       },
       "sourceSize": {
         "w": 192,
-        "h": 312
-      }
-    },
-    "decor-xe-banh-trang": {
-      "frame": {
-        "x": 3732,
-        "y": 870,
-        "w": 312,
-        "h": 312
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 312,
-        "h": 312
-      },
-      "sourceSize": {
-        "w": 312,
         "h": 312
       }
     },
     "body": {
       "frame": {
         "x": 0,
-        "y": 1284,
-        "w": 360,
-        "h": 288
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 360,
-        "h": 288
-      },
-      "sourceSize": {
-        "w": 360,
-        "h": 288
-      }
-    },
-    "body-tint": {
-      "frame": {
-        "x": 366,
-        "y": 1284,
-        "w": 360,
-        "h": 288
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 360,
-        "h": 288
-      },
-      "sourceSize": {
-        "w": 360,
-        "h": 288
-      }
-    },
-    "decor-xe-crab": {
-      "frame": {
-        "x": 732,
-        "y": 1284,
+        "y": 2406,
         "w": 360,
         "h": 288
       },
@@ -502,8 +302,8 @@
     },
     "prop-archive-ban-dem-tien": {
       "frame": {
-        "x": 1098,
-        "y": 1284,
+        "x": 1116,
+        "y": 2112,
         "w": 408,
         "h": 288
       },
@@ -517,33 +317,13 @@
       },
       "sourceSize": {
         "w": 408,
-        "h": 288
-      }
-    },
-    "prop-coordination-binh-tra-da": {
-      "frame": {
-        "x": 1512,
-        "y": 1284,
-        "w": 192,
-        "h": 288
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 192,
-        "h": 288
-      },
-      "sourceSize": {
-        "w": 192,
         "h": 288
       }
     },
     "prop-exhibition-bang-hieu": {
       "frame": {
-        "x": 1710,
-        "y": 1284,
+        "x": 0,
+        "y": 2112,
         "w": 624,
         "h": 288
       },
@@ -557,33 +337,13 @@
       },
       "sourceSize": {
         "w": 624,
-        "h": 288
-      }
-    },
-    "prop-storage-xe-may": {
-      "frame": {
-        "x": 2340,
-        "y": 1284,
-        "w": 384,
-        "h": 288
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 384,
-        "h": 288
-      },
-      "sourceSize": {
-        "w": 384,
         "h": 288
       }
     },
     "decor-ban-tho-ong-dia": {
       "frame": {
-        "x": 2730,
-        "y": 1284,
+        "x": 390,
+        "y": 2700,
         "w": 216,
         "h": 264
       },
@@ -602,8 +362,8 @@
     },
     "decor-quat-may": {
       "frame": {
-        "x": 2952,
-        "y": 1284,
+        "x": 612,
+        "y": 2700,
         "w": 144,
         "h": 264
       },
@@ -617,33 +377,13 @@
       },
       "sourceSize": {
         "w": 144,
-        "h": 264
-      }
-    },
-    "prop-coordination-ban-ghe-nhua": {
-      "frame": {
-        "x": 3102,
-        "y": 1284,
-        "w": 360,
-        "h": 264
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 360,
-        "h": 264
-      },
-      "sourceSize": {
-        "w": 360,
         "h": 264
       }
     },
     "prop-courtyard-ban-inox": {
       "frame": {
-        "x": 3468,
-        "y": 1284,
+        "x": 1050,
+        "y": 2406,
         "w": 384,
         "h": 264
       },
@@ -663,7 +403,7 @@
     "prop-editing-thau-va-xe": {
       "frame": {
         "x": 0,
-        "y": 1578,
+        "y": 2700,
         "w": 384,
         "h": 264
       },
@@ -682,8 +422,8 @@
     },
     "decor-dong-rac": {
       "frame": {
-        "x": 390,
-        "y": 1578,
+        "x": 762,
+        "y": 2700,
         "w": 360,
         "h": 252
       },
@@ -702,8 +442,8 @@
     },
     "decor-hem-barrier": {
       "frame": {
-        "x": 756,
-        "y": 1578,
+        "x": 1128,
+        "y": 2700,
         "w": 144,
         "h": 240
       },
@@ -718,72 +458,12 @@
       "sourceSize": {
         "w": 144,
         "h": 240
-      }
-    },
-    "prop-archive-nem": {
-      "frame": {
-        "x": 906,
-        "y": 1578,
-        "w": 408,
-        "h": 216
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 408,
-        "h": 216
-      },
-      "sourceSize": {
-        "w": 408,
-        "h": 216
-      }
-    },
-    "decor-ban-inox": {
-      "frame": {
-        "x": 1320,
-        "y": 1578,
-        "w": 240,
-        "h": 192
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 240,
-        "h": 192
-      },
-      "sourceSize": {
-        "w": 240,
-        "h": 192
       }
     },
     "decor-binh-tra-da": {
       "frame": {
-        "x": 1566,
-        "y": 1578,
-        "w": 144,
-        "h": 192
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
         "x": 0,
-        "y": 0,
-        "w": 144,
-        "h": 192
-      },
-      "sourceSize": {
-        "w": 144,
-        "h": 192
-      }
-    },
-    "decor-can-nuoc": {
-      "frame": {
-        "x": 1716,
-        "y": 1578,
+        "y": 2970,
         "w": 144,
         "h": 192
       },
@@ -802,8 +482,8 @@
     },
     "decor-thung-da": {
       "frame": {
-        "x": 1866,
-        "y": 1578,
+        "x": 1278,
+        "y": 2700,
         "w": 192,
         "h": 192
       },
@@ -822,8 +502,8 @@
     },
     "decor-thung-giay": {
       "frame": {
-        "x": 2064,
-        "y": 1578,
+        "x": 1476,
+        "y": 2700,
         "w": 192,
         "h": 192
       },
@@ -838,92 +518,12 @@
       "sourceSize": {
         "w": 192,
         "h": 192
-      }
-    },
-    "decor-binh-xang": {
-      "frame": {
-        "x": 2262,
-        "y": 1578,
-        "w": 120,
-        "h": 168
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 120,
-        "h": 168
-      },
-      "sourceSize": {
-        "w": 120,
-        "h": 168
-      }
-    },
-    "decor-ghe-nhua-do": {
-      "frame": {
-        "x": 2388,
-        "y": 1578,
-        "w": 120,
-        "h": 144
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 120,
-        "h": 144
-      },
-      "sourceSize": {
-        "w": 120,
-        "h": 144
-      }
-    },
-    "decor-ghe-nhua-xanh": {
-      "frame": {
-        "x": 2514,
-        "y": 1578,
-        "w": 120,
-        "h": 144
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 120,
-        "h": 144
-      },
-      "sourceSize": {
-        "w": 120,
-        "h": 144
-      }
-    },
-    "decor-non-bao-hiem": {
-      "frame": {
-        "x": 2640,
-        "y": 1578,
-        "w": 168,
-        "h": 144
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 168,
-        "h": 144
-      },
-      "sourceSize": {
-        "w": 168,
-        "h": 144
       }
     },
     "decor-o-ga": {
       "frame": {
-        "x": 2814,
-        "y": 1578,
+        "x": 372,
+        "y": 2970,
         "w": 288,
         "h": 120
       },
@@ -938,6 +538,266 @@
       "sourceSize": {
         "w": 288,
         "h": 120
+      }
+    },
+    "decor-exhibition-sink": {
+      "frame": {
+        "x": 0,
+        "y": 3168,
+        "w": 240,
+        "h": 336
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 336
+      },
+      "sourceSize": {
+        "w": 240,
+        "h": 336
+      }
+    },
+    "decor-exhibition-pickup": {
+      "frame": {
+        "x": 246,
+        "y": 3168,
+        "w": 192,
+        "h": 336
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 336
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 336
+      }
+    },
+    "decor-exhibition-table": {
+      "frame": {
+        "x": 444,
+        "y": 3168,
+        "w": 240,
+        "h": 192
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 192
+      },
+      "sourceSize": {
+        "w": 240,
+        "h": 192
+      }
+    },
+    "decor-exhibition-chair-red": {
+      "frame": {
+        "x": 690,
+        "y": 3168,
+        "w": 120,
+        "h": 144
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 120,
+        "h": 144
+      },
+      "sourceSize": {
+        "w": 120,
+        "h": 144
+      }
+    },
+    "decor-exhibition-chair-blue": {
+      "frame": {
+        "x": 816,
+        "y": 3168,
+        "w": 120,
+        "h": 144
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 120,
+        "h": 144
+      },
+      "sourceSize": {
+        "w": 120,
+        "h": 144
+      }
+    },
+    "decor-exhibition-waiting-sign": {
+      "frame": {
+        "x": 942,
+        "y": 3168,
+        "w": 216,
+        "h": 360
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 216,
+        "h": 360
+      },
+      "sourceSize": {
+        "w": 216,
+        "h": 360
+      }
+    },
+    "prop-coordination-tivi": {
+      "frame": {
+        "x": 1152,
+        "y": 1746,
+        "w": 288,
+        "h": 336
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 288,
+        "h": 336
+      },
+      "sourceSize": {
+        "w": 288,
+        "h": 336
+      }
+    },
+    "decor-coordination-router": {
+      "frame": {
+        "x": 150,
+        "y": 2970,
+        "w": 216,
+        "h": 156
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 216,
+        "h": 156
+      },
+      "sourceSize": {
+        "w": 216,
+        "h": 156
+      }
+    },
+    "prop-coordination-danh-bai": {
+      "frame": {
+        "x": 1122,
+        "y": 0,
+        "w": 576,
+        "h": 480
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 576,
+        "h": 480
+      },
+      "sourceSize": {
+        "w": 576,
+        "h": 480
+      }
+    },
+    "prop-coordination-xe-dung": {
+      "frame": {
+        "x": 630,
+        "y": 2112,
+        "w": 480,
+        "h": 288
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 288
+      },
+      "sourceSize": {
+        "w": 480,
+        "h": 288
+      }
+    },
+    "prop-editing-compressor": {
+      "frame": {
+        "x": 366,
+        "y": 2406,
+        "w": 336,
+        "h": 288
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 336,
+        "h": 288
+      },
+      "sourceSize": {
+        "w": 336,
+        "h": 288
+      }
+    },
+    "prop-editing-parts-shelf": {
+      "frame": {
+        "x": 804,
+        "y": 870,
+        "w": 432,
+        "h": 432
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 432,
+        "h": 432
+      },
+      "sourceSize": {
+        "w": 432,
+        "h": 432
+      }
+    },
+    "prop-editing-wiring-panel": {
+      "frame": {
+        "x": 708,
+        "y": 2406,
+        "w": 336,
+        "h": 288
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 336,
+        "h": 288
+      },
+      "sourceSize": {
+        "w": 336,
+        "h": 288
       }
     }
   },
@@ -946,8 +806,8 @@
     "image": "decor-0.webp",
     "format": "RGBA8888",
     "size": {
-      "w": 4096,
-      "h": 1842
+      "w": 1728,
+      "h": 3528
     },
     "scale": "1",
     "textureScale": 3

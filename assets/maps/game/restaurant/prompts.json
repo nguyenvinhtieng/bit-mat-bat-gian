@@ -1,0 +1,13 @@
+{
+  "mode": "built-in imagegen",
+  "transparent_background": true,
+  "common": "Use case: stylized-concept. Asset type: transparent 2D game prop sprite for a Saigon alley viewed from above at 35 degrees, front and slight right side visible, upright verticals, compact orthographic perspective. Hand-painted restrained warm muted colors, clean readable silhouette and intentional straight functional construction, subtle wear, not photoreal, no ornate clutter, no melted or impossible machinery. One isolated object fully visible centered with 6% margin, ground at bottom, genuinely transparent background, no people, no ground scenery, no cast shadow beyond a small contact shadow, no lettering or logos. ",
+  "subjects": {
+    "banh-mi": "A modest Vietnamese banh mi pushcart: rectangular stainless steel frame, simple glass display with three baguettes on one shelf and two ingredient trays below, pale cream lower cabinet, two mechanically plausible wheels, no canopy.",
+    "hu-tieu": "A practical Saigon hu tieu noodle cart: rectangular stainless steel cabinet on two wheels, one large cylindrical stockpot with lid beside compact glass cabinet with bowls and noodles, muted blue lower panel. No chimney, no canopy.",
+    "com-tam": "A practical Saigon com tam food cart: wide rectangular stainless steel serving cabinet on four small caster wheels, three neat shallow food trays behind glass, stacked white plates at side, muted maroon lower panel. No giant wheels, no canopy.",
+    "nuoc-mia": "A practical Saigon sugarcane juice cart: compact rectangular teal stainless cabinet on four small caster wheels, clearly constructed steel roller press and flywheel, small stack of sugarcane secured vertically at side, two cups on tray. Simple no canopy.",
+    "sink": "A compact wall-mounted stainless steel handwashing sink on two front square legs, one curved faucet over a SINGLE oval basin, visible blue PVC supply pipe running up the wall to faucet with a red stop valve, visible gray U-bend drain below. Small soap bottle on rim. No wall or floor backdrop.",
+    "pickup": "A small open stainless steel takeaway pickup rack with two shelves: upper shelf three tied translucent takeaway food bags and stacked rectangular food boxes; lower shelf one green insulated delivery bag with black straps. Compact functional straight frame and four square legs. No text, no people."
+  }
+}

@@ -194,6 +194,7 @@ export class GameScene extends Phaser.Scene {
   create() {
     this.buildMap();
     this.buildProps();
+    this.buildMeetingPoint();
     this.buildStreetSigns();
     this.buildStations();
     // frame size / counts come from the atlas itself (48x64 x4 on the older maps, 64x88 x8 + idle on Sài Gòn)
@@ -588,6 +589,48 @@ export class GameScene extends Phaser.Scene {
       if (!p.wall && img.displayHeight >= 150) this.tallProps.push(img);
       if (!p.wall) this.propImgs.push(img);
     }
+  }
+
+  /** A neighbourhood noticeboard above the tea table, with a quiet marker on the approach. */
+  private buildMeetingPoint() {
+    const { x, y } = MEETING_POINT;
+    const halo = this.add.ellipse(x, y, 142, 62, 0xdcc88a, 0.09)
+      .setStrokeStyle(1.5, 0xe3ce92, 0.35).setDepth(-4);
+    this.tweens.add({ targets: halo, alpha: 0.5, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    // Painted tin and a timber frame, like a small tổ dân phố board; no freestanding pillar.
+    const board = this.add.container(x, y - 83).setDepth(y - 10);
+    const paint = this.add.graphics();
+    paint.fillStyle(0x655844).fillRect(-72, 35, 7, 39).fillRect(65, 35, 7, 39);
+    paint.lineStyle(1, 0x9c8864, 0.6).lineBetween(-70, 40, -70, 71).lineBetween(67, 40, 67, 71);
+    paint.fillStyle(0x302f28, 0.16).fillRoundedRect(-84, -32, 172, 76, 2);
+    paint.fillStyle(0x72624b).fillRoundedRect(-86, -37, 172, 76, 2);
+    paint.fillStyle(0xe4dcc0).fillRect(-81, -32, 162, 66);
+    paint.fillStyle(0x844d3e).fillRect(-81, -32, 162, 19);
+    paint.lineStyle(1, 0xb7aa88, 0.65).lineBetween(-72, 12, 72, 12);
+    for (const bx of [-77, 77]) for (const by of [-28, 30]) {
+      paint.fillStyle(0x7c7865).fillCircle(bx, by, 1.3);
+    }
+    const text = (ty: number, label: string, size: number, color: string) =>
+      this.add.text(0, ty, label, { fontFamily: 'Arial, sans-serif', fontSize: size, color, fontStyle: 'bold', resolution: 4 }).setOrigin(0.5);
+    board.add([paint,
+      text(-22, 'TỔ DÂN PHỐ · HẺM 42', 10, '#f1e7cd'),
+      text(-1, 'ĐIỂM BÁO CÁO', 15, '#594b38'),
+      text(24, 'HỌP KHẨN', 12, '#684631'),
+    ]);
+    board.setSize(172, 76).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.ringBell());
+    // A small bamboo điếu cày tucked beside the tea table, within its existing footprint.
+    const pipe = this.add.graphics({ x: x + 58, y: y + 44 }).setDepth(y + 45);
+    pipe.fillStyle(0x35382b, 0.18).fillEllipse(3, 0, 18, 5);
+    pipe.fillStyle(0x827043).fillPoints([
+      { x: -2, y: -32 }, { x: 3, y: -33 }, { x: 8, y: -2 }, { x: 2, y: -1 },
+    ], true);
+    pipe.lineStyle(1, 0xc3af72).lineBetween(0, -29, 5, -4);
+    pipe.lineStyle(2, 0x544c32).lineBetween(-1, -25, 4, -26).lineBetween(2, -10, 7, -11);
+    pipe.fillStyle(0x4c422b).fillEllipse(0, -32, 6, 3);
+    pipe.lineStyle(3, 0x74613e).lineBetween(5, -13, 10, -17);
+    pipe.fillStyle(0x443c2a).fillEllipse(10, -18, 5, 3);
+    this.attachedObjs.push(halo, board, pipe);
   }
 
   /** A prop counts as an obstacle when a collision box overlaps the bottom strip of its art (its footprint). */

@@ -60,17 +60,25 @@ function ring(x, t0, partials, gain = 1, click = 0.0015) {
   }
 }
 
-/** Every file lands at the same loudness (RMS), with soft-clipped peaks and click-free ends. */
-function write(name, x) {
+/**
+ * Every file lands at the same loudness (RMS), with soft-clipped peaks and click-free ends.
+ * `soft` masters an ending for the results screen: quieter, rolled-off highs, eased in so nothing jumps out.
+ */
+function write(name, x, { soft = false } = {}) {
   const n = x.length;
   for (let i = 0, px = 0, py = 0; i < n; i++) [px, py] = [x[i], (x[i] = x[i] - px + 0.995 * py)];
-  for (let i = 0; i < SR * 0.005; i++) x[i] *= i / (SR * 0.005);
-  for (let i = 0; i < SR * 0.3; i++) x[n - 1 - i] *= i / (SR * 0.3);
+  if (soft) {
+    const a = 1 - Math.exp((-TAU * 3000) / SR); // two gentle low-pass poles
+    for (let i = 0, l1 = 0, l2 = 0; i < n; i++) (l1 += a * (x[i] - l1)), (l2 += a * (l1 - l2)), (x[i] = l2);
+  }
+  const fadeIn = soft ? 0.15 : 0.005;
+  for (let i = 0; i < SR * fadeIn; i++) x[i] *= smooth(i / (SR * fadeIn));
+  for (let i = 0; i < SR * (soft ? 0.8 : 0.3); i++) x[n - 1 - i] *= i / (SR * (soft ? 0.8 : 0.3));
   let peak = 0;
   let sum = 0;
   for (const v of x) (peak = Math.max(peak, Math.abs(v))), (sum += v * v);
   const rms = Math.sqrt(sum / n) || 1;
-  const g = Math.min(1.25 / (peak || 1), 0.14 / rms);
+  const g = soft ? Math.min(0.75 / (peak || 1), 0.085 / rms) : Math.min(1.25 / (peak || 1), 0.14 / rms);
   const pcm = Buffer.alloc(n * 2);
   for (let i = 0; i < n; i++) pcm.writeInt16LE(Math.round(Math.tanh(x[i] * g) * 0.95 * 32767), i * 2);
   const h = Buffer.alloc(44);
@@ -360,60 +368,64 @@ const buf = (sec) => new Float32Array(Math.round(SR * sec));
 }
 
 // ---------------------------------------------------------------- endings
+// The results screen stays up a while, so the endings are gentle: they ease in, sit under the UI and resolve.
+/** Soft electric piano: rounded tine + bell that fades, slow-ish attack so nothing pokes out. */
+function keys(x, t0, midi, { dur = 1.4, gain = 0.2 } = {}) {
+  const f = hz(midi);
+  add(x, t0, dur, (t) => {
+    const s = Math.sin(TAU * f * t + 0.6 * Math.sin(TAU * f * t) * Math.exp(-t * 6)) + 0.12 * Math.sin(TAU * 2 * f * t) * Math.exp(-t * 3);
+    const env = smooth(clamp01(t / 0.018)) * Math.exp(-t * 1.6) * (0.92 + 0.08 * Math.sin(TAU * 4.5 * t)) * Math.min(1, (dur - t) / 0.2);
+    return gain * env * s;
+  });
+}
+const arp = (x, t0, midis, step = 0.09, o = {}) => midis.forEach((m, i) => keys(x, t0 + i * step, m, { ...o, dur: (o.dur ?? 2) - i * step }));
 {
-  // parcel delivered: "five stars please!" — swing walk, cash, horn, ride off
-  const x = buf(6.2);
-  [[0, N.F2], [0.6, N.A2], [1.2, N.C3], [1.8, N.D3], [2.4, N.C3]].forEach(([t, m]) => bass(x, t, m, { dur: 0.55 }));
-  [0.6, 1.8].forEach((t) => snap(x, t));
-  for (let k = 0; k < 10; k++) brush(x, k * 0.3 + (k % 2 ? 0.05 : 0), 0.1);
-  [[0.3, N.C5], [0.6, N.D5], [0.9, N.F5], [1.2, N.A5], [1.5, N.G5], [1.8, N.F5], [2.1, N.D5]].forEach(([t, m]) => vib(x, t, m, { dur: 0.5 }));
-  vib(x, 2.4, N.F5, { dur: 1.4 });
-  [[1.0, 96], [1.14, 100], [1.28, 103]].forEach(([t, m]) => coin(x, t, m));
-  brass(x, 3.0, [N.F3, N.A3, N.C4, N.D4], { dur: 1.3, gain: 0.18 });
-  bass(x, 3.0, N.F2, { dur: 1.2, gain: 0.6 });
-  kick(x, 3.0, 0.7);
-  pipPip(x, 3.5, 0.25);
-  scooter(x, 3.8, 2.3, { gain: 0.35 });
-  write('end-tasks.wav', reverb(x, 0.2));
+  // parcel delivered: an easy swing in F, a soft "ting" of payment, a scooter purring off down the alley
+  const x = buf(6.4);
+  pad(x, 0, 6.2, [N.F3, N.A3, N.C4, N.E4], 0.07);
+  [[0, N.F2], [0.6, N.A2], [1.2, N.C3], [1.8, N.D3], [2.4, N.C3]].forEach(([t, m]) => bass(x, t, m, { dur: 0.55, gain: 0.35 }));
+  for (let k = 0; k < 10; k++) brush(x, k * 0.3 + (k % 2 ? 0.05 : 0), 0.05);
+  [[0.3, N.C5], [0.6, N.D5], [0.9, N.F5], [1.2, N.A5], [1.5, N.G5], [1.8, N.F5], [2.1, N.D5]].forEach(([t, m]) => keys(x, t, m, { dur: 0.7, gain: 0.16 }));
+  coin(x, 1.25, 84, 0.05);
+  arp(x, 2.9, [N.F3, N.C4, N.E4, N.A4, N.C5, N.G5], 0.11, { dur: 3, gain: 0.13 });
+  bass(x, 2.9, N.F2, { dur: 2, gain: 0.35 });
+  scooter(x, 3.6, 2.6, { gain: 0.1 });
+  write('end-tasks.wav', reverb(x, 0.3), { soft: true });
 }
 {
-  // cop unmasked: "gotcha!" then the whole crew scatters on their bikes
-  const x = buf(5.6);
-  brass(x, 0, [N.D3, N.F3, N.A3], { dur: 0.28, gain: 0.22 });
-  kick(x, 0, 0.7);
-  brass(x, 0.35, [N.F3, N.A3, N.C4, N.F4], { dur: 1.0, gain: 0.22 });
-  bass(x, 0.35, N.F2, { dur: 0.9, gain: 0.6 });
-  kick(x, 0.35, 0.8);
-  snap(x, 0.35);
-  [N.C6, N.A5, N.F5, N.D5, N.C5].forEach((m, i) => vib(x, 0.95 + i * 0.1, m, { dur: 0.4, gain: 0.24 }));
-  [[1.3, 1, 75], [1.5, 1.25, 85], [1.72, 0.88, 68]].forEach(([t, k, f]) => (pipPip(x, t, 0.18, k), scooter(x, t + 0.15, 2.2, { from: f, to: f * 1.6, gain: 0.22 })));
-  [[1.4, N.C3], [2.0, N.A2], [2.6, N.F2]].forEach(([t, m]) => bass(x, t, m, { dur: 0.5 }));
-  [2.0, 2.6].forEach((t) => snap(x, t, 0.7));
-  [N.F4, N.A4, N.C5, N.F5].forEach((m, i) => vib(x, 3.2 + i * 0.06, m, { dur: 2, gain: 0.2 }));
-  write('end-vote.wav', reverb(x, 0.22));
-}
-{
-  // last driver cuffed: cuffs, the whistle, a slow noir descent and the holding-room door
+  // cop unmasked: a relieved lift — rising arpeggio, the crew laughs it off and rides away
   const x = buf(5.8);
-  cuffs(x, 0.05);
-  cuffs(x, 0.3, 0.8);
-  whistle(x, 0.6, 0.3);
-  whistle(x, 1.0, 0.7);
-  [[1.0, N.D2, N.A4], [1.7, N.C2, N.G4], [2.4, N.Bb1, N.F4], [3.1, N.A1, N.E4]].forEach(([t, b, v]) => (bass(x, t, b, { dur: 0.7 }), vib(x, t, v, { dur: 0.7, gain: 0.24 }), kick(x, t, 0.35)));
-  brass(x, 3.1, [N.D3, N.F3, N.Bb3], { dur: 2.2, gain: 0.16, attack: 0.15 });
-  bass(x, 3.1, N.A1, { dur: 2, gain: 0.5 });
-  kick(x, 4.4, 0.8);
-  ring(x, 4.4, [[180, 0.12, 1], [410, 0.06, 0.5]], 0.6);
-  write('end-killer.wav', reverb(x, 0.25));
+  pad(x, 0, 5.6, [N.Bb3, N.D4, N.F4], 0.07);
+  arp(x, 0.05, [N.F3, N.Bb3, N.D4, N.F4, N.A4, N.D5], 0.08, { dur: 1.6, gain: 0.14 });
+  bass(x, 0.05, 34 + 12, { dur: 1.2, gain: 0.35 });
+  [[1.3, N.C5], [1.6, N.D5], [1.9, N.F5], [2.35, N.Eb5], [2.65, N.D5], [2.95, N.C5]].forEach(([t, m]) => keys(x, t, m, { dur: 0.7, gain: 0.15 }));
+  [[1.3, N.G2], [1.9, N.Eb2], [2.5, N.F2]].forEach(([t, m]) => bass(x, t, m, { dur: 0.55, gain: 0.32 }));
+  [1.6, 2.2, 2.8].forEach((t) => snap(x, t, 0.35));
+  scooter(x, 2.2, 2.6, { from: 70, to: 110, gain: 0.08 });
+  arp(x, 3.25, [N.Bb3, N.D4, N.F4, N.A4, N.D5], 0.1, { dur: 2.3, gain: 0.13 });
+  bass(x, 3.25, 46, { dur: 2, gain: 0.35 });
+  write('end-vote.wav', reverb(x, 0.3), { soft: true });
 }
 {
-  // dawn, parcel still here: birds, a rooster, and a deflated muted-trumpet "wah wah wah waaah"
+  // last driver cuffed: a quiet click in the distance, then a slow, sad walk down in D minor
+  const x = buf(6);
+  pad(x, 0, 5.8, [N.D3, N.F3, N.A3], 0.07);
+  cuffs(x, 0.25, 0.22);
+  [[0.7, N.D2, N.A4], [1.5, N.C2, N.G4], [2.3, N.Bb1, N.F4], [3.1, N.A1, N.E4]].forEach(([t, b, v]) => (bass(x, t, b, { dur: 0.8, gain: 0.32 }), keys(x, t, v, { dur: 0.9, gain: 0.16 })));
+  [1.1, 1.9, 2.7].forEach((t) => brush(x, t, 0.04, 0.2));
+  brass(x, 3.9, [N.D3, N.F3, N.A3], { dur: 1.9, gain: 0.08, attack: 0.35 });
+  arp(x, 3.9, [N.D4, N.F4, N.A4, N.E5], 0.14, { dur: 2, gain: 0.11 });
+  bass(x, 3.9, N.D2, { dur: 1.8, gain: 0.32 });
+  write('end-killer.wav', reverb(x, 0.32), { soft: true });
+}
+{
+  // dawn, parcel still here: birds wake, a far-off rooster, and a sleepy, shrugging "wah wah wah waaah"
   const x = buf(6.6);
-  birds(x, 0, 6.2, { rate: 2.5 });
-  rooster(x, 0.25, 0.22);
-  pad(x, 0.1, 6, [N.G3, N.D4, N.A4], 0.08);
-  [[2.2, N.G3], [2.75, N.Gb3], [3.3, N.F3]].forEach(([t, m]) => brass(x, t, [m], { dur: 0.5, gain: 0.42, wah: true }));
-  brass(x, 3.85, [N.F3 - 1], { dur: 2, gain: 0.42, wah: true, sag: 0.5, vibr: 0.35 });
-  bass(x, 3.85, N.Eb2, { dur: 1.6, gain: 0.4 });
-  write('end-timeout.wav', reverb(x, 0.22));
+  birds(x, 0, 6.2, { rate: 1.5, gain: 0.05 });
+  rooster(x, 0.4, 0.08);
+  pad(x, 0.1, 6, [N.G3, N.D4, N.A4], 0.07);
+  [[2.2, N.G3], [2.75, N.Gb3], [3.3, N.F3]].forEach(([t, m]) => brass(x, t, [m], { dur: 0.5, gain: 0.2, attack: 0.05, wah: true }));
+  brass(x, 3.85, [N.F3 - 1], { dur: 2, gain: 0.2, attack: 0.08, wah: true, sag: 0.5, vibr: 0.3 });
+  bass(x, 3.85, N.Eb2, { dur: 1.6, gain: 0.3 });
+  write('end-timeout.wav', reverb(x, 0.28), { soft: true });
 }

@@ -7,51 +7,58 @@ export const GAME_COLLISION: PxBox[] = [
   [1589, 990, 1629, 1152], // decor-hem-barrier @33.5,21.0
   [1685, 990, 1725, 1152], // decor-hem-barrier @35.5,21.0
   [944, 211, 1072, 240], // prop-courtyard-ban-inox @21.0,5.1
-  [1172, 89, 1273, 96], // prop-courtyard-xe-crab-hang @25.2,2.6
-  [783, 182, 802, 192], // prop-courtyard-cot-dien @16.5,4.0
-  [144, 444, 192, 480], // prop-exhibition-xe-banh-mi @3.5,10.0
-  [144, 684, 192, 720], // prop-exhibition-xe-com-tam @3.5,15.0
-  [425, 446, 432, 480], // prop-exhibition-xe-nuoc-mia @9.5,10.0
-  [432, 446, 480, 480], // prop-exhibition-xe-nuoc-mia @9.5,10.0
-  [528, 444, 576, 480], // prop-exhibition-xe-hu-tieu @11.5,10.0
-  [265, 548, 329, 576], // decor-xe-banh-trang @6.0,12.0
-  [538, 707, 568, 720], // decor-thung-da @11.5,15.0
+  [144, 442, 192, 478], // prop-exhibition-xe-banh-mi @3.5,10.0
+  [245, 442, 330, 478], // prop-exhibition-xe-nuoc-mia @6.0,10.0
+  [384, 434, 480, 470], // prop-exhibition-xe-hu-tieu @9.0,10.0
+  [144, 578, 192, 614], // prop-exhibition-xe-com-tam @3.5,13.0
+  [556, 409, 604, 430], // decor-exhibition-sink @12.1,9.0
+  [317, 619, 355, 636], // decor-exhibition-table @7.0,13.3
+  [288, 632, 307, 645], // decor-exhibition-chair-red @6.1,13.6
+  [365, 633, 384, 646], // decor-exhibition-chair-blue @7.9,13.6
+  [485, 715, 523, 732], // decor-exhibition-table @10.5,15.3
+  [447, 729, 475, 742], // decor-exhibition-chair-blue @9.6,15.6
+  [533, 728, 561, 741], // decor-exhibition-chair-red @11.4,15.6
+  [98, 809, 132, 816], // decor-exhibition-pickup @2.4,17.2
+  [288, 816, 312, 819], // decor-exhibition-chair-blue @6.2,17.2
+  [336, 816, 364, 818], // decor-exhibition-chair-red @7.3,17.2
   [931, 422, 940, 432], // prop-corridor-cot-dien @19.5,9.0
   [1075, 854, 1084, 864], // prop-corridor-cot-dien @22.5,18.0
-  [1392, 1315, 1453, 1344], // prop-storage-xe-may-xep @28.8,28.1
-  [1487, 398, 1567, 432], // prop-coordination-quay-ca-phe @31.5,9.0
-  [721, 974, 768, 1008], // prop-editing-thau-va-xe @15.5,21.0
-  [1267, 977, 1337, 1008], // prop-editing-ke-xang @27.0,21.0
-  [970, 1094, 984, 1104], // prop-editing-cot-dien @20.5,23.0
-  [290, 1260, 380, 1296], // prop-archive-tu-so @7.0,27.0
+  [1522, 1318, 1560, 1335], // decor-exhibition-table @32.1,27.9
+  [1567, 1340, 1597, 1354], // decor-exhibition-chair-blue @33.0,28.4
+  [1467, 1320, 1490, 1330], // decor-quat-may @30.9,27.7
+  [1594, 1317, 1616, 1327], // decor-binh-tra-da @33.5,27.6
+  [1176, 1320, 1207, 1334], // decor-thung-da @24.8,27.8
+  [1444, 385, 1584, 421], // prop-coordination-quay-ca-phe @31.5,9.0
+  [1758, 396, 1841, 432], // prop-coordination-tivi @37.5,9.0
+  [740, 1028, 768, 1044], // prop-editing-thau-va-xe @15.5,21.8
+  [1248, 926, 1336, 962], // prop-editing-compressor @26.7,20.3
+  [1296, 926, 1336, 960], // prop-editing-compressor @26.7,20.3
+  [681, 917, 807, 953], // prop-editing-parts-shelf @15.5,20.3
+  [681, 917, 720, 953], // prop-editing-parts-shelf @15.5,20.3
+  [964, 1158, 1008, 1188], // prop-editing-wiring-panel @20.5,24.9
+  [196, 1248, 284, 1281], // prop-archive-tu-so @5.0,27.0
+  [196, 1248, 240, 1281], // prop-archive-tu-so @5.0,27.0
   [1152, 1454, 1200, 1488], // prop-storage-day-phoi @25.5,31.0
   [1248, 1454, 1296, 1488], // prop-storage-day-phoi @25.5,31.0
-  [1820, 795, 1865, 816], // prop-coordination-binh-tra-da @38.3,17.0
+  [1769, 1342, 1797, 1354], // prop-storage-ao-mua @37.1,28.2
   [738, 86, 753, 96], // decor-chau-bong-giay @15.5,2.0
-  [1256, 325, 1281, 336], // decor-binh-tra-da @26.5,7.0
   [114, 422, 129, 432], // decor-chau-bong-giay @2.5,9.0
-  [587, 422, 602, 432], // decor-long-chim @12.5,9.0
-  [1472, 782, 1510, 799], // decor-ban-inox @31.0,16.6
-  [1459, 806, 1467, 816], // decor-ghe-nhua-do @30.5,17.0
-  [1511, 806, 1519, 816], // decor-ghe-nhua-do @31.5,17.0
-  [1810, 806, 1820, 816], // decor-ghe-nhua-xanh @37.8,17.0
-  [1856, 593, 1894, 610], // decor-ban-inox @39.0,12.7
-  [1843, 614, 1851, 624], // decor-ghe-nhua-do @38.5,13.0
-  [1896, 614, 1906, 624], // decor-ghe-nhua-xanh @39.5,13.0
-  [1413, 518, 1421, 528], // decor-cot-dien @29.5,11.0
-  [1403, 710, 1418, 720], // decor-long-chim @29.5,15.0
-  [1883, 516, 1910, 528], // decor-du-che @39.5,11.0
+  [1518, 539, 1554, 555], // decor-exhibition-table @32.0,11.6
+  [1491, 555, 1519, 568], // decor-exhibition-chair-red @31.4,12.0
+  [1553, 556, 1581, 569], // decor-exhibition-chair-blue @32.6,12.0
+  [1676, 539, 1712, 555], // decor-exhibition-table @35.3,11.6
+  [1649, 556, 1677, 569], // decor-exhibition-chair-blue @34.6,12.0
+  [1712, 555, 1740, 568], // decor-exhibition-chair-red @36.0,12.0
+  [1854, 589, 1890, 605], // decor-exhibition-table @39.0,12.6
+  [1827, 603, 1855, 616], // decor-exhibition-chair-red @38.4,13.0
+  [1889, 604, 1917, 617], // decor-exhibition-chair-blue @39.6,13.0
+  [1681, 706, 1843, 807], // prop-coordination-danh-bai @36.7,16.9
+  [1432, 794, 1562, 830], // prop-coordination-xe-dung @31.2,17.5
   [1890, 422, 1905, 432], // decor-chau-bong-giay @39.5,9.0
   [673, 1180, 719, 1200], // decor-ban-tho-ong-dia @14.5,25.0
-  [879, 950, 897, 960], // decor-binh-xang @18.5,20.0
-  [829, 950, 851, 960], // decor-can-nuoc @17.5,20.0
-  [1296, 1164, 1344, 1200], // decor-xe-crab @27.5,25.0
-  [784, 1374, 816, 1392], // prop-archive-nem @16.0,29.0
   [840, 1459, 893, 1483], // decor-thung-giay @18.0,30.9
   [504, 1459, 557, 1483], // decor-thung-giay @11.0,30.9
   [882, 1286, 897, 1296], // decor-chau-bong-giay @18.5,27.0
-  [1536, 1313, 1569, 1344], // prop-storage-xe-may @32.0,28.0
-  [1733, 1423, 1771, 1440], // decor-cot-chung-cu @36.5,30.0
+  [1746, 1430, 1761, 1440], // decor-chau-bong-giay @36.5,30.0
   [1125, 1286, 1133, 1296], // decor-cot-dien @23.5,27.0
-  [1265, 1478, 1287, 1488], // decor-non-bao-hiem @26.5,31.0
 ];

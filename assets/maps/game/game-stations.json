@@ -1,0 +1,144 @@
+{
+ "mapVersion": 2,
+ "hitbox": [
+  96,
+  96
+ ],
+ "stations": [
+  {
+   "id": "pack_cooler",
+   "area": "exhibition",
+   "x": 120,
+   "y": 845,
+   "title": "Xếp đơn vào thùng giữ nhiệt",
+   "titleEn": "Pack the cooler box",
+   "icon": "icon"
+  },
+  {
+   "id": "water_pipes",
+   "area": "exhibition",
+   "x": 600,
+   "y": 466,
+   "title": "Mở van nước rửa tay",
+   "titleEn": "Fix the handwashing tap",
+   "icon": "icon"
+  },
+  {
+   "id": "brew_coffee",
+   "area": "coordination",
+   "x": 1416,
+   "y": 418,
+   "title": "Pha cà phê sữa đá",
+   "titleEn": "Make an iced milk coffee",
+   "icon": "icon"
+  },
+  {
+   "id": "wifi_hunt",
+   "area": "coordination",
+   "x": 1896,
+   "y": 845,
+   "title": "Bắt wifi ké",
+   "titleEn": "Leech the Wi-Fi",
+   "icon": "icon"
+  },
+  {
+   "id": "tune_antenna",
+   "area": "coordination",
+   "x": 1800,
+   "y": 466,
+   "title": "Chỉnh anten tivi quán cóc",
+   "titleEn": "Tune the stall TV aerial",
+   "icon": "icon"
+  },
+  {
+   "id": "pump_tyre",
+   "area": "editing",
+   "x": 1282,
+   "y": 1013,
+   "title": "Bơm bánh xe",
+   "titleEn": "Pump the tyre",
+   "icon": "icon"
+  },
+  {
+   "id": "connect_wires",
+   "area": "editing",
+   "x": 984,
+   "y": 1147,
+   "title": "Nối dây hộp điện",
+   "titleEn": "Reconnect the junction box",
+   "icon": "icon"
+  },
+  {
+   "id": "patch_tube",
+   "area": "editing",
+   "x": 744,
+   "y": 1080,
+   "title": "Vá ruột xe",
+   "titleEn": "Patch the inner tube",
+   "icon": "icon"
+  },
+  {
+   "id": "tape_box",
+   "area": "archive",
+   "x": 216,
+   "y": 1306,
+   "title": "Quấn băng keo thùng hàng",
+   "titleEn": "Tape up the box",
+   "icon": "icon"
+  },
+  {
+   "id": "stack_rack",
+   "area": "archive",
+   "x": 792,
+   "y": 1469,
+   "title": "Chất hàng lên baga",
+   "titleEn": "Stack the rear rack",
+   "icon": "icon"
+  },
+  {
+   "id": "untangle_charger",
+   "area": "archive",
+   "x": 264,
+   "y": 1469,
+   "title": "Gỡ dây sạc điện thoại",
+   "titleEn": "Untangle the phone charger",
+   "icon": "icon"
+  },
+  {
+   "id": "unpark_bike",
+   "area": "artifact_storage",
+   "x": 1800,
+   "y": 1469,
+   "title": "Rút xe ra khỏi bãi",
+   "titleEn": "Get the bike out",
+   "icon": "icon"
+  },
+  {
+   "id": "stuck_shutter",
+   "area": "artifact_storage",
+   "x": 1224,
+   "y": 1469,
+   "title": "Kéo cửa cuốn kẹt",
+   "titleEn": "Unstick the roller shutter",
+   "icon": "icon"
+  },
+  {
+   "id": "dodge_potholes",
+   "area": "corridor",
+   "x": 1080,
+   "y": 797,
+   "title": "Né ổ gà vào hẻm",
+   "titleEn": "Dodge the potholes",
+   "icon": "icon"
+  },
+  {
+   "id": "handoff_package",
+   "area": "corridor",
+   "x": 1656,
+   "y": 1032,
+   "title": "Bàn giao Cuốc Cuối",
+   "titleEn": "Hand off the Last Ride",
+   "icon": "icon"
+  }
+ ]
+}

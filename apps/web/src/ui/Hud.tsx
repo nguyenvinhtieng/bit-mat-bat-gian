@@ -533,7 +533,7 @@ export function Hud() {
           {room.phase === 'explore' && <MyTasksDoneNotice done={waitingOthers} />}
         </div>
       )}
-      {/* top centre: the (small) location plate */}
+      {/* top centre: the location plate announces a new area, then fades out */}
       <div className="hud-top">
         {area && (
           <div className="area-name" data-map={skin.slug} key={area}>

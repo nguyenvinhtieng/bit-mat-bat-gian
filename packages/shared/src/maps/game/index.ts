@@ -35,16 +35,16 @@ export const GAME_STATIONS: StationDef[] = [
   // Dãy Quán Ăn — góc dưới trái sau xe bánh mì · hốc trên phải sau lồng chim
   { id: 'pack_cooler', area: 'exhibition', x: t(2.5), y: t(17.6), title: 'Xếp đơn vào thùng giữ nhiệt', titleEn: 'Pack the cooler box', icon: 'icon' },
   { id: 'water_pipes', area: 'exhibition', x: t(12.5), y: t(9.7), title: 'Mở van nước rửa tay', titleEn: 'Fix the handwashing tap', icon: 'icon' },
-  // Quán Nước — góc trên trái cạnh quầy pha phin · góc dưới phải sau ghế nhựa
+  // Quán Nước — cạnh quầy cà phê vợt, trước tivi và dưới kệ router.
   { id: 'brew_coffee', area: 'coordination', x: t(29.5), y: t(8.7), title: 'Pha cà phê sữa đá', titleEn: 'Make an iced milk coffee', icon: 'icon' },
-  { id: 'wifi_hunt', area: 'coordination', x: t(39.5), y: t(16.6), title: 'Bắt wifi ké', titleEn: 'Leech the Wi-Fi', icon: 'icon' },
-  { id: 'tune_antenna', area: 'coordination', x: t(37.5), y: t(8.7), title: 'Chỉnh anten tivi quán cóc', titleEn: 'Tune the stall TV aerial', icon: 'icon' },
-  // Tiệm Sửa Xe — hốc trên phải · sát vách trái, chỗ thau vá xe
-  { id: 'pump_tyre', area: 'editing', x: t(26.5), y: t(19.7), title: 'Bơm bánh xe', titleEn: 'Pump the tyre', icon: 'icon' },
-  { id: 'connect_wires', area: 'editing', x: t(20.5), y: t(24.7), title: 'Nối dây hộp điện', titleEn: 'Reconnect the junction box', icon: 'icon' },
-  { id: 'patch_tube', area: 'editing', x: t(14.6), y: t(21.5), title: 'Vá ruột xe', titleEn: 'Patch the inner tube', icon: 'icon' },
+  { id: 'wifi_hunt', area: 'coordination', x: t(39.5), y: t(17.6), title: 'Bắt wifi ké', titleEn: 'Leech the Wi-Fi', icon: 'icon' },
+  { id: 'tune_antenna', area: 'coordination', x: t(37.5), y: t(9.7), title: 'Chỉnh anten tivi quán cóc', titleEn: 'Tune the stall TV aerial', icon: 'icon' },
+  // Tiệm Sửa Xe — điểm bơm nằm trước bình khí nén; hộp điện cạnh điểm nối dây.
+  { id: 'pump_tyre', area: 'editing', x: t(26.7), y: t(21.1), title: 'Bơm bánh xe', titleEn: 'Pump the tyre', icon: 'icon' },
+  { id: 'connect_wires', area: 'editing', x: t(20.5), y: t(23.9), title: 'Nối dây hộp điện', titleEn: 'Reconnect the junction box', icon: 'icon' },
+  { id: 'patch_tube', area: 'editing', x: t(15.5), y: t(22.5), title: 'Vá ruột xe', titleEn: 'Patch the inner tube', icon: 'icon' },
   // Kho CRAB — góc trên trái dưới kệ · hốc dưới phải giữa hai rương
-  { id: 'tape_box', area: 'archive', x: t(4.5), y: t(27.7), title: 'Quấn băng keo thùng hàng', titleEn: 'Tape up the box', icon: 'icon' },
+  { id: 'tape_box', area: 'archive', x: t(4.5), y: t(27.2), title: 'Quấn băng keo thùng hàng', titleEn: 'Tape up the box', icon: 'icon' },
   { id: 'stack_rack', area: 'archive', x: t(16.5), y: t(30.6), title: 'Chất hàng lên baga', titleEn: 'Stack the rear rack', icon: 'icon' },
   { id: 'untangle_charger', area: 'archive', x: t(5.5), y: t(30.6), title: 'Gỡ dây sạc điện thoại', titleEn: 'Untangle the phone charger', icon: 'icon' },
   // Bãi Giữ Xe — góc dưới phải chỗ xe xếp · hốc cụt giữa đèn và lư
@@ -114,7 +114,7 @@ export const GAME_SKIN: MapSkin = {
   roles: ROLES,
   killerName: { vi: 'Công An Chìm', en: 'Undercover Cop' },
   crewName: { vi: 'Hội Tài Xế', en: 'Driver Crew' },
-  emergency: { vi: 'Nhắn Zola gọi họp', en: 'Call a meeting on Zola' },
+  emergency: { vi: 'Gọi họp tại bảng tin', en: 'Call a meeting at the noticeboard' },
   delivery: { packageHome: PACKAGE_HOME },
   labels: {
     mapTitle: { vi: 'Hẻm 42', en: 'Alley 42' },
