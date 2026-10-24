@@ -62,6 +62,11 @@ type MoveState = { queue: { seq: number; dx: number; dy: number }[]; budget: num
 
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const AFK_LOBBY_MS = 3 * 60_000;
+/** how long a dropped seat is held (a phone off to Zalo to share the code, a 4G hand-over) */
+const HOLD_LOBBY_S = 60;
+const HOLD_GAME_S = 120;
+/** close code for a session whose seat was taken over by the same device on a newer session */
+const REPLACED = 4003;
 const activeCodes = new Set<string>();
 const grid = getGrid();
 const lobbyGrid = getLobbyGrid();
@@ -77,6 +82,12 @@ const shuffle = <T>(arr: readonly T[]): T[] => {
 const pick = <T>(arr: readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
 const cleanName = (raw: unknown) => (raw ?? '').toString().replace(/[<>]/g, '').trim().slice(0, NAME_MAX);
+const cleanPid = (raw: unknown) => (typeof raw === 'string' && /^[\w-]{8,64}$/.test(raw) ? raw : '');
+const rekey = <V>(map: Map<string, V>, from: string, to: string) => {
+  if (!map.has(from)) return;
+  map.set(to, map.get(from)!);
+  map.delete(from);
+};
 
 export class GameRoom extends Room<GameState> {
   maxClients = MAX_PLAYERS;
@@ -91,6 +102,8 @@ export class GameRoom extends Room<GameState> {
   private closing = false;
   /** sessions the server itself removed (host kick / AFK): their close is never "unexpected", so no seat is held */
   private kicked = new Set<string>();
+  /** device id per session (random, kept in the client's storage): a reload or lost token can take its seat back */
+  private pids = new Map<string, string>();
 
   private get skin() {
     return mapSkin(this.state.mapSlug);
@@ -131,7 +144,10 @@ export class GameRoom extends Room<GameState> {
     activeCodes.delete(this.roomId);
   }
 
-  onJoin(client: Client, options: { name?: string }) {
+  onJoin(client: Client, options: { name?: string; pid?: string }) {
+    const pid = cleanPid(options?.pid);
+    const prev = pid ? [...this.pids].find(([id, v]) => v === pid && this.state.players.has(id))?.[0] : undefined;
+    if (prev) return this.takeOver(prev, client, pid);
     if (this.state.phase !== 'lobby') throw new Error('Ván đang diễn ra — không thể vào giữa chừng.');
     const p = new Player();
     p.id = client.sessionId;
@@ -144,6 +160,7 @@ export class GameRoom extends Room<GameState> {
     this.state.players.set(client.sessionId, p);
     this.moves.set(client.sessionId, { queue: [], budget: 0, lastQueued: 0 });
     this.lastActive.set(client.sessionId, Date.now());
+    if (pid) this.pids.set(client.sessionId, pid);
     if (!this.state.hostId) this.state.hostId = client.sessionId;
     this.syncMeta();
     this.system(`${p.name} đã vào phòng.`);
@@ -158,10 +175,13 @@ export class GameRoom extends Room<GameState> {
     if (!consented && !kicked) {
       // flaky mobile networks / app switching: hold the seat (shorter in the lobby so a dead player doesn't block the start)
       p.connected = false;
-      // don't leave the room captained by a dead socket; nobody online at all -> close it instead of keeping a ghost room
-      if (!this.keepOnlineHost()) return;
+      // don't leave the room captained by a dead socket. Nobody online at all (a lone host pressing F5, every phone
+      // asleep) still holds the seat: the room closes once the last hold lapses
+      if ([...this.state.players.values()].some((x) => x.connected)) this.keepOnlineHost();
       try {
-        const rc = await this.allowReconnection(client, this.state.phase === 'lobby' ? 20 : 45);
+        const rc = await this.allowReconnection(client, this.state.phase === 'lobby' ? HOLD_LOBBY_S : HOLD_GAME_S);
+        // the same device came back on a new session meanwhile and already owns the seat
+        if (this.state.players.get(client.sessionId) !== p) return rc.leave(REPLACED);
         p.connected = true;
         this.syncMeta();
         rc.send('time', Date.now());
@@ -169,12 +189,13 @@ export class GameRoom extends Room<GameState> {
         rc.send('chat:history', this.chatLog.slice(-40));
         return;
       } catch {
-        if (this.closing) return;
+        if (this.closing || this.state.players.get(client.sessionId) !== p) return;
       }
     }
     if (this.state.phase === 'lobby') {
       this.state.players.delete(client.sessionId);
       this.moves.delete(client.sessionId);
+      this.pids.delete(client.sessionId);
       // dropped below the minimum: nobody can stay ready for a game that can't start
       if (!DEV && this.state.players.size < MIN_PLAYERS) for (const x of this.state.players.values()) x.ready = false;
     } else {
@@ -187,6 +208,37 @@ export class GameRoom extends Room<GameState> {
     if (!this.keepOnlineHost()) return;
     if (this.state.phase === 'meeting') this.maybeResolveVotes();
     else if (this.state.phase === 'explore') this.checkWin();
+  }
+
+  /**
+   * The same device is back on a new session (reload, lost reconnection token, socket stuck mid-join): move its
+   * seat — role, tasks, package, votes — to the new session instead of adding a duplicate. Works mid-game too
+   * (a seat given up after the hold comes back as a spectator). A still-open old socket is closed.
+   */
+  private takeOver(oldId: string, client: Client, pid: string) {
+    const id = client.sessionId;
+    const old = this.state.players.get(oldId)!;
+    const p = Object.assign(new Player(), old.toJSON(), { id, connected: true });
+    this.state.players.delete(oldId);
+    this.state.players.set(id, p);
+    for (const m of [this.secrets, this.moves, this.lastChat, this.lastSay, this.pids] as Map<string, unknown>[]) rekey(m, oldId, id);
+    this.pids.set(id, pid);
+    this.lastActive.delete(oldId);
+    this.lastActive.set(id, Date.now());
+    this.kicked.delete(oldId);
+    if (this.state.hostId === oldId) this.state.hostId = id;
+    for (const x of this.state.players.values()) if (x.voteFor === oldId) x.voteFor = id;
+    for (const s of this.secrets.values()) if (s.vote === oldId) s.vote = id;
+    for (const m of this.chatLog) if (m.from === oldId) m.from = id;
+    this.delivery.rekey(oldId, id);
+    this.syncDelivery();
+    this.clients.getById(oldId)?.leave(REPLACED);
+    this.syncMeta();
+    client.send('time', Date.now());
+    client.send('chat:history', this.chatLog.slice(-40));
+    // cops see each other's ids: refresh theirs too
+    const killer = this.secrets.get(id)?.faction === 'killer';
+    for (const [x, s] of this.secrets) if (x === id || (killer && s.faction === 'killer')) this.sendPrivate(x);
   }
 
   // ---------------------------------------------------------------- messages
@@ -412,6 +464,7 @@ export class GameRoom extends Room<GameState> {
     this.kicked.add(id);
     this.state.players.delete(id);
     this.moves.delete(id);
+    this.pids.delete(id);
     if (!DEV && this.state.players.size < MIN_PLAYERS) for (const x of this.state.players.values()) x.ready = false;
     this.syncMeta();
     client.leave(4001);
@@ -708,8 +761,10 @@ export class GameRoom extends Room<GameState> {
     this.delivery.reset({}, [], this.skin.delivery.packageHome);
     this.syncDelivery();
     for (const [id, p] of this.state.players) {
-      if (!p.connected) this.state.players.delete(id);
-      else {
+      if (!p.connected) {
+        this.state.players.delete(id);
+        this.pids.delete(id);
+      } else {
         p.ready = false;
         p.voted = false;
         p.voteFor = '';

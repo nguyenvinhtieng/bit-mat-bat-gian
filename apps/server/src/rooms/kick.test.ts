@@ -18,6 +18,7 @@ function fixture() {
     state: { phase: 'lobby', players, hostId: 'host' },
     clients,
     kicked: new Set<string>(),
+    pids: new Map<string, string>(),
     lastActive: new Map<string, number>(),
     moves: new Map<string, unknown>(clients.map((c) => [c.sessionId, {}])),
     onMessage: (type: string, cb: (client: any, msg: any) => void) => messages.set(type, cb),

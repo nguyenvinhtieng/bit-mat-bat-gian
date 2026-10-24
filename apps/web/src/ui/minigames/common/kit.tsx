@@ -540,8 +540,8 @@ export const sfx = {
 export type EngineMix = { id: string; level: number; rpm: number };
 type Motor = { osc: OscillatorNode; air: AudioBufferSourceNode; lfo: OscillatorNode; lfoDepth: GainNode; lp: BiquadFilterNode; gain: GainNode; base: number };
 const motors = new Map<string, Motor>();
-/** loudest an engine ever gets (the player's own bike at full throttle) — well under the other cues */
-const ENGINE_MAX = 0.05;
+/** loudest an engine ever gets (the player's own bike at full throttle) — still under the other cues */
+const ENGINE_MAX = 0.12;
 /** small 4-stroke hum: a few fast-falling harmonics, so there is no sawtooth rasp to filter away */
 const engineWave = new WeakMap<BaseAudioContext, PeriodicWave>();
 
@@ -554,7 +554,8 @@ function motor(a: AudioContext, id: string): Motor {
   const base = 46 + (h % 7);
   let wave = engineWave.get(a);
   if (!wave) {
-    const amp = [0, 1, 0.55, 0.3, 0.16, 0.08, 0.04];
+    // phone speakers roll off below ~200 Hz, so the 46 Hz fundamental is felt not heard: keep the upper harmonics alive
+    const amp = [0, 1, 0.7, 0.5, 0.38, 0.28, 0.2, 0.14, 0.1, 0.07];
     engineWave.set(a, (wave = a.createPeriodicWave(new Float32Array(amp), new Float32Array(amp.length))));
   }
   const osc = a.createOscillator();
@@ -562,7 +563,7 @@ function motor(a: AudioContext, id: string): Motor {
   osc.frequency.value = base;
   const lp = a.createBiquadFilter();
   lp.type = 'lowpass';
-  lp.frequency.value = 260;
+  lp.frequency.value = 420;
   lp.Q.value = 0.5;
   // exhaust breath: dark rumble under the tone, so it reads as a motor rather than a synth note
   const air = a.createBufferSource();
@@ -570,7 +571,7 @@ function motor(a: AudioContext, id: string): Motor {
   air.loop = true;
   const airLp = a.createBiquadFilter();
   airLp.type = 'lowpass';
-  airLp.frequency.value = 380;
+  airLp.frequency.value = 650;
   const airGain = a.createGain();
   airGain.gain.value = 0.45;
   // the "putt-putt": a slow (sub-audio) amplitude wobble at the firing rate — audio-rate wobble is what buzzed
@@ -612,7 +613,7 @@ export function setEngines(list: EngineMix[]) {
     const level = Math.min(1, Math.max(0, e.level)) * ENGINE_MAX;
     m.osc.frequency.setTargetAtTime(m.base * (1 + rpm * 0.8), t, 0.25);
     m.lfo.frequency.setTargetAtTime(9 + rpm * 11, t, 0.25);
-    m.lp.frequency.setTargetAtTime(260 + rpm * 340, t, 0.25);
+    m.lp.frequency.setTargetAtTime(420 + rpm * 480, t, 0.25);
     m.gain.gain.setTargetAtTime(level, t, 0.15);
     m.lfoDepth.gain.setTargetAtTime(level * 0.3, t, 0.15);
   }

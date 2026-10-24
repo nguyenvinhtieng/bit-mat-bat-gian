@@ -24,7 +24,12 @@ export function initKeyboardViewport() {
     // the URL/tool bars alone change the height by well under 100px
     const open = isTextField(focused) && window.innerHeight - vv.height > 100;
     html.classList.toggle('kb-open', open);
-    if (!open) return;
+    if (!open) {
+      // iOS scrolls the layout viewport to reveal a focused input and doesn't always scroll back once the keyboard
+      // closes, leaving the app shifted up with a gap underneath
+      if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
+      return;
+    }
     html.style.setProperty('--vv-h', `${vv.height}px`);
     html.style.setProperty('--vv-top', `${vv.offsetTop}px`);
     focused.scrollIntoView({ block: 'nearest', inline: 'nearest' });

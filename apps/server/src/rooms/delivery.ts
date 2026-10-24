@@ -90,6 +90,17 @@ export class Delivery {
     return got;
   }
 
+  /** the same player came back on a new session id */
+  rekey(from: string, to: string) {
+    const list = this.jobs.get(from);
+    if (list) {
+      this.jobs.set(to, list);
+      this.jobs.delete(from);
+    }
+    if (this.counted.delete(from)) this.counted.add(to);
+    if (this.carrier === from) this.carrier = to;
+  }
+
   pick(id: string, at: Pt): 'ok' | 'far' | 'taken' | 'gone' {
     if (this.state === 'delivered') return 'gone';
     if (this.state === 'carried') return this.carrier === id ? 'ok' : 'taken';

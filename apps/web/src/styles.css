@@ -13,7 +13,8 @@
   background: var(--wood);
 }
 * { box-sizing: border-box; }
-html, body, #root { margin: 0; height: 100%; overflow: hidden; }
+/* 100% alone tracks the initial containing block, which mobile browsers don't grow when the URL bar hides — that left a strip under the app */
+html, body, #root { margin: 0; height: 100%; height: 100dvh; overflow: hidden; }
 /* on-screen keyboard open (src/keyboard.ts): fit the app above it; the transform makes #root the containing block for fixed overlays */
 html.kb-open #root { position: fixed; left: 0; right: 0; top: var(--vv-top, 0px); height: var(--vv-h, 100%); transform: translateZ(0); }
 /* iOS Safari inflates text after rotating to landscape unless this is pinned */
@@ -1788,7 +1789,8 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
   .role-card .role-tag { display: block; font-size: 0.66em; white-space: nowrap; }
   /* keep the role chip clear of the settings cog in the top-right corner */
   .hud-settings ~ .role-card { right: calc(max(8px, env(safe-area-inset-right)) + 48px); }
-  .hud-voice ~ .role-card { right: calc(max(8px, env(safe-area-inset-right)) + 128px); }
+  /* voice tiles: 46px offset + 2 × 40px + 6px gap (saigon-ui) + 8px breathing room */
+  .hud-voice ~ .role-card { right: calc(max(8px, env(safe-area-inset-right)) + 140px); }
   /* tasks: icon + count chip, the list opens as a popup */
   .task-pop-backdrop { z-index: 30; background: rgba(10, 6, 3, 0.45); }
   .task-list.task-pop { width: min(360px, 86vw); min-width: 0; max-width: none; max-height: 82vh; overflow: auto; padding: 10px 14px; animation: popIn 0.18s; }
