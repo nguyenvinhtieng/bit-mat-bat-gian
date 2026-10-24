@@ -130,7 +130,7 @@ export const GAME_SKIN: MapSkin = {
     prelude: [
       'Đêm nay, Hội Tài Xế CRAB ở Hẻm 42 nhận một cuốc đặc biệt:',
       'giao một kiện hàng cấm trị giá 50 triệu trước khi trời sáng.',
-      'Nhưng có tin mật báo về: một công an chìm đã trà trộn vào hội.',
+      'Một công an chìm đã trà trộn vào hội!',
       'Hãy cùng nhau chuẩn bị và giao hàng trót lọt,',
       'hoặc tìm ra ai là công an chìm — trước khi cả hội bị còng tay.',
     ],

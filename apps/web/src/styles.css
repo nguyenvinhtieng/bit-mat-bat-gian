@@ -1751,8 +1751,10 @@ kbd { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 
   .rotate-gate img { width: min(260px, 70vw); animation: rotateHint 2.4s ease-in-out infinite; }
   .rotate-gate h2 { margin: 6px 0 0; color: var(--ochre); font-family: 'Noto Serif', serif; }
   .rotate-gate p { margin: 0; color: var(--muted); max-width: 300px; }
-  /* the loading screen and install guide stay usable upright; only the app itself needs landscape */
-  #root > :not(.rotate-gate):not(.preloader):not(.install-hint):not(.admin), .game-root > :not(.rotate-gate) { visibility: hidden; }
+  /* the loading screen and install guide stay usable upright; only the app itself needs landscape.
+     Tied to the gate being mounted, so dev builds (no gate) render portrait as-is for layout testing. */
+  body:has(.rotate-gate) #root > :not(.rotate-gate):not(.preloader):not(.install-hint):not(.admin),
+  body:has(.rotate-gate) .game-root > :not(.rotate-gate) { visibility: hidden; }
   .rotate-gate { visibility: visible; }
 }
 @keyframes rotateHint { 0%, 30% { transform: rotate(0); } 55%, 85% { transform: rotate(-8deg) scale(1.04); } 100% { transform: rotate(0); } }
@@ -2992,6 +2994,10 @@ html.kb-open .meeting.zola { padding: 0; }
 @keyframes sirenGlow { 50% { --accent: #ff4a3c; box-shadow: inset 0 0 0 1px #00000080, 0 0 18px #ff4a3c88, 0 8px 20px #0009; } }
 .carry-notice { --accent: #c58a4a; --glow: #ffd79a; animation: noticeIn 0.35s cubic-bezier(0.2, 1.3, 0.4, 1); }
 .handoff-notice { --accent: #e0b23c; --glow: #ffe48a; animation: noticeIn 0.35s cubic-bezier(0.2, 1.3, 0.4, 1), handoffGlow 1.2s ease-in-out 3; }
+/* no icon: even padding on both sides, text centred */
+.notice.done-notice { padding: 8px 22px; text-align: center; }
+.notice.done-notice .notice-body { align-items: center; }
+@media (max-width: 760px), (max-height: 560px) { .notice.done-notice { padding: 5px 14px; } }
 @keyframes handoffGlow { 50% { box-shadow: inset 0 0 0 1px #00000080, 0 0 22px #ffd23f99, 0 8px 20px #0009; } }
 /* the handoff point while I carry the package (minimap + full map) */
 .mm-goal-pulse { fill: rgba(255, 210, 63, 0.4); stroke: #ffd23f; stroke-width: 0.3; animation: mmpulse 0.6s infinite alternate; }

@@ -134,6 +134,31 @@ function HandoffAnnounce() {
   );
 }
 
+/** The moment my own list is cleared but prep isn't at 100% yet: say so, and that the crew still has to finish. */
+function MyTasksDoneNotice({ done }: { done: boolean }) {
+  const t = useT();
+  // starts at the current value so a reconnect / remount after a meeting doesn't replay it
+  const was = useRef(done);
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const finished = done && !was.current;
+    was.current = done;
+    if (!finished) return;
+    setShow(true);
+    const id = setTimeout(() => setShow(false), 8000);
+    return () => clearTimeout(id);
+  }, [done]);
+  if (!show || !done) return null;
+  return (
+    <div className="notice handoff-notice done-notice" role="status">
+      <div className="notice-body">
+        <b>{t('myDoneTitle')}</b>
+        <span>{t('myDoneWait')}</span>
+      </div>
+    </div>
+  );
+}
+
 /** One countdown before daybreak (paused during meetings): only the time left is shown. */
 function useClock() {
   const room = useStore((s) => s.room)!;
@@ -435,6 +460,8 @@ export function Hud() {
   });
   const myDone = me?.tasks?.filter((j) => j.done).length ?? 0;
   const myTotal = me?.tasks?.length ?? 0;
+  // the cop's list is cover, so only real crew get the "wait for the others" hint
+  const waitingOthers = !killer && myTotal > 0 && myDone >= myTotal && !room.handoffOpen;
   const pendingAreas = new Set<AreaId>(rows.filter((r) => !r.done && !r.locked).map((r) => r.st.area));
 
   const touch = isTouchDevice();
@@ -503,6 +530,7 @@ export function Hud() {
         <div className="hud-notices">
           {room.phase === 'explore' && <HandoffAnnounce />}
           {room.phase === 'explore' && <CarryNotice />}
+          {room.phase === 'explore' && <MyTasksDoneNotice done={waitingOthers} />}
         </div>
       )}
       {/* top centre: the (small) location plate */}
@@ -573,6 +601,7 @@ export function Hud() {
             </div>
             {meter}
             {killer && <p className="task-note">{t('fakeTasks')}</p>}
+            {waitingOthers && <p className="task-note task-note-done">{t('myDoneTitle')} {t('myDoneWait')}</p>}
             {taskItems}
             <button
               className="btn task-pop-map"

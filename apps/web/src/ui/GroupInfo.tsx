@@ -285,7 +285,7 @@ function GroupSettings({ onSaved }: { onSaved: () => void }) {
         </div>
       </section>
       {isHost && (
-        <button type="button" className="zl-btn primary zl-save" disabled={!dirty} onClick={save}>
+        <button type="button" className="zl-btn primary zl-save" disabled={!dirty || !copsOk} onClick={save}>
           {t('save')}
         </button>
       )}

@@ -114,6 +114,9 @@ export class GameScene extends Phaser.Scene {
   private stationSprites = new Map<TaskId, { icon: Phaser.GameObjects.Image; ring: Phaser.GameObjects.Image; top: number; fx: Phaser.GameObjects.GameObject[]; marker: Phaser.GameObjects.Container }>();
   /** Props as placed, so a station can adopt the object standing on it. */
   private propImgs: Phaser.GameObjects.Image[] = [];
+  /** dev "hide" toggles: props whose footprint blocks movement vs. everything else stuck onto the map art (wall props, signs…) */
+  private obstacleObjs: Phaser.GameObjects.Components.Visible[] = [];
+  private attachedObjs: Phaser.GameObjects.Components.Visible[] = [];
   /** Bouncing "tap me" badge over the task station I'm standing at. */
   private tapBadge?: Phaser.GameObjects.Container;
   private tapBadgeFor: TaskId | null = null;
@@ -265,8 +268,9 @@ export class GameScene extends Phaser.Scene {
       // above props/avatars, under the fog (100000)
       this.devGfx = this.add.graphics().setDepth(99990).setVisible(false);
       this.devHitbox = this.add.graphics().setDepth(99991).setVisible(false);
-      this.unbind.push(useDev.subscribe(() => this.drawDevColliders()));
+      this.unbind.push(useDev.subscribe(() => (this.drawDevColliders(), this.applyDevHide())));
       this.drawDevColliders();
+      this.applyDevHide();
     }
     this.unbind.push(onHeard((at) => this.onHeard(at)) as unknown as () => void);
     this.unbind.push(onSay((m) => this.say(m)) as unknown as () => void);
@@ -446,15 +450,28 @@ export class GameScene extends Phaser.Scene {
   /** vision scale (1 = normal); the fog brush and sight checks are sized by it */
   private vis = 1;
   private pkg?: Phaser.GameObjects.Container;
-  private pkgGlow?: Phaser.GameObjects.Arc;
+  private pkgGlow?: Phaser.GameObjects.Container;
+  private pkgChevron?: Phaser.GameObjects.Triangle;
 
   /** The Last Ride package: a taped cardboard box. On the ground it pulses; carried, it rides above the carrier's head. */
   private buildPackage() {
     // painted by tools/paint/cc_assets.py into the stations atlas; feet sit near the bottom of the frame
     const g = this.add.image(0, 0, 'map-stations', 'package').setOrigin(0.5, 0.9).setScale(0.9);
-    this.pkgGlow = this.add.circle(0, -2, 34).setStrokeStyle(3, 0x4ee08a, 0.9);
-    this.tweens.add({ targets: this.pkgGlow, scale: 1.6, alpha: 0, duration: 1200, repeat: -1 });
-    this.pkg = this.add.container(0, 0, [this.pkgGlow, g]).setVisible(false);
+    // dropped: a glowing pad on the floor under the box, ripples spreading out of it, a halo behind the box and a bouncing chevron above
+    const GREEN = 0x3dff8f;
+    const pad = this.add.ellipse(0, 2, 70, 26, GREEN, 0.35).setStrokeStyle(3, 0xffffff, 0.95);
+    const ripples = [0, 600].map((delay) => {
+      const r = this.add.ellipse(0, 2, 70, 26).setStrokeStyle(4, GREEN, 1);
+      this.tweens.add({ targets: r, scale: 2, alpha: 0, duration: 1200, delay, repeat: -1, ease: 'Sine.out' });
+      return r;
+    });
+    const halo = this.add.circle(0, -24, 36, GREEN, 0.4).setBlendMode(Phaser.BlendModes.ADD);
+    this.tweens.add({ targets: halo, scale: 1.25, alpha: 0.15, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    const chevron = this.add.triangle(0, -72, 0, 0, 22, 0, 11, 13, GREEN).setStrokeStyle(2.5, 0xffffff, 1);
+    this.tweens.add({ targets: chevron, y: -82, duration: 450, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    this.pkgGlow = this.add.container(0, 0, [...ripples, pad, halo]);
+    this.pkgChevron = chevron;
+    this.pkg = this.add.container(0, 0, [this.pkgGlow, g, chevron]).setVisible(false);
   }
 
   private updatePackage(canSee: (x: number, y: number) => boolean) {
@@ -467,10 +484,13 @@ export class GameScene extends Phaser.Scene {
       if (!at) return void c.setVisible(false);
       c.setPosition(at.x, at.y - 118).setScale(0.62).setDepth(at.y + 2).setVisible(at.visible);
       this.pkgGlow!.setVisible(false);
+      this.pkgChevron!.setVisible(false);
       return;
     }
     c.setPosition(r.packageX, r.packageY).setScale(1).setDepth(r.packageY).setVisible(canSee(r.packageX, r.packageY));
-    this.pkgGlow!.setVisible(r.packageState === 'dropped');
+    // on the ground (still at home or dropped): glow + chevron
+    this.pkgGlow!.setVisible(true);
+    this.pkgChevron!.setVisible(true);
   }
 
   /** While I carry the package: a beacon on the handoff point and an arrow at the screen edge pointing to it. */
@@ -547,6 +567,8 @@ export class GameScene extends Phaser.Scene {
       const img = this.add.image(p.x, p.y, atlas, p.key).setOrigin(0.5, 1);
       img.setScale((p.scale ?? 1) / (atlas === 'map-decor' ? textureScale : 1));
       img.setDepth(p.wall ? -5 : p.y);
+      const group = !p.wall && this.blocksMovement(img) ? this.obstacleObjs : this.attachedObjs;
+      group.push(img);
       if (p.key === 'prop-courtyard-ban-inox') {
         // A small phone rests on the existing painted steel table, beside the tea and notebook.
         // Keep its perspective and scale tied to the prop rather than using a floating UI icon.
@@ -561,18 +583,33 @@ export class GameScene extends Phaser.Scene {
         ], true);
         phone.lineStyle(0.8, 0xe7f2d8).lineBetween(23, -48, 28, -49);
         phone.lineBetween(24, -46, 28, -47);
+        group.push(phone);
       }
       if (!p.wall && img.displayHeight >= 150) this.tallProps.push(img);
       if (!p.wall) this.propImgs.push(img);
     }
   }
 
+  /** A prop counts as an obstacle when a collision box overlaps the bottom strip of its art (its footprint). */
+  private blocksMovement(img: Phaser.GameObjects.Image) {
+    const l = img.x - img.displayWidth / 2, r = img.x + img.displayWidth / 2;
+    const b = img.y, t = img.y - Math.min(img.displayHeight, 64);
+    return (this.grid.boxes ?? []).some(([bl, bt, br, bb]) => bl < r && br > l && bt < b && bb > t);
+  }
+
+  /** Dev: hide obstacle props / attached map assets to judge the bare map art. */
+  private applyDevHide() {
+    const { hideObstacles, hideAttached } = useDev.getState();
+    for (const o of this.obstacleObjs) o.setVisible(!hideObstacles);
+    for (const o of this.attachedObjs) o.setVisible(!hideAttached);
+  }
+
   /** MapSkin.signs: wall writing over the bake (sprayed warnings with drips, tin boards, ad stickers). Depth -4: above the floor/walls, under everyone. */
   private buildStreetSigns() {
     for (const sg of this.skin.signs ?? []) {
       if (sg.art) {
-        this.add.image(sg.x, sg.y, `street-sign-${sg.art}`)
-          .setDisplaySize(sg.width ?? 96, sg.height ?? 64).setAngle(sg.angle ?? 0).setDepth(-4);
+        this.attachedObjs.push(this.add.image(sg.x, sg.y, `street-sign-${sg.art}`)
+          .setDisplaySize(sg.width ?? 96, sg.height ?? 64).setAngle(sg.angle ?? 0).setDepth(-4));
         continue;
       }
       const font = "'Arial Black', 'Arial', sans-serif";
@@ -601,7 +638,7 @@ export class GameScene extends Phaser.Scene {
         else bg.fillStyle(0x5e6268, 1).fillRect(-1, h / 2, 2, 4).fillStyle(0xf2f2ee, 1).fillRect(-w / 2, -h / 2, w, h).lineStyle(2, 0xc8221a, 1).strokeRect(-w / 2 + 2, -h / 2 + 2, w - 4, h - 4);
         parts.push(bg, txt);
       }
-      this.add.container(sg.x, sg.y, parts).setAngle(sg.angle ?? 0).setDepth(-4);
+      this.attachedObjs.push(this.add.container(sg.x, sg.y, parts).setAngle(sg.angle ?? 0).setDepth(-4));
     }
   }
 

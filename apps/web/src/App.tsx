@@ -79,9 +79,11 @@ function ReconnectBanner() {
   );
 }
 
-/** Phones play landscape only: in portrait (CSS-gated) everything else is hidden behind this card. */
+/** Phones play landscape only: in portrait (CSS-gated) everything else is hidden behind this card.
+ *  Skipped in dev so portrait layout can be inspected. */
 function RotateGate() {
   const t = useT();
+  if (import.meta.env.DEV) return null;
   return (
     <div className="rotate-gate" role="alert">
       <img src={asset('maps/common/ui/mobile/rotate-phone.webp')} alt="" draggable={false} />

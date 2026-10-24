@@ -251,7 +251,11 @@ export class GameRoom extends Room<GameState> {
         this.state.nightMin = Math.max(min, Math.min(GAME.timeMinMax, Math.floor(msg.timeMin!)));
       }
       if (Number.isFinite(msg?.cops)) {
-        this.state.cops = Math.max(GAME.copsMin, Math.min(GAME.copsMax, Math.floor(msg.cops!)));
+        const cops = Math.max(GAME.copsMin, Math.min(GAME.copsMax, Math.floor(msg.cops!)));
+        const n = Math.max(this.state.players.size, MIN_PLAYERS);
+        if (!copsValid(cops, n)) {
+          client.send('toast', { text: `${cops} công an là quá nhiều cho ${n} người (tối đa ${maxCops(n)}: phải ít hơn 1/2 số dân).`, kind: 'warn' });
+        } else this.state.cops = cops;
       }
     });
 
