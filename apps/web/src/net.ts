@@ -190,7 +190,7 @@ function bind(r: Room) {
   lastSeen = Date.now();
   const st = useStore.getState();
   // `connecting` stays on until the first state arrives — till then the home screen is showing, so keep its spinner
-  st.set({ screen: 'room', sessionId: r.sessionId, error: '', end: null, me: null, chat: [], voteResult: null, ejectedNames: [] });
+  st.set({ screen: 'room', sessionId: r.sessionId, error: '', end: null, me: null, introOpen: false, chat: [], voteResult: null, ejectedNames: [] });
   history.replaceState(null, '', `/join/${r.roomId}`);
 
   let last = '';
@@ -226,10 +226,9 @@ function bind(r: Room) {
   r.onMessage('time', (serverNow: number) => useStore.getState().set({ timeOffset: serverNow - Date.now() }));
   r.onMessage('private', (me) => {
     const s = useStore.getState();
-    const first = !s.me && me;
     s.set({ me });
-    if (first && s.room?.phase === 'explore') s.set({ introOpen: true, introQuick: false });
   });
+  // the opening plays only on the server's 'intro' (game start); a rejoin mid-game goes straight to play
   r.onMessage('intro', () => useStore.getState().set({ introOpen: true, introQuick: false }));
   r.onMessage('chat:history', (list) => useStore.getState().set({ chat: list }));
   r.onMessage('chat', (m) => {

@@ -38,14 +38,14 @@ export const GAME_PROPS: PropPlacement[] = [
   { key: 'decor-exhibition-chair-blue', x: t(6.2), y: t(17.2), scale: 0.8 },
   { key: 'decor-exhibition-chair-red', x: t(7.3), y: t(17.2), scale: 0.8 },
   // Hẻm chính — cột điện dây điện mạng nhện
-  { key: 'prop-corridor-cot-dien', x: t(19.5), y: t(9), scale: 0.65 },
-  { key: 'prop-corridor-cot-dien', x: t(22.5), y: t(18), scale: 0.65 },
+  { key: 'prop-corridor-cot-dien', x: t(19.5), y: t(9), scale: 0.9 },
+  { key: 'prop-corridor-cot-dien', x: t(22.5), y: t(18), scale: 0.9 },
   // Bãi giữ xe — góc chú bảo vệ sát vách bắc, đồ cũ cùng bộ với quán nước.
-  // Bàn trà, ghế đẩu và quạt tách nhau; khoảng giữa bãi để trống.
-  { key: 'decor-exhibition-table', x: t(32.1), y: t(27.85), scale: 0.9 },
-  { key: 'decor-exhibition-chair-blue', x: t(32.95), y: t(28.35), scale: 0.85 },
-  { key: 'decor-quat-may', x: t(30.85), y: t(27.7), scale: 0.8 },
-  { key: 'decor-binh-tra-da', x: t(33.5), y: t(27.65), scale: 0.65 },
+  // Quạt cạnh bàn trà nép vách giữa hai cửa bắc; lối từ hẻm đông xuống trạm rút xe để trống.
+  { key: 'decor-quat-may', x: t(28.4), y: t(26.8), scale: 0.8 },
+  { key: 'decor-exhibition-table', x: t(29.7), y: t(26.9), scale: 0.9 },
+  { key: 'decor-binh-tra-da', x: t(31.3), y: t(26.75), scale: 0.65 },
+  { key: 'decor-exhibition-chair-blue', x: t(30.5), y: t(27.45), scale: 0.85 },
   { key: 'decor-thung-da', x: t(24.8), y: t(27.8), scale: 0.75 },
   // Quán nước: quầy cà phê vợt và tivi CRT thẳng hàng sát vách bắc.
   // Ba điểm tương tác giữ nguyên, đồ dùng đặt ngay cạnh từng nhiệm vụ.
@@ -94,7 +94,6 @@ export const GAME_PROPS: PropPlacement[] = [
   { key: 'decor-chau-bong-giay', x: t(18.5), y: t(27), scale: 0.7 },
   // Chậu cây thay cột giữa bãi; không che lối đến trạm rút xe phía đông.
   { key: 'decor-chau-bong-giay', x: t(36.5), y: t(30), scale: 0.7 },
-  { key: 'decor-cot-dien', x: t(23.5), y: t(27), scale: 0.65 },
   // hẻm life — đống rác under the "Cấm đổ rác" sign, ổ gà in the asphalt (floor decals: wall=true keeps them under players)
   { key: 'decor-dong-rac', x: t(25), y: t(12.1), scale: 0.8 },
   { key: 'decor-o-ga', x: t(21.1), y: t(15.9), wall: true },

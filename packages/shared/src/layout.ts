@@ -43,8 +43,8 @@ export const FURNITURE_SLOTS: Record<string, Rect> = {
   editing_parts: [14, 19, 3, 2],
   editing_wiring_panel: [20, 24, 1, 1],
   archive_shelf: [4, 26, 2, 1],
-  storage_guard_corner: [30, 27, 5, 1], // bàn trà, ghế, quạt và bình nước sát vách bắc
-  storage_guard_stool: [32, 28, 2, 1], // ghế kê chếch trước bàn, lối giữa vẫn thoáng
+  storage_guard_corner: [28, 26, 4, 1], // quạt, bàn trà, bình nước sát vách bắc giữa hai cửa
+  storage_guard_stool: [30, 27, 1, 1], // ghế kê trước bàn; lối từ cửa đông (x33–35) để trống
   storage_cooler: [24, 27, 2, 1],
   storage_raincoats: [36, 27, 2, 2], // giá áo mưa sát vách đông; chừa ô nhiệm vụ 37,30
   storage_crate: [26, 29, 1, 1], // the station cell (25,30) sits between lantern + censer: keep 25,29 open

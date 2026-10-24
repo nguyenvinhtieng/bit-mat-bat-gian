@@ -38,6 +38,28 @@ const NAME_COLOR = '#fff8e8';
 const READY_NAME_COLOR = '#8dffb4';
 
 const A = '/assets';
+
+/** Edge insets (CSS px) for off-screen pointers; the bottom clears the role card and action buttons. */
+const EDGE_INSET = { top: 44, left: 44, right: 44, bottom: 120 };
+
+/** The view shrunk by EDGE_INSET (u = world px per CSS px): pointers live on its border. */
+function edgeBox(v: Phaser.Geom.Rectangle, u: number) {
+  return { l: v.x + EDGE_INSET.left * u, r: v.right - EDGE_INSET.right * u, t: v.y + EDGE_INSET.top * u, b: v.bottom - EDGE_INSET.bottom * u };
+}
+
+function inBox(e: ReturnType<typeof edgeBox>, x: number, y: number) {
+  return x > e.l && x < e.r && y > e.t && y < e.b;
+}
+
+/** Where a pointer to an off-screen world point sits: on the inset box's border along the ray from the view centre. */
+function edgePoint(v: Phaser.Geom.Rectangle, u: number, tx: number, ty: number) {
+  const e = edgeBox(v, u);
+  const cx = v.centerX, cy = Math.min(Math.max(v.centerY, e.t), e.b), dx = tx - cx, dy = ty - cy;
+  const fx = dx > 0 ? (e.r - cx) / dx : dx < 0 ? (e.l - cx) / dx : Infinity;
+  const fy = dy > 0 ? (e.b - cy) / dy : dy < 0 ? (e.t - cy) / dy : Infinity;
+  const f = Math.min(fx, fy);
+  return { x: cx + dx * f, y: cy + dy * f, a: Math.atan2(dy, dx) };
+}
 const DIRS = ['down', 'left', 'right', 'up'] as const;
 const INTERP_MS = 140; // > 2 patch intervals (PATCH_MS=50) to absorb network jitter
 /** FX strips: 8 frames x 256px, painted per pixel (tools/paint/fx.py). rate = fps, size = on-screen px in world units */
@@ -247,6 +269,7 @@ export class GameScene extends Phaser.Scene {
     this.buildFog();
     this.buildPackage();
     this.buildGoal();
+    this.buildTaskPointers();
     const cam = this.cameras.main;
     cam.setBounds(0, 0, LAYOUT_W * TILE, LAYOUT_H * TILE);
     cam.setBackgroundColor('#1b120d');
@@ -504,8 +527,8 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: ring, scale: 1.7, alpha: 0, duration: 1100, repeat: -1 });
     this.goalRing = this.add.container(0, 0, [fill, ring]).setDepth(99989).setVisible(false);
     // drawn pointing right; rotated toward the goal each frame
-    const tri = this.add.triangle(0, 0, 0, 0, 26, 14, 0, 28, 0xffd23f).setStrokeStyle(3, 0x1b120d);
-    const label = this.add.text(0, 0, '📦', { fontSize: '16px' }).setOrigin(0.5, 0.5);
+    const tri = this.chevron();
+    const label = this.add.text(0, 0, '📦', { fontSize: '12px' }).setOrigin(0.5, 0.5).setResolution(window.devicePixelRatio || 1);
     this.goalArrow = this.add.container(0, 0, [tri, label]).setDepth(100002).setVisible(false);
   }
 
@@ -519,27 +542,168 @@ export class GameScene extends Phaser.Scene {
     const alpha = r.handoffOpen ? 1 : 0.5;
     ring.setPosition(st.x, st.y).setVisible(true).setAlpha(alpha);
     const cam = this.cameras.main, v = cam.worldView;
-    const k = 1 / cam.zoom;
-    const pad = 44 * k;
+    const k = this.uiScale();
     const tx = st.x, ty = st.y - 30;
-    const tri = arrow.list[0] as Phaser.GameObjects.Triangle, label = arrow.list[1] as Phaser.GameObjects.Text;
-    arrow.setScale(k).setAlpha(alpha).setVisible(true);
-    if (tx > v.x + pad && tx < v.right - pad && ty > v.y + pad && ty < v.bottom - pad) {
+    const tri = arrow.list[0] as Phaser.GameObjects.Graphics, label = arrow.list[1] as Phaser.GameObjects.Text;
+    arrow.setScale(k).setAlpha(alpha * 0.9).setVisible(true);
+    if (inBox(edgeBox(v, k), tx, ty)) {
       // on screen: bob straight down over the point
-      const bob = Math.sin(performance.now() / 180) * 6 * k;
-      arrow.setPosition(tx, ty - 46 * k + bob);
+      const bob = Math.sin(performance.now() / 180) * 4 * k;
+      arrow.setPosition(tx, ty - 34 * k + bob);
       tri.setRotation(Math.PI / 2);
       label.setVisible(false);
       return;
     }
-    // off screen: pin to the edge along the line from the screen centre
-    const cx = v.centerX, cy = v.centerY, dx = tx - cx, dy = ty - cy;
-    const f = Math.min((v.width / 2 - pad) / Math.max(Math.abs(dx), 1e-3), (v.height / 2 - pad) / Math.max(Math.abs(dy), 1e-3));
-    const a = Math.atan2(dy, dx);
-    arrow.setPosition(cx + dx * f, cy + dy * f);
-    tri.setRotation(a);
+    const e = edgePoint(v, k, tx, ty);
+    arrow.setPosition(e.x, e.y);
+    tri.setRotation(e.a);
     // the box sits behind the tip, toward the screen centre
-    label.setVisible(true).setPosition(-Math.cos(a) * 28, -Math.sin(a) * 28);
+    label.setVisible(true).setPosition(-Math.cos(e.a) * 18, -Math.sin(e.a) * 18);
+  }
+
+  /**
+   * Task guidance: one big arrow to my nearest open station (by walking distance, not straight line) and small
+   * pips for the rest, pips in roughly the same direction merged into one with a count. Only off-screen targets
+   * get a pointer — on-screen stations already carry their own pin.
+   */
+  private taskArrow?: Phaser.GameObjects.Container;
+  private taskPips: Phaser.GameObjects.Container[] = [];
+  private taskPrimary: TaskId | null = null;
+  private pathField?: { tile: number; d: Int16Array };
+
+  /** world px per CSS px: screen-space UI drawn in the world keeps its size across camera zoom and device pixel ratio */
+  private uiScale() {
+    const c = this.scale.canvas;
+    return (c.clientWidth ? c.width / c.clientWidth : 1) / this.cameras.main.zoom;
+  }
+
+  /** slim chevron pointing right (rotated toward its target), with a soft drop shadow instead of a hard outline */
+  private chevron() {
+    const pts = [-5, -7, 7, 0, -5, 7, -2, 0];
+    const poly = (dx: number, dy: number) => Array.from({ length: 4 }, (_, i) => ({ x: pts[i * 2] + dx, y: pts[i * 2 + 1] + dy }));
+    return this.add.graphics().fillStyle(0x1b120d, 0.35).fillPoints(poly(1, 1.5), true).fillStyle(0xffd23f, 1).fillPoints(poly(0, 0), true);
+  }
+
+  private pointerText(size: number) {
+    return this.add
+      .text(0, 0, '', { fontFamily: 'system-ui, sans-serif', fontSize: `${size}px`, fontStyle: '600', color: '#fff3d6' })
+      .setShadow(0, 1, '#1b120d', 3, false, true)
+      .setOrigin(0.5, 0.5)
+      .setResolution(window.devicePixelRatio || 1);
+  }
+
+  private buildTaskPointers() {
+    this.taskArrow = this.add.container(0, 0, [this.chevron(), this.pointerText(10)]).setDepth(100002).setAlpha(0.85).setVisible(false);
+  }
+
+  private taskPip(i: number) {
+    let pip = this.taskPips[i];
+    if (!pip) {
+      const dot = this.add.circle(0, 0, 3.5, 0xffd23f, 1);
+      const n = this.pointerText(9).setPosition(9, -6);
+      pip = this.add.container(0, 0, [dot, n]).setDepth(100001).setAlpha(0.35);
+      this.taskPips[i] = pip;
+    }
+    return pip;
+  }
+
+  /** BFS walking distance (in tiles) from my tile over walls; recomputed only when I step onto another tile. */
+  private walkField(g: LayoutGrid) {
+    const sx = Math.floor(this.pred.x / TILE), sy = Math.floor(this.pred.y / TILE);
+    const start = sy * g.w + sx;
+    if (this.pathField?.tile === start && this.pathField.d.length === g.w * g.h) return this.pathField.d;
+    const walls = g.walls ?? g.solid;
+    const d = new Int16Array(g.w * g.h).fill(-1);
+    const q = new Int32Array(g.w * g.h);
+    let head = 0, tail = 0;
+    if (start >= 0 && start < d.length) (d[start] = 0), (q[tail++] = start);
+    while (head < tail) {
+      const c = q[head++], x = c % g.w, y = (c - x) / g.w;
+      for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
+        if (nx < 0 || ny < 0 || nx >= g.w || ny >= g.h) continue;
+        const n = ny * g.w + nx;
+        if (d[n] !== -1 || walls[n] === 1) continue;
+        d[n] = d[c] + 1;
+        q[tail++] = n;
+      }
+    }
+    this.pathField = { tile: start, d };
+    return d;
+  }
+
+  /** walking distance to a station; it often sits on a wall/prop tile, so take its nearest reachable neighbour */
+  private walkDist(g: LayoutGrid, d: Int16Array, x: number, y: number) {
+    const tx = Math.floor(x / TILE), ty = Math.floor(y / TILE);
+    let best = Infinity;
+    for (let oy = -1; oy <= 1; oy++)
+      for (let ox = -1; ox <= 1; ox++) {
+        const nx = tx + ox, ny = ty + oy;
+        if (nx < 0 || ny < 0 || nx >= g.w || ny >= g.h) continue;
+        const v = d[ny * g.w + nx];
+        if (v >= 0) best = Math.min(best, v + (ox || oy ? 1 : 0));
+      }
+    return best === Infinity ? dist(this.pred, { x, y }) / TILE : best;
+  }
+
+  private updateTaskPointers() {
+    const arrow = this.taskArrow;
+    if (!arrow) return;
+    const { room: r, sessionId } = useStore.getState();
+    const carrying = r?.packageState === 'carried' && r.packageCarrier === sessionId;
+    const targets =
+      r?.phase === 'explore' && !carrying
+        ? this.skin.stations.filter((s) => s.id !== 'handoff_package' && this.canWork(s.id) && this.stationOpen(s.id))
+        : [];
+    let used = 0;
+    if (!targets.length) {
+      this.taskPrimary = null;
+      arrow.setVisible(false);
+      for (const p of this.taskPips) p.setVisible(false);
+      return;
+    }
+    const g = this.grid, field = this.walkField(g);
+    const ranked = targets.map((s) => ({ s, d: this.walkDist(g, field, s.x, s.y) })).sort((a, b) => a.d - b.d);
+    // hysteresis: keep the current target unless another is clearly closer, so the arrow doesn't flicker between two
+    const cur = ranked.find((t) => t.s.id === this.taskPrimary);
+    const primary = cur && ranked[0].d >= cur.d * 0.8 - 1 ? cur : ranked[0];
+    this.taskPrimary = primary.s.id;
+
+    const v = this.cameras.main.worldView, k = this.uiScale(), box = edgeBox(v, k);
+    const onScreen = (x: number, y: number) => inBox(box, x, y);
+    const MERGE = (18 * Math.PI) / 180;
+    const angDiff = (a: number, b: number) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
+
+    const tri = arrow.list[0] as Phaser.GameObjects.Graphics, label = arrow.list[1] as Phaser.GameObjects.Text;
+    let primaryAngle: number | null = null, primaryExtra = 0;
+    if (onScreen(primary.s.x, primary.s.y)) arrow.setVisible(false);
+    else {
+      const e = edgePoint(v, k, primary.s.x, primary.s.y);
+      primaryAngle = e.a;
+      arrow.setScale(k).setPosition(e.x, e.y).setVisible(true);
+      tri.setRotation(e.a);
+      label.setPosition(-Math.cos(e.a) * 20, -Math.sin(e.a) * 20);
+    }
+
+    // the rest: cluster by screen-edge direction; a cluster that lines up with the big arrow folds into its count
+    const clusters: { a: number; n: number; x: number; y: number }[] = [];
+    for (const t of ranked) {
+      if (t === primary || onScreen(t.s.x, t.s.y)) continue;
+      const e = edgePoint(v, k, t.s.x, t.s.y);
+      if (primaryAngle !== null && angDiff(e.a, primaryAngle) < MERGE) {
+        primaryExtra++;
+        continue;
+      }
+      const c = clusters.find((c) => angDiff(c.a, e.a) < MERGE);
+      if (c) c.n++;
+      else clusters.push({ a: e.a, n: 1, x: e.x, y: e.y });
+    }
+    label.setText(`${Math.max(1, Math.round(primary.d))}m${primaryExtra ? ` +${primaryExtra}` : ''}`);
+    for (const c of clusters) {
+      const pip = this.taskPip(used++);
+      pip.setScale(k).setPosition(c.x, c.y).setVisible(true);
+      (pip.list[1] as Phaser.GameObjects.Text).setText(c.n > 1 ? `×${c.n}` : '');
+    }
+    for (let i = used; i < this.taskPips.length; i++) this.taskPips[i].setVisible(false);
   }
 
   private togglePackage() {
@@ -1500,6 +1664,7 @@ export class GameScene extends Phaser.Scene {
     }
     this.updatePackage(canSee);
     this.updateGoal();
+    this.updateTaskPointers();
     const now = performance.now();
     for (const [id, av] of this.avatars) {
       const mineAv = id === r.sessionId;

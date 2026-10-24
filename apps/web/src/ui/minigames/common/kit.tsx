@@ -543,7 +543,7 @@ export type EngineMix = { id: string; level: number; rpm: number };
 type Motor = { osc: OscillatorNode; air: AudioBufferSourceNode; lfo: OscillatorNode; lfoDepth: GainNode; lp: BiquadFilterNode; gain: GainNode; base: number };
 const motors = new Map<string, Motor>();
 /** loudest an engine ever gets (the player's own bike at full throttle) — still under the other cues */
-const ENGINE_MAX = 0.12;
+const ENGINE_MAX = 0.085;
 /** small 4-stroke hum: a few fast-falling harmonics, so there is no sawtooth rasp to filter away */
 const engineWave = new WeakMap<BaseAudioContext, PeriodicWave>();
 

@@ -12,7 +12,7 @@ export function UnparkBike({ task, submit }: P<'unpark_bike'>) {
   const [bikes, setBikes] = useState<LotBike[]>(task.bikes);
   const [selected, setSelected] = useState(task.bikes.find((b) => b.mine)?.id ?? task.bikes[0].id);
   const [moves, setMoves] = useState<{ id: string; d: number }[]>([]);
-  const [hint, setHint] = useState<[string, Tone]>(['', 'info']);
+  const [hint, setHint] = useState<[string, Tone]>([t('Dọn đường cho xe xanh chạy ra LỐI RA bên phải →', 'Clear a path so the green bike reaches the EXIT on the right →'), 'info']);
   const drag = useRef<{ id: string; p0: number; steps: number } | null>(null);
   // a drag fires many moves per second: keep the foley from piling up
   const soundAt = useRef({ roll: 0, block: 0 });
@@ -67,7 +67,11 @@ export function UnparkBike({ task, submit }: P<'unpark_bike'>) {
   return (
     <MgShell bare taskId={task.taskId} status={`${moves.length} ${t('lần đẩy', 'pushes')}`} hint={hint[0]} tone={hint[1]}>
       <div className="ck-lot" style={{ '--cols': task.w, '--rows': task.h, height: 'auto', aspectRatio: `${task.w} / ${task.h}`, backgroundSize: `${100 / task.w}% ${100 / task.h}%` } as React.CSSProperties} onPointerMove={onMove} onPointerUp={() => (drag.current = null)} onPointerCancel={() => (drag.current = null)}>
-        <div className="ck-gate" style={{ top: `${((bikes.find((b) => b.mine)?.y ?? 0) / task.h) * 100}%`, height: `${100 / task.h}%` }} />
+        {/* the mine bike's row, lit all the way to the gate so the goal reads at a glance */}
+        <div className="ck-exit-lane" aria-hidden="true" style={{ top: `${((bikes.find((b) => b.mine)?.y ?? 0) / task.h) * 100}%`, height: `${100 / task.h}%` }} />
+        <div className="ck-gate" style={{ top: `${((bikes.find((b) => b.mine)?.y ?? 0) / task.h) * 100}%`, height: `${100 / task.h}%` }}>
+          <span className="ck-gate-tag">{t('LỐI RA', 'EXIT')} ➜</span>
+        </div>
         {bikes.map((b) => (
           <button
             type="button"

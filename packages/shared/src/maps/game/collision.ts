@@ -21,12 +21,12 @@ export const GAME_COLLISION: PxBox[] = [
   [98, 809, 132, 816], // decor-exhibition-pickup @2.4,17.2
   [288, 816, 312, 819], // decor-exhibition-chair-blue @6.2,17.2
   [336, 816, 364, 818], // decor-exhibition-chair-red @7.3,17.2
-  [931, 422, 940, 432], // prop-corridor-cot-dien @19.5,9.0
-  [1075, 854, 1084, 864], // prop-corridor-cot-dien @22.5,18.0
-  [1522, 1318, 1560, 1335], // decor-exhibition-table @32.1,27.9
-  [1567, 1340, 1597, 1354], // decor-exhibition-chair-blue @33.0,28.4
-  [1467, 1320, 1490, 1330], // decor-quat-may @30.9,27.7
-  [1594, 1317, 1616, 1327], // decor-binh-tra-da @33.5,27.6
+  [930, 422, 942, 432], // prop-corridor-cot-dien @19.5,9.0
+  [1074, 854, 1086, 864], // prop-corridor-cot-dien @22.5,18.0
+  [1349, 1276, 1372, 1286], // decor-quat-may @28.4,26.8
+  [1407, 1272, 1445, 1289], // decor-exhibition-table @29.7,26.9
+  [1488, 1274, 1510, 1284], // decor-binh-tra-da @31.3,26.8
+  [1449, 1297, 1479, 1311], // decor-exhibition-chair-blue @30.5,27.5
   [1176, 1320, 1207, 1334], // decor-thung-da @24.8,27.8
   [1444, 385, 1584, 421], // prop-coordination-quay-ca-phe @31.5,9.0
   [1758, 396, 1841, 432], // prop-coordination-tivi @37.5,9.0
@@ -60,5 +60,4 @@ export const GAME_COLLISION: PxBox[] = [
   [504, 1459, 557, 1483], // decor-thung-giay @11.0,30.9
   [882, 1286, 897, 1296], // decor-chau-bong-giay @18.5,27.0
   [1746, 1430, 1761, 1440], // decor-chau-bong-giay @36.5,30.0
-  [1125, 1286, 1133, 1296], // decor-cot-dien @23.5,27.0
 ];

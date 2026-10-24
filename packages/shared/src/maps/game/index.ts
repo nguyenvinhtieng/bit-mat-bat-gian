@@ -47,11 +47,11 @@ export const GAME_STATIONS: StationDef[] = [
   { id: 'tape_box', area: 'archive', x: t(4.5), y: t(27.2), title: 'Quấn băng keo thùng hàng', titleEn: 'Tape up the box', icon: 'icon' },
   { id: 'stack_rack', area: 'archive', x: t(16.5), y: t(30.6), title: 'Chất hàng lên baga', titleEn: 'Stack the rear rack', icon: 'icon' },
   { id: 'untangle_charger', area: 'archive', x: t(5.5), y: t(30.6), title: 'Gỡ dây sạc điện thoại', titleEn: 'Untangle the phone charger', icon: 'icon' },
-  // Bãi Giữ Xe — góc dưới phải chỗ xe xếp · hốc cụt giữa đèn và lư
+  // Bãi Giữ Xe — góc dưới phải chỗ xe xếp · sát vách tây, trên giàn phơi
   { id: 'unpark_bike', area: 'artifact_storage', x: t(37.5), y: t(30.6), title: 'Rút xe ra khỏi bãi', titleEn: 'Get the bike out', icon: 'icon' },
-  { id: 'stuck_shutter', area: 'artifact_storage', x: t(25.5), y: t(30.6), title: 'Kéo cửa cuốn kẹt', titleEn: 'Unstick the roller shutter', icon: 'icon' },
-  // Hẻm Cuối — góc khuất sau cột điện hẻm giữa · điểm giao ở hẻm đông
-  { id: 'dodge_potholes', area: 'corridor', x: t(22.5), y: t(16.6), title: 'Né ổ gà vào hẻm', titleEn: 'Dodge the potholes', icon: 'icon' },
+  { id: 'stuck_shutter', area: 'artifact_storage', x: t(23.5), y: t(29.4), title: 'Kéo cửa cuốn kẹt', titleEn: 'Unstick the roller shutter', icon: 'icon' },
+  // Hẻm Cuối — sát vách tây hẻm giữa, tránh cột điện · điểm giao ở hẻm đông
+  { id: 'dodge_potholes', area: 'corridor', x: t(19.5), y: t(16.6), title: 'Né ổ gà vào hẻm', titleEn: 'Dodge the potholes', icon: 'icon' },
   { id: 'handoff_package', area: 'corridor', x: t(34.5), y: t(21.5), title: 'Bàn giao Cuốc Cuối', titleEn: 'Hand off the Last Ride', icon: 'icon' },
 ];
 

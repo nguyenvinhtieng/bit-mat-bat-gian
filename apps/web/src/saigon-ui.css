@@ -101,9 +101,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e5b76d; outline-
 .slider-text small { font-size: .67rem; color: #9cafaa; }
 .slider-value { background: #244b40; color: #d7eacc; border: 1px solid #86b49a55; border-radius: 9px; box-shadow: none; font-size: 1.15rem; min-width: 45px; height: 45px; }
 .slider-value.muted-ico { background: #203b3c; border-color: #76908755; color: #a8c0b4; }
-.slider { height: 7px; background: linear-gradient(90deg, #65b993 var(--fill), #304846 var(--fill)); border: none; }
-.slider::-webkit-slider-thumb { width: 22px; height: 22px; border: 3px solid #e6d6b3; border-radius: 50%; background: #38795e; box-shadow: 0 2px 7px #0005; filter: none; }
-.slider::-moz-range-thumb { width: 17px; height: 17px; border: 3px solid #e6d6b3; border-radius: 50%; background: #38795e; }
+/* The input itself is the touch target (44px tall); the visible 7px bar is drawn on the track. */
+.slider { height: 44px; margin: 0; background: transparent; border: none; border-radius: 0; touch-action: none; -webkit-tap-highlight-color: transparent; }
+.slider::-webkit-slider-runnable-track { height: 7px; border-radius: 99px; background: linear-gradient(90deg, #65b993 var(--fill), #304846 var(--fill)); }
+.slider::-moz-range-track { height: 7px; border-radius: 99px; background: linear-gradient(90deg, #65b993 var(--fill), #304846 var(--fill)); }
+.slider::-webkit-slider-thumb { width: 26px; height: 26px; margin-top: -9.5px; border: 3px solid #e6d6b3; border-radius: 50%; background: #38795e; box-shadow: 0 2px 7px #0005; filter: none; }
+.slider::-moz-range-thumb { width: 20px; height: 20px; border: 3px solid #e6d6b3; border-radius: 50%; background: #38795e; }
 .lang-switch, .settings-lang { padding: 3px; background: #071719; border: 1px solid #6d9b8055; border-radius: 9px; box-shadow: none; }
 .lang-track { width: 108px; height: 36px; border-radius: 6px; background: none; }
 .lang-knob { display: none; }
@@ -219,9 +222,6 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e5b76d; outline-
   .saigon-settings .saigon-settings-head { padding-left: 14px; gap: 11px; }
   .slider-row { padding: 13px; }
   .slider-text small { max-width: 160px; }
-  .saigon-guide .guide-tabs { gap: 3px; padding: 8px; }
-  .saigon-guide .guide-tab { font-size: .71rem; padding: 9px 8px; gap: 5px; }
-  .saigon-guide .modal-content { padding: 14px; }
 }
 @media (max-width: 370px) {
   .home .home-card { padding: 20px 16px; }
@@ -235,19 +235,34 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e5b76d; outline-
   .home { padding: 64px 18px 20px; }
   .home .home-card { width: min(740px, 94vw); display: grid; grid-template-columns: .9fr 1.1fr; gap: 24px; align-items: center; padding: 22px 26px; }
   .home .home-brand { margin: 0; }
-  .home .home-logo { width: 95px; }
-  .home .home-tagline { font-size: .8rem; margin-top: 12px; padding: 7px 10px 7px 7px; gap: 8px; }
-  .home-sign-number { min-width: 30px; height: 30px; }
-  .home-location { font-size: .55rem; }
-  .home .home-id .field { display: flex; }
-  .home .home-actions { margin-top: 14px; }
-  .home .cta { min-height: 60px; }
-  .home .cta-text b { font-size: .82rem; }
+  /* sized off the short side so phones fill the card instead of floating small in it */
+  .home .home-logo { width: clamp(95px, 36vh, 160px); }
+  .home .home-tagline { font-size: clamp(.8rem, 2.9vh, 1.05rem); margin-top: 14px; padding: 9px 14px 9px 9px; gap: 10px; }
+  .home-sign-number { min-width: 34px; height: 34px; }
+  .home-location { font-size: .66rem; margin-bottom: 8px; }
+  .home .home-id .field { display: flex; font-size: .84rem; gap: 9px; }
+  .home .home-card .field input { height: clamp(46px, 14.5vh, 58px); font-size: 1.06rem; padding: 10px 16px; }
+  .home .home-actions { margin-top: 16px; }
+  .home .cta { min-height: clamp(60px, 21vh, 84px); gap: 10px; }
+  .home .cta-text b { font-size: clamp(.82rem, 2.9vh, 1.02rem); }
+  .home .cta-icon { width: 36px; height: 36px; }
+  .home .cta-icon svg { width: 24px; height: 24px; }
   .saigon-settings .saigon-settings-head { padding-top: 12px; padding-bottom: 12px; }
   .saigon-settings-head p { display: none; }
   .settings-modal.game-settings .modal-content { gap: 9px; padding: 12px; }
   .settings-modal .slider-row { padding: 12px; }
-  .saigon-guide .guide-head { padding-top: 12px; padding-bottom: 12px; }
+}
+@media (max-width: 600px), (max-height: 550px) and (orientation: landscape) {
+  .guide-modal.saigon-guide { padding: 4px; }
+  .saigon-guide .guide-head { padding: 10px 44px 8px 12px; gap: 0; }
+  .saigon-guide .guide-kicker { display: none; }
+  .saigon-guide .guide-title { font-size: 1.15rem; line-height: 1.25; }
+  .saigon-guide .guide-close { top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 6px; }
+  .saigon-guide .guide-close svg { width: 14px; height: 14px; }
+  .saigon-guide .guide-tabs { gap: 4px; padding: 2px 10px 8px; }
+  .saigon-guide .guide-tab { font-size: .72rem; padding: 4px 8px; gap: 4px; border-radius: 6px; }
+  .saigon-guide .guide-tab svg { width: 14px; height: 14px; }
+  .saigon-guide .modal-content { padding: 10px; font-size: .8rem; line-height: 1.6; }
 }
 @media (prefers-reduced-motion: reduce) {
   .home *, .modal *, .chat *, .home .home-bg, .modal { animation: none !important; transition: none !important; }
@@ -452,15 +467,15 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e5b76d; outline-
 /* Dispatch clock: jade enamel and an amber instrument display. */
 .hud-right-dock .night-clock {
   display: flex; align-items: center; gap: 5px; max-width: calc(100dvw - 24px); box-sizing: border-box;
-  padding: 3px 7px 3px 5px; border: 1px solid #88aa8d; border-radius: 8px;
-  background: linear-gradient(145deg, #285d51, #102f2d); color: #c5d0b9;
-  box-shadow: inset 0 0 0 3px #0b292655, 0 3px 0 #071b1b, 0 5px 12px #0005;
+  padding: 3px 7px 3px 5px; border: 1px solid #88aa8dcc; border-radius: 8px;
+  background: linear-gradient(145deg, #285d51b3, #102f2db3); color: #c5d0b9;
+  box-shadow: inset 0 0 0 3px #0b292640, 0 3px 0 #071b1b80, 0 5px 12px #0003;
   font-size: 13px; line-height: 1.2; text-shadow: none; white-space: normal;
 }
 .night-clock .nc-icon { flex: none; width: 16px; height: 16px; color: #e5b76d; }
 .night-clock .nc-left { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: 10px; font-weight: 600; }
 .night-clock .nc-time {
-  flex: none; padding: 2px 4px; border: 1px solid #809d7a44; border-radius: 4px; background: #092421;
+  flex: none; padding: 2px 4px; border: 1px solid #809d7a44; border-radius: 4px; background: #092421b3;
   color: #f1cf8d; font-size: 13px; letter-spacing: .02em; line-height: 1; text-shadow: none;
 }
 .night-clock .nc-prep { min-width: 0; padding: 1px 0 1px 5px; border-left: 1px solid #8eaa8555; color: #c5d0b9; font-size: 10px; line-height: 1.3; font-weight: 700; }
@@ -539,16 +554,16 @@ button:focus-visible, input:focus-visible { outline: 2px solid #e5b76d; outline-
 .dispatch-footer { display: flex; justify-content: space-between; flex: none; padding: 10px 3px 0; font: 700 8px ui-monospace, monospace; letter-spacing: .12em; color: #aec0a2; }
 .dispatch-footer span { font-size: 6px; color: #6e927b; }
 .task-chip.crab-task-chip {
-  min-height: 48px; padding: 4px 10px 4px 5px; gap: 8px; border: 1px solid #88aa8d; border-radius: 13px;
-  background: linear-gradient(145deg, #285d51, #102f2d); color: #f5eddb;
-  box-shadow: inset 0 0 0 3px #0b292655, 0 3px 0 #071b1b, 0 5px 12px #0005;
+  min-height: 48px; padding: 4px 10px 4px 5px; gap: 8px; border: 1px solid #88aa8dcc; border-radius: 13px;
+  background: linear-gradient(145deg, #285d51b3, #102f2db3); color: #f5eddb;
+  box-shadow: inset 0 0 0 3px #0b292640, 0 3px 0 #071b1b80, 0 5px 12px #0003;
 }
-.task-chip.crab-task-chip:hover { background: #2b5e50; border-color: #edcc8b; }
+.task-chip.crab-task-chip:hover { background: #2b5e50e6; border-color: #edcc8b; }
 .hud-right-dock .task-chip.crab-task-chip { align-self: flex-end; }
 .task-chip.crab-task-chip img, .hud-right-dock .task-chip.crab-task-chip img { width: 30px; height: 36px; }
 .dispatch-chip-label { text-align: left; font-size: 12px; letter-spacing: .1em; line-height: 1.2; }
 .dispatch-chip-label small { display: block; font-size: 9px; letter-spacing: 0; color: #bfceb6; font-weight: 600; }
-.crab-task-chip b { padding: 3px 6px; border-radius: 5px; background: #092421; color: #efd093; }
+.crab-task-chip b { padding: 3px 6px; border-radius: 5px; background: #092421b3; color: #efd093; }
 .task-pop-backdrop.modal-backdrop { place-items: center; background: #031719c9; backdrop-filter: blur(6px); }
 .task-pop-backdrop > .task-list.crab-dispatch.task-pop {
   width: min(420px, 100%); min-width: 0; max-width: 420px; height: auto; min-height: 0;

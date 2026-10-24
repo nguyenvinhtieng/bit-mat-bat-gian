@@ -116,8 +116,8 @@
   {
    "id": "stuck_shutter",
    "area": "artifact_storage",
-   "x": 1224,
-   "y": 1469,
+   "x": 1128,
+   "y": 1411,
    "title": "Kéo cửa cuốn kẹt",
    "titleEn": "Unstick the roller shutter",
    "icon": "icon"
@@ -125,7 +125,7 @@
   {
    "id": "dodge_potholes",
    "area": "corridor",
-   "x": 1080,
+   "x": 936,
    "y": 797,
    "title": "Né ổ gà vào hẻm",
    "titleEn": "Dodge the potholes",
