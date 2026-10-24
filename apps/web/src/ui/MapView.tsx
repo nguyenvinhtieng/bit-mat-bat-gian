@@ -1,4 +1,4 @@
-import { AREA_RECTS, LAYOUT_H, LAYOUT_W, MEETING_POINT, PREP_TASK_IDS, TILE, type AreaId, type TaskId } from '@hidden-truth/shared';
+import { AREA_RECTS, LAYOUT_H, LAYOUT_W, MEETING_POINT, PREP_TASK_IDS, TILE, type AreaId, type TaskId } from '@giao-keo/shared';
 import { useLang } from '../i18n';
 import { useStore } from '../store';
 import { CloseButton, EscHint, asset, useEscape, useSkin, usePackageSpot, useHandoffGoal } from './common';

@@ -1,4 +1,4 @@
-import { GAME_SLUG } from '@hidden-truth/shared';
+import { GAME_SLUG } from '@giao-keo/shared';
 import { GAME_CONTENT } from './game';
 import type { MapContent } from './common/util';
 

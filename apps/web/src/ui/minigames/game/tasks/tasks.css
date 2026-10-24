@@ -636,8 +636,17 @@
 .ck-quiet-feedback svg { width: 32px; height: 32px; }
 .ck-quiet-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .alarmed .ck-shutter { animation: ck-quiet-rattle .13s linear 5; }
+/* waking a neighbour lets the door slip back down a stretch instead of jumping */
+.ck-quiet-scene.alarmed .ck-shutter { transition: height .45s cubic-bezier(.55, 0, .35, 1.2); }
+/* finish line: where the door's bottom edge (incl. its 5px rail) sits at full lift */
+.ck-quiet-goal { position: absolute; z-index: 3; left: -2px; right: -2px; top: calc(13% + 5px); height: 0; border-top: 3px dashed #f9df9e; pointer-events: none; opacity: .9; transition: border-color .2s; }
+.ck-quiet-goal::before, .ck-quiet-goal::after { content: ''; position: absolute; top: -9px; width: 10px; height: 15px; background: #f9df9e; transition: background .2s; }
+.ck-quiet-goal::before { left: 0; clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.ck-quiet-goal::after { right: 0; clip-path: polygon(100% 0, 0 50%, 100% 100%); }
+.ck-quiet-goal.reached { border-top-color: #a2d5b4; }
+.ck-quiet-goal.reached::before, .ck-quiet-goal.reached::after { background: #a2d5b4; }
 @keyframes ck-quiet-rattle { 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
-@media (prefers-reduced-motion: reduce) { .ck-quiet-pull, .ck-quiet-scene .ck-shutter-handle:has(.ck-quiet-pull), .alarmed .ck-shutter { animation: none; }.ck-neighbor, .ck-neighbor::before, .ck-neighbor::after { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .ck-quiet-scene.alarmed .ck-shutter { transition: none; } .ck-quiet-pull, .ck-quiet-scene .ck-shutter-handle:has(.ck-quiet-pull), .alarmed .ck-shutter { animation: none; }.ck-neighbor, .ck-neighbor::before, .ck-neighbor::after { transition: none; } }
 
 /* Phones play in landscape: zoom the shop on the left, keep feedback on the right.
    Square art is scaled to 140% of scene height and offset by (-12%, -30%). */
@@ -647,6 +656,7 @@
   .mg-col[data-task] .ck-quiet-scene .ck-errand-art { width: 77.778%; height: 140%; left: -6.667%; top: -30%; object-fit: fill; mask-image: linear-gradient(to right, #000 88%, transparent); }
   .ck-quiet-scene .ck-shutter-frame { top: 17.6%; bottom: 20.8%; left: 12%; right: 47.556%; border-width: 4px; border-bottom-width: 0; }
   .ck-quiet-scene .ck-shutter { min-height: 56px; box-sizing: border-box; }
+  .ck-quiet-goal { top: max(13%, 56px); }
   .ck-quiet-scene .ck-shutter-handle { box-sizing: border-box; height: 46px; width: 54%; left: 23%; }
   .ck-quiet-scene .ck-neighbor { box-sizing: border-box; top: 15%; width: 10%; height: 25%; z-index: 1; }
   .ck-quiet-scene .ck-neighbor-left { left: 74%; }

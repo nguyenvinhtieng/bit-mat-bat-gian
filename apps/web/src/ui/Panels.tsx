@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { mapSkin } from '@hidden-truth/shared';
+import { mapSkin } from '@giao-keo/shared';
 import { KILLER_NAME_COLOR, useStore } from '../store';
 import { RoleBadge, useEscape } from './common';
 import { isTouchDevice } from './Joystick';

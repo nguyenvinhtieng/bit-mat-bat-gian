@@ -22,7 +22,7 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": [
         "--filter",
-        "@hidden-truth/web",
+        "@giao-keo/web",
         "preview",
         "--port",
         "4173",
@@ -35,7 +35,7 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": [
         "--filter",
-        "@hidden-truth/web",
+        "@giao-keo/web",
         "exec",
         "vite",
         "--port",

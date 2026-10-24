@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GAME, MAX_PLAYERS, MIN_PLAYERS, NAME_MAX, copsValid, maxCops } from '@hidden-truth/shared';
+import { GAME, MAX_PLAYERS, MIN_PLAYERS, NAME_MAX, copsValid, maxCops } from '@giao-keo/shared';
 import { send } from '../net';
 import { useStore } from '../store';
 import { useT } from '../i18n';

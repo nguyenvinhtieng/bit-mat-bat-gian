@@ -1,4 +1,4 @@
-import type { GameTaskId } from '@hidden-truth/shared';
+import type { GameTaskId } from '@giao-keo/shared';
 
 type G = { goal: string };
 /** One short action line per mini-game (vi / en) — the play area explains the rest. */

@@ -3,7 +3,8 @@ export type QuietShutterConfig = { quietSpeed: number; noiseGain: number; cooldo
 export type QuietShutterSample = { dtMs: number; rise: number };
 export type QuietShutterState = { lift: number; noise: number; alarmMs: number; alarms: number; elapsedMs: number };
 export const createQuietShutter = (): QuietShutterState => ({ lift: 0, noise: 0, alarmMs: 0, alarms: 0, elapsedMs: 0 });
-export const isQuietShutterComplete = (s: QuietShutterState) => s.lift >= 1 && s.noise <= .35 && s.alarmMs === 0;
+/** Done the moment the door reaches the top mark without waking anyone: no extra wait for the noise to settle. */
+export const isQuietShutterComplete = (s: QuietShutterState) => s.lift >= 1 && s.alarmMs === 0;
 
 export function stepQuietShutter(s: QuietShutterState, input: QuietShutterSample, config: QuietShutterConfig): QuietShutterState {
   const dt = input.dtMs / 1000;

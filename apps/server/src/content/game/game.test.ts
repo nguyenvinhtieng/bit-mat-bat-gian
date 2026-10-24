@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { TASK_IDS, type LotBike, type TaskData } from '@hidden-truth/shared';
+import { TASK_IDS, type LotBike, type TaskData } from '@giao-keo/shared';
 import { GAME_CONTENT } from './index';
 import type { Pending } from '../common/util';
 

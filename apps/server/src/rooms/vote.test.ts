@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { GAME } from '@hidden-truth/shared';
+import { GAME } from '@giao-keo/shared';
 import { GameRoom } from './GameRoom';
 import { Player } from './schema';
 

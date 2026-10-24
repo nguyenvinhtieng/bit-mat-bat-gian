@@ -1,4 +1,4 @@
-import type { TaskData } from '@hidden-truth/shared';
+import type { TaskData } from '@giao-keo/shared';
 import type { Submit } from './common/kit';
 import { GameMinigame } from './game';
 

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { mapSkin } from '@hidden-truth/shared';
+import { mapSkin } from '@giao-keo/shared';
 import { useStore } from '../store';
 import { type Ending, preloadMusic, sfx, uiTap, wakeAudio } from './minigames/common/kit';
 

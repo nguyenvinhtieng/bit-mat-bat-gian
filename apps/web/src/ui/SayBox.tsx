@@ -1,6 +1,6 @@
 import { ActionArt } from './ActionArt';
 import { useEffect, useRef, useState } from 'react';
-import { SAY_MAX } from '@hidden-truth/shared';
+import { SAY_MAX } from '@giao-keo/shared';
 import { send } from '../net';
 import { uiBlocksMovement, useStore } from '../store';
 import { useT } from '../i18n';

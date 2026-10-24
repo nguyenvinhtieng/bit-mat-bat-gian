@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ROLE_IDS, ROLE_INFO, mapSkin } from '@hidden-truth/shared';
+import { ROLE_IDS, ROLE_INFO, mapSkin } from '@giao-keo/shared';
 import { useLang } from '../i18n';
 import { RoleBadge, useEscape, useSkin } from './common';
 import { mapGuide } from './guides';

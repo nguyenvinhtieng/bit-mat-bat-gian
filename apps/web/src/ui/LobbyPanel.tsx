@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
-import { MIN_PLAYERS } from '@hidden-truth/shared';
+import { useEffect, useRef, useState } from 'react';
+import { MIN_PLAYERS } from '@giao-keo/shared';
 import { send } from '../net';
 import { useStore } from '../store';
 import { Chat } from './Chat';
 import { useT } from '../i18n';
+import { sfx } from './minigames/common/kit';
 
 // dev: the host alone can ready up and start, to test without 4 clients
 const DEV = import.meta.env.DEV;
@@ -48,6 +49,12 @@ export function LobbyPanel() {
   const unreadMessages = chat.slice(seen ? chat.indexOf(seen) + 1 : 0).filter((m) => !m.system && m.from !== sessionId);
   const unread = unreadMessages.length;
   const latestMessage = unreadMessages.at(-1);
+  // ping once per new message from someone else while the chat is closed (not for the backlog on entry)
+  const heard = useRef(latestMessage);
+  useEffect(() => {
+    if (latestMessage && latestMessage !== heard.current && !chatOpen) sfx.message();
+    heard.current = latestMessage;
+  }, [latestMessage, chatOpen]);
   const allReady = total > 0 && readyCount === total;
   const startReady = DEV ? !!me?.ready : canStart && allReady;
 

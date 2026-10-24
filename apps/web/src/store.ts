@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ArrestHoldMsg, Cinematic, ChatMsg, EndReveal, InspectResult, Phase, PrivateInfo, TaskData, TaskId, ToastMsg, VoteResult } from '@hidden-truth/shared';
+import type { ArrestHoldMsg, Cinematic, ChatMsg, EndReveal, InspectResult, Phase, PrivateInfo, TaskData, TaskId, ToastMsg, VoteResult } from '@giao-keo/shared';
 
 /** which matchmaking call is in flight (false = idle) */
 export type Connecting = false | 'create' | 'join' | 'find' | 'reconnect';

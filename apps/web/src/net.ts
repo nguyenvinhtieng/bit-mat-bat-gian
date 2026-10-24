@@ -1,5 +1,5 @@
 import { Client, type Room } from 'colyseus.js';
-import { GAME, PLAYER_COLORS, ROOM_NAME, type ArrestHoldMsg, type ClientMessages, type Cinematic, type InspectResult, type SayMsg, type VoteResult } from '@hidden-truth/shared';
+import { GAME, PLAYER_COLORS, ROOM_NAME, type ArrestHoldMsg, type ClientMessages, type Cinematic, type InspectResult, type SayMsg, type VoteResult } from '@giao-keo/shared';
 import { useStore, type Connecting, type RoomView } from './store';
 
 function endpoint(): string {
@@ -21,12 +21,13 @@ export function onRoom(cb: Listener) {
   return () => roomListeners.delete(cb);
 }
 
-let arresting = false;
-/** undercover: press / release the arrest button (the server times the hold) */
-export function arrest(on: boolean) {
-  if (arresting === on) return;
-  arresting = on;
-  send('arrest', { on });
+let arrestSentAt = 0;
+/** undercover: arrest the nearest driver now (the server checks range and cooldown); a double tap sends once */
+export function arrest() {
+  const now = Date.now();
+  if (now - arrestSentAt < 400) return;
+  arrestSentAt = now;
+  send('arrest', { on: true });
 }
 
 /** arrest:heard listeners (GameScene plays the sound + a marker) */
@@ -180,8 +181,6 @@ let pingTimer: ReturnType<typeof setInterval> | undefined;
 let lastSeen = 0;
 const FIRST_STATE_MS = 8_000;
 const SILENT_MS = 12_000;
-/** set by leaveRoom() so onLeave can tell our own exit from the server closing the room */
-let leaving = false;
 
 function bind(r: Room) {
   room = r;
@@ -256,7 +255,6 @@ function bind(r: Room) {
     }
   });
   r.onMessage('arrest:hold', (m: ArrestHoldMsg) => {
-    if (!m.on && m.youAre === 'actor') arresting = false;
     useStore.getState().set({ arrestHold: m.on ? m : null });
   });
   r.onMessage('arrest:heard', (m: { at: { x: number; y: number } }) => {
@@ -287,9 +285,8 @@ function bind(r: Room) {
     room = null;
     if (pingTimer) clearInterval(pingTimer);
     useStore.getState().set({ ping: 0 });
-    const self = leaving;
-    leaving = false;
-    if (!self && code > 1000 && code !== 4000 && code !== 4001 && code !== 4003 && kv.get(ROOM_KEY)) {
+    // our own exit never gets here: leaveRoom() unbinds first
+    if (code > 1000 && code !== 4000 && code !== 4001 && code !== 4003 && kv.get(ROOM_KEY)) {
       // unexpected disconnect (network blip, phone backgrounded) -> keep retrying while the server holds our seat
       recover();
     } else {
@@ -298,7 +295,7 @@ function bind(r: Room) {
       rememberLeft(r.roomId);
       // 4000 we didn't ask for = the server closed the room (restart/deploy); 4001 = kicked (server toasts why)
       const error =
-        !self && code === 4000
+        code === 4000
           ? 'Phòng đã đóng (máy chủ vừa khởi động lại). Hãy tạo hoặc vào phòng mới.'
           : code === 4003
             ? 'Bạn đã vào phòng này từ một tab hoặc kết nối khác.'
@@ -566,12 +563,14 @@ if (typeof window !== 'undefined') {
   window.addEventListener('pageshow', (e) => e.persisted && probe());
 }
 
+/** Back home right away: the server's goodbye can take ages (or never come) on a slow or half-dead socket. */
 export function leaveRoom() {
   forgetSeat();
-  if (!room && useStore.getState().reconnecting) {
-    useStore.getState().set({ screen: 'home', room: null, reconnecting: false, error: '' });
-    history.replaceState(null, '', '/');
-  }
-  if (room) leaving = true;
-  room?.leave(true);
+  const r = room;
+  room = null; // its late onLeave sees room !== r and stays quiet
+  if (pingTimer) clearInterval(pingTimer);
+  if (r) rememberLeft(r.roomId);
+  useStore.getState().set({ screen: 'home', room: null, ping: 0, reconnecting: false, connecting: false, error: '' });
+  history.replaceState(null, '', '/');
+  r?.leave(true);
 }

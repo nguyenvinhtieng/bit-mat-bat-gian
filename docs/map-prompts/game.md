@@ -4,7 +4,7 @@
 
 ---
 
-Triển khai map mới **`sai-gon`** cho game "Bịt Mắt Bắt Gian" (social deduction kiểu Among Us, chủ đề văn hoá Việt).
+Triển khai map mới **`sai-gon`** cho game "Giao Kèo" (social deduction kiểu Among Us, chủ đề văn hoá Việt).
 
 Map này **khác motif** các map trước: không ma quỷ, không tâm linh — **hài đời thường Sài Gòn**. Phe đông là một hội tài xế xe ôm công nghệ chơi hụi chui; phe ẩn là **công an chìm** giả làm tài xế mới.
 

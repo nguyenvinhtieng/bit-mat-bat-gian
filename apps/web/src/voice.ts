@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Room } from 'colyseus.js';
-import { voiceGain, type VoiceSignal } from '@hidden-truth/shared';
+import { voiceGain, type VoiceSignal } from '@giao-keo/shared';
 import { httpBase, onRoom, send } from './net';
 import { useStore } from './store';
 
@@ -159,6 +159,7 @@ async function onSignal({ from, data }: { from: string; data: VoiceSignal }) {
 /** open/close connections to match who is in the room */
 function sync() {
   const r = useStore.getState().room;
+  if (!r && room) return teardown(); // left for home: don't wait for the socket's own close
   if (!room || !r) return;
   const others = r.players.filter((p) => p.id !== myId && p.connected);
   const ids = new Set(others.map((p) => p.id));

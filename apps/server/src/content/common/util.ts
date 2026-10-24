@@ -1,4 +1,4 @@
-import type { TaskData, TaskId } from '@hidden-truth/shared';
+import type { TaskData, TaskId } from '@giao-keo/shared';
 
 export const shuffle = <T>(arr: readonly T[]): T[] => {
   const a = [...arr];

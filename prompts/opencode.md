@@ -1,4 +1,4 @@
-# OpenCode — model & công cụ cho Bịt Mắt Bắt Gian
+# OpenCode — model & công cụ cho Giao Kèo
 
 > Cấu hình project: `opencode.json` (OpenCode v2). Đọc file này trước khi code hoặc sinh asset.
 

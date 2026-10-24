@@ -3,7 +3,7 @@ import { Sprite } from './Cinematic';
 import { colorIndex } from './Zola';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { sfx } from './minigames/common/kit';
-import { AREA_RECTS, GAME, LAYOUT_H, LAYOUT_W, TILE, type AreaId, type TaskId } from '@hidden-truth/shared';
+import { AREA_RECTS, GAME, LAYOUT_H, LAYOUT_W, TILE, type AreaId, type TaskId } from '@giao-keo/shared';
 
 function MiniMap({ current, pending, pos, big, onClick }: { current: AreaId | ''; pending: Set<AreaId>; pos: { x: number; y: number } | null; big?: boolean; onClick?: () => void }) {
   const skin = useSkin();
@@ -386,7 +386,7 @@ function ArrestButton({ ready, cdLeft, readyAt, label }: { ready: boolean; cdLef
     <button
       className={`round-btn kill slot-main ${ready ? 'ready' : 'idle'} ${cdLeft ? 'cooling' : ''}`}
       disabled={!ready}
-      onClick={() => arrest(true)}
+      onClick={() => arrest()}
       onContextMenu={(e) => e.preventDefault()}
       title={`${label} (K)`}
       aria-label={label}

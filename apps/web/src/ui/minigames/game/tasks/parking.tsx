@@ -1,6 +1,6 @@
 /** Bãi Giữ Xe: get the bike out (slide puzzle). */
 import { useRef, useState } from 'react';
-import type { LotBike } from '@hidden-truth/shared';
+import type { LotBike } from '@giao-keo/shared';
 import { MgShell, sfx, type Tone } from '../../common/kit';
 import { useT } from '../art';
 import { taskArt, useOnce, type P } from './shared';

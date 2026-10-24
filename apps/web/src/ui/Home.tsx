@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DEFAULT_MAP_SLUG, NAME_MAX } from '@hidden-truth/shared';
+import { DEFAULT_MAP_SLUG, NAME_MAX } from '@giao-keo/shared';
 import { cancelFind, createRoom, findRoom, joinRoom, reconnect, roomExists } from '../net';
 import { useStore } from '../store';
 import { asset } from './common';

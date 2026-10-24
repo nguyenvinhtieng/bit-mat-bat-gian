@@ -18,8 +18,8 @@ set -euo pipefail
 
 PUBLIC_IP="${PUBLIC_IP:-3.106.54.104}"
 TURN_DOMAIN="${TURN_DOMAIN:-}"
-APP_DIR="${APP_DIR:-/var/www/the-hidden-truth}"
-REALM="${REALM:-bitmat.vinhtieng.com}"
+APP_DIR="${APP_DIR:-/var/www/giao-keo}"
+REALM="${REALM:-giaokeo.vinhtieng.com}"
 MIN_PORT=49152
 MAX_PORT=65535
 

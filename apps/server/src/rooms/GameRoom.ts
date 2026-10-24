@@ -37,7 +37,7 @@ import {
   type TaskId,
   type TaskResultMsg,
   type VoteResult,
-} from '@hidden-truth/shared';
+} from '@giao-keo/shared';
 import { contentFor, type Pending } from '../content';
 import { Delivery, recentActivities, type Activity } from './delivery';
 import { GameState, Player, StationState } from './schema';

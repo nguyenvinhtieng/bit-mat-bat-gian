@@ -1,4 +1,4 @@
-import { GAME, PREP_TASK_IDS, dist, type PrepTaskId, type Pt, type TaskId } from '@hidden-truth/shared';
+import { GAME, PREP_TASK_IDS, dist, type PrepTaskId, type Pt, type TaskId } from '@giao-keo/shared';
 
 /**
  * Cuốc Cuối rules, free of Colyseus so they can be unit-tested:

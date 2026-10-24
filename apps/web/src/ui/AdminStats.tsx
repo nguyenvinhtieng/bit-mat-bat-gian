@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { mapMeta, type Phase } from '@hidden-truth/shared';
+import { mapMeta, type Phase } from '@giao-keo/shared';
 import { httpBase } from '../net';
 
 type RoomStat = {
@@ -110,7 +110,7 @@ export function AdminStats() {
       <header className="admin-head">
         <div>
           <h1>Bảng điều khiển</h1>
-          <p className="muted small">Bịt Mắt Bắt Gian · thống kê máy chủ</p>
+          <p className="muted small">Giao Kèo · thống kê máy chủ</p>
         </div>
         <div className={`admin-live ${error ? 'down' : ''}`}>
           <i aria-hidden />

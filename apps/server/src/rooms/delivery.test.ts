@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { GAME, PREP_TASK_IDS, dealTasks } from '@hidden-truth/shared';
+import { GAME, PREP_TASK_IDS, dealTasks } from '@giao-keo/shared';
 import { ArrestHold, Delivery, recentActivities, type Activity } from './delivery';
 
 const HOME = { x: 100, y: 100 };

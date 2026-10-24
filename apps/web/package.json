@@ -1,5 +1,5 @@
 {
-  "name": "@hidden-truth/web",
+  "name": "@giao-keo/web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@hidden-truth/shared": "workspace:*",
+    "@giao-keo/shared": "workspace:*",
     "colyseus.js": "^0.16.22",
     "phaser": "3.90.0",
     "react": "^19.1.0",

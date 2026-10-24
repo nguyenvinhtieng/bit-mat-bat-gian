@@ -4,11 +4,11 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { GAME_CONTENT } from '../../apps/server/src/content/game/index';
 import sharp from 'sharp';
-import { GAME_SKIN, TASK_IDS, type TaskId, type LotBike } from '@hidden-truth/shared';
+import { GAME_SKIN, TASK_IDS, type TaskId, type LotBike } from '@giao-keo/shared';
 
 const visualOnly = process.argv.includes('--visual-only');
 const taskFilter = process.argv.find((arg) => arg.startsWith('--tasks='))?.slice(8).split(',');
-const out = process.env.MINIGAME_OUT || '/tmp/the-hidden-truth-minigames';
+const out = process.env.MINIGAME_OUT || '/tmp/giao-keo-minigames';
 fs.mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
 const failures: string[] = [];

@@ -1,4 +1,4 @@
-import type { TaskId } from '@hidden-truth/shared';
+import type { TaskId } from '@giao-keo/shared';
 import { GUIDE as GAME_GUIDE } from './game/guide';
 import { QUOTES as GAME_QUOTES } from './game/quotes';
 

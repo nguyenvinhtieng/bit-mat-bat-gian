@@ -18,7 +18,7 @@ import {
   SPAWNS,
   TILE,
   getGrid,
-} from '@hidden-truth/shared';
+} from '@giao-keo/shared';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
 const write = (rel: string, data: unknown) => {

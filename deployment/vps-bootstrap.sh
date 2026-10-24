@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # One-time setup on a fresh Ubuntu 22.04 / 24.04 VPS (run as root or with sudo).
-# Production: https://bitmat.vinhtieng.com — HTTPS via Cloudflare (no cert on VPS).
+# Production: https://giaokeo.vinhtieng.com — HTTPS via Cloudflare (no cert on VPS).
 #
 # Usage (from repo on VPS):
 #   sudo bash deployment/vps-bootstrap.sh
 #
 set -euo pipefail
 
-DOMAIN=bitmat.vinhtieng.com
+DOMAIN=giaokeo.vinhtieng.com
 GIT_REPO="${GIT_REPO:-}"
-APP_DIR="${APP_DIR:-/var/www/the-hidden-truth}"
+APP_DIR="${APP_DIR:-/var/www/giao-keo}"
 DEPLOY_USER="${DEPLOY_USER:-deploy}"
 NODE_MAJOR="${NODE_MAJOR:-22}"
 APP_PORT="${APP_PORT:-2567}"
@@ -66,14 +66,14 @@ echo "==> Nginx site: ${DOMAIN} (Cloudflare origin HTTP)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 mkdir -p /etc/nginx/snippets
 cp "${SCRIPT_DIR}/nginx/cloudflare-real-ip.conf" /etc/nginx/snippets/cloudflare-real-ip.conf
-NGINX_SRC="${SCRIPT_DIR}/nginx/bitmat.vinhtieng.com.conf"
-NGINX_DST="/etc/nginx/sites-available/bitmat.vinhtieng.com"
+NGINX_SRC="${SCRIPT_DIR}/nginx/giaokeo.vinhtieng.com.conf"
+NGINX_DST="/etc/nginx/sites-available/giaokeo.vinhtieng.com"
 if [[ ! -f "${NGINX_SRC}" ]]; then
   echo "Missing ${NGINX_SRC} — run this script from the repo checkout."
   exit 1
 fi
 cp "${NGINX_SRC}" "${NGINX_DST}"
-ln -sf "${NGINX_DST}" /etc/nginx/sites-enabled/bitmat.vinhtieng.com
+ln -sf "${NGINX_DST}" /etc/nginx/sites-enabled/giaokeo.vinhtieng.com
 rm -f /etc/nginx/sites-enabled/default
 nginx -t
 systemctl enable nginx
@@ -103,6 +103,6 @@ Next steps (as ${DEPLOY_USER}):
 
 PM2 (as ${DEPLOY_USER}):
   pm2 status
-  pm2 logs hidden-truth
+  pm2 logs giao-keo
 
 EOF

@@ -15,7 +15,7 @@ import {
   type PrivateInfo,
   type TaskData,
   type Vec,
-} from '@hidden-truth/shared';
+} from '@giao-keo/shared';
 
 const N = Number(process.argv[2] || 4);
 const URL = process.env.SERVER_URL || 'ws://localhost:2567';

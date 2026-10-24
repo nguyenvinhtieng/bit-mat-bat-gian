@@ -1,4 +1,4 @@
-# Bịt Mắt Bắt Gian: Truy Tìm Kẻ Gian Giữa Di Sản Việt
+# Giao Kèo: Truy Tìm Kẻ Gian Giữa Di Sản Việt
 
 > **Thể loại:** trốn chạy · nhiệm vụ văn hoá · tìm kẻ sát nhân (kiểu Among Us, đơn giản).
 > Cốt truyện / nhiệm vụ theo địa điểm nằm trong `map/*.md`. Không còn cơ chế điều tra bằng manh mối.

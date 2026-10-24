@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { PLAYER_COLORS } from '@hidden-truth/shared';
+import { useRef, useState } from 'react';
+import { PLAYER_COLORS } from '@giao-keo/shared';
 import { send } from '../net';
 import { colorHex, KILLER_NAME_COLOR, useKillerIds, useStore, type PlayerView } from '../store';
 import { Sprite } from './Cinematic';
@@ -61,15 +61,18 @@ export function ChatLines({ myId, players }: { myId: string; players: PlayerView
 export function Composer({ enabled = true, lockedHint = '' }: { enabled?: boolean; lockedHint?: string }) {
   const [text, setText] = useState('');
   const [touch] = useState(isTouchDevice);
+  const field = useRef<HTMLInputElement>(null);
+  // the field keeps focus after sending so the next message can follow; ESC hands the keys back to the game
   const submit = () => {
-    if (!text.trim()) return false;
+    if (!text.trim()) return;
     send('chat', { text });
     setText('');
-    return true;
+    field.current?.focus();
   };
   return (
     <div className="zl-compose">
       <input
+        ref={field}
         aria-label="Tin nhắn"
         value={text}
         maxLength={240}
@@ -79,8 +82,8 @@ export function Composer({ enabled = true, lockedHint = '' }: { enabled?: boolea
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
           e.stopPropagation();
-          // Release focus after sending so movement keys reach the game again.
-          if (e.key === 'Enter' && submit()) e.currentTarget.blur();
+          if (e.key === 'Enter') submit();
+          else if (e.key === 'Escape') e.currentTarget.blur();
         }}
       />
       <button className="zl-send" onClick={submit} disabled={!enabled || !text.trim()} aria-label="Gửi" title="Gửi">

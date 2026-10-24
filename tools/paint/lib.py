@@ -1,5 +1,5 @@
 """
-Procedural raster painter for Bịt Mắt Bắt Gian (Cố đô Huế).
+Procedural raster painter for Giao Kèo (Cố đô Huế).
 
 No vector outlines: everything is shaded per pixel (diffuse + specular + ambient occlusion),
 textured with fractal noise (wood grain, stone speckle, bronze patina, lacquer gloss) and

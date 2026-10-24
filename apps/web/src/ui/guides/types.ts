@@ -1,4 +1,4 @@
-import type { RoleId } from '@hidden-truth/shared';
+import type { RoleId } from '@giao-keo/shared';
 
 export type L = { vi: string; en: string };
 export const l = (vi: string, en: string): L => ({ vi, en });

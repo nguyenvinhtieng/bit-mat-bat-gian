@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build and reload the app on the VPS (run as deploy user from APP_DIR or any cwd).
 #
-#   cd /var/www/the-hidden-truth && bash deployment/deploy.sh
+#   cd /var/www/giao-keo && bash deployment/deploy.sh
 #
 set -euo pipefail
 
@@ -29,7 +29,7 @@ pnpm build
 
 echo "==> PM2"
 ECOSYSTEM="${APP_DIR}/deployment/ecosystem.config.cjs"
-if pm2 describe hidden-truth &>/dev/null; then
+if pm2 describe giao-keo &>/dev/null; then
   pm2 reload "${ECOSYSTEM}" --update-env
 else
   pm2 start "${ECOSYSTEM}"
@@ -39,15 +39,15 @@ pm2 save
 echo "==> Health (local)"
 sleep 2
 curl -fsS "http://127.0.0.1:${PORT:-2567}/health" || {
-  echo "Health check failed — try: pm2 logs hidden-truth"
+  echo "Health check failed — try: pm2 logs giao-keo"
   exit 1
 }
 # /health also answers from a stale process left on the port; a current route proves the new code is live
 curl -fsS -o /dev/null "http://127.0.0.1:${PORT:-2567}/admin/stats" || {
   echo
   echo "Server is running OLD code (/admin/stats missing) — an old process still holds the port."
-  echo "Fix: pm2 delete hidden-truth; kill the process on :${PORT:-2567} (sudo lsof -i :${PORT:-2567}); bash deployment/deploy.sh"
+  echo "Fix: pm2 delete giao-keo; kill the process on :${PORT:-2567} (sudo lsof -i :${PORT:-2567}); bash deployment/deploy.sh"
   exit 1
 }
 
-echo "Deploy OK — https://bitmat.vinhtieng.com (${APP_DIR})"
+echo "Deploy OK — https://giaokeo.vinhtieng.com (${APP_DIR})"

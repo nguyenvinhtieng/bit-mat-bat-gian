@@ -1,4 +1,4 @@
-import { createQuietShutter, stepQuietShutter, isQuietShutterComplete, type QuietShutterSample } from '@hidden-truth/shared';
+import { createQuietShutter, stepQuietShutter, isQuietShutterComplete, type QuietShutterSample } from '@giao-keo/shared';
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { asset } from '../../../common';
 import { MgShell, sfx } from '../../common/kit';
@@ -108,6 +108,8 @@ export function StuckShutter({ task, submit }: P<'stuck_shutter'>) {
       <div className="ck-neighbor ck-neighbor-right" aria-hidden="true"><i /><span>{alarm ? '!' : '☾'}</span></div>
       <div className="ck-shutter-frame">
         <div className="ck-quiet-interior" aria-hidden="true"><QuietIcon kind="check" /></div>
+        {/* finish line: the door's bottom edge reaches it at full lift */}
+        <div className={`ck-quiet-goal ${state.lift >= 1 ? 'reached' : ''}`} aria-hidden="true" />
         <div className="ck-shutter" style={{ height: `${100 - state.lift * 87}%` }}>
           <div className="ck-shutter-handle" role="slider" tabIndex={sent ? -1 : 0} aria-label={t('Tay nắm cửa cuốn', 'Shutter handle')} aria-valuenow={Math.round(state.lift * 100)} aria-valuemin={0} aria-valuemax={100} aria-valuetext={status} aria-disabled={sent || alarm}
             onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === ' ') { e.preventDefault(); if (sent || alarm) return; input.current.keyboard = true; input.current.active = true; setStarted(true); } }}

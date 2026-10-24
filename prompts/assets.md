@@ -1,4 +1,4 @@
-# Đặc tả asset — Bịt Mắt Bắt Gian
+# Đặc tả asset — Giao Kèo
 
 > **Phạm vi tài liệu:** danh sách asset cần sản xuất, **kích thước**, **định dạng file**, **quy ước đặt tên** và **mapping** với gameplay.  
 > **Nhân vật người chơi (avatar, animation):** mỗi map có **trang phục riêng** (mục 3.1) trên cùng một rig/khung hình; `maps/common/characters` là bản dự phòng.  
@@ -182,7 +182,7 @@ Anchor: **chân prop** = tâm ô dưới (48×48 footprint chuẩn).
 | `coordination` | `hue-prop-coord-whiteboard` | **128×96** | Bảng lịch khai mạc |
 | `coordination` | `hue-prop-coord-monitor` | **80×64** | Màn hình chat (UI fake) |
 | `corridor` | `hue-prop-corridor-plant` | **48×64** | Cây chậu |
-| `courtyard_checkin` | `hue-prop-courtyard-banner` | **128×192** | Banner *Bịt Mắt Bắt Gian* |
+| `courtyard_checkin` | `hue-prop-courtyard-banner` | **128×192** | Banner *Giao Kèo* |
 | `courtyard_checkin` | `hue-prop-courtyard-bench` | **128×48** | Ghế |
 
 **Tổng tối thiểu MVP:** ~12 prop (ưu tiên có trong bảng nhiệm vụ).

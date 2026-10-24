@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ROLE_INFO, mapSkin, type RoleId } from '@hidden-truth/shared';
+import { ROLE_INFO, mapSkin, type RoleId } from '@giao-keo/shared';
 import { useStore } from '../store';
 import { uiTap } from './minigames/common/kit';
 

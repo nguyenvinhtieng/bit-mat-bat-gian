@@ -26,7 +26,7 @@ import {
   BODY_HH,
   BODY_HW,
   BODY_OY,
-} from '@hidden-truth/shared';
+} from '@giao-keo/shared';
 import { useDev } from '../ui/DevPanel';
 import { arrest, onHeard, onRoom, onSay, room, send } from '../net';
 import { setEngines, sfx, type EngineMix } from '../ui/minigames/common/kit';
@@ -1348,7 +1348,7 @@ export class GameScene extends Phaser.Scene {
   private arrestKey() {
     const s = useStore.getState();
     if (s.me?.faction !== 'killer' || s.room?.phase !== 'explore' || uiBlocksMovement()) return;
-    arrest(true);
+    arrest();
   }
 
   private doReport() {
@@ -1398,8 +1398,11 @@ export class GameScene extends Phaser.Scene {
     const s = useStore.getState();
     if (s.me?.faction !== 'killer' || s.room?.phase !== 'explore') return false;
     if (!this.myView()?.alive) return false;
+    // same rule as the server: fellow cops and dropped players can't be cuffed
+    const killers = s.me.killerIds ?? [];
+    const offline = new Set(s.room.players.filter((p) => !p.connected).map((p) => p.id));
     for (const [id, av] of this.avatars) {
-      if (id === s.sessionId || !av.alive) continue;
+      if (id === s.sessionId || !av.alive || killers.includes(id) || offline.has(id)) continue;
       if (dist(this.pred, { x: av.c.x, y: av.c.y }) <= GAME.arrestRange) return true;
     }
     return false;

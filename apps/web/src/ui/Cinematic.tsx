@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { PLAYER_COLORS, mapSkin, playerArt } from '@hidden-truth/shared';
+import { PLAYER_COLORS, mapSkin, playerArt } from '@giao-keo/shared';
 import { colorHex, useStore } from '../store';
 import { asset, useEscape } from './common';
 import { GROUP_NAME, groupAvatar } from './Zola';

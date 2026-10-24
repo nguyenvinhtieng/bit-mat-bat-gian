@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { PLAYER_COLORS, mapSkin } from '@hidden-truth/shared';
+import { PLAYER_COLORS, mapSkin } from '@giao-keo/shared';
 import { leaveRoom, send } from '../net';
 import { colorHex, useStore } from '../store';
 import { RoleBadge } from './common';

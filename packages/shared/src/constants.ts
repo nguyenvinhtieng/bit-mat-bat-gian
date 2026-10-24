@@ -19,7 +19,7 @@ export const MIN_PLAYERS = 4;
 export const ROOM_NAME = 'investigation';
 
 /** Public domain the game is deployed at (web + WebSocket on one origin). */
-export const GAME_DOMAIN = 'bitmat.vinhtieng.com';
+export const GAME_DOMAIN = 'giaokeo.vinhtieng.com';
 export const GAME_URL = `https://${GAME_DOMAIN}`;
 
 export const AREA_IDS = [

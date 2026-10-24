@@ -3,8 +3,8 @@
  * Hands-on mini-games (drag, swipe, hold, tap timing): the server deals each round's setup and checks
  * that the play the client reports fits it. buildTask() returns the client payload + what to verify.
  */
-import { replayQuietShutter, isQuietShutterComplete, type QuietShutterConfig } from '@hidden-truth/shared';
-import type { CoolerItem, LotBike, Pothole, RackBox, TaskData, TaskId } from '@hidden-truth/shared';
+import { replayQuietShutter, isQuietShutterComplete, type QuietShutterConfig } from '@giao-keo/shared';
+import type { CoolerItem, LotBike, Pothole, RackBox, TaskData, TaskId } from '@giao-keo/shared';
 
 import { pick, rid, sample, shuffle, type Built, type Fact, type MapContent, type Pending } from '../common/util';
 

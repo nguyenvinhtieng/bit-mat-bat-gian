@@ -19,7 +19,7 @@ export type MapMeta = {
 
 export const GAME_META: MapMeta = {
   slug: GAME_SLUG,
-  name: { vi: 'Cua Xanh', en: 'Green Crab' },
+  name: { vi: 'Giao Kèo', en: 'Giao Kèo' },
   subtitle: { vi: 'Phiên Hụi Chui Hẻm 42', en: 'The Secret Savings Circle of Alley 42' },
   hook: {
     vi: 'Cả hội tài xế áo xanh lén khui hụi giữa đêm ở Hẻm 42. Khổ nỗi trong hội có một đứa áo xanh… là công an chìm!',

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { copsFor, copsValid, maxCops } from '@hidden-truth/shared';
+import { copsFor, copsValid, maxCops } from '@giao-keo/shared';
 
 test('cops must be fewer than half the civilians', () => {
   // cops < (n - cops) / 2  <=>  3 * cops < n

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { mapSkin } from '@hidden-truth/shared';
+import { mapSkin } from '@giao-keo/shared';
 import { useStore } from './store';
 
 export type Lang = 'vi' | 'en';
@@ -8,7 +8,7 @@ const KEY = 'tht:lang';
 const dict = {
   vi: {
     slogan: 'Ai là công an chìm?',
-    appTagline: 'Cua Xanh',
+    appTagline: 'Giao Kèo',
     tagline: 'Chuẩn bị Cuốc Cuối, bàn giao kiện hàng, bỏ phiếu — và lột mặt {killer} trong hội tài xế.',
     displayName: 'Tên hiển thị',
     namePlaceholder: 'Ví dụ: Minh',
@@ -181,7 +181,7 @@ const dict = {
   },
   en: {
     slogan: 'Who is the undercover cop?',
-    appTagline: 'Green Crab',
+    appTagline: 'Giao Kèo',
     tagline: 'Prep the Last Ride, hand off the package, vote — and unmask the {killerEn} among the drivers.',
     displayName: 'Display name',
     namePlaceholder: 'e.g. Minh',

@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 /** App root on the VPS (override with APP_DIR env when starting PM2). */
-const appDir = process.env.APP_DIR || '/var/www/the-hidden-truth';
+const appDir = process.env.APP_DIR || '/var/www/giao-keo';
 
 function loadEnvFile(filePath) {
   const env = { NODE_ENV: 'production', PORT: '2567' };
@@ -20,7 +20,7 @@ function loadEnvFile(filePath) {
 module.exports = {
   apps: [
     {
-      name: 'hidden-truth',
+      name: 'giao-keo',
       // cwd must be apps/server: tsx reads tsconfig.json from the cwd, and only the server's enables
       // experimentalDecorators (without it @colyseus/schema's @type crashes on startup)
       cwd: path.join(appDir, 'apps/server'),

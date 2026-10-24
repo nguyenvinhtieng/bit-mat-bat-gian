@@ -1,4 +1,4 @@
-import type { TaskData } from '@hidden-truth/shared';
+import type { TaskData } from '@giao-keo/shared';
 import type { Submit } from '../common/kit';
 import { PackCooler } from './tasks/food';
 import { BrewCoffee, WifiHunt } from './tasks/drinks';

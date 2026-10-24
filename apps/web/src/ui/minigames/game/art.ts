@@ -1,4 +1,4 @@
-import { GAME_SKIN } from '@hidden-truth/shared';
+import { GAME_SKIN } from '@giao-keo/shared';
 import { useLang } from '../../../i18n';
 import { mgOf } from '../common/kit';
 

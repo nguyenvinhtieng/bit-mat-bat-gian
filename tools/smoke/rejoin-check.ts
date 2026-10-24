@@ -1,5 +1,5 @@
 import { Client } from 'colyseus.js';
-import { ROOM_NAME } from '@hidden-truth/shared';
+import { ROOM_NAME } from '@giao-keo/shared';
 
 const c = new Client(process.env.SERVER_URL || 'ws://localhost:2567');
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));

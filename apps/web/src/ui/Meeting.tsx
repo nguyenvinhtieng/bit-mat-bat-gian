@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { PLAYER_COLORS, mapSkin } from '@hidden-truth/shared';
+import { PLAYER_COLORS, mapSkin } from '@giao-keo/shared';
 import { send } from '../net';
-import type { VoteResult } from '@hidden-truth/shared';
+import type { VoteResult } from '@giao-keo/shared';
 import { colorHex, KILLER_NAME_COLOR, useKillerIds, useStore, type PlayerView } from '../store';
 import { SockReveal } from './SockReveal';
 import { Avatar, ChatLines, colorIndex, Composer, GROUP_NAME, groupAvatar } from './Zola';

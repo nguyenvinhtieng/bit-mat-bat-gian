@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { mapSkin, type TaskId } from '@hidden-truth/shared';
+import { mapSkin, type TaskId } from '@giao-keo/shared';
 import { useLang } from '../../../i18n';
 import { useStore } from '../../../store';
 import { asset } from '../../common';
@@ -471,6 +471,8 @@ export const sfx = {
   handoff: () => noise(0.16, { vol: 0.04, freq: 1500, to: 900, q: 1, attack: 0.02 }),
 
   // ---- events
+  /** new chat message while the chat is closed: a short two-note messenger "ting-ting" */
+  message: () => (pluck(E5, 0, 0.05, 0.3), pluck(A5, 0.11, 0.045, 0.36)),
   /** someone was cuffed nearby: two muted metal clicks */
   cuffs: () => (noise(0.03, { vol: 0.07, freq: 2600, q: 8 }), noise(0.03, { vol: 0.07, freq: 3000, q: 8, at: 0.09 }), tone(620, 0.3, { vol: 0.03, bend: 0.75, at: 0.2 })),
   /** final-30s clock: wood-block tick/tock; last 10s a touch louder with a soft echo */

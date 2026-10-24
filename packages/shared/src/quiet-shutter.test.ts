@@ -31,3 +31,10 @@ test('quiet shutter: replay rejects malformed, impossible, and unbounded input',
   }
   assert.equal(isQuietShutterComplete(replayQuietShutter([{ dtMs: 100, rise: .08 }], config)!), false);
 });
+test('quiet shutter: reaching the top finishes at once, even while the noise is still cooling', () => {
+  const state = { ...createQuietShutter(), lift: .97, noise: .6 };
+  const next = stepQuietShutter(state, { dtMs: 50, rise: .03 }, config);
+  assert.equal(next.lift, 1);
+  assert.ok(next.noise > .35);
+  assert.ok(isQuietShutterComplete(next));
+});

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { GAME_SKIN, type TaskData } from '@hidden-truth/shared';
+import { GAME_SKIN, type TaskData } from '@giao-keo/shared';
 import { asset } from '../../../common';
 import { sfx, type Submit } from '../../common/kit';
 

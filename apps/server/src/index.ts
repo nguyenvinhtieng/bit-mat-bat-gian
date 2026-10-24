@@ -6,7 +6,7 @@ import express from 'express';
 import cors from 'cors';
 import { Server, matchMaker } from '@colyseus/core';
 import { WebSocketTransport } from '@colyseus/ws-transport';
-import { GAME_URL, ROOM_NAME } from '@hidden-truth/shared';
+import { GAME_URL, ROOM_NAME } from '@giao-keo/shared';
 import { GameRoom } from './rooms/GameRoom';
 import { pickOpenRoom } from './rooms/matchmaking';
 import { adminAuth, closeBlocker } from './rooms/admin';
