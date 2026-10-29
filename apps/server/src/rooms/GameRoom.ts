@@ -1,4 +1,4 @@
-import { Room, type Client } from '@colyseus/core';
+import { Room, ServerError, type Client } from '@colyseus/core';
 import {
   mapMeta,
   mapSkin,
@@ -144,10 +144,12 @@ export class GameRoom extends Room<GameState> {
     activeCodes.delete(this.roomId);
   }
 
-  onJoin(client: Client, options: { name?: string; pid?: string }) {
+  onJoin(client: Client, options: { name?: string; pid?: string; resumeOnly?: boolean }) {
     const pid = cleanPid(options?.pid);
     const prev = pid ? [...this.pids].find(([id, v]) => v === pid && this.state.players.has(id))?.[0] : undefined;
     if (prev) return this.takeOver(prev, client, pid);
+    // Recovery must never turn an expired or kicked seat into a new player.
+    if (options?.resumeOnly) throw new ServerError(4004, 'Chỗ cũ không còn. Hãy vào lại phòng bằng mã phòng.');
     if (this.state.phase !== 'lobby') throw new Error('Ván đang diễn ra — không thể vào giữa chừng.');
     const p = new Player();
     p.id = client.sessionId;

@@ -454,7 +454,7 @@ async function resumeOnce(): Promise<Room> {
     } catch {}
   }
   try {
-    return await attempt(() => client.joinById(roomId, { name: savedName(), pid: pid() }), 8_000);
+    return await attempt(() => client.joinById(roomId, { name: savedName(), pid: pid(), resumeOnly: true }), 8_000);
   } catch (e) {
     throw rejected(e) ? new SeatGone() : e;
   }
